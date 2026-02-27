@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
-import emptyCalendarImg from "@/assets/illustrations/empty-calendar.png";
+import emptyCalendarImg from "@/assets/illustrations/empty-calendar.webp";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { Input } from "@/components/ui/input";
@@ -173,7 +173,7 @@ export default function LeaveManagement() {
         <PageBanner
           title="Leave Management"
           description="Review and manage employee leave requests and approvals."
-          iconSrc="/3d-icons/leave.png"
+          iconSrc="/3d-icons/leave.webp"
         />
         {loading ? (
           <TableSkeleton rows={8} columns={6} />

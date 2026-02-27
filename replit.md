@@ -21,7 +21,7 @@ The UI/UX is inspired by the Dropship.io design system, featuring custom brand t
 - **Status Badge**: Automatically maps status strings to a predefined set of semantic color variants (success, error, warning, info, neutral).
 - **Form Dialog**: A standardized dialog for all create/edit forms.
 - **Empty State**: Reusable component with illustrations, messaging, and an optional action button.
-- **Page Banner**: A full-width, branded banner with a 3D icon, title, description, and optional action button, used consistently across HR pages.
+- **Page Banner**: A full-width, branded banner with a 3D icon (WebP, 128×128, ~3KB each), title, description, and optional action button, used consistently across HR pages. Icon display size is `size-16` (64px).
 - **Document Preview Modal**: A modal for viewing mock document content (PDF, DOCX, XLSX, certificates) with navigation.
 - **Loading States**: Includes various spinners and skeleton components (TableSkeleton, CardSkeleton, StatsCardSkeleton) to provide clear feedback during data loading.
 - **Toast System**: A custom, module-level toast notification system with 4 semantic types (success, error, info, warning) displayed at the bottom-right.
@@ -61,6 +61,7 @@ Data models for all HR entities (Employee, Candidate, Department, JobPosting, Le
 - **motion/react (Framer Motion)**: Animation library.
 - **Express.js**: Backend web framework.
 - **Google Fonts**: Plus Jakarta Sans (unified font for all UI text).
+- **Image Format**: All 3D icons and illustrations use WebP format (compressed from 1024×1024 PNGs). Icons: 128×128 WebP (~3KB). Illustrations: 256×256 WebP (~5KB).
 - **DiceBear**: For generating Micah (people) and Glass (entities) avatars.
 - **lucide-react**: Icon library.
 - **Zod**: Schema declaration and validation library.

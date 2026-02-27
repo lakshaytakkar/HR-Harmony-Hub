@@ -158,7 +158,7 @@ export default function Payroll() {
           <PageBanner
             title="Payroll Management"
             description="Process salaries, review compensation, and manage employee payments."
-            iconSrc="/3d-icons/employees.png"
+            iconSrc="/3d-icons/employees.webp"
           />
 
           <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

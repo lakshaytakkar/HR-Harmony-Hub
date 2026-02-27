@@ -986,12 +986,12 @@ function BannerTab() {
             <PageBanner
               title="Employee Directory"
               description="View, manage, and organize your entire workforce in one place."
-              iconSrc="/3d-icons/employees.png"
+              iconSrc="/3d-icons/employees.webp"
             />
             <PageBanner
               title="Leave Management"
               description="Review and manage employee leave requests and approvals."
-              iconSrc="/3d-icons/leave.png"
+              iconSrc="/3d-icons/leave.webp"
               actionLabel="New Request"
               onAction={() => showInfo("Action", "New Request button clicked")}
             />
@@ -1004,14 +1004,14 @@ function BannerTab() {
         <div className="rounded-2xl bg-[#F8F9FC] p-8">
           <div className="grid grid-cols-4 gap-6">
             {[
-              { name: "Dashboard", src: "/3d-icons/dashboard.png" },
-              { name: "Employees", src: "/3d-icons/employees.png" },
-              { name: "Candidates", src: "/3d-icons/candidates.png" },
-              { name: "Departments", src: "/3d-icons/departments.png" },
-              { name: "Job Postings", src: "/3d-icons/jobs.png" },
-              { name: "Leave", src: "/3d-icons/leave.png" },
-              { name: "Attendance", src: "/3d-icons/attendance.png" },
-              { name: "Documents", src: "/3d-icons/documents.png" },
+              { name: "Dashboard", src: "/3d-icons/dashboard.webp" },
+              { name: "Employees", src: "/3d-icons/employees.webp" },
+              { name: "Candidates", src: "/3d-icons/candidates.webp" },
+              { name: "Departments", src: "/3d-icons/departments.webp" },
+              { name: "Job Postings", src: "/3d-icons/job-postings.webp" },
+              { name: "Leave", src: "/3d-icons/leave.webp" },
+              { name: "Attendance", src: "/3d-icons/attendance.webp" },
+              { name: "Documents", src: "/3d-icons/documents.webp" },
             ].map((icon) => (
               <div key={icon.name} className="flex flex-col items-center gap-3 rounded-lg bg-white p-4 border" data-testid={`icon-3d-${icon.name.toLowerCase().replace(/\s+/g, "-")}`}>
                 <img src={icon.src} alt={icon.name} className="size-12 object-contain drop-shadow-lg" />

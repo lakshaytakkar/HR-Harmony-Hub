@@ -100,7 +100,7 @@ export default function Projects() {
           <PageBanner
             title="Project Management"
             description="Track progress, manage tasks, and collaborate across teams."
-            iconSrc="/3d-icons/departments.png"
+            iconSrc="/3d-icons/departments.webp"
           />
 
           <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">

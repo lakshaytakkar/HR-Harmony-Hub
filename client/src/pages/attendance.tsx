@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
-import emptyAttendanceImg from "@/assets/illustrations/empty-attendance.png";
+import emptyAttendanceImg from "@/assets/illustrations/empty-attendance.webp";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { Input } from "@/components/ui/input";
@@ -168,7 +168,7 @@ export default function Attendance() {
         <PageBanner
           title="Attendance Tracker"
           description="Monitor daily check-ins, work hours, and attendance patterns."
-          iconSrc="/3d-icons/attendance.png"
+          iconSrc="/3d-icons/attendance.webp"
         />
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">

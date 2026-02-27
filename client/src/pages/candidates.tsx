@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
-import emptyPeopleImg from "@/assets/illustrations/empty-people.png";
+import emptyPeopleImg from "@/assets/illustrations/empty-people.webp";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { Input } from "@/components/ui/input";
@@ -192,7 +192,7 @@ export default function Candidates() {
         <PageBanner
           title="Recruitment Pipeline"
           description="Track candidates from application to hire across all open positions."
-          iconSrc="/3d-icons/candidates.png"
+          iconSrc="/3d-icons/candidates.webp"
         />
         {loading ? (
           <TableSkeleton rows={8} columns={5} />

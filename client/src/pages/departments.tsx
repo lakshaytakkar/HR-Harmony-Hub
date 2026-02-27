@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
-import emptyDepartmentsImg from "@/assets/illustrations/empty-departments.png";
+import emptyDepartmentsImg from "@/assets/illustrations/empty-departments.webp";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { Input } from "@/components/ui/input";
@@ -135,7 +135,7 @@ export default function Departments() {
         <PageBanner
           title="Department Overview"
           description="Manage your organizational structure and department details."
-          iconSrc="/3d-icons/departments.png"
+          iconSrc="/3d-icons/departments.webp"
         />
         {loading ? (
           <TableSkeleton rows={8} columns={4} />

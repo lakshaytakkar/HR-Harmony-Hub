@@ -2,7 +2,7 @@ import { useState } from "react";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import { DocumentPreviewModal } from "@/components/hr/document-preview-modal";
-import emptyDocumentsImg from "@/assets/illustrations/empty-documents.png";
+import emptyDocumentsImg from "@/assets/illustrations/empty-documents.webp";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { Input } from "@/components/ui/input";
@@ -178,7 +178,7 @@ export default function Documents() {
         <PageBanner
           title="Document Library"
           description="Store, organize, and manage all HR documents and policies."
-          iconSrc="/3d-icons/documents.png"
+          iconSrc="/3d-icons/documents.webp"
         />
         {loading ? (
           <TableSkeleton rows={8} columns={5} />

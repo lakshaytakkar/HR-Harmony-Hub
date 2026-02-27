@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
-import emptyJobsImg from "@/assets/illustrations/empty-jobs.png";
+import emptyJobsImg from "@/assets/illustrations/empty-jobs.webp";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { Input } from "@/components/ui/input";
@@ -189,7 +189,7 @@ export default function JobPostings() {
         <PageBanner
           title="Job Postings"
           description="Create, manage, and track open positions across departments."
-          iconSrc="/3d-icons/job-postings.png"
+          iconSrc="/3d-icons/job-postings.webp"
         />
         {loading ? (
           <TableSkeleton rows={8} columns={6} />

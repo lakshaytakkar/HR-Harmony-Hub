@@ -19,7 +19,9 @@ export function PageBanner({ title, description, iconSrc, actionLabel, onAction 
       <img
         src={iconSrc}
         alt=""
-        className="size-12 shrink-0 object-contain drop-shadow-lg"
+        className="size-16 shrink-0 object-contain drop-shadow-lg"
+        loading="eager"
+        decoding="async"
         draggable={false}
       />
       <div className="flex-1 min-w-0">

@@ -1,5 +1,5 @@
 import { EmptyState } from "@/components/hr/empty-state";
-import notFoundIllustration from "@/assets/illustrations/not-found.png";
+import notFoundIllustration from "@/assets/illustrations/not-found.webp";
 import { PageTransition } from "@/components/ui/animated";
 
 export default function NotFound() {

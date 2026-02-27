@@ -1,7 +1,7 @@
 import { Users, UserPlus, Briefcase, CalendarDays, TrendingUp, Clock, CheckCircle2, AlertCircle, Eye, Check, X, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { PageBanner } from "@/components/hr/page-banner";
-import emptyCalendarImg from "@/assets/illustrations/empty-calendar.png";
+import emptyCalendarImg from "@/assets/illustrations/empty-calendar.webp";
 import { StatsCard } from "@/components/hr/stats-card";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,7 +48,7 @@ export default function Dashboard() {
       <PageTransition>
         <PageBanner
           title="Welcome to TeamSync"
-          iconSrc="/3d-icons/dashboard.png"
+          iconSrc="/3d-icons/dashboard.webp"
         />
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

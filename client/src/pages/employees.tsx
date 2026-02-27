@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import emptyPeopleImg from "@/assets/illustrations/empty-people.png";
+import emptyPeopleImg from "@/assets/illustrations/empty-people.webp";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { Input } from "@/components/ui/input";
@@ -173,7 +173,7 @@ export default function Employees() {
         <PageBanner
           title="Employee Directory"
           description="View, manage, and organize your entire workforce in one place."
-          iconSrc="/3d-icons/employees.png"
+          iconSrc="/3d-icons/employees.webp"
         />
         {loading ? (
           <TableSkeleton rows={8} columns={6} />
