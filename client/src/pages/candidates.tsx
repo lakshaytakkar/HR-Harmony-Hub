@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
 import { getPersonAvatar } from "@/lib/avatars";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { PageTransition } from "@/components/ui/animated";
 
 export default function Candidates() {
   const loading = useSimulatedLoading();
@@ -190,6 +191,7 @@ export default function Candidates() {
     <div className="flex flex-col h-full">
       <Topbar title="Candidates" subtitle="Track your recruitment pipeline" />
       <div className="flex-1 overflow-auto p-6">
+        <PageTransition>
         <PageBanner
           title="Recruitment Pipeline"
           description="Track candidates from application to hire across all open positions."
@@ -219,6 +221,7 @@ export default function Candidates() {
             emptyIllustration={emptyPeopleImg}
           />
         )}
+        </PageTransition>
       </div>
 
       <FormDialog

@@ -24,6 +24,7 @@ import { StatsCard } from "@/components/hr/stats-card";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { CheckCircle2, Clock, AlertCircle, CalendarDays } from "lucide-react";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { PageTransition } from "@/components/ui/animated";
 
 export default function Attendance() {
   const loading = useSimulatedLoading();
@@ -166,6 +167,7 @@ export default function Attendance() {
     <div className="flex flex-col h-full">
       <Topbar title="Attendance" subtitle="Daily attendance tracking" />
       <div className="flex-1 overflow-auto p-6">
+        <PageTransition>
         <PageBanner
           title="Attendance Tracker"
           description="Monitor daily check-ins, work hours, and attendance patterns."
@@ -235,6 +237,7 @@ export default function Attendance() {
             emptyIllustration={emptyAttendanceImg}
           />
         )}
+        </PageTransition>
       </div>
 
       <FormDialog

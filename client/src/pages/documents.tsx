@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getThingAvatar } from "@/lib/avatars";
 import { FileText } from "lucide-react";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { PageTransition } from "@/components/ui/animated";
 
 const fileTypeIcons: Record<string, string> = {
   PDF: "bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400",
@@ -176,6 +177,7 @@ export default function Documents() {
     <div className="flex flex-col h-full">
       <Topbar title="Documents" subtitle="HR document management" />
       <div className="flex-1 overflow-auto p-6">
+        <PageTransition>
         <PageBanner
           title="Document Library"
           description="Store, organize, and manage all HR documents and policies."
@@ -206,6 +208,7 @@ export default function Documents() {
             emptyIllustration={emptyDocumentsImg}
           />
         )}
+        </PageTransition>
       </div>
 
       <DocumentPreviewModal

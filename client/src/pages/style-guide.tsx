@@ -1,6 +1,7 @@
 import { Topbar } from "@/components/layout/topbar";
 import { PageHeader } from "@/components/layout/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageTransition } from "@/components/ui/animated";
 
 const primaryColors = [
   { name: "50", hex: "#EBF1FF", bg: "#EBF1FF" },
@@ -291,7 +292,7 @@ export default function StyleGuide() {
     <div className="flex h-full flex-col" data-testid="page-style-guide">
       <Topbar title="Style Guide" />
       <div className="flex-1 overflow-auto">
-        <div className="px-6 py-6">
+        <PageTransition className="px-6 py-6">
           <PageHeader
             title="Style Guide"
             description="TeamSync Design System foundation — typography, colors, and shadows."
@@ -316,7 +317,7 @@ export default function StyleGuide() {
               </div>
             </Tabs>
           </div>
-        </div>
+        </PageTransition>
       </div>
     </div>
   );

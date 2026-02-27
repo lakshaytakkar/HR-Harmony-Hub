@@ -1,9 +1,10 @@
 import { EmptyState } from "@/components/hr/empty-state";
 import notFoundIllustration from "@/assets/illustrations/not-found.png";
+import { PageTransition } from "@/components/ui/animated";
 
 export default function NotFound() {
   return (
-    <div className="flex h-full w-full items-center justify-center">
+    <PageTransition className="flex h-full w-full items-center justify-center">
       <EmptyState
         illustration={notFoundIllustration}
         title="Page Not Found"
@@ -11,6 +12,6 @@ export default function NotFound() {
         actionLabel="Back to Dashboard"
         actionHref="/"
       />
-    </div>
+    </PageTransition>
   );
 }

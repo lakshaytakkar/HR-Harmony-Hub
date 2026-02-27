@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Fade } from "@/components/ui/animated";
 
 interface PageBannerProps {
   title: string;
@@ -10,6 +11,7 @@ interface PageBannerProps {
 
 export function PageBanner({ title, description, iconSrc, actionLabel, onAction }: PageBannerProps) {
   return (
+    <Fade direction="down" distance={10} duration={0.3}>
     <div
       className="mb-5 flex items-center gap-4 rounded-xl bg-primary/90 px-5 py-4"
       data-testid="page-banner"
@@ -38,5 +40,6 @@ export function PageBanner({ title, description, iconSrc, actionLabel, onAction 
         </Button>
       )}
     </div>
+    </Fade>
   );
 }

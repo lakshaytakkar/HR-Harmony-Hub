@@ -22,6 +22,7 @@ import type { LeaveRequest } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { getPersonAvatar } from "@/lib/avatars";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { PageTransition } from "@/components/ui/animated";
 
 export default function LeaveManagement() {
   const loading = useSimulatedLoading();
@@ -170,6 +171,7 @@ export default function LeaveManagement() {
     <div className="flex flex-col h-full">
       <Topbar title="Leave Management" subtitle="Track and manage leave requests" />
       <div className="flex-1 overflow-auto p-6">
+        <PageTransition>
         <PageBanner
           title="Leave Management"
           description="Review and manage employee leave requests and approvals."
@@ -199,6 +201,7 @@ export default function LeaveManagement() {
             emptyIllustration={emptyCalendarImg}
           />
         )}
+        </PageTransition>
       </div>
 
       <FormDialog

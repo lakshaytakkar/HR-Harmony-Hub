@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Topbar } from "@/components/layout/topbar";
 import { PageHeader } from "@/components/layout/page-header";
 import { Input } from "@/components/ui/input";
+import { PageTransition } from "@/components/ui/animated";
 import {
   Search,
   Home,
@@ -339,7 +340,7 @@ export default function IconsGuide() {
     <div className="flex h-full flex-col" data-testid="page-icons-guide">
       <Topbar title="Icons" />
       <div className="flex-1 overflow-auto">
-        <div className="px-6 py-6">
+        <PageTransition className="px-6 py-6">
           <PageHeader
             title="Icons"
             description="Lucide icon library — all icons used across the TeamSync design system."
@@ -388,7 +389,7 @@ export default function IconsGuide() {
               </div>
             )}
           </div>
-        </div>
+        </PageTransition>
       </div>
     </div>
   );

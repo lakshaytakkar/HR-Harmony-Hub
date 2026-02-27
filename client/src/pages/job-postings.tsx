@@ -22,6 +22,7 @@ import type { JobPosting } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Users } from "lucide-react";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { PageTransition } from "@/components/ui/animated";
 
 export default function JobPostings() {
   const loading = useSimulatedLoading();
@@ -187,6 +188,7 @@ export default function JobPostings() {
     <div className="flex flex-col h-full">
       <Topbar title="Job Postings" subtitle="Manage open positions" />
       <div className="flex-1 overflow-auto p-6">
+        <PageTransition>
         <PageBanner
           title="Job Postings"
           description="Create, manage, and track open positions across departments."
@@ -217,6 +219,7 @@ export default function JobPostings() {
             emptyIllustration={emptyJobsImg}
           />
         )}
+        </PageTransition>
       </div>
 
       <FormDialog

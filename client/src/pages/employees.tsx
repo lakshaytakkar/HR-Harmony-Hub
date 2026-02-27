@@ -21,6 +21,7 @@ import type { Employee } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { getPersonAvatar } from "@/lib/avatars";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { PageTransition } from "@/components/ui/animated";
 
 export default function Employees() {
   const loading = useSimulatedLoading();
@@ -170,6 +171,7 @@ export default function Employees() {
     <div className="flex flex-col h-full">
       <Topbar title="Employees" subtitle="Manage your team members" />
       <div className="flex-1 overflow-auto p-6">
+        <PageTransition>
         <PageBanner
           title="Employee Directory"
           description="View, manage, and organize your entire workforce in one place."
@@ -198,6 +200,7 @@ export default function Employees() {
             emptyIllustration={emptyPeopleImg}
           />
         )}
+        </PageTransition>
       </div>
 
       <FormDialog

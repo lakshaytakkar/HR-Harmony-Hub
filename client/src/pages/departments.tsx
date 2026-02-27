@@ -22,6 +22,7 @@ import type { Department } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { getThingAvatar } from "@/lib/avatars";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { PageTransition } from "@/components/ui/animated";
 
 export default function Departments() {
   const loading = useSimulatedLoading();
@@ -132,6 +133,7 @@ export default function Departments() {
     <div className="flex flex-col h-full">
       <Topbar title="Departments" subtitle="Manage organization structure" />
       <div className="flex-1 overflow-auto p-6">
+        <PageTransition>
         <PageBanner
           title="Department Overview"
           description="Manage your organizational structure and department details."
@@ -160,6 +162,7 @@ export default function Departments() {
             emptyIllustration={emptyDepartmentsImg}
           />
         )}
+        </PageTransition>
       </div>
 
       <FormDialog

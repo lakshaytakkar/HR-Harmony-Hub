@@ -1,6 +1,7 @@
 import { Topbar } from "@/components/layout/topbar";
 import { PageHeader } from "@/components/layout/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageTransition } from "@/components/ui/animated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1031,7 +1032,7 @@ export default function ComponentsGuide() {
     <div className="flex h-full flex-col" data-testid="page-components-guide">
       <Topbar title="Components" />
       <div className="flex-1 overflow-auto">
-        <div className="px-6 py-6">
+        <PageTransition className="px-6 py-6">
           <PageHeader
             title="Components"
             description="TeamSync UI component library — buttons, forms, badges, avatars, and more."
@@ -1062,7 +1063,7 @@ export default function ComponentsGuide() {
               </div>
             </Tabs>
           </div>
-        </div>
+        </PageTransition>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Scale } from "@/components/ui/animated";
 
 interface EmptyStateProps {
   illustration?: string;
@@ -19,6 +20,7 @@ export function EmptyState({
   onAction,
 }: EmptyStateProps) {
   return (
+    <Scale initialScale={0.9} duration={0.35}>
     <div className="flex flex-col items-center gap-4 py-12" data-testid="empty-state">
       {illustration && (
         <img
@@ -43,5 +45,6 @@ export function EmptyState({
         </Button>
       )}
     </div>
+    </Scale>
   );
 }

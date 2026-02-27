@@ -4,7 +4,7 @@
 A custom HR Management Portal branded as TeamSync. Focused on perfect UI/UX inspired by Dropship.io design system, standardized components, comprehensive CRUD operations, and recruiter-ready functionality. Uses DiceBear Micah avatars for people and DiceBear Glass avatars for non-human entities (departments, documents).
 
 ## Tech Stack
-- **Frontend**: React + TypeScript, Tailwind CSS, Shadcn UI, Wouter (routing)
+- **Frontend**: React + TypeScript, Tailwind CSS, Shadcn UI, Wouter (routing), motion/react (animations)
 - **Backend**: Express.js (Node.js)
 - **State**: In-memory (frontend state management with React useState)
 - **Fonts**: Plus Jakarta Sans (headings), Inter (body) — Google Fonts
@@ -30,11 +30,12 @@ client/src/
       page-banner.tsx    - Full-width branded banner with 3D icon, title, description, optional action
       document-preview-modal.tsx - Document preview modal with prev/next navigation, renders PDF/DOCX/XLSX/certificate previews
     ui/
+      animated.tsx       - Animation primitives (Fade, Scale, Slide, Stagger, StaggerItem, PageTransition, AnimatedList) using motion/react
       spinner.tsx        - Spinner (5 sizes), PageSpinner (centered with label), InlineSpinner (for buttons)
       table-skeleton.tsx - Skeleton mimicking DataTable layout (header + rows + pagination)
       card-skeleton.tsx  - CardSkeleton, StatsCardSkeleton
       skeleton.tsx       - Base Skeleton component (pulse animation)
-      toaster.tsx        - Custom toast renderer (bottom-right, semantic colors)
+      toaster.tsx        - Custom toast renderer (bottom-right, slide-in/out animations)
       ...                - Shadcn UI components
   pages/
     dashboard.tsx        - Overview with stats, charts, recent activity
@@ -160,11 +161,11 @@ Status badges and change indicators use Tailwind semantic colors intentionally d
 ### Key Components
 - **DataTable**: Generic table with search, filters, sorting, pagination, checkboxes, row actions, empty state illustrations
 - **StatusBadge**: Auto-maps status strings to success/error/warning/info/neutral color variants
-- **FormDialog**: Standard dialog for create/edit forms (no popup animations)
+- **FormDialog**: Standard dialog for create/edit forms (scale+fade animation on open)
 - **StatsCard**: Dashboard metric card with icon and change indicator
-- **EmptyState**: Reusable empty state with illustration, title, description, and optional action button
+- **EmptyState**: Reusable empty state with illustration, title, description, and optional action button (fade+scale on mount)
 - **PageBanner**: Full-width indigo banner with 3D PNG icon (48×48), title, description, optional action button. Used at the top of every HR page. Icons stored in `client/public/3d-icons/`
-- **AnnouncementBanner**: Full-width blue bar at the very top of the app (above sidebar + content), dismissible per session via sessionStorage (`announcement-dismissed` key). Renders in `App.tsx`
+- **AnnouncementBanner**: Full-width blue bar at the very top of the app (above sidebar + content), dismissible per session via sessionStorage (`announcement-dismissed` key). Slide-down on mount, slide-up on dismiss. Renders in `App.tsx`
 - **DocumentPreviewModal**: Full modal for previewing documents — renders mock content by type (PDF sections, DOCX templates, XLSX tables, certificates) with prev/next navigation
 - **Spinner/PageSpinner/InlineSpinner**: Loading spinners in 5 sizes (xs→xl). PageSpinner is centered with optional label. InlineSpinner for buttons
 - **TableSkeleton/CardSkeleton/StatsCardSkeleton**: Skeleton loading states mimicking real component layouts
@@ -173,7 +174,7 @@ Status badges and change indicators use Tailwind semantic colors intentionally d
 - Custom module-level toast store (not React context). 4 semantic types: success (green), error (red), info (blue), warning (amber)
 - API: `showSuccess(title, desc?)`, `showError(title, desc?)`, `showInfo(title, desc?)`, `showWarning(title, desc?)`
 - Legacy compat: `toast({ title, description, variant })` still works
-- Position: fixed bottom-right, auto-dismiss 3s, no animations (user preference)
+- Position: fixed bottom-right, auto-dismiss 3s, slide-in/out animation with layout reflow
 
 ### Loading States
 - All 8 HR pages use `useSimulatedLoading(500)` hook for a brief skeleton flash on mount
@@ -209,6 +210,28 @@ Status badges and change indicators use Tailwind semantic colors intentionally d
 ### Data Model
 All types defined in `shared/schema.ts` with Zod validation schemas.
 Currently using frontend state (useState) with mock data. Database integration planned for later phase.
+
+## Animation System
+Uses `motion/react` (Framer Motion) for professional, polished animations throughout the app.
+
+### Animation Primitives (`client/src/components/ui/animated.tsx`)
+- **Fade**: Opacity 0→1 with optional direction (up/down/left/right) and distance
+- **Scale**: Scale 0.95→1 + fade, for mount reveals
+- **Slide**: Slide from direction + fade
+- **Stagger / StaggerItem**: Container that staggers children's animations (configurable interval)
+- **PageTransition**: Route-level wrapper with subtle fade + slide-up (8px, 0.35s)
+- **AnimatedList**: Stagger-animated list wrapping each child
+
+### Animation Patterns
+- **Page transitions**: Every page wraps scrollable content in `PageTransition` (fade+slide-up on mount)
+- **Dashboard**: Stats cards use `Stagger` (50ms apart), section panels use `Fade` with increasing delays (0.15s, 0.25s)
+- **Overlays**: Dialog/AlertDialog use motion scale+fade (0.95→1), Sheet slides from edge with spring physics, dropdown/popover/tooltip/select use refined CSS animations
+- **Toaster**: AnimatePresence + motion for slide-in from right, slide-out, and layout reflow
+- **Sidebar**: Staggered nav items (30ms apart), active indicator with `layoutId` animation
+- **Banner**: AnnouncementBanner slides down on mount, slides up on dismiss
+- **Buttons**: CSS `active:scale-[0.97]` micro-interaction
+- **PageBanner**: Fade+slide-down on mount
+- **EmptyState**: Scale+fade on mount
 
 ## Running
 - `npm run dev` starts both Express backend and Vite frontend dev server
