@@ -17,6 +17,7 @@ import {
 import { attendanceRecords as initialAttendance, employees } from "@/lib/mock-data";
 import type { AttendanceRecord } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { getPersonAvatar } from "@/lib/avatars";
 import { StatsCard } from "@/components/hr/stats-card";
 import { CheckCircle2, Clock, AlertCircle, CalendarDays } from "lucide-react";
 
@@ -48,9 +49,7 @@ export default function Attendance() {
       sortable: true,
       render: (item) => (
         <div className="flex items-center gap-2.5">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-            {item.employeeName.split(" ").map((n) => n[0]).join("")}
-          </div>
+          <img src={getPersonAvatar(item.employeeName, 28)} alt={item.employeeName} className="size-7 shrink-0 rounded-full" />
           <div>
             <p className="text-sm font-medium">{item.employeeName}</p>
             <p className="text-xs text-muted-foreground">{item.department}</p>

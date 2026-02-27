@@ -12,6 +12,7 @@ import {
   Component,
   Grid3X3,
 } from "lucide-react";
+import logoImg from "@/assets/logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -51,13 +52,11 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary">
-            <span className="text-sm font-bold text-primary-foreground">L</span>
-          </div>
+          <img src={logoImg} alt="TeamSync" className="size-8 shrink-0 object-contain" />
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-semibold tracking-tight" data-testid="text-brand-name">LUMIN HR</span>
-              <span className="text-[11px] text-muted-foreground">Management Portal</span>
+              <span className="text-sm font-semibold tracking-tight" data-testid="text-brand-name">TeamSync</span>
+              <span className="text-[11px] text-muted-foreground">HR Portal</span>
             </div>
           )}
         </div>

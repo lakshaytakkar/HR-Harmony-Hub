@@ -1,7 +1,7 @@
-# LUMIN HR - Human Resources Management Portal
+# TeamSync - HR Management Portal
 
 ## Overview
-A custom HR Management Portal built with the LUMIN design system. Focused on perfect UI/UX, standardized components, comprehensive CRUD operations, and recruiter-ready functionality.
+A custom HR Management Portal (formerly LUMIN HR, now branded as TeamSync). Focused on perfect UI/UX, standardized components, comprehensive CRUD operations, and recruiter-ready functionality. Uses DiceBear Micah avatars for people and DiceBear Glass avatars for non-human entities (departments, documents).
 
 ## Tech Stack
 - **Frontend**: React + TypeScript, Tailwind CSS, Shadcn UI, Wouter (routing)

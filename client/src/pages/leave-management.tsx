@@ -18,6 +18,7 @@ import {
 import { leaveRequests as initialLeaveRequests, employees } from "@/lib/mock-data";
 import type { LeaveRequest } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { getPersonAvatar } from "@/lib/avatars";
 
 export default function LeaveManagement() {
   const [data, setData] = useState<LeaveRequest[]>(initialLeaveRequests);
@@ -42,9 +43,7 @@ export default function LeaveManagement() {
       sortable: true,
       render: (item) => (
         <div className="flex items-center gap-2.5">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-            {item.employeeName.split(" ").map((n) => n[0]).join("")}
-          </div>
+          <img src={getPersonAvatar(item.employeeName, 28)} alt={item.employeeName} className="size-7 shrink-0 rounded-full" />
           <span className="text-sm font-medium">{item.employeeName}</span>
         </div>
       ),

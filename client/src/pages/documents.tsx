@@ -17,6 +17,7 @@ import {
 import { documents as initialDocuments } from "@/lib/mock-data";
 import type { HRDocument } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { getThingAvatar } from "@/lib/avatars";
 import { FileText } from "lucide-react";
 
 const fileTypeIcons: Record<string, string> = {
@@ -47,9 +48,7 @@ export default function Documents() {
       sortable: true,
       render: (item) => (
         <div className="flex items-center gap-2.5">
-          <div className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${fileTypeIcons[item.fileType] || "bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-400"}`}>
-            <FileText className="size-3.5" />
-          </div>
+          <img src={getThingAvatar(item.title, 32)} alt={item.title} className="size-8 shrink-0 rounded-lg" />
           <div>
             <p className="text-sm font-medium">{item.title}</p>
             <p className="text-xs text-muted-foreground">{item.fileType} - {item.fileSize}</p>

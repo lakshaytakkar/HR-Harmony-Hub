@@ -18,7 +18,7 @@ import {
 import { departments as initialDepartments } from "@/lib/mock-data";
 import type { Department } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Users } from "lucide-react";
+import { getThingAvatar } from "@/lib/avatars";
 
 export default function Departments() {
   const [data, setData] = useState<Department[]>(initialDepartments);
@@ -40,9 +40,7 @@ export default function Departments() {
       sortable: true,
       render: (item) => (
         <div className="flex items-center gap-2.5">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Users className="size-3.5" />
-          </div>
+          <img src={getThingAvatar(item.name, 32)} alt={item.name} className="size-8 shrink-0 rounded-lg" />
           <div>
             <p className="text-sm font-medium">{item.name}</p>
             <p className="text-xs text-muted-foreground line-clamp-1">{item.description}</p>

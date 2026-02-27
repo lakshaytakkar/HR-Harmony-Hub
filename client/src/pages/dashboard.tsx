@@ -4,6 +4,7 @@ import emptyCalendarImg from "@/assets/illustrations/empty-calendar.png";
 import { StatsCard } from "@/components/hr/stats-card";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { employees, candidates, jobPostings, leaveRequests, attendanceRecords } from "@/lib/mock-data";
+import { getPersonAvatar } from "@/lib/avatars";
 
 export default function Dashboard() {
   const activeEmployees = employees.filter((e) => e.status === "Active").length;
@@ -71,9 +72,7 @@ export default function Dashboard() {
                   data-testid={`card-candidate-${candidate.id}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-                      {candidate.name.split(" ").map((n) => n[0]).join("")}
-                    </div>
+                    <img src={getPersonAvatar(candidate.name, 32)} alt={candidate.name} className="size-8 rounded-full" />
                     <div>
                       <p className="text-sm font-medium">{candidate.name}</p>
                       <p className="text-xs text-muted-foreground">{candidate.position}</p>
@@ -102,9 +101,7 @@ export default function Dashboard() {
                     data-testid={`card-leave-${leave.id}`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex size-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900 text-xs font-medium text-amber-700 dark:text-amber-300">
-                        <CalendarDays className="size-3.5" />
-                      </div>
+                      <img src={getPersonAvatar(leave.employeeName, 32)} alt={leave.employeeName} className="size-8 rounded-full" />
                       <div>
                         <p className="text-sm font-medium">{leave.employeeName}</p>
                         <p className="text-xs text-muted-foreground">

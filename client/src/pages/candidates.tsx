@@ -18,6 +18,7 @@ import { candidates as initialCandidates } from "@/lib/mock-data";
 import type { Candidate } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
+import { getPersonAvatar } from "@/lib/avatars";
 
 export default function Candidates() {
   const [data, setData] = useState<Candidate[]>(initialCandidates);
@@ -43,9 +44,7 @@ export default function Candidates() {
       sortable: true,
       render: (item) => (
         <div className="flex items-center gap-2.5">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-            {item.name.split(" ").map((n) => n[0]).join("")}
-          </div>
+          <img src={getPersonAvatar(item.name, 28)} alt={item.name} className="size-7 shrink-0 rounded-full" />
           <div>
             <p className="text-sm font-medium">{item.name}</p>
             <p className="text-xs text-muted-foreground">{item.email}</p>

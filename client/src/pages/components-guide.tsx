@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/hr/status-badge";
+import { getPersonAvatar, getThingAvatar } from "@/lib/avatars";
+import logoImg from "@/assets/logo.png";
 import {
   Plus,
   Download,
@@ -447,26 +449,20 @@ function LogosCursorsTab() {
           <div className="grid grid-cols-3 gap-6">
             <div className="flex flex-col items-center gap-4 rounded-xl bg-white p-8 shadow-[0px_1px_2px_rgba(13,13,18,0.06)]" data-testid="logo-primary">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary">
-                  <span className="text-lg font-bold text-primary-foreground">L</span>
-                </div>
-                <span className="text-xl font-semibold tracking-tight">LUMIN HR</span>
+                <img src={logoImg} alt="TeamSync" className="size-10 object-contain" />
+                <span className="text-xl font-semibold tracking-tight">TeamSync</span>
               </div>
               <p className="text-xs text-[#666D80]">Primary Logo</p>
             </div>
             <div className="flex flex-col items-center gap-4 rounded-xl bg-[#0D0D12] p-8 shadow-[0px_1px_2px_rgba(13,13,18,0.06)]" data-testid="logo-dark">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white">
-                  <span className="text-lg font-bold text-[#0D0D12]">L</span>
-                </div>
-                <span className="text-xl font-semibold tracking-tight text-white">LUMIN HR</span>
+                <img src={logoImg} alt="TeamSync" className="size-10 object-contain" />
+                <span className="text-xl font-semibold tracking-tight text-white">TeamSync</span>
               </div>
               <p className="text-xs text-[#818898]">Dark Background</p>
             </div>
             <div className="flex flex-col items-center gap-4 rounded-xl bg-white p-8 shadow-[0px_1px_2px_rgba(13,13,18,0.06)]" data-testid="logo-icon">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-                <span className="text-2xl font-bold text-primary-foreground">L</span>
-              </div>
+              <img src={logoImg} alt="TeamSync" className="size-12 object-contain" />
               <p className="text-xs text-[#666D80]">Icon Only</p>
             </div>
           </div>
@@ -693,12 +689,12 @@ function AvatarTab() {
           <div className="flex items-end gap-6">
             {sizes.map((s) => (
               <div key={s.label} className="flex flex-col items-center gap-3" data-testid={`avatar-size-${s.label.toLowerCase()}`}>
-                <div
-                  className="flex items-center justify-center rounded-full bg-primary/10 font-semibold text-primary"
+                <img
+                  src={getPersonAvatar("Rahul Patel", s.size)}
+                  alt="RP"
+                  className="rounded-full"
                   style={{ width: s.size, height: s.size }}
-                >
-                  <span className={s.text}>RP</span>
-                </div>
+                />
                 <p className="text-xs text-[#666D80]">{s.label} ({s.size}px)</p>
               </div>
             ))}
@@ -710,36 +706,25 @@ function AvatarTab() {
         <SectionTitle>Avatar Types</SectionTitle>
         <div className="rounded-2xl bg-[#F8F9FB] p-8">
           <div className="grid grid-cols-3 gap-8">
-            <SubSection title="Initials">
+            <SubSection title="Micah (People)">
               <div className="flex items-center gap-4">
-                {[
-                  { initials: "RP", bg: "bg-primary/10", text: "text-primary" },
-                  { initials: "AS", bg: "bg-emerald-50", text: "text-emerald-700" },
-                  { initials: "VK", bg: "bg-amber-50", text: "text-amber-700" },
-                  { initials: "PM", bg: "bg-red-50", text: "text-red-700" },
-                ].map((a) => (
-                  <div key={a.initials} className={`flex size-10 items-center justify-center rounded-full ${a.bg} text-sm font-semibold ${a.text}`}>
-                    {a.initials}
-                  </div>
+                {["Rahul Patel", "Ananya Sharma", "Vikram Kumar", "Priya Mehta"].map((name) => (
+                  <img key={name} src={getPersonAvatar(name, 40)} alt={name} className="size-10 rounded-full" />
                 ))}
               </div>
             </SubSection>
-            <SubSection title="Icon Fallback">
+            <SubSection title="Glass (Things)">
               <div className="flex items-center gap-4">
-                {[40, 32, 24].map((s) => (
-                  <div key={s} className="flex items-center justify-center rounded-full bg-[#ECEFF3]" style={{ width: s, height: s }}>
-                    <User className="text-[#818898]" style={{ width: s * 0.5, height: s * 0.5 }} />
-                  </div>
+                {["Engineering", "Marketing", "Finance"].map((name) => (
+                  <img key={name} src={getThingAvatar(name, 40)} alt={name} className="size-10 rounded-lg" />
                 ))}
               </div>
             </SubSection>
             <SubSection title="With Status">
               <div className="flex items-center gap-4">
-                {statusIndicators.map((si) => (
+                {statusIndicators.map((si, i) => (
                   <div key={si.label} className="relative" data-testid={`avatar-status-${si.label.toLowerCase()}`}>
-                    <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                      RP
-                    </div>
+                    <img src={getPersonAvatar(["Rahul Patel", "Ananya Sharma", "Vikram Kumar", "Priya Mehta"][i], 40)} alt={si.label} className="size-10 rounded-full" />
                     <span
                       className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-white"
                       style={{ backgroundColor: si.color }}
@@ -758,20 +743,14 @@ function AvatarTab() {
           <div className="flex flex-col gap-6">
             <SubSection title="Overlapping Stack">
               <div className="flex -space-x-2">
-                {[
-                  { initials: "RP", bg: "bg-primary/10", text: "text-primary" },
-                  { initials: "AS", bg: "bg-emerald-50", text: "text-emerald-700" },
-                  { initials: "VK", bg: "bg-amber-50", text: "text-amber-700" },
-                  { initials: "PM", bg: "bg-red-50", text: "text-red-700" },
-                  { initials: "NK", bg: "bg-blue-50", text: "text-blue-700" },
-                ].map((a, i) => (
-                  <div
-                    key={a.initials}
-                    className={`flex size-9 items-center justify-center rounded-full border-2 border-white ${a.bg} text-xs font-semibold ${a.text}`}
+                {["Rahul Patel", "Ananya Sharma", "Vikram Kumar", "Priya Mehta", "Neha Kapoor"].map((name, i) => (
+                  <img
+                    key={name}
+                    src={getPersonAvatar(name, 36)}
+                    alt={name}
+                    className="size-9 rounded-full border-2 border-white"
                     style={{ zIndex: 5 - i }}
-                  >
-                    {a.initials}
-                  </div>
+                  />
                 ))}
                 <div className="flex size-9 items-center justify-center rounded-full border-2 border-white bg-[#ECEFF3] text-[10px] font-medium text-[#666D80]">
                   +3
@@ -793,7 +772,7 @@ export default function ComponentsGuide() {
         <div className="px-6 py-6">
           <PageHeader
             title="Components"
-            description="LUMIN UI component library — buttons, forms, badges, avatars, and more."
+            description="TeamSync UI component library — buttons, forms, badges, avatars, and more."
           />
           <div className="mt-6">
             <Tabs defaultValue="buttons" data-testid="tabs-components">

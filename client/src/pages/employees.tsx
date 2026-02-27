@@ -17,6 +17,7 @@ import {
 import { employees as initialEmployees } from "@/lib/mock-data";
 import type { Employee } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { getPersonAvatar } from "@/lib/avatars";
 
 export default function Employees() {
   const [data, setData] = useState<Employee[]>(initialEmployees);
@@ -49,9 +50,7 @@ export default function Employees() {
       sortable: true,
       render: (item) => (
         <div className="flex items-center gap-2.5">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-            {item.firstName[0]}{item.lastName[0]}
-          </div>
+          <img src={getPersonAvatar(`${item.firstName} ${item.lastName}`, 28)} alt={`${item.firstName[0]}${item.lastName[0]}`} className="size-7 shrink-0 rounded-full" />
           <div>
             <p className="text-sm font-medium">{item.firstName} {item.lastName}</p>
             <p className="text-xs text-muted-foreground">{item.email}</p>

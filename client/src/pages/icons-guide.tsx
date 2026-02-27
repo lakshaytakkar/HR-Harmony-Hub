@@ -342,7 +342,7 @@ export default function IconsGuide() {
         <div className="px-6 py-6">
           <PageHeader
             title="Icons"
-            description="Lucide icon library — all icons used across the LUMIN design system."
+            description="Lucide icon library — all icons used across the TeamSync design system."
           />
 
           <div className="mt-6 mb-8 max-w-sm">

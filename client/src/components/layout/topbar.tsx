@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { getPersonAvatar } from "@/lib/avatars";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,9 +52,7 @@ export function Topbar({ title, subtitle }: TopbarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2" data-testid="button-user-menu">
-              <div className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                SP
-              </div>
+              <img src={getPersonAvatar("Sneha Patel", 28)} alt="SP" className="size-7 rounded-full" />
               <div className="hidden flex-col items-start md:flex">
                 <span className="text-xs font-medium">Sneha Patel</span>
                 <span className="text-[10px] text-muted-foreground">HR Manager</span>

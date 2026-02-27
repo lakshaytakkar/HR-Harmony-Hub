@@ -263,7 +263,7 @@ export default function StyleGuide() {
         <div className="px-6 py-6">
           <PageHeader
             title="Style Guide"
-            description="LUMIN Design System foundation — typography, colors, and shadows."
+            description="TeamSync Design System foundation — typography, colors, and shadows."
           />
           <div className="mt-6">
             <Tabs defaultValue="typography" data-testid="tabs-style-guide">
