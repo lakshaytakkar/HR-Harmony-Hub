@@ -104,8 +104,8 @@ export function TopNavigation() {
   const showSubNav = activeCategory && activeCategory.items.length > 1;
 
   return (
-    <div className="shrink-0 overflow-hidden">
-      <header className="flex h-14 items-center justify-between gap-2 border-b bg-background px-6 lg:px-10 overflow-hidden">
+    <div className="shrink-0 overflow-y-hidden">
+      <header className="flex h-14 items-center justify-between gap-2 border-b bg-background px-6 lg:px-10 overflow-hidden overflow-y-hidden">
         <div className="flex items-center gap-6 min-w-0">
           <Link href="/" className="flex items-center gap-2.5 shrink-0" data-testid="nav-brand">
             <TeamSyncMascot size={30} />
@@ -169,7 +169,7 @@ export function TopNavigation() {
                 <img src={getPersonAvatar("Sneha Patel", 32)} alt="SP" className="size-8 rounded-full" />
                 <div className="hidden flex-col items-start md:flex">
                   <span className="text-sm font-medium">Sneha Patel</span>
-                  <span className="text-xs text-muted-foreground">HR Manager</span>
+                  <span className="text-[13px] text-muted-foreground">HR Manager</span>
                 </div>
                 <ChevronDown className="size-3.5 text-muted-foreground" />
               </Button>

@@ -19,12 +19,12 @@ interface TopbarProps {
 
 export function Topbar({ title, subtitle }: TopbarProps) {
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-background px-4">
+    <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-background px-4 overflow-hidden">
       <div className="flex items-center gap-3">
         <SidebarTrigger data-testid="button-sidebar-toggle" />
         <Separator orientation="vertical" className="h-5" />
         <div className="flex flex-col">
-          <h1 className="text-sm font-semibold font-heading leading-tight" data-testid="text-page-title">{title}</h1>
+          <h1 className="text-base font-semibold font-heading leading-tight" data-testid="text-page-title">{title}</h1>
           {subtitle && (
             <p className="text-xs text-muted-foreground" data-testid="text-page-subtitle">{subtitle}</p>
           )}
@@ -37,7 +37,7 @@ export function Topbar({ title, subtitle }: TopbarProps) {
           <Input
             type="search"
             placeholder="Search..."
-            className="h-8 w-56 pl-8 text-xs"
+            className="h-8 w-56 pl-8 text-sm"
             data-testid="input-global-search"
           />
         </div>
@@ -54,8 +54,8 @@ export function Topbar({ title, subtitle }: TopbarProps) {
             <Button variant="ghost" size="sm" className="gap-2" data-testid="button-user-menu">
               <img src={getPersonAvatar("Sneha Patel", 28)} alt="SP" className="size-7 rounded-full" />
               <div className="hidden flex-col items-start md:flex">
-                <span className="text-xs font-medium">Sneha Patel</span>
-                <span className="text-[10px] text-muted-foreground">HR Manager</span>
+                <span className="text-sm font-medium">Sneha Patel</span>
+                <span className="text-xs text-muted-foreground">HR Manager</span>
               </div>
               <ChevronDown className="size-3 text-muted-foreground" />
             </Button>

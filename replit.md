@@ -9,10 +9,10 @@ Not specified.
 ## System Architecture
 
 ### Frontend Technology
-The frontend is built using React with TypeScript, styled with Tailwind CSS, and utilizes Shadcn UI for componentry. Routing is handled by Wouter, and animations are powered by `motion/react` (Framer Motion). Fonts include Plus Jakarta Sans for headings and Inter for body text.
+The frontend is built using React with TypeScript, styled with Tailwind CSS, and utilizes Shadcn UI for componentry. Routing is handled by Wouter, and animations are powered by `motion/react` (Framer Motion). The single font family is Plus Jakarta Sans, used for both headings and body text.
 
 ### Design System
-The UI/UX is inspired by the Dropship.io design system, featuring custom brand tokens mapped to CSS variables for consistent theming. This includes a primary blue palette, a comprehensive greyscale, and semantic status colors for indicators. Shadows are meticulously defined, and typography scales are established using Plus Jakarta Sans and Inter.
+The UI/UX is inspired by the Dropship.io design system, featuring custom brand tokens mapped to CSS variables for consistent theming. This includes a primary blue palette, a comprehensive greyscale, and semantic status colors for indicators. Shadows are meticulously defined, and typography scales are established using Plus Jakarta Sans as the unified font family.
 
 ### Core UI/UX Decisions and Components
 - **Two-Level Horizontal Top Navigation**: Replaces traditional sidebars, offering category-based (Level 1: Dashboard, People, Recruitment, Operations, Finance, Projects, Design System) and sub-page navigation (Level 2) with animated indicators.
@@ -53,7 +53,7 @@ Data models for all HR entities (Employee, Candidate, Department, JobPosting, Le
 - **Wouter**: React routing library.
 - **motion/react (Framer Motion)**: Animation library.
 - **Express.js**: Backend web framework.
-- **Google Fonts**: Plus Jakarta Sans and Inter for typography.
+- **Google Fonts**: Plus Jakarta Sans (unified font for all UI text).
 - **DiceBear**: For generating Micah (people) and Glass (entities) avatars.
 - **lucide-react**: Icon library.
 - **Zod**: Schema declaration and validation library.

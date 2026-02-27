@@ -191,7 +191,7 @@ export function DataTable<T extends { id: string }>({
               setSearch(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-8 w-60 pl-8 text-xs"
+            className="h-8 w-60 pl-8 text-sm"
             data-testid="input-table-search"
           />
         </div>
@@ -207,7 +207,7 @@ export function DataTable<T extends { id: string }>({
               }}
             >
               <SelectTrigger
-                className="h-8 w-auto min-w-[120px] text-xs"
+                className="h-8 w-auto min-w-[120px] text-sm"
                 data-testid={`filter-${filter.key}`}
               >
                 <Filter className="mr-1.5 size-3 text-muted-foreground" />
@@ -240,7 +240,7 @@ export function DataTable<T extends { id: string }>({
                 <th
                   key={col.key}
                   className={cn(
-                    "px-3 py-2.5 text-left text-xs font-medium text-muted-foreground",
+                    "px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground",
                     col.width
                   )}
                 >
@@ -352,7 +352,7 @@ export function DataTable<T extends { id: string }>({
 
       {filteredData.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3">
-          <p className="text-xs text-muted-foreground" data-testid="text-pagination-info">
+          <p className="text-sm text-muted-foreground" data-testid="text-pagination-info">
             Showing {startIndex} - {endIndex} of {filteredData.length} results
           </p>
           <div className="flex items-center gap-1">
@@ -382,7 +382,7 @@ export function DataTable<T extends { id: string }>({
                   key={pageNum}
                   size="icon"
                   variant={currentPage === pageNum ? "default" : "ghost"}
-                  className="size-7 text-xs"
+                  className="size-7 text-sm"
                   onClick={() => setCurrentPage(pageNum)}
                   data-testid={`button-page-${pageNum}`}
                 >

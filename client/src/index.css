@@ -14,7 +14,7 @@
   --secondary: 226 42% 96%;
   --secondary-foreground: 225 47% 15%;
   --muted: 226 30% 95%;
-  --muted-foreground: 224 12% 50%;
+  --muted-foreground: 224 15% 42%;
   --accent: 226 42% 98%;
   --accent-foreground: 225 47% 25%;
   --destructive: 0 85% 45%;
@@ -35,8 +35,8 @@
   --chart-3: 230 75% 45%;
   --chart-4: 223 90% 94%;
   --chart-5: 225 15% 40%;
-  --font-sans: 'Inter', sans-serif;
-  --font-heading: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: 0.75rem;
@@ -62,7 +62,7 @@
   --secondary: 225 20% 18%;
   --secondary-foreground: 226 30% 95%;
   --muted: 225 20% 18%;
-  --muted-foreground: 226 15% 65%;
+  --muted-foreground: 226 18% 62%;
   --accent: 225 20% 18%;
   --accent-foreground: 226 30% 95%;
   --destructive: 0 85% 55%;

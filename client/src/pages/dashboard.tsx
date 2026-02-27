@@ -82,7 +82,7 @@ export default function Dashboard() {
           <div className="rounded-lg border bg-background">
             <div className="flex items-center justify-between border-b px-5 py-4">
               <div>
-                <h3 className="text-sm font-semibold font-heading">Recent Candidates</h3>
+                <h3 className="text-base font-semibold font-heading">Recent Candidates</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Latest applications received</p>
               </div>
               <StatusBadge status={`${activeCandidates} active`} variant="info" />
@@ -110,7 +110,7 @@ export default function Dashboard() {
           <div className="rounded-lg border bg-background">
             <div className="flex items-center justify-between border-b px-5 py-4">
               <div>
-                <h3 className="text-sm font-semibold font-heading">Pending Leave Requests</h3>
+                <h3 className="text-base font-semibold font-heading">Pending Leave Requests</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Requires your approval</p>
               </div>
               <StatusBadge status={`${pendingLeaves} pending`} variant="warning" />
@@ -159,7 +159,7 @@ export default function Dashboard() {
         <Fade direction="up" delay={0.25} className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="rounded-lg border bg-background">
             <div className="border-b px-5 py-4">
-              <h3 className="text-sm font-semibold font-heading">Today's Attendance</h3>
+              <h3 className="text-base font-semibold font-heading">Today's Attendance</h3>
               <p className="text-xs text-muted-foreground mt-0.5">Feb 27, 2025</p>
             </div>
             <div className="p-5">
@@ -169,7 +169,7 @@ export default function Dashboard() {
                     <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <span className="text-lg font-semibold font-heading">{todayPresent}</span>
-                  <span className="text-[10px] text-muted-foreground">Present</span>
+                  <span className="text-xs text-muted-foreground">Present</span>
                 </div>
                 <div className="flex flex-col items-center gap-1 flex-1">
                   <div className="flex size-10 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950">
@@ -178,7 +178,7 @@ export default function Dashboard() {
                   <span className="text-lg font-semibold font-heading">
                     {attendanceRecords.filter((a) => a.status === "Late").length}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">Late</span>
+                  <span className="text-xs text-muted-foreground">Late</span>
                 </div>
                 <div className="flex flex-col items-center gap-1 flex-1">
                   <div className="flex size-10 items-center justify-center rounded-full bg-red-50 dark:bg-red-950">
@@ -187,7 +187,7 @@ export default function Dashboard() {
                   <span className="text-lg font-semibold font-heading">
                     {attendanceRecords.filter((a) => a.status === "Absent").length}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">Absent</span>
+                  <span className="text-xs text-muted-foreground">Absent</span>
                 </div>
                 <div className="flex flex-col items-center gap-1 flex-1">
                   <div className="flex size-10 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950">
@@ -196,7 +196,7 @@ export default function Dashboard() {
                   <span className="text-lg font-semibold font-heading">
                     {attendanceRecords.filter((a) => a.status === "Half Day").length}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">Half Day</span>
+                  <span className="text-xs text-muted-foreground">Half Day</span>
                 </div>
               </div>
             </div>
@@ -204,7 +204,7 @@ export default function Dashboard() {
 
           <div className="rounded-lg border bg-background lg:col-span-2">
             <div className="border-b px-5 py-4">
-              <h3 className="text-sm font-semibold font-heading">Department Overview</h3>
+              <h3 className="text-base font-semibold font-heading">Department Overview</h3>
               <p className="text-xs text-muted-foreground mt-0.5">Team distribution</p>
             </div>
             <div className="divide-y">
