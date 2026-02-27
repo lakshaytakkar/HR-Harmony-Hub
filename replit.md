@@ -66,7 +66,7 @@ client/src/
 ## Design System Foundation (Dropship.io Tokens)
 
 ### CSS Variable Mapping
-All Dropship.io tokens are precisely mapped to CSS custom properties in `client/src/index.css`. Every Shadcn/Tailwind component automatically uses the correct colors, shadows, and spacing via `hsl(var(--token))`. The style guide pages are the single source of truth for the design system.
+All Dropship.io tokens are mapped to standard Shadcn CSS custom properties in `client/src/index.css`. Every Shadcn/Tailwind component automatically uses the correct colors, shadows, and spacing via `hsl(var(--token))`. Shadcn UI components use standard code with branding applied only through CSS variables and minimal shadow additions on buttons. No custom elevate system or border-intensity system — pure standard Shadcn patterns.
 
 | CSS Variable | Token | Hex |
 |---|---|---|
@@ -80,7 +80,7 @@ All Dropship.io tokens are precisely mapped to CSS custom properties in `client/
 | `--secondary-foreground` | Secondary Text | #151E3A |
 | `--accent` | Accent | #F8F9FC |
 | `--input` | Input Border | #E2E6F3 |
-| `--sidebar` | Sidebar Bg | #F8F9FC |
+| `--sidebar-background` | Sidebar Bg | #F8F9FC |
 
 Shadows use `rgba(21,30,58,...)` base color (from `--shadow-xs` through `--shadow-2xl`).
 Button shadows: `--shadow-btn-primary` (blue inset glow), `--shadow-btn-secondary` (subtle ring shadow).
@@ -152,9 +152,8 @@ Status badges and change indicators use Tailwind semantic colors intentionally d
 | Btn Secondary | rgba(21,30,58,0.12) 0px 1px 2px 0px, rgba(21,30,58,0.12) 0px 0px 0px 1px |
 
 ### Border Radius
-- Buttons & Inputs: 12px (rounded-[12px])
-- Small buttons/Icon buttons: 10px (rounded-[10px])
-- Cards: 12px (rounded-lg)
+- Standard Shadcn `rounded-md` (10px from config), `rounded-lg` (12px from config)
+- Cards: `rounded-lg` (12px)
 - General: `--radius: 0.75rem` (12px)
 
 

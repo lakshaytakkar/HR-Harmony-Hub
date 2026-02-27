@@ -47,17 +47,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <SidebarProvider style={sidebarStyle as React.CSSProperties}>
-          <div className="flex h-screen w-full flex-col">
-            <AnnouncementBanner />
-            <div className="flex flex-1 overflow-hidden">
-              <AppSidebar />
-              <main className="flex-1 overflow-hidden">
-                <Router />
-              </main>
-            </div>
-          </div>
-        </SidebarProvider>
+        <div className="flex h-screen w-full flex-col">
+          <AnnouncementBanner />
+          <SidebarProvider style={sidebarStyle as React.CSSProperties} className="flex-1 min-h-0">
+            <AppSidebar />
+            <main className="flex-1 overflow-hidden">
+              <Router />
+            </main>
+          </SidebarProvider>
+        </div>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
