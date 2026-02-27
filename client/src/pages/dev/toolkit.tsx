@@ -1,0 +1,572 @@
+import { useState } from "react";
+import {
+  Wrench,
+  Shield,
+  AlertTriangle,
+  Clock,
+  ExternalLink,
+  Plus,
+  Pin,
+  Key,
+  Globe,
+  Database,
+  Bot,
+  CreditCard,
+  BarChart3,
+  Code2,
+  GitBranch,
+  BookOpen,
+  Paintbrush,
+  Smile,
+  FileText,
+  Navigation,
+  StickyNote,
+  Figma,
+  Copy,
+  type LucideIcon,
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StatsCard } from "@/components/hr/stats-card";
+import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
+import { StatusBadge } from "@/components/hr/status-badge";
+import { DataTable, type Column } from "@/components/hr/data-table";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { FormDialog } from "@/components/hr/form-dialog";
+import { PageBanner } from "@/components/hr/page-banner";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
+import { appCredentials, importantLinks, type AppCredential, type ImportantLink } from "@/lib/mock-data-dev";
+import { useToast } from "@/hooks/use-toast";
+
+const iconMap: Record<string, LucideIcon> = {
+  Code2,
+  Database,
+  GitBranch,
+  BookOpen,
+  Paintbrush,
+  Smile,
+  CreditCard,
+  Globe,
+  Bot,
+  FileText,
+  Navigation,
+  StickyNote,
+  Figma,
+  BarChart3,
+  Pin,
+};
+
+function getIconComponent(iconName: string): LucideIcon {
+  return iconMap[iconName] || Globe;
+}
+
+const categoryVariant: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
+  hosting: "info",
+  database: "success",
+  ai: "warning",
+  payment: "neutral",
+  analytics: "info",
+  other: "neutral",
+};
+
+const envVariant: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
+  production: "success",
+  staging: "warning",
+  dev: "info",
+};
+
+const statusVariant: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
+  active: "success",
+  expired: "error",
+  pending: "warning",
+};
+
+const linkCategoryVariant: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
+  tool: "info",
+  docs: "neutral",
+  dashboard: "success",
+  repo: "warning",
+};
+
+const credentialColumns: Column<AppCredential>[] = [
+  {
+    key: "appName",
+    header: "App",
+    sortable: true,
+    render: (item) => (
+      <div className="flex items-center gap-2">
+        <div className="flex size-8 items-center justify-center rounded-md bg-primary/10">
+          <Key className="size-3.5 text-primary" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-medium truncate">{item.appName}</p>
+          <a
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground hover:text-primary truncate flex items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+            data-testid={`link-credential-url-${item.id}`}
+          >
+            {item.url.replace("https://", "")}
+            <ExternalLink className="size-2.5 shrink-0" />
+          </a>
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: "category",
+    header: "Category",
+    sortable: true,
+    render: (item) => (
+      <StatusBadge
+        status={item.category.charAt(0).toUpperCase() + item.category.slice(1)}
+        variant={categoryVariant[item.category]}
+      />
+    ),
+  },
+  {
+    key: "environment",
+    header: "Environment",
+    sortable: true,
+    render: (item) => (
+      <StatusBadge
+        status={item.environment.charAt(0).toUpperCase() + item.environment.slice(1)}
+        variant={envVariant[item.environment]}
+      />
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    sortable: true,
+    render: (item) => (
+      <StatusBadge
+        status={item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+        variant={statusVariant[item.status]}
+      />
+    ),
+  },
+  {
+    key: "apiKeyHint",
+    header: "API Key",
+    render: (item) => (
+      <code className="rounded-md bg-muted px-2 py-1 text-xs font-mono" data-testid={`text-api-key-${item.id}`}>
+        {item.apiKeyHint}
+      </code>
+    ),
+  },
+  {
+    key: "notes",
+    header: "Notes",
+    render: (item) => (
+      <p className="text-xs text-muted-foreground max-w-[200px] truncate">{item.notes}</p>
+    ),
+  },
+  {
+    key: "addedDate",
+    header: "Added",
+    sortable: true,
+    render: (item) => (
+      <span className="text-xs text-muted-foreground">{item.addedDate}</span>
+    ),
+  },
+];
+
+export default function ToolkitPage() {
+  const loading = useSimulatedLoading();
+  const { toast } = useToast();
+  const [credentialDialogOpen, setCredentialDialogOpen] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkCategoryFilter, setLinkCategoryFilter] = useState<string>("all");
+
+  const activeCount = appCredentials.filter((c) => c.status === "active").length;
+  const expiredCount = appCredentials.filter((c) => c.status === "expired").length;
+  const pendingCount = appCredentials.filter((c) => c.status === "pending").length;
+
+  const pinnedLinks = importantLinks.filter((l) => l.isPinned);
+  const filteredLinks = linkCategoryFilter === "all"
+    ? importantLinks
+    : importantLinks.filter((l) => l.category === linkCategoryFilter);
+
+  const linkCategories = Array.from(new Set(importantLinks.map((l) => l.category)));
+
+  return (
+    <div className="px-16 py-6 lg:px-24">
+      <PageTransition>
+        <PageBanner
+          title="Toolkit"
+          description="Apps, credentials, and important links for the team"
+          iconSrc="/3d-icons/documents.webp"
+        />
+
+        <Tabs defaultValue="credentials" className="mt-2">
+          <TabsList data-testid="tabs-toolkit">
+            <TabsTrigger value="credentials" data-testid="tab-credentials">Apps & Credentials</TabsTrigger>
+            <TabsTrigger value="links" data-testid="tab-links">Important Links</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="credentials">
+            {loading ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mt-4">
+                <StatsCardSkeleton />
+                <StatsCardSkeleton />
+                <StatsCardSkeleton />
+              </div>
+            ) : (
+              <Stagger staggerInterval={0.05} className="grid grid-cols-1 gap-4 sm:grid-cols-3 mt-4">
+                <StaggerItem>
+                  <StatsCard
+                    title="Active"
+                    value={activeCount}
+                    change={`${appCredentials.length} total credentials`}
+                    changeType="positive"
+                    icon={<Shield className="size-5" />}
+                  />
+                </StaggerItem>
+                <StaggerItem>
+                  <StatsCard
+                    title="Expired"
+                    value={expiredCount}
+                    change={expiredCount > 0 ? "Needs renewal" : "All good"}
+                    changeType={expiredCount > 0 ? "negative" : "positive"}
+                    icon={<AlertTriangle className="size-5" />}
+                  />
+                </StaggerItem>
+                <StaggerItem>
+                  <StatsCard
+                    title="Pending"
+                    value={pendingCount}
+                    change={pendingCount > 0 ? "Awaiting setup" : "None pending"}
+                    changeType={pendingCount > 0 ? "warning" : "neutral"}
+                    icon={<Clock className="size-5" />}
+                  />
+                </StaggerItem>
+              </Stagger>
+            )}
+
+            {loading ? (
+              <div className="mt-6">
+                <TableSkeleton rows={5} columns={6} />
+              </div>
+            ) : (
+              <Fade direction="up" delay={0.15} className="mt-6">
+                <DataTable
+                  data={appCredentials}
+                  columns={credentialColumns}
+                  searchPlaceholder="Search credentials..."
+                  searchKey="appName"
+                  filters={[
+                    {
+                      label: "Category",
+                      key: "category",
+                      options: ["hosting", "database", "ai", "payment", "analytics", "other"],
+                    },
+                    {
+                      label: "Status",
+                      key: "status",
+                      options: ["active", "expired", "pending"],
+                    },
+                    {
+                      label: "Environment",
+                      key: "environment",
+                      options: ["production", "staging", "dev"],
+                    },
+                  ]}
+                  headerActions={
+                    <Button
+                      size="sm"
+                      onClick={() => setCredentialDialogOpen(true)}
+                      data-testid="button-add-credential"
+                    >
+                      <Plus className="mr-1.5 size-3.5" />
+                      Add Credential
+                    </Button>
+                  }
+                  rowActions={[
+                    {
+                      label: "Copy API Hint",
+                      onClick: (item) => {
+                        navigator.clipboard.writeText(item.apiKeyHint);
+                        toast({ title: "Copied", description: `API key hint for ${item.appName} copied` });
+                      },
+                    },
+                    {
+                      label: "Open URL",
+                      onClick: (item) => window.open(item.url, "_blank"),
+                    },
+                  ]}
+                  emptyTitle="No credentials found"
+                  emptyDescription="Add your first app credential to get started."
+                />
+              </Fade>
+            )}
+          </TabsContent>
+
+          <TabsContent value="links">
+            {loading ? (
+              <div className="mt-4 space-y-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <Skeleton className="h-24 rounded-lg" />
+                  <Skeleton className="h-24 rounded-lg" />
+                  <Skeleton className="h-24 rounded-lg" />
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4">
+                {pinnedLinks.length > 0 && (
+                  <Fade direction="up" delay={0.1}>
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <Pin className="size-3.5" />
+                        Pinned Links
+                      </h3>
+                      <Stagger staggerInterval={0.04} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {pinnedLinks.map((link) => {
+                          const IconComp = getIconComponent(link.iconName);
+                          return (
+                            <StaggerItem key={link.id}>
+                              <a
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block"
+                                data-testid={`link-pinned-${link.id}`}
+                              >
+                                <Card className="p-4 hover-elevate">
+                                  <div className="flex items-start gap-3">
+                                    <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                                      <IconComp className="size-4" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <p className="text-sm font-medium truncate">{link.title}</p>
+                                        <ExternalLink className="size-3 text-muted-foreground shrink-0" />
+                                      </div>
+                                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{link.description}</p>
+                                    </div>
+                                  </div>
+                                </Card>
+                              </a>
+                            </StaggerItem>
+                          );
+                        })}
+                      </Stagger>
+                    </div>
+                  </Fade>
+                )}
+
+                <Fade direction="up" delay={0.2}>
+                  <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      All Links ({filteredLinks.length})
+                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Select value={linkCategoryFilter} onValueChange={setLinkCategoryFilter}>
+                        <SelectTrigger className="h-8 w-auto min-w-[120px] text-sm" data-testid="filter-link-category">
+                          <SelectValue placeholder="Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {linkCategories.map((cat) => (
+                            <SelectItem key={cat} value={cat}>
+                              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        size="sm"
+                        onClick={() => setLinkDialogOpen(true)}
+                        data-testid="button-add-link"
+                      >
+                        <Plus className="mr-1.5 size-3.5" />
+                        Add Link
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Stagger staggerInterval={0.03} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredLinks.map((link) => {
+                      const IconComp = getIconComponent(link.iconName);
+                      return (
+                        <StaggerItem key={link.id}>
+                          <a
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block"
+                            data-testid={`link-item-${link.id}`}
+                          >
+                            <Card className="p-4 hover-elevate">
+                              <div className="flex items-start gap-3">
+                                <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                                  <IconComp className="size-4" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-sm font-medium truncate">{link.title}</p>
+                                    {link.isPinned && (
+                                      <Pin className="size-3 text-primary shrink-0" />
+                                    )}
+                                    <ExternalLink className="size-3 text-muted-foreground shrink-0" />
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{link.description}</p>
+                                  <div className="mt-2 flex items-center gap-2 flex-wrap">
+                                    <StatusBadge
+                                      status={link.category.charAt(0).toUpperCase() + link.category.slice(1)}
+                                      variant={linkCategoryVariant[link.category]}
+                                    />
+                                    <span className="text-xs text-muted-foreground truncate">
+                                      {link.url.replace("https://", "").split("/")[0]}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </Card>
+                          </a>
+                        </StaggerItem>
+                      );
+                    })}
+                  </Stagger>
+
+                  {filteredLinks.length === 0 && (
+                    <div className="flex flex-col items-center gap-2 py-12">
+                      <p className="text-sm font-medium">No links found</p>
+                      <p className="text-xs text-muted-foreground">Try adjusting your filter</p>
+                    </div>
+                  )}
+                </Fade>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <FormDialog
+          open={credentialDialogOpen}
+          onOpenChange={setCredentialDialogOpen}
+          title="Add Credential"
+          onSubmit={() => {
+            toast({ title: "Credential added", description: "New credential has been saved." });
+            setCredentialDialogOpen(false);
+          }}
+          submitLabel="Add Credential"
+        >
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="cred-app">App Name</Label>
+            <Input id="cred-app" placeholder="e.g. Stripe" data-testid="input-cred-app" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="cred-url">URL</Label>
+            <Input id="cred-url" placeholder="https://..." data-testid="input-cred-url" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label>Category</Label>
+              <Select defaultValue="other">
+                <SelectTrigger data-testid="select-cred-category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hosting">Hosting</SelectItem>
+                  <SelectItem value="database">Database</SelectItem>
+                  <SelectItem value="ai">AI</SelectItem>
+                  <SelectItem value="payment">Payment</SelectItem>
+                  <SelectItem value="analytics">Analytics</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Environment</Label>
+              <Select defaultValue="dev">
+                <SelectTrigger data-testid="select-cred-environment">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="production">Production</SelectItem>
+                  <SelectItem value="staging">Staging</SelectItem>
+                  <SelectItem value="dev">Dev</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Status</Label>
+            <Select defaultValue="pending">
+              <SelectTrigger data-testid="select-cred-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="cred-key">API Key Hint (last 4 chars)</Label>
+            <Input id="cred-key" placeholder="e.g. ••••ab12" data-testid="input-cred-key" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="cred-notes">Notes</Label>
+            <Textarea id="cred-notes" placeholder="Additional notes..." className="resize-none" data-testid="input-cred-notes" />
+          </div>
+        </FormDialog>
+
+        <FormDialog
+          open={linkDialogOpen}
+          onOpenChange={setLinkDialogOpen}
+          title="Add Link"
+          onSubmit={() => {
+            toast({ title: "Link added", description: "New link has been saved." });
+            setLinkDialogOpen(false);
+          }}
+          submitLabel="Add Link"
+        >
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="link-title">Title</Label>
+            <Input id="link-title" placeholder="e.g. GitHub Repo" data-testid="input-link-title" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="link-url">URL</Label>
+            <Input id="link-url" placeholder="https://..." data-testid="input-link-url" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Category</Label>
+            <Select defaultValue="tool">
+              <SelectTrigger data-testid="select-link-category">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="tool">Tool</SelectItem>
+                <SelectItem value="docs">Docs</SelectItem>
+                <SelectItem value="dashboard">Dashboard</SelectItem>
+                <SelectItem value="repo">Repo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="link-desc">Description</Label>
+            <Textarea id="link-desc" placeholder="Brief description..." className="resize-none" data-testid="input-link-desc" />
+          </div>
+        </FormDialog>
+      </PageTransition>
+    </div>
+  );
+}

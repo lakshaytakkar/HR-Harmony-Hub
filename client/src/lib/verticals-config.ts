@@ -22,6 +22,11 @@ import {
   Headphones,
   LineChart,
   GitBranch,
+  Code2,
+  Palette,
+  MessageSquare,
+  BookOpen,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -29,6 +34,7 @@ import { LegalNationsLogo } from "@/components/brand/legalnations-logo";
 import { UsdropAiLogo } from "@/components/brand/usdrop-ai-logo";
 import { GoyoToursLogo } from "@/components/brand/goyotours-logo";
 import { LbmLifestyleLogo } from "@/components/brand/lbm-lifestyle-logo";
+import { DeveloperLogo } from "@/components/brand/developer-logo";
 
 export interface NavItem {
   title: string;
@@ -116,16 +122,6 @@ export const verticals: Vertical[] = [
         items: [
           { title: "Formation Analytics", url: "/hr/analytics" },
           { title: "Team Performance", url: "/hr/team-performance" },
-        ],
-      },
-      {
-        title: "Design System",
-        defaultUrl: "/dev/style-guide",
-        icon: Settings,
-        items: [
-          { title: "Style Guide", url: "/dev/style-guide" },
-          { title: "Components", url: "/dev/components" },
-          { title: "Icons", url: "/dev/icons" },
         ],
       },
     ],
@@ -270,6 +266,52 @@ export const verticals: Vertical[] = [
       },
     ],
   },
+  {
+    id: "dev",
+    name: "Developer",
+    shortName: "Developer",
+    icon: Code2,
+    logo: DeveloperLogo,
+    color: "#10B981",
+    tagline: "Internal Tools",
+    description: "Developer hub, design system & internal resources",
+    navCategories: [
+      {
+        title: "Dashboard",
+        defaultUrl: "/dev",
+        icon: LayoutDashboard,
+        items: [],
+      },
+      {
+        title: "Design System",
+        defaultUrl: "/dev/style-guide",
+        icon: Palette,
+        items: [
+          { title: "Style Guide", url: "/dev/style-guide" },
+          { title: "Components", url: "/dev/components" },
+          { title: "Icons", url: "/dev/icons" },
+        ],
+      },
+      {
+        title: "Prompts",
+        defaultUrl: "/dev/prompts",
+        icon: MessageSquare,
+        items: [],
+      },
+      {
+        title: "Resources",
+        defaultUrl: "/dev/resources",
+        icon: BookOpen,
+        items: [],
+      },
+      {
+        title: "Toolkit",
+        defaultUrl: "/dev/toolkit",
+        icon: Wrench,
+        items: [],
+      },
+    ],
+  },
 ];
 
 export function getVerticalById(id: string): Vertical | undefined {
@@ -296,5 +338,6 @@ export function detectVerticalFromUrl(location: string): Vertical | undefined {
   if (location.startsWith("/sales")) return getVerticalById("sales");
   if (location.startsWith("/events")) return getVerticalById("events");
   if (location.startsWith("/admin")) return getVerticalById("admin");
+  if (location.startsWith("/dev")) return getVerticalById("dev");
   return undefined;
 }

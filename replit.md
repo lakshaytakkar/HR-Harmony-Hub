@@ -35,6 +35,12 @@ The portal supports multiple business verticals, each with its own navigation, b
    - Analytics (Revenue Analytics, User Analytics, Product Performance)
 3. **GoyoTours** (id: `events`, color: #E91E63) — Events, Venues, Check-in — Routes: `/events/*`
 4. **LBM Lifestyle** (id: `admin`, color: #673AB7) — Team, Settings, Reports — Routes: `/admin/*`
+5. **Developer** (id: `dev`, color: #10B981) — Internal Developer Hub — Routes: `/dev/*`
+   - Dashboard (quick links, recent prompts, credential status, pinned links)
+   - Design System (Style Guide, Components, Icons)
+   - Prompts (AI prompt library — categorized by agent/frontend/backend/database/debug, model tracking)
+   - Resources (Dev processes, learnings, playbooks, workflow docs)
+   - Toolkit (Apps & Credentials tracker, Important Links — Replit, Supabase, GitHub, etc.)
 
 ### Brand Logo Components
 Each vertical has a unique SVG logo in hexagonal mascot style:
@@ -42,6 +48,7 @@ Each vertical has a unique SVG logo in hexagonal mascot style:
 - `client/src/components/brand/usdrop-ai-logo.tsx` — Box+arrow/dropship icon
 - `client/src/components/brand/goyotours-logo.tsx` — Compass icon
 - `client/src/components/brand/lbm-lifestyle-logo.tsx` — Heart-star/lifestyle icon
+- `client/src/components/brand/developer-logo.tsx` — Terminal/code icon
 
 ### Frontend Technology
 React with TypeScript, Tailwind CSS, Shadcn UI, Wouter routing, motion/react animations.
@@ -50,7 +57,6 @@ React with TypeScript, Tailwind CSS, Shadcn UI, Wouter routing, motion/react ani
 - All verticals use consistent `/vertical/*` URL namespacing
 - Root `/` redirects to `/hr` (default vertical)
 - Deep links auto-detect the correct vertical via `detectVerticalFromUrl`
-- Dev routes remain at `/dev/*` (style-guide, components, icons)
 
 ### Navigation
 - **Two-Level Horizontal Top Navigation**: Dynamic based on active vertical
@@ -75,6 +81,14 @@ client/src/pages/
 ├── annual-reports.tsx         # Annual Reports (route: /hr/annual-reports)
 ├── formation-analytics.tsx    # Formation Analytics (route: /hr/analytics)
 ├── team-performance.tsx       # Team Performance (route: /hr/team-performance)
+├── dev/
+│   ├── dashboard.tsx          # Developer Dashboard (route: /dev)
+│   ├── style-guide.tsx        # Style Guide (route: /dev/style-guide)
+│   ├── components-guide.tsx   # Components Guide (route: /dev/components)
+│   ├── icons-guide.tsx        # Icons Guide (route: /dev/icons)
+│   ├── prompts.tsx            # AI Prompt Library (route: /dev/prompts)
+│   ├── resources.tsx          # Dev Resources & Processes (route: /dev/resources)
+│   └── toolkit.tsx            # Apps, Credentials & Links (route: /dev/toolkit)
 ├── sales/
 │   ├── dashboard.tsx           # USDrop AI Dashboard (route: /sales)
 │   ├── products.tsx            # Product Library (route: /sales/products)
@@ -104,9 +118,6 @@ client/src/pages/
 │   ├── team.tsx           # Team Management (route: /admin/team)
 │   ├── settings.tsx       # System Settings (route: /admin/settings)
 │   └── reports.tsx        # Reports & Analytics (route: /admin/reports)
-├── style-guide.tsx        # Dev: Style Guide
-├── components-guide.tsx   # Dev: Components
-├── icons-guide.tsx        # Dev: Icons
 └── not-found.tsx          # 404
 ```
 
@@ -117,6 +128,7 @@ client/src/pages/
 ### Mock Data Files
 - `client/src/lib/mock-data.ts` — LegalNations entities (20 formation clients, 45+ checklist items, 25 documents, 15 compliance items, 25 tasks, 10 escalations, 6 team members, formation metrics, document templates)
 - `client/src/lib/mock-data-sales.ts` — USDrop AI entities (products, categories, suppliers, users, leads, subscriptions, stores, fulfillment, tickets, courses, plans, revenue metrics, help center articles)
+- `client/src/lib/mock-data-dev.ts` — Developer entities (12 AI prompts, 8 dev resources, 10 app credentials, 15 important links)
 - `client/src/lib/mock-data-events.ts` — Events (events, venues, attendees)
 - `client/src/lib/mock-data-admin.ts` — Admin (team members, activity logs, reports)
 

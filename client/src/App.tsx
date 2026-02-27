@@ -23,9 +23,9 @@ import ComplianceTracker from "@/pages/compliance-tracker";
 import AnnualReports from "@/pages/annual-reports";
 import FormationAnalytics from "@/pages/formation-analytics";
 import TeamPerformance from "@/pages/team-performance";
-import StyleGuide from "@/pages/style-guide";
-import ComponentsGuide from "@/pages/components-guide";
-import IconsGuide from "@/pages/icons-guide";
+import StyleGuide from "@/pages/dev/style-guide";
+import ComponentsGuide from "@/pages/dev/components-guide";
+import IconsGuide from "@/pages/dev/icons-guide";
 import SalesDashboard from "@/pages/sales/dashboard";
 import SalesProducts from "@/pages/sales/products";
 import SalesCategories from "@/pages/sales/categories";
@@ -52,6 +52,10 @@ import AdminDashboard from "@/pages/admin/dashboard";
 import AdminTeam from "@/pages/admin/team";
 import AdminSettings from "@/pages/admin/settings";
 import AdminReports from "@/pages/admin/reports";
+import DevDashboard from "@/pages/dev/dashboard";
+import DevPrompts from "@/pages/dev/prompts";
+import DevResources from "@/pages/dev/resources";
+import DevToolkit from "@/pages/dev/toolkit";
 
 function Router() {
   return (
@@ -70,9 +74,13 @@ function Router() {
       <Route path="/hr/annual-reports" component={AnnualReports} />
       <Route path="/hr/analytics" component={FormationAnalytics} />
       <Route path="/hr/team-performance" component={TeamPerformance} />
+      <Route path="/dev" component={DevDashboard} />
       <Route path="/dev/style-guide" component={StyleGuide} />
       <Route path="/dev/components" component={ComponentsGuide} />
       <Route path="/dev/icons" component={IconsGuide} />
+      <Route path="/dev/prompts" component={DevPrompts} />
+      <Route path="/dev/resources" component={DevResources} />
+      <Route path="/dev/toolkit" component={DevToolkit} />
       <Route path="/sales" component={SalesDashboard} />
       <Route path="/sales/products" component={SalesProducts} />
       <Route path="/sales/categories" component={SalesCategories} />
