@@ -26,7 +26,15 @@ client/src/
       stats-card.tsx     - Dashboard stats card
       form-dialog.tsx    - Reusable form dialog for CRUD operations
       empty-state.tsx    - Reusable empty state with illustration, messaging, and action button
-    ui/                  - Shadcn UI components
+      page-banner.tsx    - Full-width branded banner with 3D icon, title, description, optional action
+      document-preview-modal.tsx - Document preview modal with prev/next navigation, renders PDF/DOCX/XLSX/certificate previews
+    ui/
+      spinner.tsx        - Spinner (5 sizes), PageSpinner (centered with label), InlineSpinner (for buttons)
+      table-skeleton.tsx - Skeleton mimicking DataTable layout (header + rows + pagination)
+      card-skeleton.tsx  - CardSkeleton, StatsCardSkeleton
+      skeleton.tsx       - Base Skeleton component (pulse animation)
+      toaster.tsx        - Custom toast renderer (bottom-right, semantic colors)
+      ...                - Shadcn UI components
   pages/
     dashboard.tsx        - Overview with stats, charts, recent activity
     employees.tsx        - Employee management with full CRUD
@@ -42,8 +50,12 @@ client/src/
     not-found.tsx        - 404 page with illustration
   assets/
     illustrations/       - AI-generated empty state illustrations (background-less PNGs)
+  hooks/
+    use-toast.ts         - Toast system (showSuccess/showError/showInfo/showWarning + legacy toast())
+    use-simulated-loading.ts - Simulated loading hook (500ms delay for demo skeletons)
   lib/
-    mock-data.ts         - Realistic mock data for all modules
+    mock-data.ts         - Realistic mock data for all modules (includes documentPreviews)
+    avatars.ts           - DiceBear avatar helpers (Micah for people, Glass for entities)
 ```
 
 ### Sidebar Navigation
@@ -57,7 +69,7 @@ All LUMIN tokens are precisely mapped to CSS custom properties in `client/src/in
 
 | CSS Variable | LUMIN Token | Hex |
 |---|---|---|
-| `--primary` | Primary 500 | #897EFA |
+| `--primary` | Primary 500 (Indigo) | #4F46E5 |
 | `--background` | Greyscale 0 | #F8F9FB |
 | `--foreground` | Greyscale 900 | #0D0D12 |
 | `--border` | Greyscale 100 | #DFE1E7 |
@@ -97,15 +109,15 @@ Status badges and change indicators use Tailwind semantic colors intentionally d
 | Body Small | 14px | Regular/Medium | 20px |
 | Body XSmall | 12px | Regular/Medium | 16px |
 
-### Colors — Primary
+### Colors — Primary (Indigo)
 | Token | Hex |
 |-------|------|
-| 50 | #F8F5FF |
-| 100 | #D3C4FC |
-| 200 | #B59CFA |
-| 300 | #9774F7 |
-| 400 | #7A4DF5 |
-| 500 | #897EFA |
+| 50 | #EEF2FF |
+| 100 | #E0E7FF |
+| 200 | #C7D2FE |
+| 300 | #A5B4FC |
+| 400 | #818CF8 |
+| 500 | #4F46E5 |
 
 ### Colors — Greyscale
 | Token | Hex |
@@ -140,14 +152,33 @@ Status badges and change indicators use Tailwind semantic colors intentionally d
 - **FormDialog**: Standard dialog for create/edit forms (no popup animations)
 - **StatsCard**: Dashboard metric card with icon and change indicator
 - **EmptyState**: Reusable empty state with illustration, title, description, and optional action button
+- **PageBanner**: Full-width indigo banner with 3D PNG icon (48×48), title, description, optional action button. Used at the top of every HR page. Icons stored in `client/public/3d-icons/`
+- **DocumentPreviewModal**: Full modal for previewing documents — renders mock content by type (PDF sections, DOCX templates, XLSX tables, certificates) with prev/next navigation
+- **Spinner/PageSpinner/InlineSpinner**: Loading spinners in 5 sizes (xs→xl). PageSpinner is centered with optional label. InlineSpinner for buttons
+- **TableSkeleton/CardSkeleton/StatsCardSkeleton**: Skeleton loading states mimicking real component layouts
+
+### Toast System
+- Custom module-level toast store (not React context). 4 semantic types: success (green), error (red), info (blue), warning (amber)
+- API: `showSuccess(title, desc?)`, `showError(title, desc?)`, `showInfo(title, desc?)`, `showWarning(title, desc?)`
+- Legacy compat: `toast({ title, description, variant })` still works
+- Position: fixed bottom-right, auto-dismiss 3s, no animations (user preference)
+
+### Loading States
+- All 8 HR pages use `useSimulatedLoading(500)` hook for a brief skeleton flash on mount
+- Pages with DataTable show `TableSkeleton` while loading
+- Dashboard shows `StatsCardSkeleton` grid + `Skeleton` cards while loading
+- In future with DB, these will be replaced by real react-query loading states
 
 ### Component Library Reference (Components Page)
 - **Buttons**: 5 variants (Primary, Secondary, Outline, Ghost, Destructive) × 3 sizes (lg, default, sm) × states (Default, Hover, Focused, Disabled) + icon-only
 - **Forms**: Text Input (Default/Filled/Disabled/Error + icon prefixes), Select/Dropdown, Checkbox, Switch/Toggle
 - **Table Components**: Cell types (Avatar+Text, Title+Description, Badge, Button, Plain Text), Header styles
-- **Logos & Cursors**: LUMIN brand mark (Primary, Dark, Icon-only) + 12 cursor type demos
+- **Loading**: Spinner sizes (xs→xl), PageSpinner, InlineSpinner, StatsCardSkeleton grid, CardSkeleton variants, TableSkeleton
+- **Toasts**: 4 semantic toast types with trigger buttons + static style previews
+- **Banner**: PageBanner demo with 3D icon variants + 3D icon gallery (8 icons)
 - **Badges**: 5 colors (Neutral/Primary/Green/Yellow/Red) × 3 sizes (Large/Medium/Small) × 2 styles (Fill/Outlined) + Dot and Close icon types
 - **Avatars**: 7 sizes (24px→72px), Initials/Icon fallback types, 4 status indicators (Online/Offline/Busy/Away), stacked avatar groups
+- **Logos & Cursors**: TeamSync brand mark (Primary, Dark, Icon-only) + 12 cursor type demos
 
 ### Icon Library Reference (Icons Page)
 - 150+ lucide-react icons organized into 12 categories: Navigation, Actions, Communication, Media, Files, Arrows, Interface, Status, Data, Business, Text, Devices, Misc

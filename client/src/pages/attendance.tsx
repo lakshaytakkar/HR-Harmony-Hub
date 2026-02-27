@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Topbar } from "@/components/layout/topbar";
 import { PageHeader } from "@/components/layout/page-header";
+import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import emptyAttendanceImg from "@/assets/illustrations/empty-attendance.png";
 import { StatusBadge } from "@/components/hr/status-badge";
@@ -14,14 +15,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { attendanceRecords as initialAttendance, employees } from "@/lib/mock-data";
 import type { AttendanceRecord } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { getPersonAvatar } from "@/lib/avatars";
 import { StatsCard } from "@/components/hr/stats-card";
+import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { CheckCircle2, Clock, AlertCircle, CalendarDays } from "lucide-react";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 
 export default function Attendance() {
+  const loading = useSimulatedLoading();
   const [data, setData] = useState<AttendanceRecord[]>(initialAttendance);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<AttendanceRecord | null>(null);
@@ -35,7 +40,7 @@ export default function Attendance() {
     department: "",
     workHours: "",
   });
-  const { toast } = useToast();
+  const { toast, showSuccess, showError } = useToast();
 
   const present = data.filter((a) => a.status === "Present").length;
   const late = data.filter((a) => a.status === "Late").length;
@@ -117,7 +122,7 @@ export default function Attendance() {
       separator: true,
       onClick: (item) => {
         setData((prev) => prev.filter((a) => a.id !== item.id));
-        toast({ title: "Record Removed", description: "Attendance record has been removed." });
+        showSuccess("Record Removed", "Attendance record has been removed.");
       },
     },
   ];
@@ -139,17 +144,17 @@ export default function Attendance() {
 
   const handleSubmit = () => {
     if (!formState.employeeName || !formState.date) {
-      toast({ title: "Validation Error", description: "Please fill in all required fields.", variant: "destructive" });
+      showError("Validation Error", "Please fill in all required fields.");
       return;
     }
 
     if (editingItem) {
       setData((prev) => prev.map((a) => a.id === editingItem.id ? { ...a, ...formState } : a));
-      toast({ title: "Record Updated", description: "Attendance record has been updated." });
+      showSuccess("Record Updated", "Attendance record has been updated.");
     } else {
       const newRecord: AttendanceRecord = { id: String(Date.now()), ...formState };
       setData((prev) => [newRecord, ...prev]);
-      toast({ title: "Record Added", description: "Attendance record has been added." });
+      showSuccess("Record Added", "Attendance record has been added.");
     }
     setDialogOpen(false);
   };
@@ -161,36 +166,50 @@ export default function Attendance() {
     <div className="flex flex-col h-full">
       <Topbar title="Attendance" subtitle="Daily attendance tracking" />
       <div className="flex-1 overflow-auto p-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <StatsCard
-            title="Present"
-            value={present}
-            icon={<CheckCircle2 className="size-5" />}
-            changeType="positive"
-            change={`${Math.round((present / data.length) * 100)}% attendance`}
-          />
-          <StatsCard
-            title="Late"
-            value={late}
-            icon={<Clock className="size-5" />}
-            changeType="warning"
-            change={`${Math.round((late / data.length) * 100)}% of total`}
-          />
-          <StatsCard
-            title="Absent"
-            value={absent}
-            icon={<AlertCircle className="size-5" />}
-            changeType="negative"
-            change={`${Math.round((absent / data.length) * 100)}% of total`}
-          />
-          <StatsCard
-            title="Half Day"
-            value={halfDay}
-            icon={<CalendarDays className="size-5" />}
-            changeType="neutral"
-            change={`${Math.round((halfDay / data.length) * 100)}% of total`}
-          />
-        </div>
+        <PageBanner
+          title="Attendance Tracker"
+          description="Monitor daily check-ins, work hours, and attendance patterns."
+          iconSrc="/3d-icons/attendance.png"
+        />
+        {loading ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+            <StatsCard
+              title="Present"
+              value={present}
+              icon={<CheckCircle2 className="size-5" />}
+              changeType="positive"
+              change={`${Math.round((present / data.length) * 100)}% attendance`}
+            />
+            <StatsCard
+              title="Late"
+              value={late}
+              icon={<Clock className="size-5" />}
+              changeType="warning"
+              change={`${Math.round((late / data.length) * 100)}% of total`}
+            />
+            <StatsCard
+              title="Absent"
+              value={absent}
+              icon={<AlertCircle className="size-5" />}
+              changeType="negative"
+              change={`${Math.round((absent / data.length) * 100)}% of total`}
+            />
+            <StatsCard
+              title="Half Day"
+              value={halfDay}
+              icon={<CalendarDays className="size-5" />}
+              changeType="neutral"
+              change={`${Math.round((halfDay / data.length) * 100)}% of total`}
+            />
+          </div>
+        )}
 
         <PageHeader
           title="Attendance Records"
@@ -198,20 +217,24 @@ export default function Attendance() {
           actionLabel="Add Record"
           onAction={openCreateDialog}
         />
-        <DataTable
-          data={data}
-          columns={columns}
-          searchPlaceholder="Search employees..."
-          searchKey="employeeName"
-          rowActions={rowActions}
-          filters={[
-            { label: "Status", key: "status", options: statuses },
-            { label: "Department", key: "department", options: departments },
-          ]}
-          emptyTitle="No attendance records"
-          emptyDescription="No attendance data available for this date."
-          emptyIllustration={emptyAttendanceImg}
-        />
+        {loading ? (
+          <TableSkeleton rows={8} columns={6} />
+        ) : (
+          <DataTable
+            data={data}
+            columns={columns}
+            searchPlaceholder="Search employees..."
+            searchKey="employeeName"
+            rowActions={rowActions}
+            filters={[
+              { label: "Status", key: "status", options: statuses },
+              { label: "Department", key: "department", options: departments },
+            ]}
+            emptyTitle="No attendance records"
+            emptyDescription="No attendance data available for this date."
+            emptyIllustration={emptyAttendanceImg}
+          />
+        )}
       </div>
 
       <FormDialog

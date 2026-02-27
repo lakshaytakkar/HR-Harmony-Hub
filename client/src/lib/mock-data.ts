@@ -100,3 +100,122 @@ export const documents: HRDocument[] = [
   { id: "9", title: "Travel Reimbursement Policy", category: "Policy", uploadedBy: "Divya Iyer", uploadDate: "2024-09-15", fileSize: "310 KB", fileType: "PDF", status: "Archived" },
   { id: "10", title: "Code of Conduct", category: "Policy", uploadedBy: "Sneha Patel", uploadDate: "2024-06-01", fileSize: "540 KB", fileType: "PDF", status: "Active" },
 ];
+
+export interface DocumentPreview {
+  type: "policy" | "contract" | "spreadsheet" | "certificate";
+  sections?: { heading: string; content: string }[];
+  tableData?: { headers: string[]; rows: string[][] };
+  certificateTitle?: string;
+  certificateRecipient?: string;
+  certificateBody?: string;
+  certificateDate?: string;
+  certificateIssuer?: string;
+}
+
+export const documentPreviews: Record<string, DocumentPreview> = {
+  "1": {
+    type: "policy",
+    sections: [
+      { heading: "1. Introduction", content: "Welcome to TeamSync. This Employee Handbook outlines the policies, procedures, and guidelines that govern your employment with us. All employees are expected to read and comply with the standards described herein." },
+      { heading: "2. Employment Policies", content: "TeamSync is an equal opportunity employer. We do not discriminate based on race, gender, religion, age, disability, or any other protected characteristic. All hiring and promotion decisions are based on qualifications and merit." },
+      { heading: "3. Work Hours & Attendance", content: "Standard work hours are 9:00 AM to 6:00 PM, Monday through Friday. Employees are expected to maintain regular attendance and punctuality. Flexible work arrangements may be available with managerial approval." },
+      { heading: "4. Compensation & Benefits", content: "Compensation is reviewed annually and is based on performance, market conditions, and company financials. Benefits include health insurance, provident fund contributions, and paid time off as described in the benefits section." },
+      { heading: "5. Code of Conduct", content: "All employees must maintain professional conduct at all times. Harassment, discrimination, and unethical behavior are strictly prohibited and may result in disciplinary action up to and including termination." },
+    ],
+  },
+  "2": {
+    type: "policy",
+    sections: [
+      { heading: "1. Leave Entitlement", content: "Full-time employees are entitled to 24 days of annual leave, 12 days of sick leave, and 5 days of personal leave per calendar year. Leave balances are prorated for employees joining mid-year." },
+      { heading: "2. Leave Application Process", content: "All leave requests must be submitted through the TeamSync HR portal at least 3 working days in advance for planned leave. Sick leave may be applied retroactively with a medical certificate for absences exceeding 2 consecutive days." },
+      { heading: "3. Leave Approval", content: "Leave requests are subject to approval by the reporting manager. Approval depends on team workload, project deadlines, and adequate team coverage. Managers should respond to leave requests within 2 business days." },
+      { heading: "4. Carry Forward & Encashment", content: "A maximum of 10 unused annual leave days may be carried forward to the next calendar year. Any leave beyond this limit will lapse. Leave encashment is available for up to 5 unused annual leave days at the end of the year." },
+    ],
+  },
+  "3": {
+    type: "contract",
+    sections: [
+      { heading: "NON-DISCLOSURE AGREEMENT", content: "This Non-Disclosure Agreement (the \"Agreement\") is entered into as of [Effective Date] by and between TeamSync Technologies Pvt. Ltd. (the \"Company\") and [Employee Name] (the \"Employee\")." },
+      { heading: "1. Confidential Information", content: "The Employee agrees to hold in confidence and not disclose any proprietary information, trade secrets, client data, financial records, technical specifications, or business strategies of the Company without prior written consent." },
+      { heading: "2. Obligations", content: "The Employee shall: (a) use Confidential Information solely for the purpose of performing their duties; (b) not copy or reproduce any Confidential Information except as necessary; (c) return all materials upon termination of employment." },
+      { heading: "3. Term", content: "This Agreement shall remain in effect during the Employee's tenure and for a period of [Duration] years following the termination of employment, regardless of the reason for termination." },
+      { heading: "4. Signatures", content: "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\nCompany Representative: [Authorized Signatory]\nEmployee: [Employee Name]\nDate: [Signing Date]" },
+    ],
+  },
+  "4": {
+    type: "contract",
+    sections: [
+      { heading: "OFFER OF EMPLOYMENT", content: "Dear [Candidate Name],\n\nWe are pleased to offer you the position of [Job Title] at TeamSync Technologies Pvt. Ltd., reporting to [Manager Name]. Your start date will be [Start Date]." },
+      { heading: "Compensation", content: "Your annual compensation will be [Salary Amount] (CTC), payable monthly. This includes basic salary, HRA, special allowances, and employer PF contributions as detailed in the attached compensation structure." },
+      { heading: "Benefits", content: "You will be eligible for the following benefits: Group Health Insurance (self + spouse + 2 children), 24 days annual leave, performance bonus up to [Bonus Percentage]% of base salary, and professional development allowance." },
+      { heading: "Terms & Conditions", content: "This offer is contingent upon successful completion of background verification and submission of required documents. The notice period for resignation is [Notice Period] days. This offer is valid until [Expiry Date]." },
+      { heading: "Acceptance", content: "Please sign and return this letter by [Response Date] to confirm your acceptance.\n\nWarm regards,\n[HR Manager Name]\nHead of Human Resources\nTeamSync Technologies Pvt. Ltd." },
+    ],
+  },
+  "5": {
+    type: "policy",
+    sections: [
+      { heading: "Q4 2024 HR Summary", content: "This report provides an overview of key HR metrics and activities during Q4 2024 (October - December). The quarter saw significant growth in headcount and improvements in employee engagement scores." },
+      { heading: "Headcount", content: "Total headcount increased from 42 to 56 employees (33% growth). Engineering remained the largest department with 18 members. Three new departments were established: Data Science, Customer Success, and Legal." },
+      { heading: "Recruitment", content: "32 positions were opened during Q4, with 14 successfully filled. Average time-to-hire was 28 days, down from 35 days in Q3. The top sourcing channels were LinkedIn (45%), employee referrals (30%), and job boards (25%)." },
+      { heading: "Attrition", content: "Voluntary attrition rate was 4.2% for the quarter, well below the industry average of 8.5%. Exit interview feedback indicated that the primary reasons for departure were relocation (40%) and higher education (35%)." },
+      { heading: "Engagement", content: "Employee engagement score improved to 4.2 out of 5.0, up from 3.8 in Q3. Key drivers included improved work-life balance initiatives, the new mentorship program, and enhanced learning opportunities." },
+    ],
+  },
+  "6": {
+    type: "policy",
+    sections: [
+      { heading: "1. Purpose", content: "This policy establishes guidelines for employees working remotely. It applies to all full-time employees who have been approved for remote work arrangements by their department head." },
+      { heading: "2. Eligibility", content: "Employees who have completed their probation period and have a satisfactory performance rating are eligible to apply for remote work. Certain roles requiring physical presence may not be eligible." },
+      { heading: "3. Work Environment", content: "Remote employees must maintain a dedicated, quiet workspace with reliable internet connectivity (minimum 50 Mbps). The company will provide a one-time work-from-home setup allowance of INR 15,000." },
+      { heading: "4. Communication", content: "Remote employees must be available during core hours (10:00 AM - 4:00 PM IST). All team meetings should be attended via video call. Response time for messages should not exceed 30 minutes during work hours." },
+      { heading: "5. Data Security", content: "All company data must be accessed through VPN. Personal devices must comply with the company's security policy. Employees must not use public Wi-Fi for accessing company systems without VPN protection." },
+    ],
+  },
+  "7": {
+    type: "spreadsheet",
+    tableData: {
+      headers: ["Employee", "Department", "Goals Met", "Rating", "Manager Assessment", "Recommended Action"],
+      rows: [
+        ["Arjun Mehta", "Engineering", "5/5", "Exceeds Expectations", "Outstanding contributor", "Promotion"],
+        ["Priya Sharma", "Design", "4/5", "Exceeds Expectations", "Strong design leadership", "Salary Increase"],
+        ["Rahul Kumar", "Engineering", "4/5", "Meets Expectations", "Solid performer", "Skill Development"],
+        ["Sneha Patel", "HR", "5/5", "Exceeds Expectations", "Excellent HR operations", "Bonus"],
+        ["Vikram Singh", "Marketing", "3/5", "Meets Expectations", "Good campaign results", "Mentoring"],
+        ["Karan Gupta", "Sales", "4/5", "Meets Expectations", "Consistent sales numbers", "Target Revision"],
+        ["Meera Nair", "Design", "4/5", "Meets Expectations", "Creative and reliable", "Skill Development"],
+        ["Rohan Joshi", "Engineering", "5/5", "Exceeds Expectations", "Infrastructure excellence", "Promotion"],
+      ],
+    },
+  },
+  "8": {
+    type: "policy",
+    sections: [
+      { heading: "Pre-Joining", content: "Send welcome email with joining date, document checklist, and office address. Prepare workstation, access cards, and system accounts. Assign a buddy from the same department." },
+      { heading: "Day 1", content: "Welcome session with HR overview. Office tour and team introductions. IT setup: laptop, email, Slack, and tool access. Complete joining documentation and ID verification." },
+      { heading: "Week 1", content: "Department orientation with team lead. Review of role expectations and 90-day goals. Introduction to company tools and workflows. Schedule 1:1 meetings with key stakeholders." },
+      { heading: "Month 1", content: "Complete mandatory compliance training. First performance check-in with manager. Buddy catch-up sessions (weekly). Submit feedback on onboarding experience." },
+      { heading: "Month 3", content: "Probation review meeting with HR and manager. Finalize role-specific training completion. Set quarterly OKRs. Provide comprehensive onboarding feedback survey." },
+    ],
+  },
+  "9": {
+    type: "policy",
+    sections: [
+      { heading: "1. Scope", content: "This policy covers all business travel and related expenses incurred by employees of TeamSync Technologies. It applies to domestic and international travel undertaken for official company purposes." },
+      { heading: "2. Travel Booking", content: "All travel must be booked through the company travel portal. Flights should be economy class for domestic travel and premium economy for international flights exceeding 6 hours. Train travel is encouraged for distances under 500 km." },
+      { heading: "3. Accommodation", content: "Hotel stays should not exceed INR 5,000 per night for domestic travel and USD 150 per night for international travel. Employees must submit receipts within 7 days of return." },
+      { heading: "4. Daily Allowance", content: "A daily food and incidental allowance of INR 1,500 (domestic) or USD 50 (international) will be provided. This covers meals, local transport, and minor expenses. Receipts are not required for amounts within the daily limit." },
+      { heading: "5. Reimbursement Process", content: "Submit all expense claims through the HR portal within 14 days of trip completion. Attach original receipts or scanned copies. Reimbursements are processed within 10 business days of approval." },
+    ],
+  },
+  "10": {
+    type: "policy",
+    sections: [
+      { heading: "1. Professional Conduct", content: "All employees are expected to conduct themselves professionally and ethically at all times. This includes interactions with colleagues, clients, vendors, and the public. Respectful communication is fundamental to our culture." },
+      { heading: "2. Anti-Harassment", content: "TeamSync maintains a zero-tolerance policy towards harassment of any kind, including sexual harassment, bullying, intimidation, and discriminatory behavior. All complaints will be investigated promptly and confidentially." },
+      { heading: "3. Conflict of Interest", content: "Employees must disclose any situation that may create a conflict of interest with their responsibilities at TeamSync. This includes outside employment, financial interests in competitors, and personal relationships that could influence business decisions." },
+      { heading: "4. Use of Company Resources", content: "Company resources including equipment, software, and facilities should be used primarily for business purposes. Limited personal use is acceptable provided it does not interfere with work duties or violate any policies." },
+      { heading: "5. Reporting Violations", content: "Employees are encouraged to report any violations of this Code of Conduct through the anonymous reporting channel or directly to HR. Retaliation against anyone reporting a violation in good faith is strictly prohibited." },
+    ],
+  },
+};

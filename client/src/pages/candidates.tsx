@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Topbar } from "@/components/layout/topbar";
 import { PageHeader } from "@/components/layout/page-header";
+import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import emptyPeopleImg from "@/assets/illustrations/empty-people.png";
 import { StatusBadge } from "@/components/hr/status-badge";
@@ -14,13 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { candidates as initialCandidates } from "@/lib/mock-data";
 import type { Candidate } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
 import { getPersonAvatar } from "@/lib/avatars";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 
 export default function Candidates() {
+  const loading = useSimulatedLoading();
   const [data, setData] = useState<Candidate[]>(initialCandidates);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Candidate | null>(null);
@@ -35,7 +39,7 @@ export default function Candidates() {
     source: "",
     rating: 3,
   });
-  const { toast } = useToast();
+  const { toast, showSuccess, showError } = useToast();
 
   const columns: Column<Candidate>[] = [
     {
@@ -99,7 +103,7 @@ export default function Candidates() {
     {
       label: "View Profile",
       onClick: (item) => {
-        toast({ title: "View Candidate", description: `Viewing ${item.name}` });
+        showSuccess("View Candidate", `Viewing ${item.name}`);
       },
     },
     {
@@ -110,7 +114,7 @@ export default function Candidates() {
         if (currentIdx < stages.length - 1) {
           const nextStage = stages[currentIdx + 1];
           setData((prev) => prev.map((c) => c.id === item.id ? { ...c, stage: nextStage } : c));
-          toast({ title: "Stage Updated", description: `${item.name} moved to ${nextStage}` });
+          showSuccess("Stage Updated", `${item.name} moved to ${nextStage}`);
         }
       },
     },
@@ -138,7 +142,7 @@ export default function Candidates() {
       separator: true,
       onClick: (item) => {
         setData((prev) => prev.map((c) => c.id === item.id ? { ...c, stage: "Rejected" as const } : c));
-        toast({ title: "Candidate Rejected", description: `${item.name} has been rejected.` });
+        showSuccess("Candidate Rejected", `${item.name} has been rejected.`);
       },
     },
   ];
@@ -161,20 +165,20 @@ export default function Candidates() {
 
   const handleSubmit = () => {
     if (!formState.name || !formState.email || !formState.position || !formState.department) {
-      toast({ title: "Validation Error", description: "Please fill in all required fields.", variant: "destructive" });
+      showError("Validation Error", "Please fill in all required fields.");
       return;
     }
 
     if (editingItem) {
       setData((prev) => prev.map((c) => c.id === editingItem.id ? { ...c, ...formState } : c));
-      toast({ title: "Candidate Updated", description: `${formState.name} has been updated.` });
+      showSuccess("Candidate Updated", `${formState.name} has been updated.`);
     } else {
       const newCandidate: Candidate = {
         id: String(Date.now()),
         ...formState,
       };
       setData((prev) => [newCandidate, ...prev]);
-      toast({ title: "Candidate Added", description: `${formState.name} has been added.` });
+      showSuccess("Candidate Added", `${formState.name} has been added.`);
     }
     setDialogOpen(false);
   };
@@ -186,26 +190,35 @@ export default function Candidates() {
     <div className="flex flex-col h-full">
       <Topbar title="Candidates" subtitle="Track your recruitment pipeline" />
       <div className="flex-1 overflow-auto p-6">
+        <PageBanner
+          title="Recruitment Pipeline"
+          description="Track candidates from application to hire across all open positions."
+          iconSrc="/3d-icons/candidates.png"
+        />
         <PageHeader
           title="All Candidates"
           description={`${data.length} candidates in pipeline`}
           actionLabel="Add Candidate"
           onAction={openCreateDialog}
         />
-        <DataTable
-          data={data}
-          columns={columns}
-          searchPlaceholder="Search candidates..."
-          searchKey="name"
-          rowActions={rowActions}
-          filters={[
-            { label: "Stage", key: "stage", options: stages },
-            { label: "Source", key: "source", options: sources },
-          ]}
-          emptyTitle="No candidates found"
-          emptyDescription="Start building your talent pipeline."
-          emptyIllustration={emptyPeopleImg}
-        />
+        {loading ? (
+          <TableSkeleton rows={8} columns={5} />
+        ) : (
+          <DataTable
+            data={data}
+            columns={columns}
+            searchPlaceholder="Search candidates..."
+            searchKey="name"
+            rowActions={rowActions}
+            filters={[
+              { label: "Stage", key: "stage", options: stages },
+              { label: "Source", key: "source", options: sources },
+            ]}
+            emptyTitle="No candidates found"
+            emptyDescription="Start building your talent pipeline."
+            emptyIllustration={emptyPeopleImg}
+          />
+        )}
       </div>
 
       <FormDialog

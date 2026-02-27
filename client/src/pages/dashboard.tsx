@@ -1,12 +1,17 @@
 import { Users, UserPlus, Briefcase, CalendarDays, TrendingUp, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { Topbar } from "@/components/layout/topbar";
+import { PageBanner } from "@/components/hr/page-banner";
 import emptyCalendarImg from "@/assets/illustrations/empty-calendar.png";
 import { StatsCard } from "@/components/hr/stats-card";
+import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { employees, candidates, jobPostings, leaveRequests, attendanceRecords } from "@/lib/mock-data";
 import { getPersonAvatar } from "@/lib/avatars";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 
 export default function Dashboard() {
+  const loading = useSimulatedLoading();
   const activeEmployees = employees.filter((e) => e.status === "Active").length;
   const onLeave = employees.filter((e) => e.status === "On Leave").length;
   const openJobs = jobPostings.filter((j) => j.status === "Open").length;
@@ -24,37 +29,57 @@ export default function Dashboard() {
     <div className="flex flex-col h-full">
       <Topbar title="Dashboard" subtitle="Welcome back, Sneha" />
       <div className="flex-1 overflow-auto p-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Total Employees"
-            value={employees.length}
-            change={`${activeEmployees} active`}
-            changeType="positive"
-            icon={<Users className="size-5" />}
-          />
-          <StatsCard
-            title="Open Positions"
-            value={openJobs}
-            change={`${jobPostings.reduce((a, j) => a + j.applicants, 0)} total applicants`}
-            changeType="neutral"
-            icon={<Briefcase className="size-5" />}
-          />
-          <StatsCard
-            title="Active Candidates"
-            value={activeCandidates}
-            change={`${candidates.filter((c) => c.stage === "Interview").length} in interviews`}
-            changeType="positive"
-            icon={<UserPlus className="size-5" />}
-          />
-          <StatsCard
-            title="Pending Leaves"
-            value={pendingLeaves}
-            change={`${onLeave} currently on leave`}
-            changeType="warning"
-            icon={<CalendarDays className="size-5" />}
-          />
-        </div>
+        <PageBanner
+          title="Welcome to TeamSync"
+          description="Your HR command center — track employees, manage recruitment, and oversee operations at a glance."
+          iconSrc="/3d-icons/dashboard.png"
+        />
+        {loading ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              title="Total Employees"
+              value={employees.length}
+              change={`${activeEmployees} active`}
+              changeType="positive"
+              icon={<Users className="size-5" />}
+            />
+            <StatsCard
+              title="Open Positions"
+              value={openJobs}
+              change={`${jobPostings.reduce((a, j) => a + j.applicants, 0)} total applicants`}
+              changeType="neutral"
+              icon={<Briefcase className="size-5" />}
+            />
+            <StatsCard
+              title="Active Candidates"
+              value={activeCandidates}
+              change={`${candidates.filter((c) => c.stage === "Interview").length} in interviews`}
+              changeType="positive"
+              icon={<UserPlus className="size-5" />}
+            />
+            <StatsCard
+              title="Pending Leaves"
+              value={pendingLeaves}
+              change={`${onLeave} currently on leave`}
+              changeType="warning"
+              icon={<CalendarDays className="size-5" />}
+            />
+          </div>
+        )}
 
+        {loading ? (
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="rounded-lg border bg-background p-5"><div className="flex flex-col gap-3"><Skeleton className="h-4 w-1/3" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-2/3" /></div></div>
+            <div className="rounded-lg border bg-background p-5"><div className="flex flex-col gap-3"><Skeleton className="h-4 w-1/3" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-2/3" /></div></div>
+          </div>
+        ) : (
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="rounded-lg border bg-background">
             <div className="flex items-center justify-between border-b px-5 py-4">
@@ -125,7 +150,14 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        )}
 
+        {loading ? (
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="rounded-lg border bg-background p-5"><div className="flex flex-col gap-3"><Skeleton className="h-4 w-1/3" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-2/3" /></div></div>
+            <div className="rounded-lg border bg-background p-5 lg:col-span-2"><div className="flex flex-col gap-3"><Skeleton className="h-4 w-1/3" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-2/3" /></div></div>
+          </div>
+        ) : (
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="rounded-lg border bg-background">
             <div className="border-b px-5 py-4">
@@ -202,6 +234,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

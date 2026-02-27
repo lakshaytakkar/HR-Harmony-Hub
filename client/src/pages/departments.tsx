@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Topbar } from "@/components/layout/topbar";
 import { PageHeader } from "@/components/layout/page-header";
+import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import emptyDepartmentsImg from "@/assets/illustrations/empty-departments.png";
 import { StatusBadge } from "@/components/hr/status-badge";
@@ -15,12 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { departments as initialDepartments } from "@/lib/mock-data";
 import type { Department } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { getThingAvatar } from "@/lib/avatars";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 
 export default function Departments() {
+  const loading = useSimulatedLoading();
   const [data, setData] = useState<Department[]>(initialDepartments);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Department | null>(null);
@@ -31,7 +35,7 @@ export default function Departments() {
     description: "",
     status: "Active" as Department["status"],
   });
-  const { toast } = useToast();
+  const { toast, showSuccess, showError } = useToast();
 
   const columns: Column<Department>[] = [
     {
@@ -73,7 +77,7 @@ export default function Departments() {
     {
       label: "View Details",
       onClick: (item) => {
-        toast({ title: "View Department", description: `Viewing ${item.name}` });
+        showSuccess("View Department", `Viewing ${item.name}`);
       },
     },
     {
@@ -96,7 +100,7 @@ export default function Departments() {
       separator: true,
       onClick: (item) => {
         setData((prev) => prev.filter((d) => d.id !== item.id));
-        toast({ title: "Department Removed", description: `${item.name} has been removed.` });
+        showSuccess("Department Removed", `${item.name} has been removed.`);
       },
     },
   ];
@@ -109,17 +113,17 @@ export default function Departments() {
 
   const handleSubmit = () => {
     if (!formState.name || !formState.head || !formState.description) {
-      toast({ title: "Validation Error", description: "Please fill in all required fields.", variant: "destructive" });
+      showError("Validation Error", "Please fill in all required fields.");
       return;
     }
 
     if (editingItem) {
       setData((prev) => prev.map((d) => d.id === editingItem.id ? { ...d, ...formState } : d));
-      toast({ title: "Department Updated", description: `${formState.name} has been updated.` });
+      showSuccess("Department Updated", `${formState.name} has been updated.`);
     } else {
       const newDept: Department = { id: String(Date.now()), ...formState };
       setData((prev) => [newDept, ...prev]);
-      toast({ title: "Department Added", description: `${formState.name} has been added.` });
+      showSuccess("Department Added", `${formState.name} has been added.`);
     }
     setDialogOpen(false);
   };
@@ -128,25 +132,34 @@ export default function Departments() {
     <div className="flex flex-col h-full">
       <Topbar title="Departments" subtitle="Manage organization structure" />
       <div className="flex-1 overflow-auto p-6">
+        <PageBanner
+          title="Department Overview"
+          description="Manage your organizational structure and department details."
+          iconSrc="/3d-icons/departments.png"
+        />
         <PageHeader
           title="All Departments"
           description={`${data.length} departments`}
           actionLabel="Add Department"
           onAction={openCreateDialog}
         />
-        <DataTable
-          data={data}
-          columns={columns}
-          searchPlaceholder="Search departments..."
-          searchKey="name"
-          rowActions={rowActions}
-          filters={[
-            { label: "Status", key: "status", options: ["Active", "Inactive"] },
-          ]}
-          emptyTitle="No departments found"
-          emptyDescription="Create your first department to organize your team."
-          emptyIllustration={emptyDepartmentsImg}
-        />
+        {loading ? (
+          <TableSkeleton rows={8} columns={4} />
+        ) : (
+          <DataTable
+            data={data}
+            columns={columns}
+            searchPlaceholder="Search departments..."
+            searchKey="name"
+            rowActions={rowActions}
+            filters={[
+              { label: "Status", key: "status", options: ["Active", "Inactive"] },
+            ]}
+            emptyTitle="No departments found"
+            emptyDescription="Create your first department to organize your team."
+            emptyIllustration={emptyDepartmentsImg}
+          />
+        )}
       </div>
 
       <FormDialog

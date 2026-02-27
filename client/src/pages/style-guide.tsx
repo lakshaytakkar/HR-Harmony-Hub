@@ -3,12 +3,12 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const primaryColors = [
-  { name: "50", hex: "#F8F5FF", bg: "#F8F5FF" },
-  { name: "100", hex: "#D3C4FC", bg: "#D3C4FC" },
-  { name: "200", hex: "#B59CFA", bg: "#B59CFA" },
-  { name: "300", hex: "#9774F7", bg: "#9774F7" },
-  { name: "400", hex: "#7A4DF5", bg: "#7A4DF5" },
-  { name: "500", hex: "#897EFA", bg: "#897EFA" },
+  { name: "50", hex: "#EEF2FF", bg: "#EEF2FF" },
+  { name: "100", hex: "#E0E7FF", bg: "#E0E7FF" },
+  { name: "200", hex: "#C7D2FE", bg: "#C7D2FE" },
+  { name: "300", hex: "#A5B4FC", bg: "#A5B4FC" },
+  { name: "400", hex: "#818CF8", bg: "#818CF8" },
+  { name: "500", hex: "#4F46E5", bg: "#4F46E5" },
 ];
 
 const greyscaleColors = [

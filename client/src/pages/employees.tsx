@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Topbar } from "@/components/layout/topbar";
 import { PageHeader } from "@/components/layout/page-header";
+import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import emptyPeopleImg from "@/assets/illustrations/empty-people.png";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
@@ -18,8 +20,10 @@ import { employees as initialEmployees } from "@/lib/mock-data";
 import type { Employee } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { getPersonAvatar } from "@/lib/avatars";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 
 export default function Employees() {
+  const loading = useSimulatedLoading();
   const [data, setData] = useState<Employee[]>(initialEmployees);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Employee | null>(null);
@@ -33,7 +37,7 @@ export default function Employees() {
     status: "Active" as Employee["status"],
     joinDate: "",
   });
-  const { toast } = useToast();
+  const { toast, showSuccess, showError } = useToast();
 
   const columns: Column<Employee>[] = [
     {
@@ -86,7 +90,7 @@ export default function Employees() {
     {
       label: "View Details",
       onClick: (item) => {
-        toast({ title: "View Employee", description: `Viewing ${item.firstName} ${item.lastName}` });
+        showSuccess("View Employee", `Viewing ${item.firstName} ${item.lastName}`);
       },
     },
     {
@@ -112,7 +116,7 @@ export default function Employees() {
       separator: true,
       onClick: (item) => {
         setData((prev) => prev.filter((e) => e.id !== item.id));
-        toast({ title: "Employee Removed", description: `${item.firstName} ${item.lastName} has been removed.` });
+        showSuccess("Employee Removed", `${item.firstName} ${item.lastName} has been removed.`);
       },
     },
   ];
@@ -134,7 +138,7 @@ export default function Employees() {
 
   const handleSubmit = () => {
     if (!formState.firstName || !formState.lastName || !formState.email || !formState.department || !formState.position) {
-      toast({ title: "Validation Error", description: "Please fill in all required fields.", variant: "destructive" });
+      showError("Validation Error", "Please fill in all required fields.");
       return;
     }
 
@@ -146,7 +150,7 @@ export default function Employees() {
             : e
         )
       );
-      toast({ title: "Employee Updated", description: `${formState.firstName} ${formState.lastName} has been updated.` });
+      showSuccess("Employee Updated", `${formState.firstName} ${formState.lastName} has been updated.`);
     } else {
       const newEmployee: Employee = {
         id: String(Date.now()),
@@ -154,7 +158,7 @@ export default function Employees() {
         ...formState,
       };
       setData((prev) => [newEmployee, ...prev]);
-      toast({ title: "Employee Added", description: `${formState.firstName} ${formState.lastName} has been added.` });
+      showSuccess("Employee Added", `${formState.firstName} ${formState.lastName} has been added.`);
     }
     setDialogOpen(false);
   };
@@ -166,25 +170,34 @@ export default function Employees() {
     <div className="flex flex-col h-full">
       <Topbar title="Employees" subtitle="Manage your team members" />
       <div className="flex-1 overflow-auto p-6">
+        <PageBanner
+          title="Employee Directory"
+          description="View, manage, and organize your entire workforce in one place."
+          iconSrc="/3d-icons/employees.png"
+        />
         <PageHeader
           title="All Employees"
           description={`${data.length} team members`}
           actionLabel="Add Employee"
           onAction={openCreateDialog}
         />
-        <DataTable
-          data={data}
-          columns={columns}
-          searchPlaceholder="Search employees..."
-          rowActions={rowActions}
-          filters={[
-            { label: "Department", key: "department", options: departments },
-            { label: "Status", key: "status", options: statuses },
-          ]}
-          emptyTitle="No employees found"
-          emptyDescription="Get started by adding your first team member."
-          emptyIllustration={emptyPeopleImg}
-        />
+        {loading ? (
+          <TableSkeleton rows={8} columns={6} />
+        ) : (
+          <DataTable
+            data={data}
+            columns={columns}
+            searchPlaceholder="Search employees..."
+            rowActions={rowActions}
+            filters={[
+              { label: "Department", key: "department", options: departments },
+              { label: "Status", key: "status", options: statuses },
+            ]}
+            emptyTitle="No employees found"
+            emptyDescription="Get started by adding your first team member."
+            emptyIllustration={emptyPeopleImg}
+          />
+        )}
       </div>
 
       <FormDialog

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Topbar } from "@/components/layout/topbar";
 import { PageHeader } from "@/components/layout/page-header";
+import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
+import { DocumentPreviewModal } from "@/components/hr/document-preview-modal";
 import emptyDocumentsImg from "@/assets/illustrations/empty-documents.png";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
@@ -14,11 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { documents as initialDocuments } from "@/lib/mock-data";
 import type { HRDocument } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { getThingAvatar } from "@/lib/avatars";
 import { FileText } from "lucide-react";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 
 const fileTypeIcons: Record<string, string> = {
   PDF: "bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400",
@@ -27,9 +31,12 @@ const fileTypeIcons: Record<string, string> = {
 };
 
 export default function Documents() {
+  const loading = useSimulatedLoading();
   const [data, setData] = useState<HRDocument[]>(initialDocuments);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<HRDocument | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<HRDocument | null>(null);
   const [formState, setFormState] = useState({
     title: "",
     category: "Policy" as HRDocument["category"],
@@ -39,7 +46,7 @@ export default function Documents() {
     fileType: "PDF",
     status: "Active" as HRDocument["status"],
   });
-  const { toast } = useToast();
+  const { toast, showSuccess, showError } = useToast();
 
   const columns: Column<HRDocument>[] = [
     {
@@ -80,11 +87,22 @@ export default function Documents() {
     },
   ];
 
+  const openPreview = (doc: HRDocument) => {
+    setPreviewDoc(doc);
+    setPreviewOpen(true);
+  };
+
   const rowActions: RowAction<HRDocument>[] = [
     {
-      label: "Download",
+      label: "Preview",
       onClick: (item) => {
-        toast({ title: "Download Started", description: `Downloading ${item.title}` });
+        openPreview(item);
+      },
+    },
+    {
+      label: "View",
+      onClick: (item) => {
+        openPreview(item);
       },
     },
     {
@@ -107,7 +125,7 @@ export default function Documents() {
       label: "Archive",
       onClick: (item) => {
         setData((prev) => prev.map((d) => d.id === item.id ? { ...d, status: "Archived" as const } : d));
-        toast({ title: "Document Archived", description: `${item.title} has been archived.` });
+        showSuccess("Document Archived", `${item.title} has been archived.`);
       },
     },
     {
@@ -116,7 +134,7 @@ export default function Documents() {
       separator: true,
       onClick: (item) => {
         setData((prev) => prev.filter((d) => d.id !== item.id));
-        toast({ title: "Document Removed", description: `${item.title} has been removed.` });
+        showSuccess("Document Removed", `${item.title} has been removed.`);
       },
     },
   ];
@@ -137,17 +155,17 @@ export default function Documents() {
 
   const handleSubmit = () => {
     if (!formState.title || !formState.category) {
-      toast({ title: "Validation Error", description: "Please fill in all required fields.", variant: "destructive" });
+      showError("Validation Error", "Please fill in all required fields.");
       return;
     }
 
     if (editingItem) {
       setData((prev) => prev.map((d) => d.id === editingItem.id ? { ...d, ...formState } : d));
-      toast({ title: "Document Updated", description: `${formState.title} has been updated.` });
+      showSuccess("Document Updated", `${formState.title} has been updated.`);
     } else {
       const newDoc: HRDocument = { id: String(Date.now()), ...formState };
       setData((prev) => [newDoc, ...prev]);
-      toast({ title: "Document Added", description: `${formState.title} has been added.` });
+      showSuccess("Document Added", `${formState.title} has been added.`);
     }
     setDialogOpen(false);
   };
@@ -158,27 +176,45 @@ export default function Documents() {
     <div className="flex flex-col h-full">
       <Topbar title="Documents" subtitle="HR document management" />
       <div className="flex-1 overflow-auto p-6">
+        <PageBanner
+          title="Document Library"
+          description="Store, organize, and manage all HR documents and policies."
+          iconSrc="/3d-icons/documents.png"
+        />
         <PageHeader
           title="All Documents"
           description={`${data.length} documents`}
           actionLabel="Upload Document"
           onAction={openCreateDialog}
         />
-        <DataTable
-          data={data}
-          columns={columns}
-          searchPlaceholder="Search documents..."
-          searchKey="title"
-          rowActions={rowActions}
-          filters={[
-            { label: "Category", key: "category", options: categories },
-            { label: "Status", key: "status", options: ["Active", "Archived"] },
-          ]}
-          emptyTitle="No documents found"
-          emptyDescription="Upload your first HR document."
-          emptyIllustration={emptyDocumentsImg}
-        />
+        {loading ? (
+          <TableSkeleton rows={8} columns={5} />
+        ) : (
+          <DataTable
+            data={data}
+            columns={columns}
+            searchPlaceholder="Search documents..."
+            searchKey="title"
+            rowActions={rowActions}
+            onRowClick={openPreview}
+            filters={[
+              { label: "Category", key: "category", options: categories },
+              { label: "Status", key: "status", options: ["Active", "Archived"] },
+            ]}
+            emptyTitle="No documents found"
+            emptyDescription="Upload your first HR document."
+            emptyIllustration={emptyDocumentsImg}
+          />
+        )}
       </div>
+
+      <DocumentPreviewModal
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        document={previewDoc}
+        documents={data}
+        onNavigate={(doc) => setPreviewDoc(doc)}
+      />
 
       <FormDialog
         open={dialogOpen}

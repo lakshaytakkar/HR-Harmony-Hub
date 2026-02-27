@@ -16,6 +16,11 @@ import {
 import { StatusBadge } from "@/components/hr/status-badge";
 import { getPersonAvatar, getThingAvatar } from "@/lib/avatars";
 import logoImg from "@/assets/logo.png";
+import { Spinner, PageSpinner, InlineSpinner } from "@/components/ui/spinner";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { CardSkeleton, StatsCardSkeleton } from "@/components/ui/card-skeleton";
+import { PageBanner } from "@/components/hr/page-banner";
+import { showSuccess, showError, showInfo, showWarning } from "@/hooks/use-toast";
 import {
   Plus,
   Download,
@@ -764,6 +769,206 @@ function AvatarTab() {
   );
 }
 
+function LoadingTab() {
+  return (
+    <div className="flex flex-col gap-12">
+      <div>
+        <SectionTitle>Spinner Sizes</SectionTitle>
+        <div className="rounded-2xl bg-[#F8F9FB] p-8">
+          <div className="flex items-end gap-8">
+            {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+              <div key={size} className="flex flex-col items-center gap-3" data-testid={`spinner-size-${size}`}>
+                <Spinner size={size} />
+                <p className="text-xs text-[#666D80]">{size}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <SectionTitle>Page Spinner</SectionTitle>
+        <div className="rounded-2xl bg-[#F8F9FB] p-8">
+          <div className="rounded-lg border bg-background" style={{ height: 160 }}>
+            <PageSpinner label="Loading data..." />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <SectionTitle>Inline Spinner</SectionTitle>
+        <div className="rounded-2xl bg-[#F8F9FB] p-8">
+          <div className="flex items-center gap-6">
+            <Button disabled data-testid="btn-inline-spinner">
+              <InlineSpinner className="mr-2" /> Saving...
+            </Button>
+            <span className="text-sm text-[#36394A]">Processing <InlineSpinner className="ml-1" /></span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <SectionTitle>Stats Card Skeleton</SectionTitle>
+        <div className="rounded-2xl bg-[#F8F9FB] p-8">
+          <div className="grid grid-cols-4 gap-4" data-testid="stats-skeleton-grid">
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <SectionTitle>Card Skeleton</SectionTitle>
+        <div className="rounded-2xl bg-[#F8F9FB] p-8">
+          <div className="grid grid-cols-3 gap-4" data-testid="card-skeleton-grid">
+            <CardSkeleton />
+            <CardSkeleton lines={4} />
+            <CardSkeleton lines={2} />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <SectionTitle>Table Skeleton</SectionTitle>
+        <div className="rounded-2xl bg-[#F8F9FB] p-8" data-testid="table-skeleton-demo">
+          <TableSkeleton rows={4} columns={5} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ToastsTab() {
+  return (
+    <div className="flex flex-col gap-12">
+      <div>
+        <SectionTitle>Toast Types</SectionTitle>
+        <div className="rounded-2xl bg-[#F8F9FB] p-8">
+          <p className="text-sm text-[#666D80] mb-6">Click each button to trigger a toast notification. Toasts appear in the bottom-right corner and auto-dismiss after 3 seconds.</p>
+          <div className="flex flex-wrap gap-4">
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={() => showSuccess("Success", "Employee record saved successfully.")}
+              data-testid="btn-toast-success"
+            >
+              Success Toast
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => showError("Error", "Failed to save record. Please try again.")}
+              data-testid="btn-toast-error"
+            >
+              Error Toast
+            </Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => showInfo("Info", "Your session will expire in 5 minutes.")}
+              data-testid="btn-toast-info"
+            >
+              Info Toast
+            </Button>
+            <Button
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={() => showWarning("Warning", "Unsaved changes will be lost.")}
+              data-testid="btn-toast-warning"
+            >
+              Warning Toast
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <SectionTitle>Toast Styles</SectionTitle>
+        <div className="rounded-2xl bg-[#F8F9FB] p-8">
+          <div className="flex flex-col gap-4 max-w-md">
+            <div className="flex items-start gap-3 rounded-lg border bg-emerald-50 border-emerald-200 p-3" data-testid="toast-preview-success">
+              <div className="shrink-0 mt-0.5 text-emerald-700">✓</div>
+              <div>
+                <p className="text-sm font-medium text-emerald-800">Success</p>
+                <p className="text-xs text-emerald-700 mt-0.5">Green background, check icon</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-lg border bg-red-50 border-red-200 p-3" data-testid="toast-preview-error">
+              <div className="shrink-0 mt-0.5 text-red-700">✕</div>
+              <div>
+                <p className="text-sm font-medium text-red-800">Error</p>
+                <p className="text-xs text-red-700 mt-0.5">Red background, alert icon</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-lg border bg-blue-50 border-blue-200 p-3" data-testid="toast-preview-info">
+              <div className="shrink-0 mt-0.5 text-blue-700">ℹ</div>
+              <div>
+                <p className="text-sm font-medium text-blue-800">Info</p>
+                <p className="text-xs text-blue-700 mt-0.5">Blue background, info icon</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-lg border bg-amber-50 border-amber-200 p-3" data-testid="toast-preview-warning">
+              <div className="shrink-0 mt-0.5 text-amber-700">⚠</div>
+              <div>
+                <p className="text-sm font-medium text-amber-800">Warning</p>
+                <p className="text-xs text-amber-700 mt-0.5">Amber background, warning icon</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BannerTab() {
+  return (
+    <div className="flex flex-col gap-12">
+      <div>
+        <SectionTitle>Page Banner</SectionTitle>
+        <div className="rounded-2xl bg-[#F8F9FB] p-8">
+          <p className="text-sm text-[#666D80] mb-6">Full-width branded banner with 3D icon, title, description, and optional action button. Used at the top of every HR module page.</p>
+          <div className="flex flex-col gap-4">
+            <PageBanner
+              title="Employee Directory"
+              description="View, manage, and organize your entire workforce in one place."
+              iconSrc="/3d-icons/employees.png"
+            />
+            <PageBanner
+              title="Leave Management"
+              description="Review and manage employee leave requests and approvals."
+              iconSrc="/3d-icons/leave.png"
+              actionLabel="New Request"
+              onAction={() => showInfo("Action", "New Request button clicked")}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <SectionTitle>3D Icons</SectionTitle>
+        <div className="rounded-2xl bg-[#F8F9FB] p-8">
+          <div className="grid grid-cols-4 gap-6">
+            {[
+              { name: "Dashboard", src: "/3d-icons/dashboard.png" },
+              { name: "Employees", src: "/3d-icons/employees.png" },
+              { name: "Candidates", src: "/3d-icons/candidates.png" },
+              { name: "Departments", src: "/3d-icons/departments.png" },
+              { name: "Job Postings", src: "/3d-icons/jobs.png" },
+              { name: "Leave", src: "/3d-icons/leave.png" },
+              { name: "Attendance", src: "/3d-icons/attendance.png" },
+              { name: "Documents", src: "/3d-icons/documents.png" },
+            ].map((icon) => (
+              <div key={icon.name} className="flex flex-col items-center gap-3 rounded-lg bg-white p-4 border" data-testid={`icon-3d-${icon.name.toLowerCase().replace(/\s+/g, "-")}`}>
+                <img src={icon.src} alt={icon.name} className="size-12 object-contain drop-shadow-lg" />
+                <p className="text-xs font-medium text-[#36394A]">{icon.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ComponentsGuide() {
   return (
     <div className="flex h-full flex-col" data-testid="page-components-guide">
@@ -780,17 +985,23 @@ export default function ComponentsGuide() {
                 <TabsTrigger value="buttons" data-testid="tab-buttons">Buttons</TabsTrigger>
                 <TabsTrigger value="forms" data-testid="tab-forms">Forms</TabsTrigger>
                 <TabsTrigger value="components" data-testid="tab-components">Components</TabsTrigger>
-                <TabsTrigger value="logos" data-testid="tab-logos">Logos & Cursors</TabsTrigger>
+                <TabsTrigger value="loading" data-testid="tab-loading">Loading</TabsTrigger>
+                <TabsTrigger value="toasts" data-testid="tab-toasts">Toasts</TabsTrigger>
+                <TabsTrigger value="banner" data-testid="tab-banner">Banner</TabsTrigger>
                 <TabsTrigger value="badges" data-testid="tab-badges">Badges</TabsTrigger>
                 <TabsTrigger value="avatar" data-testid="tab-avatar">Avatar</TabsTrigger>
+                <TabsTrigger value="logos" data-testid="tab-logos">Logos & Cursors</TabsTrigger>
               </TabsList>
               <div className="mt-8">
                 <TabsContent value="buttons"><ButtonsTab /></TabsContent>
                 <TabsContent value="forms"><FormsTab /></TabsContent>
                 <TabsContent value="components"><ComponentsTab /></TabsContent>
-                <TabsContent value="logos"><LogosCursorsTab /></TabsContent>
+                <TabsContent value="loading"><LoadingTab /></TabsContent>
+                <TabsContent value="toasts"><ToastsTab /></TabsContent>
+                <TabsContent value="banner"><BannerTab /></TabsContent>
                 <TabsContent value="badges"><BadgesTab /></TabsContent>
                 <TabsContent value="avatar"><AvatarTab /></TabsContent>
+                <TabsContent value="logos"><LogosCursorsTab /></TabsContent>
               </div>
             </Tabs>
           </div>

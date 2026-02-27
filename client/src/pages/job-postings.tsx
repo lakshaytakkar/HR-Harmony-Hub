@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Topbar } from "@/components/layout/topbar";
 import { PageHeader } from "@/components/layout/page-header";
+import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import emptyJobsImg from "@/assets/illustrations/empty-jobs.png";
 import { StatusBadge } from "@/components/hr/status-badge";
@@ -15,12 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { jobPostings as initialJobPostings } from "@/lib/mock-data";
 import type { JobPosting } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Users } from "lucide-react";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 
 export default function JobPostings() {
+  const loading = useSimulatedLoading();
   const [data, setData] = useState<JobPosting[]>(initialJobPostings);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<JobPosting | null>(null);
@@ -37,7 +41,7 @@ export default function JobPostings() {
     salaryRange: "",
     experience: "",
   });
-  const { toast } = useToast();
+  const { toast, showSuccess, showError } = useToast();
 
   const columns: Column<JobPosting>[] = [
     {
@@ -99,7 +103,7 @@ export default function JobPostings() {
     {
       label: "View Details",
       onClick: (item) => {
-        toast({ title: "View Job", description: `Viewing ${item.title}` });
+        showSuccess("View Job", `Viewing ${item.title}`);
       },
     },
     {
@@ -126,7 +130,7 @@ export default function JobPostings() {
       label: "Close Position",
       onClick: (item) => {
         setData((prev) => prev.map((j) => j.id === item.id ? { ...j, status: "Closed" as const } : j));
-        toast({ title: "Position Closed", description: `${item.title} has been closed.` });
+        showSuccess("Position Closed", `${item.title} has been closed.`);
       },
     },
     {
@@ -135,7 +139,7 @@ export default function JobPostings() {
       separator: true,
       onClick: (item) => {
         setData((prev) => prev.filter((j) => j.id !== item.id));
-        toast({ title: "Job Posting Removed", description: `${item.title} has been removed.` });
+        showSuccess("Job Posting Removed", `${item.title} has been removed.`);
       },
     },
   ];
@@ -160,17 +164,17 @@ export default function JobPostings() {
 
   const handleSubmit = () => {
     if (!formState.title || !formState.department || !formState.location || !formState.description) {
-      toast({ title: "Validation Error", description: "Please fill in all required fields.", variant: "destructive" });
+      showError("Validation Error", "Please fill in all required fields.");
       return;
     }
 
     if (editingItem) {
       setData((prev) => prev.map((j) => j.id === editingItem.id ? { ...j, ...formState } : j));
-      toast({ title: "Job Updated", description: `${formState.title} has been updated.` });
+      showSuccess("Job Updated", `${formState.title} has been updated.`);
     } else {
       const newJob: JobPosting = { id: String(Date.now()), ...formState };
       setData((prev) => [newJob, ...prev]);
-      toast({ title: "Job Posted", description: `${formState.title} has been created.` });
+      showSuccess("Job Posted", `${formState.title} has been created.`);
     }
     setDialogOpen(false);
   };
@@ -183,27 +187,36 @@ export default function JobPostings() {
     <div className="flex flex-col h-full">
       <Topbar title="Job Postings" subtitle="Manage open positions" />
       <div className="flex-1 overflow-auto p-6">
+        <PageBanner
+          title="Job Postings"
+          description="Create, manage, and track open positions across departments."
+          iconSrc="/3d-icons/job-postings.png"
+        />
         <PageHeader
           title="All Job Postings"
           description={`${data.length} positions`}
           actionLabel="Create Posting"
           onAction={openCreateDialog}
         />
-        <DataTable
-          data={data}
-          columns={columns}
-          searchPlaceholder="Search positions..."
-          searchKey="title"
-          rowActions={rowActions}
-          filters={[
-            { label: "Status", key: "status", options: statuses },
-            { label: "Type", key: "type", options: types },
-            { label: "Department", key: "department", options: departments },
-          ]}
-          emptyTitle="No job postings found"
-          emptyDescription="Create your first job posting to start hiring."
-          emptyIllustration={emptyJobsImg}
-        />
+        {loading ? (
+          <TableSkeleton rows={8} columns={6} />
+        ) : (
+          <DataTable
+            data={data}
+            columns={columns}
+            searchPlaceholder="Search positions..."
+            searchKey="title"
+            rowActions={rowActions}
+            filters={[
+              { label: "Status", key: "status", options: statuses },
+              { label: "Type", key: "type", options: types },
+              { label: "Department", key: "department", options: departments },
+            ]}
+            emptyTitle="No job postings found"
+            emptyDescription="Create your first job posting to start hiring."
+            emptyIllustration={emptyJobsImg}
+          />
+        )}
       </div>
 
       <FormDialog

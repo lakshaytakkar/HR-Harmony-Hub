@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Topbar } from "@/components/layout/topbar";
 import { PageHeader } from "@/components/layout/page-header";
+import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import emptyCalendarImg from "@/assets/illustrations/empty-calendar.png";
 import { StatusBadge } from "@/components/hr/status-badge";
@@ -15,12 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { leaveRequests as initialLeaveRequests, employees } from "@/lib/mock-data";
 import type { LeaveRequest } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { getPersonAvatar } from "@/lib/avatars";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 
 export default function LeaveManagement() {
+  const loading = useSimulatedLoading();
   const [data, setData] = useState<LeaveRequest[]>(initialLeaveRequests);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<LeaveRequest | null>(null);
@@ -34,7 +38,7 @@ export default function LeaveManagement() {
     reason: "",
     days: 1,
   });
-  const { toast } = useToast();
+  const { toast, showSuccess, showError } = useToast();
 
   const columns: Column<LeaveRequest>[] = [
     {
@@ -89,14 +93,14 @@ export default function LeaveManagement() {
       label: "Approve",
       onClick: (item) => {
         setData((prev) => prev.map((l) => l.id === item.id ? { ...l, status: "Approved" as const } : l));
-        toast({ title: "Leave Approved", description: `${item.employeeName}'s leave has been approved.` });
+        showSuccess("Leave Approved", `${item.employeeName}'s leave has been approved.`);
       },
     },
     {
       label: "Reject",
       onClick: (item) => {
         setData((prev) => prev.map((l) => l.id === item.id ? { ...l, status: "Rejected" as const } : l));
-        toast({ title: "Leave Rejected", description: `${item.employeeName}'s leave has been rejected.` });
+        showSuccess("Leave Rejected", `${item.employeeName}'s leave has been rejected.`);
       },
     },
     {
@@ -122,7 +126,7 @@ export default function LeaveManagement() {
       separator: true,
       onClick: (item) => {
         setData((prev) => prev.filter((l) => l.id !== item.id));
-        toast({ title: "Leave Request Removed", description: "The leave request has been removed." });
+        showSuccess("Leave Request Removed", "The leave request has been removed.");
       },
     },
   ];
@@ -144,17 +148,17 @@ export default function LeaveManagement() {
 
   const handleSubmit = () => {
     if (!formState.employeeName || !formState.startDate || !formState.endDate || !formState.reason) {
-      toast({ title: "Validation Error", description: "Please fill in all required fields.", variant: "destructive" });
+      showError("Validation Error", "Please fill in all required fields.");
       return;
     }
 
     if (editingItem) {
       setData((prev) => prev.map((l) => l.id === editingItem.id ? { ...l, ...formState } : l));
-      toast({ title: "Leave Updated", description: "Leave request has been updated." });
+      showSuccess("Leave Updated", "Leave request has been updated.");
     } else {
       const newLeave: LeaveRequest = { id: String(Date.now()), ...formState };
       setData((prev) => [newLeave, ...prev]);
-      toast({ title: "Leave Requested", description: "New leave request has been created." });
+      showSuccess("Leave Requested", "New leave request has been created.");
     }
     setDialogOpen(false);
   };
@@ -166,26 +170,35 @@ export default function LeaveManagement() {
     <div className="flex flex-col h-full">
       <Topbar title="Leave Management" subtitle="Track and manage leave requests" />
       <div className="flex-1 overflow-auto p-6">
+        <PageBanner
+          title="Leave Management"
+          description="Review and manage employee leave requests and approvals."
+          iconSrc="/3d-icons/leave.png"
+        />
         <PageHeader
           title="Leave Requests"
           description={`${data.length} total requests`}
           actionLabel="New Request"
           onAction={openCreateDialog}
         />
-        <DataTable
-          data={data}
-          columns={columns}
-          searchPlaceholder="Search requests..."
-          searchKey="employeeName"
-          rowActions={rowActions}
-          filters={[
-            { label: "Status", key: "status", options: statuses },
-            { label: "Type", key: "type", options: leaveTypes },
-          ]}
-          emptyTitle="No leave requests"
-          emptyDescription="There are no leave requests to display."
-          emptyIllustration={emptyCalendarImg}
-        />
+        {loading ? (
+          <TableSkeleton rows={8} columns={6} />
+        ) : (
+          <DataTable
+            data={data}
+            columns={columns}
+            searchPlaceholder="Search requests..."
+            searchKey="employeeName"
+            rowActions={rowActions}
+            filters={[
+              { label: "Status", key: "status", options: statuses },
+              { label: "Type", key: "type", options: leaveTypes },
+            ]}
+            emptyTitle="No leave requests"
+            emptyDescription="There are no leave requests to display."
+            emptyIllustration={emptyCalendarImg}
+          />
+        )}
       </div>
 
       <FormDialog
