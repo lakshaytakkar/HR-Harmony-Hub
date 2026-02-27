@@ -14,6 +14,7 @@ import JobPostings from "@/pages/job-postings";
 import LeaveManagement from "@/pages/leave-management";
 import Attendance from "@/pages/attendance";
 import Documents from "@/pages/documents";
+import StyleGuide from "@/pages/style-guide";
 
 function Router() {
   return (
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/leave" component={LeaveManagement} />
       <Route path="/attendance" component={Attendance} />
       <Route path="/documents" component={Documents} />
+      <Route path="/dev/style-guide" component={StyleGuide} />
       <Route component={NotFound} />
     </Switch>
   );

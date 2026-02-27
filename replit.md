@@ -8,7 +8,7 @@ A custom HR Management Portal built with the LUMIN design system. Focused on per
 - **Backend**: Express.js (Node.js)
 - **State**: In-memory (frontend state management with React useState)
 - **Font**: Inter Tight (Google Fonts)
-- **Design System**: LUMIN brand tokens
+- **Design System**: LUMIN brand tokens (documented in Style Guide page)
 
 ## Architecture
 
@@ -17,7 +17,7 @@ A custom HR Management Portal built with the LUMIN design system. Focused on per
 client/src/
   components/
     layout/
-      app-sidebar.tsx    - Navigation sidebar (Shadcn sidebar)
+      app-sidebar.tsx    - Navigation sidebar with Main Menu + Design System groups
       topbar.tsx         - Top header bar with search, notifications, user menu
       page-header.tsx    - Reusable page header with title + actions
     hr/
@@ -36,23 +36,87 @@ client/src/
     leave-management.tsx - Leave request management with approve/reject
     attendance.tsx       - Attendance tracking with daily records
     documents.tsx        - Document management
+    style-guide.tsx      - Design System style guide (Typography, Colors, Shadow tabs)
+    not-found.tsx        - 404 page with illustration
   assets/
     illustrations/       - AI-generated empty state illustrations (background-less PNGs)
   lib/
     mock-data.ts         - Realistic mock data for all modules
 ```
 
-### Design Tokens (LUMIN Brand)
-- **Font**: Inter Tight (weights: 400, 500, 600, 700)
-- **Radius**: 0.5rem default
-- **Colors**: Shadcn semantic tokens (primary, muted, accent, destructive)
-- **Status Colors**: Emerald (success), Red (error), Amber (warning), Blue (info), Slate (neutral)
+### Sidebar Navigation
+- **Main Menu**: Dashboard, Employees, Candidates, Departments, Job Postings, Leave Management, Attendance, Documents
+- **Design System**: Style Guide (`/dev/style-guide`)
+
+## Design System Foundation (LUMIN Tokens)
+
+### Typography
+- **Font Family**: Inter Tight (Google Fonts)
+- **Weights**: Regular (400), Medium (500), Semibold (600)
+
+| Scale | Size | Weight | Line Height |
+|-------|------|--------|-------------|
+| Display | 64px | Semibold | 80px |
+| Heading 1 | 48px | Semibold | 1.2 |
+| Heading 2 | 40px | Semibold | 1.2 |
+| Heading 3 | 32px | Semibold | 1.4 |
+| Heading 4 | 24px | Semibold | 1.5 |
+| Heading 5 | 20px | Semibold | 1.4 |
+| Heading 6 | 16px | Semibold | 1.5 |
+| Body Large | 18px | Regular/Medium | 28px |
+| Body Base | 16px | Regular/Medium | 24px |
+| Body Small | 14px | Regular/Medium | 20px |
+| Body XSmall | 12px | Regular/Medium | 16px |
+
+### Colors — Primary
+| Token | Hex |
+|-------|------|
+| 50 | #F8F5FF |
+| 100 | #D3C4FC |
+| 200 | #B59CFA |
+| 300 | #9774F7 |
+| 400 | #7A4DF5 |
+| 500 | #897EFA |
+
+### Colors — Greyscale
+| Token | Hex |
+|-------|------|
+| 0 | #F8F9FB |
+| 25 | #F6F8FA |
+| 50 | #ECEFF3 |
+| 100 | #DFE1E7 |
+| 200 | #C1C7D0 |
+| 300 | #A4ACB9 |
+| 400 | #818898 |
+| 500 | #666D80 |
+| 600 | #36394A |
+| 700 | #272835 |
+| 800 | #1A1B25 |
+| 900 | #0D0D12 |
+
+### Shadows
+| Name | CSS Value |
+|------|-----------|
+| XSmall | 0px 1px 2px rgba(13,13,18,0.06) |
+| Small | 0px 1px 3px rgba(13,13,18,0.05), 0px 1px 2px rgba(13,13,18,0.04) |
+| Medium | 0px 5px 10px -2px rgba(13,13,18,0.04), 0px 4px 8px -1px rgba(13,13,18,0.02) |
+| Large | 0px 12px 16px -4px rgba(13,13,18,0.08), 0px 4px 6px -2px rgba(13,13,18,0.03) |
+| XLarge | 0px 24px 48px -12px rgba(13,13,18,0.12) |
+| XXLarge | 0px 24px 48px -12px rgba(13,13,18,0.18) |
+
+### Status Colors
+- **Success**: Emerald (Active, Present, Approved, Hired, Open)
+- **Error**: Red (Inactive, Absent, Rejected, Closed)
+- **Warning**: Amber (On Leave, Half Day, Pending)
+- **Info**: Blue (Interview, Screening, Notice Period)
+- **Neutral**: Slate (Contract, Archived, Late)
 
 ### Key Components
-- **DataTable**: Generic table with search, filters, sorting, pagination, checkboxes, row actions
-- **StatusBadge**: Auto-maps status strings to color variants
-- **FormDialog**: Standard dialog for create/edit forms
+- **DataTable**: Generic table with search, filters, sorting, pagination, checkboxes, row actions, empty state illustrations
+- **StatusBadge**: Auto-maps status strings to success/error/warning/info/neutral color variants
+- **FormDialog**: Standard dialog for create/edit forms (no popup animations)
 - **StatsCard**: Dashboard metric card with icon and change indicator
+- **EmptyState**: Reusable empty state with illustration, title, description, and optional action button
 
 ### HR Modules
 1. **Dashboard** - Stats overview, recent candidates, pending leaves, attendance summary, dept overview

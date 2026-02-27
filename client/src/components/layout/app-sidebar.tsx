@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Clock,
   FileText,
+  Palette,
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,6 +32,10 @@ const mainNavItems = [
   { title: "Leave Management", url: "/leave", icon: CalendarDays },
   { title: "Attendance", url: "/attendance", icon: Clock },
   { title: "Documents", url: "/documents", icon: FileText },
+];
+
+const designNavItems = [
+  { title: "Style Guide", url: "/dev/style-guide", icon: Palette },
 ];
 
 export function AppSidebar() {
@@ -61,6 +66,31 @@ export function AppSidebar() {
             <SidebarMenu>
               {mainNavItems.map((item) => {
                 const isActive = item.url === "/" ? location === "/" : location.startsWith(item.url);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.title}
+                    >
+                      <Link href={item.url} data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, "-")}`}>
+                        <item.icon className="size-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Design System</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {designNavItems.map((item) => {
+                const isActive = location.startsWith(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
