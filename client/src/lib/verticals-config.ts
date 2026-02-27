@@ -44,6 +44,7 @@ export interface Vertical {
   icon: LucideIcon;
   logo: ComponentType<{ size?: number; className?: string }>;
   color: string;
+  tagline: string;
   description: string;
   navCategories: NavCategory[];
 }
@@ -56,7 +57,8 @@ export const verticals: Vertical[] = [
     icon: Users,
     logo: LegalNationsLogo,
     color: "#225AEA",
-    description: "People, recruitment, and operations",
+    tagline: "B2B SaaS",
+    description: "Legal compliance & HR operations platform",
     navCategories: [
       {
         title: "Dashboard",
@@ -127,7 +129,8 @@ export const verticals: Vertical[] = [
     icon: TrendingUp,
     logo: UsdropAiLogo,
     color: "#F34147",
-    description: "Leads, pipeline, and performance",
+    tagline: "D2C Dropshipping",
+    description: "AI-powered dropshipping & sales automation",
     navCategories: [
       {
         title: "Dashboard",
@@ -170,7 +173,8 @@ export const verticals: Vertical[] = [
     icon: Ticket,
     logo: GoyoToursLogo,
     color: "#E91E63",
-    description: "Seminars, meets, and venue management",
+    tagline: "Service & Experiences",
+    description: "Tour packages, events & venue management",
     navCategories: [
       {
         title: "Dashboard",
@@ -204,7 +208,8 @@ export const verticals: Vertical[] = [
     icon: Shield,
     logo: LbmLifestyleLogo,
     color: "#673AB7",
-    description: "System administration and reports",
+    tagline: "B2B Ecommerce",
+    description: "Lifestyle brand wholesale & trade platform",
     navCategories: [
       {
         title: "Dashboard",

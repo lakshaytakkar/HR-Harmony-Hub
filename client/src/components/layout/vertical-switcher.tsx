@@ -38,6 +38,9 @@ export function VerticalSwitcher() {
             <span className="text-base font-bold font-heading tracking-tight leading-tight">
               {currentVertical.shortName}
             </span>
+            <span className="text-[11px] text-muted-foreground leading-none">
+              {currentVertical.tagline}
+            </span>
           </div>
           <ChevronsUpDown className="size-3.5 text-muted-foreground hidden sm:block" />
         </button>
@@ -63,7 +66,7 @@ export function VerticalSwitcher() {
               <LogoComponent size={42} />
               <div className="flex-1 min-w-0">
                 <p className="text-base font-medium truncate">{v.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{v.description}</p>
+                <p className="text-xs text-muted-foreground truncate">{v.tagline} · {v.description}</p>
               </div>
               {isActive && <Check className="size-4 text-primary shrink-0" />}
             </DropdownMenuItem>
