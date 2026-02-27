@@ -24,11 +24,23 @@ import StyleGuide from "@/pages/style-guide";
 import ComponentsGuide from "@/pages/components-guide";
 import IconsGuide from "@/pages/icons-guide";
 import SalesDashboard from "@/pages/sales/dashboard";
+import SalesProducts from "@/pages/sales/products";
+import SalesCategories from "@/pages/sales/categories";
+import SalesSuppliers from "@/pages/sales/suppliers";
+import SalesWinningProducts from "@/pages/sales/winning-products";
+import SalesUsers from "@/pages/sales/users";
 import SalesLeads from "@/pages/sales/leads";
-import SalesPipeline from "@/pages/sales/pipeline";
-import SalesTasks from "@/pages/sales/tasks";
-import SalesFollowUps from "@/pages/sales/follow-ups";
-import SalesPerformance from "@/pages/sales/performance";
+import SalesPlans from "@/pages/sales/plans";
+import SalesSubscriptions from "@/pages/sales/subscriptions";
+import SalesStores from "@/pages/sales/stores";
+import SalesFulfillment from "@/pages/sales/fulfillment";
+import SalesCompetitors from "@/pages/sales/competitors";
+import SalesTickets from "@/pages/sales/tickets";
+import SalesCourses from "@/pages/sales/courses";
+import SalesHelpCenter from "@/pages/sales/help-center";
+import SalesRevenue from "@/pages/sales/revenue";
+import SalesUserAnalytics from "@/pages/sales/user-analytics";
+import SalesProductPerformance from "@/pages/sales/product-performance";
 import EventsDashboard from "@/pages/events/dashboard";
 import EventsList from "@/pages/events/events-list";
 import EventsVenues from "@/pages/events/venues";
@@ -56,11 +68,23 @@ function Router() {
       <Route path="/dev/components" component={ComponentsGuide} />
       <Route path="/dev/icons" component={IconsGuide} />
       <Route path="/sales" component={SalesDashboard} />
+      <Route path="/sales/products" component={SalesProducts} />
+      <Route path="/sales/categories" component={SalesCategories} />
+      <Route path="/sales/suppliers" component={SalesSuppliers} />
+      <Route path="/sales/winning-products" component={SalesWinningProducts} />
+      <Route path="/sales/users" component={SalesUsers} />
       <Route path="/sales/leads" component={SalesLeads} />
-      <Route path="/sales/pipeline" component={SalesPipeline} />
-      <Route path="/sales/tasks" component={SalesTasks} />
-      <Route path="/sales/follow-ups" component={SalesFollowUps} />
-      <Route path="/sales/performance" component={SalesPerformance} />
+      <Route path="/sales/plans" component={SalesPlans} />
+      <Route path="/sales/subscriptions" component={SalesSubscriptions} />
+      <Route path="/sales/stores" component={SalesStores} />
+      <Route path="/sales/fulfillment" component={SalesFulfillment} />
+      <Route path="/sales/competitors" component={SalesCompetitors} />
+      <Route path="/sales/tickets" component={SalesTickets} />
+      <Route path="/sales/courses" component={SalesCourses} />
+      <Route path="/sales/help-center" component={SalesHelpCenter} />
+      <Route path="/sales/revenue" component={SalesRevenue} />
+      <Route path="/sales/user-analytics" component={SalesUserAnalytics} />
+      <Route path="/sales/product-performance" component={SalesProductPerformance} />
       <Route path="/events" component={EventsDashboard} />
       <Route path="/events/list" component={EventsList} />
       <Route path="/events/venues" component={EventsVenues} />

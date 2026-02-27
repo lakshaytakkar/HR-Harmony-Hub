@@ -20,7 +20,12 @@ The portal supports multiple business verticals, each with its own navigation, b
 
 ### Active Verticals (Branded Products)
 1. **LegalNations** (id: `hr`, color: #225AEA) — People, Recruitment, Operations, Finance, Projects — Routes: `/hr/*`
-2. **USDrop AI** (id: `sales`, color: #F34147) — Leads, Pipeline, Tasks, Follow-ups, Performance — Routes: `/sales/*`
+2. **USDrop AI** (id: `sales`, color: #F34147) — D2C Dropshipping SaaS Backoffice — Routes: `/sales/*`
+   - Dashboard, Products & Catalog (Products, Categories, Suppliers, Winning Products)
+   - Users & Subscriptions (Users, Leads, Plans, Subscriptions)
+   - Operations (Shopify Stores, Fulfillment, Competitor Stores)
+   - Support & Learning (Support Tickets, Courses, Help Center)
+   - Analytics (Revenue Analytics, User Analytics, Product Performance)
 3. **GoyoTours** (id: `events`, color: #E91E63) — Events, Venues, Check-in — Routes: `/events/*`
 4. **LBM Lifestyle** (id: `admin`, color: #673AB7) — Team, Settings, Reports — Routes: `/admin/*`
 
@@ -61,12 +66,24 @@ client/src/pages/
 ├── projects.tsx           # HR (route: /hr/projects)
 ├── project-detail.tsx     # HR (route: /hr/projects/:id)
 ├── sales/
-│   ├── dashboard.tsx      # Sales Dashboard (route: /sales)
-│   ├── leads.tsx          # Lead Management (route: /sales/leads)
-│   ├── pipeline.tsx       # Kanban Pipeline (route: /sales/pipeline)
-│   ├── tasks.tsx          # Sales Tasks (route: /sales/tasks)
-│   ├── follow-ups.tsx     # Follow-ups (route: /sales/follow-ups)
-│   └── performance.tsx    # Team Performance (route: /sales/performance)
+│   ├── dashboard.tsx           # USDrop AI Dashboard (route: /sales)
+│   ├── products.tsx            # Product Library (route: /sales/products)
+│   ├── categories.tsx          # Product Categories (route: /sales/categories)
+│   ├── suppliers.tsx           # Supplier Directory (route: /sales/suppliers)
+│   ├── winning-products.tsx    # Top Products (route: /sales/winning-products)
+│   ├── users.tsx               # External Users (route: /sales/users)
+│   ├── leads.tsx               # Lead Management (route: /sales/leads)
+│   ├── plans.tsx               # Plan Tiers (route: /sales/plans)
+│   ├── subscriptions.tsx       # Subscriptions (route: /sales/subscriptions)
+│   ├── stores.tsx              # Shopify Stores (route: /sales/stores)
+│   ├── fulfillment.tsx         # Fulfillment Orders (route: /sales/fulfillment)
+│   ├── competitors.tsx         # Competitor Stores (route: /sales/competitors)
+│   ├── tickets.tsx             # Support Tickets (route: /sales/tickets)
+│   ├── courses.tsx             # Learning Hub Courses (route: /sales/courses)
+│   ├── help-center.tsx         # Help Center FAQ (route: /sales/help-center)
+│   ├── revenue.tsx             # Revenue Analytics (route: /sales/revenue)
+│   ├── user-analytics.tsx      # User Analytics (route: /sales/user-analytics)
+│   └── product-performance.tsx # Product Performance (route: /sales/product-performance)
 ├── events/
 │   ├── dashboard.tsx      # Events Hub (route: /events)
 │   ├── events-list.tsx    # All Events (route: /events/list)
@@ -85,7 +102,7 @@ client/src/pages/
 
 ### Mock Data Files
 - `client/src/lib/mock-data.ts` — HR entities (employees, candidates, departments, etc.)
-- `client/src/lib/mock-data-sales.ts` — Sales CRM (leads, tasks, follow-ups, reps, pipeline stages)
+- `client/src/lib/mock-data-sales.ts` — USDrop AI entities (products, categories, suppliers, users, leads, subscriptions, stores, fulfillment, tickets, courses, plans, revenue metrics, help center articles)
 - `client/src/lib/mock-data-events.ts` — Events (events, venues, attendees)
 - `client/src/lib/mock-data-admin.ts` — Admin (team members, activity logs, reports)
 
