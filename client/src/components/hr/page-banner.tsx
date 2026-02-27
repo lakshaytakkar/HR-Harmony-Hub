@@ -8,7 +8,7 @@ interface PageBannerProps {
   onAction?: () => void;
 }
 
-export function PageBanner({ title, iconSrc, actionLabel, onAction }: PageBannerProps) {
+export function PageBanner({ title, description, iconSrc, actionLabel, onAction }: PageBannerProps) {
   return (
     <div
       className="mb-5 flex items-center gap-4 rounded-xl bg-primary/90 px-5 py-4"
@@ -22,6 +22,9 @@ export function PageBanner({ title, iconSrc, actionLabel, onAction }: PageBanner
       />
       <div className="flex-1 min-w-0">
         <h2 className="text-xl font-semibold font-heading text-white" data-testid="banner-title">{title}</h2>
+        {description && (
+          <p className="mt-0.5 text-sm text-white/75" data-testid="banner-description">{description}</p>
+        )}
       </div>
       {actionLabel && onAction && (
         <Button

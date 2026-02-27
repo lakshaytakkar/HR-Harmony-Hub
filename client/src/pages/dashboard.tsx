@@ -31,7 +31,6 @@ export default function Dashboard() {
       <div className="flex-1 overflow-auto p-6">
         <PageBanner
           title="Welcome to TeamSync"
-          description="Your HR command center — track employees, manage recruitment, and oversee operations at a glance."
           iconSrc="/3d-icons/dashboard.png"
         />
         {loading ? (
