@@ -44,8 +44,11 @@ export function TopNavigation() {
   const showSubNav = activeCategory && activeCategory.items.length > 1;
 
   return (
-    <div className="shrink-0 overflow-y-hidden">
-      <header className="flex h-14 items-center justify-between gap-2 border-b bg-background px-12 lg:px-20 overflow-hidden overflow-y-hidden">
+    <div className="shrink-0 overflow-y-hidden px-16 lg:px-24 pt-3 space-y-2">
+      <header
+        className="flex h-14 items-center justify-between gap-2 rounded-xl border bg-background px-5 overflow-hidden overflow-y-hidden"
+        data-testid="topbar-main"
+      >
         <div className="flex items-center gap-6 min-w-0">
           <VerticalSwitcher />
 
@@ -60,17 +63,17 @@ export function TopNavigation() {
                   href={cat.defaultUrl}
                   data-testid={`nav-l1-${cat.title.toLowerCase().replace(/\s+/g, "-")}`}
                   className={cn(
-                    "relative whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                    "relative whitespace-nowrap px-3 py-1.5 text-sm font-medium transition-colors",
                     isActive
                       ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {cat.title}
                   {isActive && (
                     <motion.div
                       layoutId="nav-l1-indicator"
-                      className="absolute bottom-[-13px] left-2 right-2 h-[2px] rounded-full bg-primary"
+                      className="absolute bottom-0 left-1 right-1 h-[2px] rounded-full bg-primary"
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
@@ -120,7 +123,10 @@ export function TopNavigation() {
       </header>
 
       {showSubNav && (
-        <div className="flex items-center gap-1 border-b bg-primary px-12 py-2 lg:px-20 overflow-x-auto overflow-y-hidden scrollbar-hide" data-testid="nav-level-2">
+        <div
+          className="flex items-center gap-1 rounded-xl bg-primary px-5 py-2 overflow-x-auto overflow-y-hidden scrollbar-hide"
+          data-testid="nav-level-2"
+        >
           {activeCategory.items.map((item, index) => {
             const isActive = isItemActive(location, item.url);
             return (
