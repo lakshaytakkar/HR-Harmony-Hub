@@ -20,7 +20,7 @@ export function StatsCard({ title, value, change, changeType = "neutral", icon, 
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-muted-foreground">{title}</span>
+          <span className="text-sm font-medium text-muted-foreground">{title}</span>
           <span className="text-2xl font-semibold font-heading tracking-tight">{value}</span>
           {change && (
             <span

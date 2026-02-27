@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/layout/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageTransition } from "@/components/ui/animated";
 
@@ -290,11 +289,7 @@ export default function StyleGuide() {
   return (
     <div className="px-8 py-6 lg:px-12" data-testid="page-style-guide">
         <PageTransition>
-          <PageHeader
-            title="Style Guide"
-            description="TeamSync Design System foundation — typography, colors, and shadows."
-          />
-          <div className="mt-6">
+          <div>
             <Tabs defaultValue="typography" data-testid="tabs-style-guide">
               <TabsList data-testid="tabs-list">
                 <TabsTrigger value="typography" data-testid="tab-typography">Typography</TabsTrigger>

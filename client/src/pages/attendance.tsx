@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { PageHeader } from "@/components/layout/page-header";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import emptyAttendanceImg from "@/assets/illustrations/empty-attendance.png";
@@ -21,7 +20,8 @@ import { useToast } from "@/hooks/use-toast";
 import { getPersonAvatar } from "@/lib/avatars";
 import { StatsCard } from "@/components/hr/stats-card";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
-import { CheckCircle2, Clock, AlertCircle, CalendarDays } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, CalendarDays, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { PageTransition } from "@/components/ui/animated";
 
@@ -210,12 +210,6 @@ export default function Attendance() {
           </div>
         )}
 
-        <PageHeader
-          title="Attendance Records"
-          description="Feb 27, 2025"
-          actionLabel="Add Record"
-          onAction={openCreateDialog}
-        />
         {loading ? (
           <TableSkeleton rows={8} columns={6} />
         ) : (
@@ -232,6 +226,12 @@ export default function Attendance() {
             emptyTitle="No attendance records"
             emptyDescription="No attendance data available for this date."
             emptyIllustration={emptyAttendanceImg}
+            headerActions={
+              <Button size="sm" onClick={openCreateDialog} data-testid="button-page-action">
+                <Plus className="mr-1.5 size-3.5" />
+                Add Record
+              </Button>
+            }
           />
         )}
         </PageTransition>

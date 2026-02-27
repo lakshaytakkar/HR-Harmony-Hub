@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { PageHeader } from "@/components/layout/page-header";
 import { Input } from "@/components/ui/input";
 import { PageTransition } from "@/components/ui/animated";
 import {
@@ -338,12 +337,7 @@ export default function IconsGuide() {
   return (
     <div className="px-8 py-6 lg:px-12" data-testid="page-icons-guide">
         <PageTransition>
-          <PageHeader
-            title="Icons"
-            description="Lucide icon library — all icons used across the TeamSync design system."
-          />
-
-          <div className="mt-6 mb-8 max-w-sm">
+          <div className="mb-8 max-w-sm">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input

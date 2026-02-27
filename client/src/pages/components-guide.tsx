@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/layout/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageTransition } from "@/components/ui/animated";
 import { Button } from "@/components/ui/button";
@@ -1030,11 +1029,7 @@ export default function ComponentsGuide() {
   return (
     <div className="px-8 py-6 lg:px-12" data-testid="page-components-guide">
         <PageTransition>
-          <PageHeader
-            title="Components"
-            description="TeamSync UI component library — buttons, forms, badges, avatars, and more."
-          />
-          <div className="mt-6">
+          <div>
             <Tabs defaultValue="buttons" data-testid="tabs-components">
               <TabsList data-testid="tabs-list-components">
                 <TabsTrigger value="buttons" data-testid="tab-buttons">Buttons</TabsTrigger>

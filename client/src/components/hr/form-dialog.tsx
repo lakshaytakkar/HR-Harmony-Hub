@@ -31,7 +31,7 @@ export function FormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto [&>button]:hidden">
         <DialogHeader>
-          <DialogTitle className="text-base">{title}</DialogTitle>
+          <DialogTitle className="text-lg font-semibold font-heading">{title}</DialogTitle>
           <DialogDescription className="sr-only">Fill in the form below</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4 py-2">

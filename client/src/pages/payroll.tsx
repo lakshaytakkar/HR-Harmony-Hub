@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { PageHeader } from "@/components/layout/page-header";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
@@ -202,34 +201,6 @@ export default function Payroll() {
           </Stagger>
 
           <Fade delay={0.15}>
-            <PageHeader
-              title="Payroll Details"
-              description={selectedRun.period}
-            >
-              <Select value={selectedRunId} onValueChange={setSelectedRunId}>
-                <SelectTrigger className="h-8 w-auto min-w-[180px] text-xs" data-testid="select-payroll-run">
-                  <SelectValue placeholder="Select period" />
-                </SelectTrigger>
-                <SelectContent>
-                  {payrollRuns.map((run) => (
-                    <SelectItem key={run.id} value={run.id}>
-                      {run.period}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="sm" onClick={handleExport} data-testid="button-export-payroll">
-                <Download className="mr-1.5 size-3.5" />
-                Export
-              </Button>
-              <Button size="sm" onClick={() => setRunPayrollOpen(true)} data-testid="button-run-payroll">
-                <Play className="mr-1.5 size-3.5" />
-                Run Payroll
-              </Button>
-            </PageHeader>
-          </Fade>
-
-          <Fade delay={0.2}>
             {loading ? (
               <TableSkeleton rows={8} columns={7} />
             ) : (
@@ -244,6 +215,30 @@ export default function Payroll() {
                 ]}
                 emptyTitle="No payroll entries"
                 emptyDescription="No payroll entries found for this period."
+                headerActions={
+                  <>
+                    <Select value={selectedRunId} onValueChange={setSelectedRunId}>
+                      <SelectTrigger className="h-8 w-auto min-w-[180px] text-xs" data-testid="select-payroll-run">
+                        <SelectValue placeholder="Select period" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {payrollRuns.map((run) => (
+                          <SelectItem key={run.id} value={run.id}>
+                            {run.period}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="sm" onClick={handleExport} data-testid="button-export-payroll">
+                      <Download className="mr-1.5 size-3.5" />
+                      Export
+                    </Button>
+                    <Button size="sm" onClick={() => setRunPayrollOpen(true)} data-testid="button-run-payroll">
+                      <Play className="mr-1.5 size-3.5" />
+                      Run Payroll
+                    </Button>
+                  </>
+                }
               />
             )}
           </Fade>

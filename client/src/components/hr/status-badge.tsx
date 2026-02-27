@@ -66,7 +66,7 @@ export function StatusBadge({ status, variant, className }: StatusBadgeProps) {
     <Badge
       variant="secondary"
       className={cn(
-        "border-0 text-[11px] font-medium px-2 py-0.5",
+        "border-0 text-xs font-medium px-2 py-0.5",
         variantStyles[resolvedVariant],
         className
       )}

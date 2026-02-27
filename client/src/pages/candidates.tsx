@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { PageHeader } from "@/components/layout/page-header";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import emptyPeopleImg from "@/assets/illustrations/empty-people.png";
@@ -18,7 +17,8 @@ import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { candidates as initialCandidates } from "@/lib/mock-data";
 import type { Candidate } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Star } from "lucide-react";
+import { Star, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { getPersonAvatar } from "@/lib/avatars";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { PageTransition } from "@/components/ui/animated";
@@ -194,12 +194,6 @@ export default function Candidates() {
           description="Track candidates from application to hire across all open positions."
           iconSrc="/3d-icons/candidates.png"
         />
-        <PageHeader
-          title="All Candidates"
-          description={`${data.length} candidates in pipeline`}
-          actionLabel="Add Candidate"
-          onAction={openCreateDialog}
-        />
         {loading ? (
           <TableSkeleton rows={8} columns={5} />
         ) : (
@@ -216,6 +210,12 @@ export default function Candidates() {
             emptyTitle="No candidates found"
             emptyDescription="Start building your talent pipeline."
             emptyIllustration={emptyPeopleImg}
+            headerActions={
+              <Button size="sm" onClick={openCreateDialog} data-testid="button-page-action">
+                <Plus className="mr-1.5 size-3.5" />
+                Add Candidate
+              </Button>
+            }
           />
         )}
         </PageTransition>

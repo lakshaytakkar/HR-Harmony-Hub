@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { PageHeader } from "@/components/layout/page-header";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import emptyJobsImg from "@/assets/illustrations/empty-jobs.png";
@@ -19,7 +18,8 @@ import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { jobPostings as initialJobPostings } from "@/lib/mock-data";
 import type { JobPosting } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Users } from "lucide-react";
+import { MapPin, Users, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { PageTransition } from "@/components/ui/animated";
 
@@ -191,12 +191,6 @@ export default function JobPostings() {
           description="Create, manage, and track open positions across departments."
           iconSrc="/3d-icons/job-postings.png"
         />
-        <PageHeader
-          title="All Job Postings"
-          description={`${data.length} positions`}
-          actionLabel="Create Posting"
-          onAction={openCreateDialog}
-        />
         {loading ? (
           <TableSkeleton rows={8} columns={6} />
         ) : (
@@ -214,6 +208,12 @@ export default function JobPostings() {
             emptyTitle="No job postings found"
             emptyDescription="Create your first job posting to start hiring."
             emptyIllustration={emptyJobsImg}
+            headerActions={
+              <Button size="sm" onClick={openCreateDialog} data-testid="button-page-action">
+                <Plus className="mr-1.5 size-3.5" />
+                Create Posting
+              </Button>
+            }
           />
         )}
         </PageTransition>

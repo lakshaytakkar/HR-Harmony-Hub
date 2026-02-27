@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { PageHeader } from "@/components/layout/page-header";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import emptyCalendarImg from "@/assets/illustrations/empty-calendar.png";
@@ -174,12 +175,6 @@ export default function LeaveManagement() {
           description="Review and manage employee leave requests and approvals."
           iconSrc="/3d-icons/leave.png"
         />
-        <PageHeader
-          title="Leave Requests"
-          description={`${data.length} total requests`}
-          actionLabel="New Request"
-          onAction={openCreateDialog}
-        />
         {loading ? (
           <TableSkeleton rows={8} columns={6} />
         ) : (
@@ -196,6 +191,12 @@ export default function LeaveManagement() {
             emptyTitle="No leave requests"
             emptyDescription="There are no leave requests to display."
             emptyIllustration={emptyCalendarImg}
+            headerActions={
+              <Button size="sm" onClick={openCreateDialog} data-testid="button-page-action">
+                <Plus className="mr-1.5 size-3.5" />
+                New Request
+              </Button>
+            }
           />
         )}
         </PageTransition>

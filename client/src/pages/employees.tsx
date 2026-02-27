@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { PageHeader } from "@/components/layout/page-header";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
@@ -174,12 +175,6 @@ export default function Employees() {
           description="View, manage, and organize your entire workforce in one place."
           iconSrc="/3d-icons/employees.png"
         />
-        <PageHeader
-          title="All Employees"
-          description={`${data.length} team members`}
-          actionLabel="Add Employee"
-          onAction={openCreateDialog}
-        />
         {loading ? (
           <TableSkeleton rows={8} columns={6} />
         ) : (
@@ -195,6 +190,12 @@ export default function Employees() {
             emptyTitle="No employees found"
             emptyDescription="Get started by adding your first team member."
             emptyIllustration={emptyPeopleImg}
+            headerActions={
+              <Button size="sm" onClick={openCreateDialog} data-testid="button-page-action">
+                <Plus className="mr-1.5 size-3.5" />
+                Add Employee
+              </Button>
+            }
           />
         )}
         </PageTransition>

@@ -57,6 +57,7 @@ interface DataTableProps<T extends { id: string }> {
   emptyTitle?: string;
   emptyDescription?: string;
   emptyIllustration?: string;
+  headerActions?: React.ReactNode;
 }
 
 export function DataTable<T extends { id: string }>({
@@ -71,6 +72,7 @@ export function DataTable<T extends { id: string }>({
   emptyTitle = "No data found",
   emptyDescription = "There are no records to display.",
   emptyIllustration,
+  headerActions,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -194,6 +196,7 @@ export function DataTable<T extends { id: string }>({
           />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          {headerActions}
           {filters?.map((filter) => (
             <Select
               key={filter.key}

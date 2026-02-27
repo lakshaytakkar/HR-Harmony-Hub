@@ -23,7 +23,7 @@ export function PageBanner({ title, description, iconSrc, actionLabel, onAction 
         draggable={false}
       />
       <div className="flex-1 min-w-0">
-        <h2 className="text-xl font-semibold font-heading text-white" data-testid="banner-title">{title}</h2>
+        <h2 className="text-xl font-bold font-heading text-white" data-testid="banner-title">{title}</h2>
         {description && (
           <p className="mt-0.5 text-sm text-white/75" data-testid="banner-description">{description}</p>
         )}

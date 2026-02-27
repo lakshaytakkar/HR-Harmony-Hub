@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { PageHeader } from "@/components/layout/page-header";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import emptyDepartmentsImg from "@/assets/illustrations/empty-departments.png";
@@ -136,12 +137,6 @@ export default function Departments() {
           description="Manage your organizational structure and department details."
           iconSrc="/3d-icons/departments.png"
         />
-        <PageHeader
-          title="All Departments"
-          description={`${data.length} departments`}
-          actionLabel="Add Department"
-          onAction={openCreateDialog}
-        />
         {loading ? (
           <TableSkeleton rows={8} columns={4} />
         ) : (
@@ -157,6 +152,12 @@ export default function Departments() {
             emptyTitle="No departments found"
             emptyDescription="Create your first department to organize your team."
             emptyIllustration={emptyDepartmentsImg}
+            headerActions={
+              <Button size="sm" onClick={openCreateDialog} data-testid="button-page-action">
+                <Plus className="mr-1.5 size-3.5" />
+                Add Department
+              </Button>
+            }
           />
         )}
         </PageTransition>

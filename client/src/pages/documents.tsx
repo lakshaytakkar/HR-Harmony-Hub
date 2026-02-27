@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { PageHeader } from "@/components/layout/page-header";
 import { PageBanner } from "@/components/hr/page-banner";
 import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import { DocumentPreviewModal } from "@/components/hr/document-preview-modal";
@@ -20,7 +19,8 @@ import { documents as initialDocuments } from "@/lib/mock-data";
 import type { HRDocument } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { getThingAvatar } from "@/lib/avatars";
-import { FileText } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { PageTransition } from "@/components/ui/animated";
 
@@ -180,12 +180,6 @@ export default function Documents() {
           description="Store, organize, and manage all HR documents and policies."
           iconSrc="/3d-icons/documents.png"
         />
-        <PageHeader
-          title="All Documents"
-          description={`${data.length} documents`}
-          actionLabel="Upload Document"
-          onAction={openCreateDialog}
-        />
         {loading ? (
           <TableSkeleton rows={8} columns={5} />
         ) : (
@@ -203,6 +197,12 @@ export default function Documents() {
             emptyTitle="No documents found"
             emptyDescription="Upload your first HR document."
             emptyIllustration={emptyDocumentsImg}
+            headerActions={
+              <Button size="sm" onClick={openCreateDialog} data-testid="button-page-action">
+                <Plus className="mr-1.5 size-3.5" />
+                Upload Document
+              </Button>
+            }
           />
         )}
         </PageTransition>

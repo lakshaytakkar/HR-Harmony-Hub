@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { PageBanner } from "@/components/hr/page-banner";
-import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/hr/stats-card";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
@@ -30,6 +30,7 @@ import {
   AlertTriangle,
   Users,
   Calendar,
+  Plus,
 } from "lucide-react";
 
 export default function Projects() {
@@ -141,12 +142,12 @@ export default function Projects() {
             </StaggerItem>
           </Stagger>
 
-          <PageHeader
-            title="All Projects"
-            description={`${data.length} projects`}
-            actionLabel="New Project"
-            onAction={openCreateDialog}
-          />
+          <div className="flex items-center justify-end pb-4">
+            <Button size="sm" onClick={openCreateDialog} data-testid="button-page-action">
+              <Plus className="mr-1.5 size-3.5" />
+              New Project
+            </Button>
+          </div>
 
           {loading ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
