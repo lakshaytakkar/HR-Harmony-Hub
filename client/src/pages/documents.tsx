@@ -16,7 +16,7 @@ import {
 import { documents as initialDocuments } from "@/lib/mock-data";
 import type { HRDocument } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Download, File } from "lucide-react";
+import { FileText } from "lucide-react";
 
 const fileTypeIcons: Record<string, string> = {
   PDF: "bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400",

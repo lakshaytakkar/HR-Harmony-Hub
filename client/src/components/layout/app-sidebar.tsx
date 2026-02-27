@@ -8,8 +8,6 @@ import {
   CalendarDays,
   Clock,
   FileText,
-  Settings,
-  ChevronLeft,
 } from "lucide-react";
 import {
   Sidebar,
@@ -21,7 +19,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
-  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -34,10 +31,6 @@ const mainNavItems = [
   { title: "Leave Management", url: "/leave", icon: CalendarDays },
   { title: "Attendance", url: "/attendance", icon: Clock },
   { title: "Documents", url: "/documents", icon: FileText },
-];
-
-const bottomNavItems = [
-  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -88,27 +81,6 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border">
-        <SidebarMenu>
-          {bottomNavItems.map((item) => {
-            const isActive = location.startsWith(item.url);
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive}
-                  tooltip={item.title}
-                >
-                  <Link href={item.url} data-testid={`nav-${item.title.toLowerCase()}`}>
-                    <item.icon className="size-4" />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }
