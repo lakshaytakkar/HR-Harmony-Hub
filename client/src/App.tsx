@@ -15,6 +15,8 @@ import LeaveManagement from "@/pages/leave-management";
 import Attendance from "@/pages/attendance";
 import Documents from "@/pages/documents";
 import StyleGuide from "@/pages/style-guide";
+import ComponentsGuide from "@/pages/components-guide";
+import IconsGuide from "@/pages/icons-guide";
 
 function Router() {
   return (
@@ -28,6 +30,8 @@ function Router() {
       <Route path="/attendance" component={Attendance} />
       <Route path="/documents" component={Documents} />
       <Route path="/dev/style-guide" component={StyleGuide} />
+      <Route path="/dev/components" component={ComponentsGuide} />
+      <Route path="/dev/icons" component={IconsGuide} />
       <Route component={NotFound} />
     </Switch>
   );

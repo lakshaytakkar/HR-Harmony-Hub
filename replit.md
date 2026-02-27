@@ -37,6 +37,8 @@ client/src/
     attendance.tsx       - Attendance tracking with daily records
     documents.tsx        - Document management
     style-guide.tsx      - Design System style guide (Typography, Colors, Shadow tabs)
+    components-guide.tsx - Component library (Buttons, Forms, Components, Logos & Cursors, Badges, Avatar tabs)
+    icons-guide.tsx      - Icon library with search (lucide-react icons organized by category)
     not-found.tsx        - 404 page with illustration
   assets/
     illustrations/       - AI-generated empty state illustrations (background-less PNGs)
@@ -46,7 +48,7 @@ client/src/
 
 ### Sidebar Navigation
 - **Main Menu**: Dashboard, Employees, Candidates, Departments, Job Postings, Leave Management, Attendance, Documents
-- **Design System**: Style Guide (`/dev/style-guide`)
+- **Design System**: Style Guide (`/dev/style-guide`), Components (`/dev/components`), Icons (`/dev/icons`)
 
 ## Design System Foundation (LUMIN Tokens)
 
@@ -117,6 +119,18 @@ client/src/
 - **FormDialog**: Standard dialog for create/edit forms (no popup animations)
 - **StatsCard**: Dashboard metric card with icon and change indicator
 - **EmptyState**: Reusable empty state with illustration, title, description, and optional action button
+
+### Component Library Reference (Components Page)
+- **Buttons**: 5 variants (Primary, Secondary, Outline, Ghost, Destructive) × 3 sizes (lg, default, sm) × states (Default, Hover, Focused, Disabled) + icon-only
+- **Forms**: Text Input (Default/Filled/Disabled/Error + icon prefixes), Select/Dropdown, Checkbox, Switch/Toggle
+- **Table Components**: Cell types (Avatar+Text, Title+Description, Badge, Button, Plain Text), Header styles
+- **Logos & Cursors**: LUMIN brand mark (Primary, Dark, Icon-only) + 12 cursor type demos
+- **Badges**: 5 colors (Neutral/Primary/Green/Yellow/Red) × 3 sizes (Large/Medium/Small) × 2 styles (Fill/Outlined) + Dot and Close icon types
+- **Avatars**: 7 sizes (24px→72px), Initials/Icon fallback types, 4 status indicators (Online/Offline/Busy/Away), stacked avatar groups
+
+### Icon Library Reference (Icons Page)
+- 150+ lucide-react icons organized into 12 categories: Navigation, Actions, Communication, Media, Files, Arrows, Interface, Status, Data, Business, Text, Devices, Misc
+- Searchable grid with category grouping
 
 ### HR Modules
 1. **Dashboard** - Stats overview, recent candidates, pending leaves, attendance summary, dept overview

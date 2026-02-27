@@ -9,6 +9,8 @@ import {
   Clock,
   FileText,
   Palette,
+  Component,
+  Grid3X3,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,6 +38,8 @@ const mainNavItems = [
 
 const designNavItems = [
   { title: "Style Guide", url: "/dev/style-guide", icon: Palette },
+  { title: "Components", url: "/dev/components", icon: Component },
+  { title: "Icons", url: "/dev/icons", icon: Grid3X3 },
 ];
 
 export function AppSidebar() {
