@@ -107,6 +107,17 @@ import AtsInterviews from "@/pages/ats/interviews";
 import AtsEvaluations from "@/pages/ats/evaluations";
 import AtsOffers from "@/pages/ats/offers";
 import AtsAnalytics from "@/pages/ats/analytics";
+import SocialDashboard from "@/pages/social/dashboard";
+import SocialPosts from "@/pages/social/posts";
+import SocialPostDetail from "@/pages/social/post-detail";
+import SocialComposer from "@/pages/social/composer";
+import SocialCalendar from "@/pages/social/calendar";
+import SocialMedia from "@/pages/social/media";
+import SocialCampaigns from "@/pages/social/campaigns";
+import SocialCampaignDetail from "@/pages/social/campaign-detail";
+import SocialApprovals from "@/pages/social/approvals";
+import SocialAssignments from "@/pages/social/assignments";
+import SocialAnalytics from "@/pages/social/analytics";
 
 function Router() {
   return (
@@ -240,6 +251,21 @@ function Router() {
       <Route path="/ats/evaluations" component={AtsEvaluations} />
       <Route path="/ats/offers" component={AtsOffers} />
       <Route path="/ats/analytics" component={AtsAnalytics} />
+      <Route path="/social" component={SocialDashboard} />
+      <Route path="/social/chat" component={UniversalChat} />
+      <Route path="/social/team" component={UniversalTeam} />
+      <Route path="/social/resources" component={UniversalResources} />
+      <Route path="/social/tasks" component={UniversalTasks} />
+      <Route path="/social/posts/:id" component={SocialPostDetail} />
+      <Route path="/social/posts" component={SocialPosts} />
+      <Route path="/social/composer" component={SocialComposer} />
+      <Route path="/social/calendar" component={SocialCalendar} />
+      <Route path="/social/media" component={SocialMedia} />
+      <Route path="/social/campaigns/:id" component={SocialCampaignDetail} />
+      <Route path="/social/campaigns" component={SocialCampaigns} />
+      <Route path="/social/approvals" component={SocialApprovals} />
+      <Route path="/social/assignments" component={SocialAssignments} />
+      <Route path="/social/analytics" component={SocialAnalytics} />
       <Route component={NotFound} />
     </Switch>
   );

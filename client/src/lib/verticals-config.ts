@@ -40,6 +40,9 @@ import {
   Award,
   ClipboardList,
   Star,
+  Target,
+  ShieldCheck,
+  FileImage,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -52,6 +55,7 @@ import { EazyToSellLogo } from "@/components/brand/eazytosell-logo";
 import { EventHubLogo } from "@/components/brand/eventhub-logo";
 import { HrmsLogo } from "@/components/brand/hrms-logo";
 import { AtsLogo } from "@/components/brand/ats-logo";
+import { SocialLogo } from "@/components/brand/social-logo";
 
 export interface NavItem {
   title: string;
@@ -803,6 +807,84 @@ export const verticals: Vertical[] = [
       },
     ],
   },
+  {
+    id: "social",
+    name: "SocialDesk",
+    shortName: "SocialDesk",
+    icon: BarChart3,
+    logo: SocialLogo,
+    color: "#0D9488",
+    tagline: "Content & Brand",
+    description: "Social media ops, scheduling & analytics",
+    isDepartment: true,
+    navCategories: [
+      {
+        title: "Dashboard",
+        defaultUrl: "/social",
+        icon: LayoutDashboard,
+        items: [],
+      },
+      {
+        title: "Chat",
+        defaultUrl: "/social/chat",
+        icon: MessageSquare,
+        items: [],
+      },
+      {
+        title: "Team",
+        defaultUrl: "/social/team",
+        icon: Users,
+        items: [],
+      },
+      {
+        title: "Resources",
+        defaultUrl: "/social/resources",
+        icon: FolderOpen,
+        items: [],
+      },
+      {
+        title: "Tasks",
+        defaultUrl: "/social/tasks",
+        icon: CheckSquare,
+        items: [],
+      },
+      {
+        title: "Content",
+        defaultUrl: "/social/posts",
+        icon: FileImage,
+        items: [
+          { title: "Post Library", url: "/social/posts" },
+          { title: "Composer", url: "/social/composer" },
+          { title: "Calendar", url: "/social/calendar" },
+          { title: "Media Library", url: "/social/media" },
+        ],
+      },
+      {
+        title: "Campaigns",
+        defaultUrl: "/social/campaigns",
+        icon: Target,
+        items: [],
+      },
+      {
+        title: "Approvals",
+        defaultUrl: "/social/approvals",
+        icon: ShieldCheck,
+        items: [],
+      },
+      {
+        title: "Assignments",
+        defaultUrl: "/social/assignments",
+        icon: ClipboardList,
+        items: [],
+      },
+      {
+        title: "Analytics",
+        defaultUrl: "/social/analytics",
+        icon: BarChart3,
+        items: [],
+      },
+    ],
+  },
 ];
 
 export function getVerticalById(id: string): Vertical | undefined {
@@ -827,6 +909,7 @@ export function getAllNavUrls(vertical: Vertical): string[] {
 export function detectVerticalFromUrl(location: string): Vertical | undefined {
   if (location.startsWith("/hrms")) return getVerticalById("hrms");
   if (location.startsWith("/ats")) return getVerticalById("ats");
+  if (location.startsWith("/social")) return getVerticalById("social");
   if (location.startsWith("/hr")) return getVerticalById("hr");
   if (location.startsWith("/sales")) return getVerticalById("sales");
   if (location.startsWith("/events")) return getVerticalById("events");
