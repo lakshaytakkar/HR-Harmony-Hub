@@ -1,7 +1,7 @@
 # TeamSync - Multi-Vertical Team Portal
 
 ## Overview
-TeamSync is a multi-vertical team portal with exceptional UI/UX inspired by the Dropship.io design system. It supports 4 branded products — LegalNations (HR), USDrop AI (Sales), GoyoTours (Events), LBM Lifestyle (Admin) — with a config-driven navigation system. Each vertical has its own dashboard, pages, brand logo, and workflows. Built with React, TypeScript, Tailwind CSS, and Shadcn UI.
+TeamSync is a multi-vertical team portal with exceptional UI/UX inspired by the Dropship.io design system. It supports 6 branded products — LegalNations (HR), USDrop AI (Sales), GoyoTours (Events), LBM Lifestyle (Admin), Developer (Internal), EazyToSell (Retail Franchise) — with a config-driven navigation system. Each vertical has its own dashboard, pages, brand logo, and workflows. Built with React, TypeScript, Tailwind CSS, and Shadcn UI.
 
 ## User Preferences
 - Single font: Plus Jakarta Sans only (Inter fully removed)
@@ -41,6 +41,14 @@ The portal supports multiple business verticals, each with its own navigation, b
    - Prompts (AI prompt library — categorized by agent/frontend/backend/database/debug, model tracking)
    - Resources (Dev processes, learnings, playbooks, workflow docs)
    - Toolkit (Apps & Credentials tracker, Important Links — Replit, Supabase, GitHub, etc.)
+6. **EazyToSell** (id: `ets`, color: #F97316) — China-to-India Value Retail Franchise Ops — Routes: `/ets/*`
+   - Dashboard (pipeline snapshot, revenue tracker, active orders with ETA bars, alerts for stuck items)
+   - Clients: Pipeline (kanban + table toggle, 8 stages: New Lead → Qualified → Token Paid → Store Design → Inventory Ordered → In Transit → Launched → Reordering), Client Detail (profile, financial summary, stage stepper, tabs: payments/checklist/timeline/notes)
+   - Catalog: Products (DataTable with price chain, hero SKU toggle, visibility, expandable pricing breakdown), Price Calculator (standalone what-if tool: EXW → FOB → CIF → Duty → IGST → Landed → Markup → MRP band, with templates)
+   - Orders: Order Tracker (6-stage: Ordered → Factory Ready → Shipped → Customs → Warehouse → Dispatched, with ETA bars), Payments (collected/pending/overdue tracking)
+   - Tools: Proposal Generator (investment breakdown by package tier, category mix sliders, WhatsApp copy export), Templates (WhatsApp message templates with variable placeholders)
+   - Settings (pricing defaults: exchange rate, commission, freight, duties, margins; category duty rates; package tier configs)
+   - Price engine ported from GitHub repo `lakshaytakkar/Eazy-Sell`: calculateEtsPrices() with MRP bands [29-999]
 
 ### Brand Logo Components
 Each vertical has a unique SVG logo in hexagonal mascot style:
@@ -49,6 +57,7 @@ Each vertical has a unique SVG logo in hexagonal mascot style:
 - `client/src/components/brand/goyotours-logo.tsx` — Compass icon
 - `client/src/components/brand/lbm-lifestyle-logo.tsx` — Heart-star/lifestyle icon
 - `client/src/components/brand/developer-logo.tsx` — Terminal/code icon
+- `client/src/components/brand/eazytosell-logo.tsx` — Shopping bag/lock/retail icon
 
 ### Frontend Technology
 React with TypeScript, Tailwind CSS, Shadcn UI, Wouter routing, motion/react animations.
@@ -118,6 +127,17 @@ client/src/pages/
 │   ├── team.tsx           # Team Management (route: /admin/team)
 │   ├── settings.tsx       # System Settings (route: /admin/settings)
 │   └── reports.tsx        # Reports & Analytics (route: /admin/reports)
+├── ets/
+│   ├── dashboard.tsx      # Command Center Dashboard (route: /ets)
+│   ├── pipeline.tsx       # Client Pipeline Kanban+Table (route: /ets/pipeline)
+│   ├── client-detail.tsx  # Client Detail (route: /ets/clients/:id)
+│   ├── products.tsx       # Product Catalog with pricing (route: /ets/products)
+│   ├── calculator.tsx     # Price Calculator (route: /ets/calculator)
+│   ├── orders.tsx         # Order Tracker (route: /ets/orders)
+│   ├── payments.tsx       # Payment Tracking (route: /ets/payments)
+│   ├── proposals.tsx      # Proposal Generator (route: /ets/proposals)
+│   ├── templates.tsx      # WhatsApp Templates (route: /ets/templates)
+│   └── settings.tsx       # Pricing & Config Settings (route: /ets/settings)
 └── not-found.tsx          # 404
 ```
 
@@ -131,6 +151,7 @@ client/src/pages/
 - `client/src/lib/mock-data-dev.ts` — Developer entities (12 AI prompts, 8 dev resources, 10 app credentials, 15 important links)
 - `client/src/lib/mock-data-events.ts` — Events (events, venues, attendees)
 - `client/src/lib/mock-data-admin.ts` — Admin (team members, activity logs, reports)
+- `client/src/lib/mock-data-ets.ts` — EazyToSell entities (15 franchise clients across 8 pipeline stages, 20 products with pricing, 8 orders, 12 payments, 3 proposal templates Lite/Pro/Elite, 8 WhatsApp templates, price settings, calculator templates) + `calculateEtsPrices()` price engine
 
 ### Core UI Components
 - **DataTable**: Generic reusable table with search, filters, sorting, pagination, row actions

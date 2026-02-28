@@ -27,6 +27,11 @@ import {
   MessageSquare,
   BookOpen,
   Wrench,
+  ShoppingBag,
+  Calculator,
+  Truck,
+  FileSpreadsheet,
+  MessageCircle,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -35,6 +40,7 @@ import { UsdropAiLogo } from "@/components/brand/usdrop-ai-logo";
 import { GoyoToursLogo } from "@/components/brand/goyotours-logo";
 import { LbmLifestyleLogo } from "@/components/brand/lbm-lifestyle-logo";
 import { DeveloperLogo } from "@/components/brand/developer-logo";
+import { EazyToSellLogo } from "@/components/brand/eazytosell-logo";
 
 export interface NavItem {
   title: string;
@@ -312,6 +318,65 @@ export const verticals: Vertical[] = [
       },
     ],
   },
+  {
+    id: "ets",
+    name: "EazyToSell",
+    shortName: "EazyToSell",
+    icon: ShoppingBag,
+    logo: EazyToSellLogo,
+    color: "#F97316",
+    tagline: "Retail Franchise Ops",
+    description: "China-to-India value retail franchise command center",
+    navCategories: [
+      {
+        title: "Dashboard",
+        defaultUrl: "/ets",
+        icon: LayoutDashboard,
+        items: [],
+      },
+      {
+        title: "Clients",
+        defaultUrl: "/ets/pipeline",
+        icon: Users,
+        items: [
+          { title: "Client Pipeline", url: "/ets/pipeline" },
+        ],
+      },
+      {
+        title: "Catalog",
+        defaultUrl: "/ets/products",
+        icon: Package,
+        items: [
+          { title: "Products", url: "/ets/products" },
+          { title: "Price Calculator", url: "/ets/calculator" },
+        ],
+      },
+      {
+        title: "Orders",
+        defaultUrl: "/ets/orders",
+        icon: Truck,
+        items: [
+          { title: "Order Tracker", url: "/ets/orders" },
+          { title: "Payments", url: "/ets/payments" },
+        ],
+      },
+      {
+        title: "Tools",
+        defaultUrl: "/ets/proposals",
+        icon: FileSpreadsheet,
+        items: [
+          { title: "Proposal Generator", url: "/ets/proposals" },
+          { title: "Templates", url: "/ets/templates" },
+        ],
+      },
+      {
+        title: "Settings",
+        defaultUrl: "/ets/settings",
+        icon: Settings,
+        items: [],
+      },
+    ],
+  },
 ];
 
 export function getVerticalById(id: string): Vertical | undefined {
@@ -339,5 +404,6 @@ export function detectVerticalFromUrl(location: string): Vertical | undefined {
   if (location.startsWith("/events")) return getVerticalById("events");
   if (location.startsWith("/admin")) return getVerticalById("admin");
   if (location.startsWith("/dev")) return getVerticalById("dev");
+  if (location.startsWith("/ets")) return getVerticalById("ets");
   return undefined;
 }

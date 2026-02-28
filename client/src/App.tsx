@@ -56,6 +56,16 @@ import DevDashboard from "@/pages/dev/dashboard";
 import DevPrompts from "@/pages/dev/prompts";
 import DevResources from "@/pages/dev/resources";
 import DevToolkit from "@/pages/dev/toolkit";
+import EtsDashboard from "@/pages/ets/dashboard";
+import EtsPipeline from "@/pages/ets/pipeline";
+import EtsClientDetail from "@/pages/ets/client-detail";
+import EtsProducts from "@/pages/ets/products";
+import EtsCalculator from "@/pages/ets/calculator";
+import EtsOrders from "@/pages/ets/orders";
+import EtsPayments from "@/pages/ets/payments";
+import EtsProposals from "@/pages/ets/proposals";
+import EtsTemplates from "@/pages/ets/templates";
+import EtsSettings from "@/pages/ets/settings";
 
 function Router() {
   return (
@@ -107,6 +117,16 @@ function Router() {
       <Route path="/admin/team" component={AdminTeam} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/reports" component={AdminReports} />
+      <Route path="/ets" component={EtsDashboard} />
+      <Route path="/ets/pipeline" component={EtsPipeline} />
+      <Route path="/ets/clients/:id" component={EtsClientDetail} />
+      <Route path="/ets/products" component={EtsProducts} />
+      <Route path="/ets/calculator" component={EtsCalculator} />
+      <Route path="/ets/orders" component={EtsOrders} />
+      <Route path="/ets/payments" component={EtsPayments} />
+      <Route path="/ets/proposals" component={EtsProposals} />
+      <Route path="/ets/templates" component={EtsTemplates} />
+      <Route path="/ets/settings" component={EtsSettings} />
       <Route component={NotFound} />
     </Switch>
   );
