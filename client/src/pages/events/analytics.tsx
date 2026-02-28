@@ -53,14 +53,17 @@ export default function EventsAnalytics() {
     { key: "interested", label: "Interested" },
     { key: "booked", label: "Booked" },
   ];
-  const funnelData = funnelStages.map((s, i, arr) => {
-    const count = leads.filter((l) => {
+  const funnelCounts = funnelStages.map((s) =>
+    leads.filter((l) => {
       if (s.key === "new") return true;
       if (s.key === "contacted") return ["contacted", "interested", "booked"].includes(l.status);
       if (s.key === "interested") return ["interested", "booked"].includes(l.status);
       return l.status === "booked";
-    }).length;
-    const prev = i === 0 ? leads.length : funnelData?.[i - 1]?.count || leads.length;
+    }).length
+  );
+  const funnelData = funnelStages.map((s, i) => {
+    const count = funnelCounts[i];
+    const prev = i === 0 ? leads.length : funnelCounts[i - 1];
     return { ...s, count, conversion: prev > 0 ? Math.round((count / prev) * 100) : 0 };
   });
 
