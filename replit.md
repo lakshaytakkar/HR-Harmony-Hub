@@ -45,6 +45,14 @@ TeamSync is a multi-vertical team portal with exceptional UI/UX inspired by the 
 - **Features**: Stats bar, filter pills, Submit Report dropdown, FormDialog with dynamic fields, file-browser list grouped by date, View dialog (read-only), pending rows with "Submit Now"
 - **Nav**: "Reports" nav item added to all 11 verticals in verticals-config.ts
 
+## PWA (Progressive Web App)
+- **Manifest**: `client/public/manifest.json` — name "TeamSync Portal", theme #225AEA, icons at 128/192/512px + SVG
+- **Service Worker**: `client/public/sw.js` — network-first with shell cache fallback for offline support
+- **Icons**: `client/public/icon.svg` (source), `favicon.png` (128px), `icon-192.png`, `icon-512.png` — TS logo blue gradient (#1a3fc4→#1860f0), rounded rect, bold white "TS" text
+- **Install prompt**: `components/layout/pwa-install-prompt.tsx` — fixed bottom-right card, on-brand, dismissable with localStorage persistence
+- **Hook**: `hooks/use-pwa-install.ts` — captures `beforeinstallprompt`, exposes `promptInstall()` and `dismiss()`
+- **Note**: Install prompt fires only when browser detects installability (HTTPS + manifest + SW + engagement criteria)
+
 ## User Preferences
 - Single font: Plus Jakarta Sans only (Inter fully removed)
 - No custom hover color classes on Shadcn Button components
