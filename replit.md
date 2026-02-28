@@ -41,8 +41,12 @@ The portal supports multiple business verticals, each with its own navigation, b
    - Prompts (AI prompt library — categorized by agent/frontend/backend/database/debug, model tracking)
    - Resources (Dev processes, learnings, playbooks, workflow docs)
    - **Projects** (project cards with progress, kanban board per project with 5 columns, list view toggle, sprint/assignee/priority filters, add task dialog)
+     - **Project Board** has a collapsible "Links & Credentials" section per project (above filters/kanban): horizontal chip row with SI logos for GitHub/Replit/Supabase/Vercel/Figma/Notion links + inline-editable credentials mini-table (click URL or Notes to edit inline; API key hint stays read-only)
    - **Tasks** (all tasks DataTable across all projects, filters by project/status/priority/type/assignee, click opens TaskDetailDialog sheet with subtasks/comments/sidebar)
-   - Toolkit (Apps & Credentials with real company logos via react-icons/si, Important Links with logos, Quick Tools tab — staging area for utility tools before deploying to target verticals)
+   - **Toolkit** — 3 tabs:
+     - *Apps & Credentials*: scope filter (All / Universal / Per-Project); Universal shows global credentials DataTable; Per-Project shows credentials grouped by project with color dot + key badge header; inline editing on Notes cells; real SI logos throughout
+     - *Important Links*: Pinned section + all links grid — cards are NOT wrapped in `<a>` to enable inline editing; click description to edit inline, click URL (shown in mono under the card) to edit inline; explicit ExternalLink icon opens URL; category badge visible
+     - *Quick Tools*: staging area for dev utilities before deploying to target verticals
 6. **EazyToSell** (id: `ets`, color: #F97316) — China-to-India Value Retail Franchise Ops — Routes: `/ets/*`
    - Dashboard (pipeline snapshot, revenue tracker, active orders with ETA bars, alerts for stuck items)
    - Clients: Pipeline (kanban + table toggle, 8 stages: New Lead → Qualified → Token Paid → Store Design → Inventory Ordered → In Transit → Launched → Reordering), Client Detail (profile, financial summary, stage stepper, tabs: payments/checklist/timeline/notes)
@@ -153,7 +157,16 @@ client/src/pages/
 ### Mock Data Files
 - `client/src/lib/mock-data.ts` — LegalNations entities (20 formation clients, 45+ checklist items, 25 documents, 15 compliance items, 25 tasks, 10 escalations, 6 team members, formation metrics, document templates)
 - `client/src/lib/mock-data-sales.ts` — USDrop AI entities (products, categories, suppliers, users, leads, subscriptions, stores, fulfillment, tickets, courses, plans, revenue metrics, help center articles)
-- `client/src/lib/mock-data-dev.ts` — Developer entities (12 AI prompts, 8 dev resources, 10 app credentials with real SI logos, 15 important links with logos, 6 projects: TeamSync/LegalNations/USDrop AI/GoyoTours/EazyToSell/Internal Tools, 38 tasks with subtasks/comments, 4 sprints, 7 quick tools)
+- `client/src/lib/mock-data-dev.ts` — Developer vertical entities:
+  - `DevProject` (6 projects: TeamSync, LegalNations, USDrop AI, GoyoTours, EazyToSell, Internal Tools)
+  - `DevTask` + `DevSprint` — Kanban tasks with subtasks/comments/attachments, sprint grouping
+  - `AppCredential` (10 universal credentials, tagged with `scope: "universal"`) — global API keys with real SI icon names
+  - `ProjectLink` (19 entries, 2-4 per project) — per-project GitHub/Replit/Supabase/Vercel/Figma/Notion links
+  - `ProjectCredential` (12 entries, 1-3 per project) — project-specific API keys (Supabase anon, Stripe live, Razorpay, etc.)
+  - `ImportantLink` (15 entries) — global developer bookmarks (pinned + all)
+  - `QuickTool` (7 tools) — utility tools with ready/wip/planned status
+  - `DevPrompt` (12 prompts) — AI prompt library with model tracking
+  - `DevResource` (8 resources) — dev process docs and playbooks
 - `client/src/components/dev/task-detail-dialog.tsx` — Task detail Sheet panel with subtask toggles, comments, right sidebar for status/priority/type editing
 - `client/src/lib/mock-data-events.ts` — Events (events, venues, attendees)
 - `client/src/lib/mock-data-admin.ts` — Admin (team members, activity logs, reports)

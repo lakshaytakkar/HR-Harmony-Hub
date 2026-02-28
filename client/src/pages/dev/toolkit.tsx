@@ -539,30 +539,70 @@ export default function ToolkitPage() {
                       <Stagger staggerInterval={0.04} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {pinnedLinks.map((link) => {
                           const IconComp = getIconComponent(link.iconName);
+                          const descKey = `link-desc-${link.id}`;
+                          const urlKey = `link-url-${link.id}`;
                           return (
                             <StaggerItem key={link.id}>
-                              <a
-                                href={link.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block"
-                                data-testid={`link-pinned-${link.id}`}
-                              >
-                                <Card className="p-4 hover-elevate">
-                                  <div className="flex items-start gap-3">
-                                    <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                                      <IconComp className="size-4" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="text-sm font-medium truncate">{link.title}</p>
-                                        <ExternalLink className="size-3 text-muted-foreground shrink-0" />
-                                      </div>
-                                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{link.description}</p>
-                                    </div>
+                              <Card className="p-4 hover-elevate" data-testid={`link-pinned-${link.id}`}>
+                                <div className="flex items-start gap-3">
+                                  <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                                    <IconComp className="size-4" />
                                   </div>
-                                </Card>
-                              </a>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <p className="text-sm font-medium truncate">{link.title}</p>
+                                      <a
+                                        href={editValues[urlKey] ?? link.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="ml-auto shrink-0"
+                                        data-testid={`link-open-${link.id}`}
+                                      >
+                                        <ExternalLink className="size-3 text-muted-foreground hover:text-primary" />
+                                      </a>
+                                    </div>
+                                    {editingField === descKey ? (
+                                      <input
+                                        className="text-xs bg-transparent border-b border-primary outline-none w-full mt-0.5"
+                                        value={editValues[descKey] ?? link.description}
+                                        onChange={(e) => setEditValues((prev) => ({ ...prev, [descKey]: e.target.value }))}
+                                        onBlur={() => commitEdit(descKey)}
+                                        onKeyDown={(e) => { if (e.key === "Enter") commitEdit(descKey); }}
+                                        autoFocus
+                                        data-testid={`input-edit-link-desc-${link.id}`}
+                                      />
+                                    ) : (
+                                      <p
+                                        className="text-xs text-muted-foreground mt-0.5 line-clamp-2 cursor-pointer hover:text-foreground"
+                                        onClick={() => startEditing(descKey, link.description)}
+                                        data-testid={`text-link-desc-${link.id}`}
+                                      >
+                                        {editValues[descKey] ?? link.description}
+                                      </p>
+                                    )}
+                                    {editingField === urlKey ? (
+                                      <input
+                                        className="text-xs bg-transparent border-b border-primary outline-none w-full mt-1"
+                                        value={editValues[urlKey] ?? link.url}
+                                        onChange={(e) => setEditValues((prev) => ({ ...prev, [urlKey]: e.target.value }))}
+                                        onBlur={() => commitEdit(urlKey)}
+                                        onKeyDown={(e) => { if (e.key === "Enter") commitEdit(urlKey); }}
+                                        autoFocus
+                                        data-testid={`input-edit-link-url-${link.id}`}
+                                      />
+                                    ) : (
+                                      <p
+                                        className="text-xs text-primary/70 mt-1 truncate cursor-pointer hover:text-primary font-mono"
+                                        onClick={() => startEditing(urlKey, link.url)}
+                                        data-testid={`text-link-url-${link.id}`}
+                                      >
+                                        {(editValues[urlKey] ?? link.url).replace("https://", "")}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </Card>
                             </StaggerItem>
                           );
                         })}
@@ -604,42 +644,79 @@ export default function ToolkitPage() {
                   <Stagger staggerInterval={0.03} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {filteredLinks.map((link) => {
                       const IconComp = getIconComponent(link.iconName);
+                      const descKey = `link-desc-${link.id}`;
+                      const urlKey = `link-url-${link.id}`;
                       return (
                         <StaggerItem key={link.id}>
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block"
-                            data-testid={`link-item-${link.id}`}
-                          >
-                            <Card className="p-4 hover-elevate">
-                              <div className="flex items-start gap-3">
-                                <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                                  <IconComp className="size-4" />
+                          <Card className="p-4 hover-elevate" data-testid={`link-item-${link.id}`}>
+                            <div className="flex items-start gap-3">
+                              <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                                <IconComp className="size-4" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-sm font-medium truncate">{link.title}</p>
+                                  {link.isPinned && (
+                                    <Pin className="size-3 text-primary shrink-0" />
+                                  )}
+                                  <a
+                                    href={editValues[urlKey] ?? link.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="ml-auto shrink-0"
+                                    data-testid={`link-open-all-${link.id}`}
+                                  >
+                                    <ExternalLink className="size-3 text-muted-foreground hover:text-primary" />
+                                  </a>
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <p className="text-sm font-medium truncate">{link.title}</p>
-                                    {link.isPinned && (
-                                      <Pin className="size-3 text-primary shrink-0" />
-                                    )}
-                                    <ExternalLink className="size-3 text-muted-foreground shrink-0" />
-                                  </div>
-                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{link.description}</p>
-                                  <div className="mt-2 flex items-center gap-2 flex-wrap">
-                                    <StatusBadge
-                                      status={link.category.charAt(0).toUpperCase() + link.category.slice(1)}
-                                      variant={linkCategoryVariant[link.category]}
-                                    />
-                                    <span className="text-xs text-muted-foreground truncate">
-                                      {link.url.replace("https://", "").split("/")[0]}
-                                    </span>
-                                  </div>
+                                {editingField === descKey ? (
+                                  <input
+                                    className="text-xs bg-transparent border-b border-primary outline-none w-full mt-0.5"
+                                    value={editValues[descKey] ?? link.description}
+                                    onChange={(e) => setEditValues((prev) => ({ ...prev, [descKey]: e.target.value }))}
+                                    onBlur={() => commitEdit(descKey)}
+                                    onKeyDown={(e) => { if (e.key === "Enter") commitEdit(descKey); }}
+                                    autoFocus
+                                    data-testid={`input-edit-link-desc-${link.id}`}
+                                  />
+                                ) : (
+                                  <p
+                                    className="text-xs text-muted-foreground mt-0.5 line-clamp-2 cursor-pointer hover:text-foreground"
+                                    onClick={() => startEditing(descKey, link.description)}
+                                    data-testid={`text-link-desc-${link.id}`}
+                                  >
+                                    {editValues[descKey] ?? link.description}
+                                  </p>
+                                )}
+                                {editingField === urlKey ? (
+                                  <input
+                                    className="text-xs bg-transparent border-b border-primary outline-none w-full mt-1"
+                                    value={editValues[urlKey] ?? link.url}
+                                    onChange={(e) => setEditValues((prev) => ({ ...prev, [urlKey]: e.target.value }))}
+                                    onBlur={() => commitEdit(urlKey)}
+                                    onKeyDown={(e) => { if (e.key === "Enter") commitEdit(urlKey); }}
+                                    autoFocus
+                                    data-testid={`input-edit-link-url-${link.id}`}
+                                  />
+                                ) : (
+                                  <p
+                                    className="text-xs text-primary/70 mt-1 truncate cursor-pointer hover:text-primary font-mono"
+                                    onClick={() => startEditing(urlKey, link.url)}
+                                    data-testid={`text-link-url-${link.id}`}
+                                  >
+                                    {(editValues[urlKey] ?? link.url).replace("https://", "")}
+                                  </p>
+                                )}
+                                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                                  <StatusBadge
+                                    status={link.category.charAt(0).toUpperCase() + link.category.slice(1)}
+                                    variant={linkCategoryVariant[link.category]}
+                                  />
                                 </div>
                               </div>
-                            </Card>
-                          </a>
+                            </div>
+                          </Card>
                         </StaggerItem>
                       );
                     })}
