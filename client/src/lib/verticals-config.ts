@@ -56,6 +56,7 @@ import { EazyToSellLogo } from "@/components/brand/eazytosell-logo";
 import { EventHubLogo } from "@/components/brand/eventhub-logo";
 import { HrmsLogo } from "@/components/brand/hrms-logo";
 import { AtsLogo } from "@/components/brand/ats-logo";
+import { CrmLogo } from "@/components/brand/crm-logo";
 import { SocialLogo } from "@/components/brand/social-logo";
 import { FaireLogo } from "@/components/brand/faire-logo";
 
@@ -1046,6 +1047,109 @@ export const verticals: Vertical[] = [
     ],
   },
   {
+    id: "crm",
+    name: "Sales CRM",
+    shortName: "CRM",
+    icon: TrendingUp,
+    logo: CrmLogo,
+    color: "#0369A1",
+    tagline: "Cross-Vertical Sales",
+    description: "Leads, deals, pipeline, contacts & team performance across all verticals",
+    isDepartment: true,
+    navCategories: [
+      {
+        title: "Dashboard",
+        defaultUrl: "/crm",
+        icon: LayoutDashboard,
+        items: [],
+      },
+      {
+        title: "Chat",
+        defaultUrl: "/crm/chat",
+        icon: MessageCircle,
+        items: [],
+      },
+      {
+        title: "Team",
+        defaultUrl: "/crm/team",
+        icon: UserRound,
+        items: [],
+      },
+      {
+        title: "Resources",
+        defaultUrl: "/crm/resources",
+        icon: FolderOpen,
+        items: [],
+      },
+      {
+        title: "Tasks",
+        defaultUrl: "/crm/tasks",
+        icon: ListChecks,
+        items: [],
+      },
+      {
+        title: "Leads",
+        defaultUrl: "/crm/leads",
+        icon: Users,
+        items: [
+          { title: "All Leads", url: "/crm/leads" },
+          { title: "Prospects", url: "/crm/prospects" },
+        ],
+      },
+      {
+        title: "Pipeline",
+        defaultUrl: "/crm/pipeline",
+        icon: FolderKanban,
+        items: [],
+      },
+      {
+        title: "Contacts",
+        defaultUrl: "/crm/contacts",
+        icon: Building2,
+        items: [
+          { title: "People", url: "/crm/contacts" },
+          { title: "Companies", url: "/crm/contacts?tab=companies" },
+        ],
+      },
+      {
+        title: "Deals",
+        defaultUrl: "/crm/deals",
+        icon: DollarSign,
+        items: [],
+      },
+      {
+        title: "Activities",
+        defaultUrl: "/crm/activities",
+        icon: CalendarCheck,
+        items: [],
+      },
+      {
+        title: "Performance",
+        defaultUrl: "/crm/performance",
+        icon: Target,
+        items: [],
+      },
+      {
+        title: "Templates",
+        defaultUrl: "/crm/templates",
+        icon: FileText,
+        items: [],
+      },
+      {
+        title: "Reports",
+        defaultUrl: "/crm/reports",
+        icon: BarChart3,
+        items: [],
+      },
+      {
+        title: "Important Contacts",
+        defaultUrl: "/crm/contacts-important",
+        icon: Phone,
+        items: [],
+      },
+    ],
+  },
+  {
     id: "social",
     name: "SocialDesk",
     shortName: "SocialDesk",
@@ -1160,6 +1264,7 @@ export function detectVerticalFromUrl(location: string): Vertical | undefined {
   if (location.startsWith("/faire")) return getVerticalById("faire");
   if (location.startsWith("/hrms")) return getVerticalById("hrms");
   if (location.startsWith("/ats")) return getVerticalById("ats");
+  if (location.startsWith("/crm")) return getVerticalById("crm");
   if (location.startsWith("/social")) return getVerticalById("social");
   if (location.startsWith("/hr")) return getVerticalById("hr");
   if (location.startsWith("/sales")) return getVerticalById("sales");

@@ -115,6 +115,15 @@ import AtsInterviews from "@/pages/ats/interviews";
 import AtsEvaluations from "@/pages/ats/evaluations";
 import AtsOffers from "@/pages/ats/offers";
 import AtsAnalytics from "@/pages/ats/analytics";
+import CrmDashboard from "@/pages/crm/dashboard";
+import CrmLeads from "@/pages/crm/leads";
+import CrmProspects from "@/pages/crm/prospects";
+import CrmPipeline from "@/pages/crm/pipeline";
+import CrmContacts from "@/pages/crm/contacts";
+import CrmDeals from "@/pages/crm/deals";
+import CrmActivities from "@/pages/crm/activities";
+import CrmPerformance from "@/pages/crm/performance";
+import CrmTemplates from "@/pages/crm/templates";
 import SocialDashboard from "@/pages/social/dashboard";
 import SocialPosts from "@/pages/social/posts";
 import SocialPostDetail from "@/pages/social/post-detail";
@@ -297,6 +306,21 @@ function Router() {
       <Route path="/ats/evaluations" component={AtsEvaluations} />
       <Route path="/ats/offers" component={AtsOffers} />
       <Route path="/ats/analytics" component={AtsAnalytics} />
+      <Route path="/crm" component={CrmDashboard} />
+      <Route path="/crm/chat" component={UniversalChat} />
+      <Route path="/crm/team" component={UniversalTeam} />
+      <Route path="/crm/resources" component={UniversalResources} />
+      <Route path="/crm/tasks" component={UniversalTasks} />
+      <Route path="/crm/reports" component={UniversalReports} />
+      <Route path="/crm/contacts-important" component={UniversalImportantContacts} />
+      <Route path="/crm/leads" component={CrmLeads} />
+      <Route path="/crm/prospects" component={CrmProspects} />
+      <Route path="/crm/pipeline" component={CrmPipeline} />
+      <Route path="/crm/contacts" component={CrmContacts} />
+      <Route path="/crm/deals" component={CrmDeals} />
+      <Route path="/crm/activities" component={CrmActivities} />
+      <Route path="/crm/performance" component={CrmPerformance} />
+      <Route path="/crm/templates" component={CrmTemplates} />
       <Route path="/social" component={SocialDashboard} />
       <Route path="/social/chat" component={UniversalChat} />
       <Route path="/social/team" component={UniversalTeam} />

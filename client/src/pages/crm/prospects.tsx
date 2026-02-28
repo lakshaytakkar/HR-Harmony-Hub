@@ -1,0 +1,200 @@
+import { useState } from "react";
+import { Search, ArrowUpRight, Plus, Activity, Calendar } from "lucide-react";
+import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { getPersonAvatar } from "@/lib/avatars";
+import { crmContacts, crmDeals, ALL_VERTICALS_IN_CRM } from "@/lib/mock-data-crm";
+
+const BRAND = "#0369A1";
+
+const REPS = [...new Set(crmContacts.map(c => c.assignedTo))].sort();
+
+function formatINR(v: number) {
+  if (v >= 100000) return `₹${(v / 100000).toFixed(1)}L`;
+  return `₹${(v / 1000).toFixed(0)}K`;
+}
+
+function NurtureBar({ score }: { score: number }) {
+  const color = score >= 70 ? "bg-emerald-500" : score >= 40 ? "bg-amber-400" : "bg-red-400";
+  const textColor = score >= 70 ? "text-emerald-600" : score >= 40 ? "text-amber-600" : "text-red-600";
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">Nurture Score</span>
+        <span className={`text-xs font-bold ${textColor}`}>{score}%</span>
+      </div>
+      <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+        <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${score}%` }} />
+      </div>
+    </div>
+  );
+}
+
+export default function CrmProspects() {
+  const isLoading = useSimulatedLoading(600);
+  const [verticalFilter, setVerticalFilter] = useState("all");
+  const [repFilter, setRepFilter] = useState("all");
+  const [sort, setSort] = useState("nurture");
+  const [search, setSearch] = useState("");
+
+  const prospects = crmContacts.filter(c => c.status === "prospect" || c.status === "qualified");
+
+  const filtered = prospects.filter(c => {
+    if (verticalFilter !== "all" && c.vertical !== verticalFilter) return false;
+    if (repFilter !== "all" && c.assignedTo !== repFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (!c.name.toLowerCase().includes(q) && !c.company.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  }).sort((a, b) => {
+    if (sort === "nurture") return b.nurtureScore - a.nurtureScore;
+    if (sort === "contact") return b.lastActivity.localeCompare(a.lastActivity);
+    if (sort === "value") return (b.expectedValue ?? 0) - (a.expectedValue ?? 0);
+    return 0;
+  });
+
+  const getVertical = (id: string) => ALL_VERTICALS_IN_CRM.find(v => v.id === id);
+  const getLinkedDeal = (contactId: string) => crmDeals.find(d => d.contactId === contactId && !["won", "lost"].includes(d.stage));
+
+  if (isLoading) {
+    return (
+      <div className="px-16 py-6 lg:px-24 space-y-4 animate-pulse">
+        <div className="h-10 bg-muted rounded w-52" />
+        <div className="h-10 bg-muted rounded" />
+        <div className="grid grid-cols-3 gap-4">{[...Array(6)].map((_, i) => <div key={i} className="h-52 bg-muted rounded-xl" />)}</div>
+      </div>
+    );
+  }
+
+  return (
+    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+      <Fade>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold">Prospects</h1>
+            <span className="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+              {filtered.length}
+            </span>
+          </div>
+          <Button size="sm" className="rounded-full gap-1.5" style={{ backgroundColor: BRAND }} data-testid="btn-convert-deal">
+            <Plus className="size-4" /> Convert to Deal
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {[{ id: "all", name: "All Verticals", color: BRAND }, ...ALL_VERTICALS_IN_CRM].map(v => (
+            <button
+              key={v.id}
+              onClick={() => setVerticalFilter(v.id)}
+              data-testid={`pill-vertical-${v.id}`}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                verticalFilter === v.id ? "text-white border-transparent" : "bg-background border-border text-muted-foreground hover:border-foreground/30"
+              }`}
+              style={verticalFilter === v.id ? { backgroundColor: v.color, borderColor: v.color } : {}}
+            >
+              {v.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input placeholder="Search prospects..." className="pl-9 h-9 w-56 rounded-lg" value={search} onChange={e => setSearch(e.target.value)} data-testid="input-search" />
+          </div>
+          <Select value={repFilter} onValueChange={setRepFilter}>
+            <SelectTrigger className="h-9 w-44 rounded-lg" data-testid="select-assignee"><SelectValue placeholder="Assigned To" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Reps</SelectItem>
+              {REPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={sort} onValueChange={setSort}>
+            <SelectTrigger className="h-9 w-44 rounded-lg" data-testid="select-sort"><SelectValue placeholder="Sort by" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nurture">Nurture Score</SelectItem>
+              <SelectItem value="contact">Last Contact</SelectItem>
+              <SelectItem value="value">Expected Value</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </Fade>
+
+      <Stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filtered.map(c => {
+          const vert = getVertical(c.vertical);
+          const deal = getLinkedDeal(c.id);
+          return (
+            <StaggerItem key={c.id}>
+              <Card className="border-0 shadow-sm hover:shadow-md transition-shadow" data-testid={`prospect-card-${c.id}`}>
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <img src={getPersonAvatar(c.name, 40)} alt={c.name} className="size-10 rounded-full shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{c.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{c.designation}</p>
+                      <p className="text-xs text-muted-foreground truncate">{c.company}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {vert && (
+                      <span className="text-xs px-2 py-0.5 rounded-full text-white font-medium" style={{ backgroundColor: vert.color }}>
+                        {vert.name}
+                      </span>
+                    )}
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 capitalize">
+                      via {c.source.replace("-", " ")}
+                    </span>
+                  </div>
+
+                  <NurtureBar score={c.nurtureScore} />
+
+                  {c.nextAction && (
+                    <div className="flex items-start gap-2">
+                      <ArrowUpRight className="size-3.5 text-blue-500 mt-0.5 shrink-0" />
+                      <p className="text-xs text-blue-600">{c.nextAction}</p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="size-3" />
+                      <span>Last: {c.lastActivity}</span>
+                    </div>
+                    {deal && (
+                      <div className="flex items-center gap-1 text-emerald-600">
+                        <span className="font-medium">
+                          {deal.currency === "INR" ? formatINR(deal.value) : `$${(deal.value / 1000).toFixed(0)}K`}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 pt-1 border-t">
+                    <Button variant="outline" size="sm" className="flex-1 h-8 text-xs rounded-lg gap-1.5" data-testid={`btn-log-activity-${c.id}`}>
+                      <Activity className="size-3" /> Log Activity
+                    </Button>
+                    <Button size="sm" className="flex-1 h-8 text-xs rounded-lg text-white" style={{ backgroundColor: BRAND }} data-testid={`btn-create-deal-${c.id}`}>
+                      Create Deal
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </StaggerItem>
+          );
+        })}
+        {filtered.length === 0 && (
+          <div className="col-span-3 py-20 text-center text-muted-foreground text-sm">
+            No prospects match the current filters.
+          </div>
+        )}
+      </Stagger>
+    </PageTransition>
+  );
+}
