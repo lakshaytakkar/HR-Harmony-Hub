@@ -34,6 +34,17 @@ TeamSync is a multi-vertical team portal with exceptional UI/UX inspired by the 
 - **Offers** `/ats/offers` — offer management with preview dialog (formatted offer letter), send/accept/decline actions
 - **Analytics** `/ats/analytics` — funnel, source mix bars, time-to-hire by dept, top jobs, interviewer load
 
+## Universal Reports System (All 11 Verticals)
+- **Page**: `pages/universal/reports.tsx` — single shared component, auto-adapts via `detectVerticalFromUrl`
+- **Route**: `/[prefix]/reports` for all 11 verticals (except LBM Lifestyle uses `/admin/team-reports` to avoid conflict with existing system reports)
+- **Data**: `lib/mock-data-reports.ts` (types + assembly) + 3 group files:
+  - `mock-data-reports-g1.ts` — hr, sales, events, eventhub
+  - `mock-data-reports-g2.ts` — admin, dev, ets, faire
+  - `mock-data-reports-g3.ts` — hrms, ats, social
+- **Each vertical**: 2 templates (1 Daily Employee + 1 Weekly Department), 5-7 fields each, ~10 mock submitted/pending/late reports spanning Feb 17–28 2026
+- **Features**: Stats bar, filter pills, Submit Report dropdown, FormDialog with dynamic fields, file-browser list grouped by date, View dialog (read-only), pending rows with "Submit Now"
+- **Nav**: "Reports" nav item added to all 11 verticals in verticals-config.ts
+
 ## User Preferences
 - Single font: Plus Jakarta Sans only (Inter fully removed)
 - No custom hover color classes on Shadcn Button components

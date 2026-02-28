@@ -172,6 +172,12 @@ export const verticals: Vertical[] = [
         ],
       },
       {
+        title: "Reports",
+        defaultUrl: "/hr/reports",
+        icon: FileText,
+        items: [],
+      },
+      {
         title: "Important Contacts",
         defaultUrl: "/hr/contacts",
         icon: Phone,
@@ -272,6 +278,12 @@ export const verticals: Vertical[] = [
         ],
       },
       {
+        title: "Reports",
+        defaultUrl: "/sales/reports",
+        icon: FileText,
+        items: [],
+      },
+      {
         title: "Important Contacts",
         defaultUrl: "/sales/contacts",
         icon: Phone,
@@ -351,6 +363,12 @@ export const verticals: Vertical[] = [
         title: "Vendors",
         defaultUrl: "/events/vendors",
         icon: Wrench,
+        items: [],
+      },
+      {
+        title: "Reports",
+        defaultUrl: "/events/reports",
+        icon: FileText,
         items: [],
       },
       {
@@ -446,6 +464,12 @@ export const verticals: Vertical[] = [
         ],
       },
       {
+        title: "Reports",
+        defaultUrl: "/hub/reports",
+        icon: FileText,
+        items: [],
+      },
+      {
         title: "Important Contacts",
         defaultUrl: "/hub/contacts",
         icon: Phone,
@@ -501,6 +525,12 @@ export const verticals: Vertical[] = [
           { title: "Settings", url: "/admin/settings" },
           { title: "Reports", url: "/admin/reports" },
         ],
+      },
+      {
+        title: "Reports",
+        defaultUrl: "/admin/team-reports",
+        icon: FileText,
+        items: [],
       },
       {
         title: "Important Contacts",
@@ -593,6 +623,12 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Reports",
+        defaultUrl: "/dev/reports",
+        icon: FileText,
+        items: [],
+      },
+      {
         title: "Important Contacts",
         defaultUrl: "/dev/contacts",
         icon: Phone,
@@ -679,6 +715,12 @@ export const verticals: Vertical[] = [
         title: "Settings",
         defaultUrl: "/ets/settings",
         icon: Settings,
+        items: [],
+      },
+      {
+        title: "Reports",
+        defaultUrl: "/ets/reports",
+        icon: FileText,
         items: [],
       },
       {
@@ -778,6 +820,12 @@ export const verticals: Vertical[] = [
         title: "Analytics",
         defaultUrl: "/faire/analytics",
         icon: BarChart3,
+        items: [],
+      },
+      {
+        title: "Reports",
+        defaultUrl: "/faire/reports",
+        icon: FileText,
         items: [],
       },
       {
@@ -882,6 +930,12 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Reports",
+        defaultUrl: "/hrms/reports",
+        icon: FileText,
+        items: [],
+      },
+      {
         title: "Important Contacts",
         defaultUrl: "/hrms/contacts",
         icon: Phone,
@@ -978,6 +1032,12 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Reports",
+        defaultUrl: "/ats/reports",
+        icon: FileText,
+        items: [],
+      },
+      {
         title: "Important Contacts",
         defaultUrl: "/ats/contacts",
         icon: Phone,
@@ -1059,6 +1119,12 @@ export const verticals: Vertical[] = [
         title: "Analytics",
         defaultUrl: "/social/analytics",
         icon: BarChart3,
+        items: [],
+      },
+      {
+        title: "Reports",
+        defaultUrl: "/social/reports",
+        icon: FileText,
         items: [],
       },
       {
