@@ -72,7 +72,22 @@ The portal supports multiple business verticals, each with its own navigation, b
 - `/dev/resources` (Developer Knowledge Base) → `/dev/knowledge-base`
 
 ### Active Verticals (Branded Products)
-1. **LegalNations** (id: `hr`, color: #225AEA) — US Company Formation & Compliance Operations — Routes: `/hr/*`
+1. **FaireDesk** (id: `faire`, color: #1A6B45) — Faire B2B Wholesale Marketplace — Routes: `/faire/*`
+   - Dashboard (gradient banner, store health strip, urgent actions widget, KPI cards, order state chips, recent orders + top products)
+   - **Universal**: Chat, Team, Resources, Tasks
+   - Stores (6 brand accounts: Suprans Lifestyle, LBM Home & Living, Gullee Craft Co., Heritage Artisan, Pure Essentials, Nature's Basket; API key dialog; sync buttons)
+   - Products & Catalog (Products list with lifecycle/sale-state filters, Product Detail with variant inline editing + reviews, Inventory with low/out-of-stock highlighting, Pricing & Prepacks with margin % auto-calc)
+   - Orders (state tabs: NEW/PRE_TRANSIT/IN_TRANSIT/DELIVERED/CLOSED/CANCELLED/BACK_ORDERED, accept/cancel dialogs, Order Detail with timeline stepper + payout breakdown)
+   - Fulfillment Queue (card layout oldest-first, ship dialog with carrier + tracking)
+   - Shipments (tracking copy/link, in-transit progress bar)
+   - Retailers (table with WhatsApp + Email, Retailer Detail with order history)
+   - Campaigns (3-per-row card grid, Create Campaign dialog)
+   - Disputes (tabs: Open/Escalated/Resolved, respond + escalate actions)
+   - Analytics (store tabs, KPI cards, revenue bars, top products, geo table, 6-month trend)
+   - **Mock data**: `client/src/lib/mock-data-faire.ts` — all field names match Faire API v2 exactly; 6 stores, 10 products, 16 orders, 6 shipments, 13 retailers, 8 campaigns, 10 disputes
+   - **Logo**: `client/src/components/brand/faire-logo.tsx`
+
+2. **LegalNations** (id: `hr`, color: #225AEA) — US Company Formation & Compliance Operations — Routes: `/hr/*`
    - Dashboard (operations overview: active formations, stuck/delayed, avg time, team load)
    - **Universal**: Chat, Team, Resources, Tasks
    - Clients (All Clients, Client Detail with stage progression, Client Intake, Stage Overview)

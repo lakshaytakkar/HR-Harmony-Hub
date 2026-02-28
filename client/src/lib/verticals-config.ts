@@ -43,6 +43,7 @@ import {
   Target,
   ShieldCheck,
   FileImage,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -56,6 +57,7 @@ import { EventHubLogo } from "@/components/brand/eventhub-logo";
 import { HrmsLogo } from "@/components/brand/hrms-logo";
 import { AtsLogo } from "@/components/brand/ats-logo";
 import { SocialLogo } from "@/components/brand/social-logo";
+import { FaireLogo } from "@/components/brand/faire-logo";
 
 export interface NavItem {
   title: string;
@@ -623,6 +625,99 @@ export const verticals: Vertical[] = [
     ],
   },
   {
+    id: "faire",
+    name: "FaireDesk",
+    shortName: "Faire",
+    icon: Store,
+    logo: FaireLogo,
+    color: "#1A6B45",
+    tagline: "Faire Marketplace",
+    description: "Multi-brand Faire wholesale marketplace management for 6 storefronts",
+    isDepartment: false,
+    navCategories: [
+      {
+        title: "Dashboard",
+        defaultUrl: "/faire",
+        icon: LayoutDashboard,
+        items: [],
+      },
+      {
+        title: "Chat",
+        defaultUrl: "/faire/chat",
+        icon: MessageCircle,
+        items: [],
+      },
+      {
+        title: "Team",
+        defaultUrl: "/faire/team",
+        icon: UserRound,
+        items: [],
+      },
+      {
+        title: "Resources",
+        defaultUrl: "/faire/resources",
+        icon: FolderOpen,
+        items: [],
+      },
+      {
+        title: "Tasks",
+        defaultUrl: "/faire/tasks",
+        icon: ListChecks,
+        items: [],
+      },
+      {
+        title: "Stores",
+        defaultUrl: "/faire/stores",
+        icon: Store,
+        items: [],
+      },
+      {
+        title: "Products & Catalog",
+        defaultUrl: "/faire/products",
+        icon: Package,
+        items: [
+          { title: "All Products", url: "/faire/products" },
+          { title: "Inventory", url: "/faire/inventory" },
+          { title: "Pricing & Prepacks", url: "/faire/pricing" },
+        ],
+      },
+      {
+        title: "Orders",
+        defaultUrl: "/faire/orders",
+        icon: ShoppingBag,
+        items: [
+          { title: "All Orders", url: "/faire/orders" },
+          { title: "Fulfillment Queue", url: "/faire/fulfillment" },
+          { title: "Shipments", url: "/faire/shipments" },
+        ],
+      },
+      {
+        title: "Retailers",
+        defaultUrl: "/faire/retailers",
+        icon: Users,
+        items: [],
+      },
+      {
+        title: "Campaigns",
+        defaultUrl: "/faire/campaigns",
+        icon: Target,
+        items: [],
+      },
+      {
+        title: "Disputes",
+        defaultUrl: "/faire/disputes",
+        icon: AlertTriangle,
+        items: [],
+      },
+      {
+        title: "Analytics",
+        defaultUrl: "/faire/analytics",
+        icon: BarChart3,
+        items: [],
+      },
+    ],
+  },
+  {
     id: "hrms",
     name: "HR / HRMS",
     shortName: "HRMS",
@@ -907,6 +1002,7 @@ export function getAllNavUrls(vertical: Vertical): string[] {
 }
 
 export function detectVerticalFromUrl(location: string): Vertical | undefined {
+  if (location.startsWith("/faire")) return getVerticalById("faire");
   if (location.startsWith("/hrms")) return getVerticalById("hrms");
   if (location.startsWith("/ats")) return getVerticalById("ats");
   if (location.startsWith("/social")) return getVerticalById("social");

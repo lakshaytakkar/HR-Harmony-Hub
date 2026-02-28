@@ -118,6 +118,21 @@ import SocialCampaignDetail from "@/pages/social/campaign-detail";
 import SocialApprovals from "@/pages/social/approvals";
 import SocialAssignments from "@/pages/social/assignments";
 import SocialAnalytics from "@/pages/social/analytics";
+import FaireDashboard from "@/pages/faire/dashboard";
+import FaireStores from "@/pages/faire/stores";
+import FaireProducts from "@/pages/faire/products";
+import FaireProductDetail from "@/pages/faire/product-detail";
+import FaireInventory from "@/pages/faire/inventory";
+import FairePricing from "@/pages/faire/pricing";
+import FaireOrders from "@/pages/faire/orders";
+import FaireOrderDetail from "@/pages/faire/order-detail";
+import FaireFulfillment from "@/pages/faire/fulfillment";
+import FaireShipments from "@/pages/faire/shipments";
+import FaireRetailers from "@/pages/faire/retailers";
+import FaireRetailerDetail from "@/pages/faire/retailer-detail";
+import FaireCampaigns from "@/pages/faire/campaigns";
+import FaireDisputes from "@/pages/faire/disputes";
+import FaireAnalytics from "@/pages/faire/analytics";
 
 function Router() {
   return (
@@ -266,6 +281,25 @@ function Router() {
       <Route path="/social/approvals" component={SocialApprovals} />
       <Route path="/social/assignments" component={SocialAssignments} />
       <Route path="/social/analytics" component={SocialAnalytics} />
+      <Route path="/faire" component={FaireDashboard} />
+      <Route path="/faire/chat" component={UniversalChat} />
+      <Route path="/faire/team" component={UniversalTeam} />
+      <Route path="/faire/resources" component={UniversalResources} />
+      <Route path="/faire/tasks" component={UniversalTasks} />
+      <Route path="/faire/stores" component={FaireStores} />
+      <Route path="/faire/products/:id" component={FaireProductDetail} />
+      <Route path="/faire/products" component={FaireProducts} />
+      <Route path="/faire/inventory" component={FaireInventory} />
+      <Route path="/faire/pricing" component={FairePricing} />
+      <Route path="/faire/orders/:id" component={FaireOrderDetail} />
+      <Route path="/faire/orders" component={FaireOrders} />
+      <Route path="/faire/fulfillment" component={FaireFulfillment} />
+      <Route path="/faire/shipments" component={FaireShipments} />
+      <Route path="/faire/retailers/:id" component={FaireRetailerDetail} />
+      <Route path="/faire/retailers" component={FaireRetailers} />
+      <Route path="/faire/campaigns" component={FaireCampaigns} />
+      <Route path="/faire/disputes" component={FaireDisputes} />
+      <Route path="/faire/analytics" component={FaireAnalytics} />
       <Route component={NotFound} />
     </Switch>
   );
