@@ -7,24 +7,38 @@ import {
   ExternalLink,
   Plus,
   Pin,
-  Key,
   Globe,
   Database,
-  Bot,
-  CreditCard,
-  BarChart3,
-  Code2,
-  GitBranch,
   BookOpen,
-  Paintbrush,
   Smile,
   FileText,
   Navigation,
-  StickyNote,
-  Figma,
   Copy,
+  CreditCard,
+  ScanLine,
+  Package,
+  Calculator,
+  Palette,
+  MessageSquare,
+  Play,
+  Rocket,
   type LucideIcon,
 } from "lucide-react";
+import {
+  SiReplit,
+  SiSupabase,
+  SiGithub,
+  SiStripe,
+  SiVercel,
+  SiOpenai,
+  SiPosthog,
+  SiCloudflare,
+  SiFigma,
+  SiNotion,
+  SiTailwindcss,
+  SiAnthropic,
+  SiResend,
+} from "react-icons/si";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard } from "@/components/hr/stats-card";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
@@ -32,7 +46,6 @@ import { StatusBadge } from "@/components/hr/status-badge";
 import { DataTable, type Column } from "@/components/hr/data-table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { FormDialog } from "@/components/hr/form-dialog";
-import { PageBanner } from "@/components/hr/page-banner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -49,29 +62,47 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
-import { appCredentials, importantLinks, type AppCredential, type ImportantLink } from "@/lib/mock-data-dev";
+import { appCredentials, importantLinks, quickTools, type AppCredential, type ImportantLink, type QuickTool } from "@/lib/mock-data-dev";
 import { useToast } from "@/hooks/use-toast";
 
-const iconMap: Record<string, LucideIcon> = {
-  Code2,
+type IconComponent = LucideIcon | ((props: { className?: string }) => JSX.Element);
+
+const siIconMap: Record<string, IconComponent> = {
+  SiReplit: (props: { className?: string }) => <SiReplit className={props.className} />,
+  SiSupabase: (props: { className?: string }) => <SiSupabase className={props.className} />,
+  SiGithub: (props: { className?: string }) => <SiGithub className={props.className} />,
+  SiStripe: (props: { className?: string }) => <SiStripe className={props.className} />,
+  SiVercel: (props: { className?: string }) => <SiVercel className={props.className} />,
+  SiOpenai: (props: { className?: string }) => <SiOpenai className={props.className} />,
+  SiPosthog: (props: { className?: string }) => <SiPosthog className={props.className} />,
+  SiCloudflare: (props: { className?: string }) => <SiCloudflare className={props.className} />,
+  SiFigma: (props: { className?: string }) => <SiFigma className={props.className} />,
+  SiNotion: (props: { className?: string }) => <SiNotion className={props.className} />,
+  SiTailwindcss: (props: { className?: string }) => <SiTailwindcss className={props.className} />,
+  SiAnthropic: (props: { className?: string }) => <SiAnthropic className={props.className} />,
+  SiResend: (props: { className?: string }) => <SiResend className={props.className} />,
+};
+
+const lucideIconMap: Record<string, LucideIcon> = {
   Database,
-  GitBranch,
   BookOpen,
-  Paintbrush,
   Smile,
   CreditCard,
   Globe,
-  Bot,
   FileText,
   Navigation,
-  StickyNote,
-  Figma,
-  BarChart3,
   Pin,
+  ScanLine,
+  Package,
+  Calculator,
+  Palette,
+  MessageSquare,
 };
 
-function getIconComponent(iconName: string): LucideIcon {
-  return iconMap[iconName] || Globe;
+function getIconComponent(iconName: string): IconComponent {
+  if (siIconMap[iconName]) return siIconMap[iconName];
+  if (lucideIconMap[iconName]) return lucideIconMap[iconName];
+  return Globe;
 }
 
 const categoryVariant: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
@@ -102,32 +133,47 @@ const linkCategoryVariant: Record<string, "success" | "error" | "warning" | "neu
   repo: "warning",
 };
 
+const toolStatusVariant: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
+  ready: "success",
+  wip: "warning",
+  planned: "neutral",
+};
+
+const toolCategoryVariant: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
+  payment: "info",
+  utility: "neutral",
+  generator: "warning",
+};
+
 const credentialColumns: Column<AppCredential>[] = [
   {
     key: "appName",
     header: "App",
     sortable: true,
-    render: (item) => (
-      <div className="flex items-center gap-2">
-        <div className="flex size-8 items-center justify-center rounded-md bg-primary/10">
-          <Key className="size-3.5 text-primary" />
+    render: (item) => {
+      const IconComp = getIconComponent(item.iconName);
+      return (
+        <div className="flex items-center gap-2">
+          <div className="flex size-8 items-center justify-center rounded-md bg-primary/10">
+            <IconComp className="size-4 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{item.appName}</p>
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-muted-foreground hover:text-primary truncate flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+              data-testid={`link-credential-url-${item.id}`}
+            >
+              {item.url.replace("https://", "")}
+              <ExternalLink className="size-2.5 shrink-0" />
+            </a>
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{item.appName}</p>
-          <a
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-muted-foreground hover:text-primary truncate flex items-center gap-1"
-            onClick={(e) => e.stopPropagation()}
-            data-testid={`link-credential-url-${item.id}`}
-          >
-            {item.url.replace("https://", "")}
-            <ExternalLink className="size-2.5 shrink-0" />
-          </a>
-        </div>
-      </div>
-    ),
+      );
+    },
   },
   {
     key: "category",
@@ -193,7 +239,9 @@ export default function ToolkitPage() {
   const { toast } = useToast();
   const [credentialDialogOpen, setCredentialDialogOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [toolDialogOpen, setToolDialogOpen] = useState(false);
   const [linkCategoryFilter, setLinkCategoryFilter] = useState<string>("all");
+  const [toolCategoryFilter, setToolCategoryFilter] = useState<string>("all");
 
   const activeCount = appCredentials.filter((c) => c.status === "active").length;
   const expiredCount = appCredentials.filter((c) => c.status === "expired").length;
@@ -206,19 +254,22 @@ export default function ToolkitPage() {
 
   const linkCategories = Array.from(new Set(importantLinks.map((l) => l.category)));
 
+  const filteredTools = toolCategoryFilter === "all"
+    ? quickTools
+    : quickTools.filter((t) => t.category === toolCategoryFilter);
+  const toolCategories = Array.from(new Set(quickTools.map((t) => t.category)));
+
+  const readyToolsCount = quickTools.filter((t) => t.status === "ready").length;
+  const wipToolsCount = quickTools.filter((t) => t.status === "wip").length;
+
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <PageBanner
-          title="Toolkit"
-          description="Apps, credentials, and important links for the team"
-          iconSrc="/3d-icons/documents.webp"
-        />
-
         <Tabs defaultValue="credentials" className="mt-2">
           <TabsList data-testid="tabs-toolkit">
             <TabsTrigger value="credentials" data-testid="tab-credentials">Apps & Credentials</TabsTrigger>
             <TabsTrigger value="links" data-testid="tab-links">Important Links</TabsTrigger>
+            <TabsTrigger value="quick-tools" data-testid="tab-quick-tools">Quick Tools</TabsTrigger>
           </TabsList>
 
           <TabsContent value="credentials">
@@ -455,6 +506,162 @@ export default function ToolkitPage() {
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="quick-tools">
+            {loading ? (
+              <div className="mt-4 space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <StatsCardSkeleton />
+                  <StatsCardSkeleton />
+                  <StatsCardSkeleton />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <Skeleton className="h-40 rounded-lg" />
+                  <Skeleton className="h-40 rounded-lg" />
+                  <Skeleton className="h-40 rounded-lg" />
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4">
+                <Stagger staggerInterval={0.05} className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
+                  <StaggerItem>
+                    <StatsCard
+                      title="Ready"
+                      value={readyToolsCount}
+                      change="Available to use"
+                      changeType="positive"
+                      icon={<Rocket className="size-5" />}
+                    />
+                  </StaggerItem>
+                  <StaggerItem>
+                    <StatsCard
+                      title="In Progress"
+                      value={wipToolsCount}
+                      change="Being developed"
+                      changeType="warning"
+                      icon={<Wrench className="size-5" />}
+                    />
+                  </StaggerItem>
+                  <StaggerItem>
+                    <StatsCard
+                      title="Total Tools"
+                      value={quickTools.length}
+                      change={`${quickTools.filter((t) => t.vertical !== "dev").length} for other verticals`}
+                      changeType="neutral"
+                      icon={<Package className="size-5" />}
+                    />
+                  </StaggerItem>
+                </Stagger>
+
+                <Fade direction="up" delay={0.15}>
+                  <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      Tools ({filteredTools.length})
+                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Select value={toolCategoryFilter} onValueChange={setToolCategoryFilter}>
+                        <SelectTrigger className="h-8 w-auto min-w-[120px] text-sm" data-testid="filter-tool-category">
+                          <SelectValue placeholder="Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {toolCategories.map((cat) => (
+                            <SelectItem key={cat} value={cat}>
+                              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        size="sm"
+                        onClick={() => setToolDialogOpen(true)}
+                        data-testid="button-add-tool"
+                      >
+                        <Plus className="mr-1.5 size-3.5" />
+                        Add Tool
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Stagger staggerInterval={0.04} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredTools.map((tool) => {
+                      const IconComp = getIconComponent(tool.iconName);
+                      return (
+                        <StaggerItem key={tool.id}>
+                          <Card className="p-5 hover-elevate" data-testid={`card-tool-${tool.id}`}>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <IconComp className="size-5" />
+                              </div>
+                              <StatusBadge
+                                status={tool.status === "wip" ? "WIP" : tool.status.charAt(0).toUpperCase() + tool.status.slice(1)}
+                                variant={toolStatusVariant[tool.status]}
+                              />
+                            </div>
+                            <div className="mt-3">
+                              <h4 className="text-sm font-semibold" data-testid={`text-tool-name-${tool.id}`}>{tool.name}</h4>
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{tool.description}</p>
+                            </div>
+                            <div className="mt-3 flex items-center gap-2 flex-wrap">
+                              <StatusBadge
+                                status={tool.category.charAt(0).toUpperCase() + tool.category.slice(1)}
+                                variant={toolCategoryVariant[tool.category]}
+                              />
+                              <Badge variant="outline" className="text-xs">
+                                {tool.vertical === "dev" ? "Developer" : tool.vertical.toUpperCase()}
+                              </Badge>
+                            </div>
+                            <div className="mt-4">
+                              {tool.status === "ready" ? (
+                                <Button
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => toast({ title: "Launching...", description: `Opening ${tool.name}` })}
+                                  data-testid={`button-launch-tool-${tool.id}`}
+                                >
+                                  <Play className="mr-1.5 size-3.5" />
+                                  Launch
+                                </Button>
+                              ) : tool.status === "wip" ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full"
+                                  disabled
+                                  data-testid={`button-wip-tool-${tool.id}`}
+                                >
+                                  <Wrench className="mr-1.5 size-3.5" />
+                                  In Development
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full"
+                                  disabled
+                                  data-testid={`button-planned-tool-${tool.id}`}
+                                >
+                                  <Clock className="mr-1.5 size-3.5" />
+                                  Planned
+                                </Button>
+                              )}
+                            </div>
+                          </Card>
+                        </StaggerItem>
+                      );
+                    })}
+                  </Stagger>
+
+                  {filteredTools.length === 0 && (
+                    <div className="flex flex-col items-center gap-2 py-12">
+                      <p className="text-sm font-medium">No tools found</p>
+                      <p className="text-xs text-muted-foreground">Try adjusting your filter</p>
+                    </div>
+                  )}
+                </Fade>
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
 
         <FormDialog
@@ -564,6 +771,70 @@ export default function ToolkitPage() {
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="link-desc">Description</Label>
             <Textarea id="link-desc" placeholder="Brief description..." className="resize-none" data-testid="input-link-desc" />
+          </div>
+        </FormDialog>
+
+        <FormDialog
+          open={toolDialogOpen}
+          onOpenChange={setToolDialogOpen}
+          title="Add Quick Tool"
+          onSubmit={() => {
+            toast({ title: "Tool added", description: "New quick tool has been registered." });
+            setToolDialogOpen(false);
+          }}
+          submitLabel="Add Tool"
+        >
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tool-name">Tool Name</Label>
+            <Input id="tool-name" placeholder="e.g. Razorpay Link Generator" data-testid="input-tool-name" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tool-desc">Description</Label>
+            <Textarea id="tool-desc" placeholder="What does this tool do?" className="resize-none" data-testid="input-tool-desc" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label>Category</Label>
+              <Select defaultValue="utility">
+                <SelectTrigger data-testid="select-tool-category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="payment">Payment</SelectItem>
+                  <SelectItem value="utility">Utility</SelectItem>
+                  <SelectItem value="generator">Generator</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Status</Label>
+              <Select defaultValue="planned">
+                <SelectTrigger data-testid="select-tool-status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ready">Ready</SelectItem>
+                  <SelectItem value="wip">WIP</SelectItem>
+                  <SelectItem value="planned">Planned</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tool-vertical">Target Vertical</Label>
+            <Select defaultValue="dev">
+              <SelectTrigger data-testid="select-tool-vertical">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dev">Developer</SelectItem>
+                <SelectItem value="hr">LegalNations</SelectItem>
+                <SelectItem value="sales">USDrop AI</SelectItem>
+                <SelectItem value="events">GoyoTours</SelectItem>
+                <SelectItem value="admin">LBM Lifestyle</SelectItem>
+                <SelectItem value="ets">EazyToSell</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </FormDialog>
       </PageTransition>

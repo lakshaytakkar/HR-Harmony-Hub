@@ -3,7 +3,6 @@ import { DataTable, type Column } from "@/components/hr/data-table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { StatsCard } from "@/components/hr/stats-card";
 import { StatusBadge } from "@/components/hr/status-badge";
-import { PageBanner } from "@/components/hr/page-banner";
 import { Badge } from "@/components/ui/badge";
 import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
@@ -121,13 +120,7 @@ export default function TaskBoard() {
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <PageBanner
-          title="Task Board"
-          description="Manage and track all formation-related tasks across clients and stages."
-          iconSrc="/3d-icons/leave.webp"
-        />
-
-        {loading ? (
+{loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <StatsCardSkeleton key={i} />

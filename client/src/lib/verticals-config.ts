@@ -311,6 +311,20 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Projects",
+        defaultUrl: "/dev/projects",
+        icon: FolderKanban,
+        items: [
+          { title: "All Projects", url: "/dev/projects" },
+        ],
+      },
+      {
+        title: "Tasks",
+        defaultUrl: "/dev/tasks",
+        icon: CheckSquare,
+        items: [],
+      },
+      {
         title: "Toolkit",
         defaultUrl: "/dev/toolkit",
         icon: Wrench,

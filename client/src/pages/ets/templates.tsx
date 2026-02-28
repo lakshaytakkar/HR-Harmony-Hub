@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
-import { PageBanner } from "@/components/hr/page-banner";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -119,15 +118,7 @@ export default function EtsTemplates() {
 
   return (
     <PageTransition className="p-6 space-y-6">
-      <PageBanner
-        title="WhatsApp Templates"
-        description="Ready-to-use message templates for client communication"
-        iconSrc={dashboardIcon}
-        actionLabel="Add Template"
-        onAction={() => setAddDialogOpen(true)}
-      />
-
-      <Fade direction="up" distance={8} duration={0.3}>
+<Fade direction="up" distance={8} duration={0.3}>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />

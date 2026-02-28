@@ -36,11 +36,13 @@ The portal supports multiple business verticals, each with its own navigation, b
 3. **GoyoTours** (id: `events`, color: #E91E63) — Events, Venues, Check-in — Routes: `/events/*`
 4. **LBM Lifestyle** (id: `admin`, color: #673AB7) — Team, Settings, Reports — Routes: `/admin/*`
 5. **Developer** (id: `dev`, color: #10B981) — Internal Developer Hub — Routes: `/dev/*`
-   - Dashboard (quick links, recent prompts, credential status, pinned links)
+   - Dashboard (quick links to all sections, My Tasks list, Project Progress bars, recent prompts, credential status)
    - Design System (Style Guide, Components, Icons)
    - Prompts (AI prompt library — categorized by agent/frontend/backend/database/debug, model tracking)
    - Resources (Dev processes, learnings, playbooks, workflow docs)
-   - Toolkit (Apps & Credentials tracker, Important Links — Replit, Supabase, GitHub, etc.)
+   - **Projects** (project cards with progress, kanban board per project with 5 columns, list view toggle, sprint/assignee/priority filters, add task dialog)
+   - **Tasks** (all tasks DataTable across all projects, filters by project/status/priority/type/assignee, click opens TaskDetailDialog sheet with subtasks/comments/sidebar)
+   - Toolkit (Apps & Credentials with real company logos via react-icons/si, Important Links with logos, Quick Tools tab — staging area for utility tools before deploying to target verticals)
 6. **EazyToSell** (id: `ets`, color: #F97316) — China-to-India Value Retail Franchise Ops — Routes: `/ets/*`
    - Dashboard (pipeline snapshot, revenue tracker, active orders with ETA bars, alerts for stuck items)
    - Clients: Pipeline (kanban + table toggle, 8 stages: New Lead → Qualified → Token Paid → Store Design → Inventory Ordered → In Transit → Launched → Reordering), Client Detail (profile, financial summary, stage stepper, tabs: payments/checklist/timeline/notes)
@@ -97,7 +99,10 @@ client/src/pages/
 │   ├── icons-guide.tsx        # Icons Guide (route: /dev/icons)
 │   ├── prompts.tsx            # AI Prompt Library (route: /dev/prompts)
 │   ├── resources.tsx          # Dev Resources & Processes (route: /dev/resources)
-│   └── toolkit.tsx            # Apps, Credentials & Links (route: /dev/toolkit)
+│   ├── projects.tsx           # All Projects (route: /dev/projects)
+│   ├── project-board.tsx      # Project Kanban/List Board (route: /dev/projects/:id)
+│   ├── tasks.tsx              # All Tasks DataTable (route: /dev/tasks)
+│   └── toolkit.tsx            # Apps, Credentials, Links & Quick Tools (route: /dev/toolkit)
 ├── sales/
 │   ├── dashboard.tsx           # USDrop AI Dashboard (route: /sales)
 │   ├── products.tsx            # Product Library (route: /sales/products)
@@ -148,7 +153,8 @@ client/src/pages/
 ### Mock Data Files
 - `client/src/lib/mock-data.ts` — LegalNations entities (20 formation clients, 45+ checklist items, 25 documents, 15 compliance items, 25 tasks, 10 escalations, 6 team members, formation metrics, document templates)
 - `client/src/lib/mock-data-sales.ts` — USDrop AI entities (products, categories, suppliers, users, leads, subscriptions, stores, fulfillment, tickets, courses, plans, revenue metrics, help center articles)
-- `client/src/lib/mock-data-dev.ts` — Developer entities (12 AI prompts, 8 dev resources, 10 app credentials, 15 important links)
+- `client/src/lib/mock-data-dev.ts` — Developer entities (12 AI prompts, 8 dev resources, 10 app credentials with real SI logos, 15 important links with logos, 6 projects: TeamSync/LegalNations/USDrop AI/GoyoTours/EazyToSell/Internal Tools, 38 tasks with subtasks/comments, 4 sprints, 7 quick tools)
+- `client/src/components/dev/task-detail-dialog.tsx` — Task detail Sheet panel with subtask toggles, comments, right sidebar for status/priority/type editing
 - `client/src/lib/mock-data-events.ts` — Events (events, venues, attendees)
 - `client/src/lib/mock-data-admin.ts` — Admin (team members, activity logs, reports)
 - `client/src/lib/mock-data-ets.ts` — EazyToSell entities (15 franchise clients across 8 pipeline stages, 20 products with pricing, 8 orders, 12 payments, 3 proposal templates Lite/Pro/Elite, 8 WhatsApp templates, price settings, calculator templates) + `calculateEtsPrices()` price engine
@@ -183,4 +189,4 @@ Analysis of Suprans Team Portal saved in `.local/reference-project-analysis.md` 
 
 ## External Dependencies
 - React, TypeScript, Tailwind CSS, Shadcn UI, Wouter, motion/react, Express.js
-- Plus Jakarta Sans (Google Fonts), DiceBear (avatars), lucide-react (icons), Zod (validation)
+- Plus Jakarta Sans (Google Fonts), DiceBear (avatars), lucide-react (icons), react-icons/si (company logos), Zod (validation)

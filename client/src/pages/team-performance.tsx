@@ -9,7 +9,6 @@ import { teamMembers, formationClients } from "@/lib/mock-data";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { Fade, Stagger, StaggerItem, PageTransition } from "@/components/ui/animated";
-import { PageBanner } from "@/components/hr/page-banner";
 
 const roleLabels: Record<string, string> = {
   "ops-manager": "Ops Manager",
@@ -38,13 +37,7 @@ export default function TeamPerformancePage() {
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <PageBanner
-          title="Team Performance"
-          description="Monitor team member workload, completion rates, and productivity"
-          iconSrc="/3d-icons/employees.webp"
-        />
-
-        {loading ? (
+{loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatsCardSkeleton />
             <StatsCardSkeleton />

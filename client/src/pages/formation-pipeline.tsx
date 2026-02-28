@@ -3,7 +3,6 @@ import { DataTable, type Column } from "@/components/hr/data-table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { StatusBadge } from "@/components/hr/status-badge";
-import { PageBanner } from "@/components/hr/page-banner";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -109,13 +108,7 @@ export default function FormationPipeline() {
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <PageBanner
-          title="Formation Pipeline"
-          description="Track all active formations through their stages. Switch between kanban and table views."
-          iconSrc="/3d-icons/job-postings.webp"
-        />
-
-        <Fade direction="up" distance={10} delay={0.1}>
+<Fade direction="up" distance={10} delay={0.1}>
           <Tabs defaultValue="kanban" data-testid="tabs-pipeline-view">
             <TabsList data-testid="tabs-list-pipeline-view">
               <TabsTrigger value="kanban" data-testid="tab-kanban">Kanban</TabsTrigger>

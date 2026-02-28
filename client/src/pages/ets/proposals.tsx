@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
-import { PageBanner } from "@/components/hr/page-banner";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -181,13 +180,7 @@ export default function EtsProposals() {
 
   return (
     <PageTransition className="p-6 space-y-6">
-      <PageBanner
-        title="Proposal Generator"
-        description="Create customized franchise investment proposals for clients"
-        iconSrc={dashboardIcon}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Fade direction="left" distance={10} duration={0.3}>
           <Card data-testid="card-proposal-inputs">
             <CardHeader className="pb-4">

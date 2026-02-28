@@ -56,6 +56,9 @@ import DevDashboard from "@/pages/dev/dashboard";
 import DevPrompts from "@/pages/dev/prompts";
 import DevResources from "@/pages/dev/resources";
 import DevToolkit from "@/pages/dev/toolkit";
+import DevProjects from "@/pages/dev/projects";
+import DevProjectBoard from "@/pages/dev/project-board";
+import DevTasks from "@/pages/dev/tasks";
 import EtsDashboard from "@/pages/ets/dashboard";
 import EtsPipeline from "@/pages/ets/pipeline";
 import EtsClientDetail from "@/pages/ets/client-detail";
@@ -91,6 +94,9 @@ function Router() {
       <Route path="/dev/prompts" component={DevPrompts} />
       <Route path="/dev/resources" component={DevResources} />
       <Route path="/dev/toolkit" component={DevToolkit} />
+      <Route path="/dev/projects/:id" component={DevProjectBoard} />
+      <Route path="/dev/projects" component={DevProjects} />
+      <Route path="/dev/tasks" component={DevTasks} />
       <Route path="/sales" component={SalesDashboard} />
       <Route path="/sales/products" component={SalesProducts} />
       <Route path="/sales/categories" component={SalesCategories} />

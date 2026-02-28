@@ -2,7 +2,6 @@ import { FileText, Download, FolderOpen, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PageBanner } from "@/components/hr/page-banner";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { StatsCard } from "@/components/hr/stats-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,13 +30,7 @@ export default function TemplatesPage() {
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <PageBanner
-          title="Document Templates"
-          description="Standard templates for formation documents, agreements, and compliance forms"
-          iconSrc="/3d-icons/documents.webp"
-        />
-
-        {loading ? (
+{loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <StatsCardSkeleton />
             <StatsCardSkeleton />

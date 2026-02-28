@@ -9,7 +9,6 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
-import { PageBanner } from "@/components/hr/page-banner";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -219,13 +218,7 @@ export default function EtsCalculator() {
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <PageBanner
-          title="Price Calculator"
-          description="What-if pricing tool with full chain visualization. EXW to MRP in real time."
-          iconSrc={dashboardIcon}
-        />
-
-        <Fade direction="up" delay={0.05}>
+<Fade direction="up" delay={0.05}>
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium text-muted-foreground mr-1">Quick Templates:</span>
             {templates.map((tpl) => (

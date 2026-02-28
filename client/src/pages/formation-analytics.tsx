@@ -5,7 +5,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formationMetrics, formationClients, stageDefinitions } from "@/lib/mock-data";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { Fade, Stagger, StaggerItem, PageTransition } from "@/components/ui/animated";
-import { PageBanner } from "@/components/hr/page-banner";
 
 export default function FormationAnalyticsPage() {
   const loading = useSimulatedLoading();
@@ -38,13 +37,7 @@ export default function FormationAnalyticsPage() {
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <PageBanner
-          title="Formation Analytics"
-          description="Insights into formation volume, completion trends, and stage bottlenecks"
-          iconSrc="/3d-icons/dashboard.webp"
-        />
-
-        {loading ? (
+{loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatsCardSkeleton />
             <StatsCardSkeleton />

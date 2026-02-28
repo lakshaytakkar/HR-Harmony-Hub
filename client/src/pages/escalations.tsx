@@ -3,7 +3,6 @@ import { DataTable, type Column, type RowAction } from "@/components/hr/data-tab
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { StatsCard } from "@/components/hr/stats-card";
 import { StatusBadge } from "@/components/hr/status-badge";
-import { PageBanner } from "@/components/hr/page-banner";
 import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
@@ -126,13 +125,7 @@ export default function Escalations() {
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <PageBanner
-          title="Escalations"
-          description="Monitor and resolve critical issues across all active formations."
-          iconSrc="/3d-icons/attendance.webp"
-        />
-
-        {loading ? (
+{loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <StatsCardSkeleton key={i} />

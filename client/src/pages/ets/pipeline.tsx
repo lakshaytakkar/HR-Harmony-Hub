@@ -4,7 +4,6 @@ import { DataTable, type Column } from "@/components/hr/data-table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { StatusBadge } from "@/components/hr/status-badge";
-import { PageBanner } from "@/components/hr/page-banner";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -253,13 +252,7 @@ export default function EtsPipeline() {
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <PageBanner
-          title="Client Pipeline"
-          description="Track all franchise clients through their journey from lead to launch and beyond."
-          iconSrc="/3d-icons/job-postings.webp"
-        />
-
-        <Fade direction="up" distance={10} delay={0.1}>
+<Fade direction="up" distance={10} delay={0.1}>
           <Stagger className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 mb-5">
             {ETS_PIPELINE_STAGES.map((stage) => (
               <StaggerItem key={stage}>

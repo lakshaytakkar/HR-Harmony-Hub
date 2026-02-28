@@ -2,7 +2,6 @@ import { Shield, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { StatsCard } from "@/components/hr/stats-card";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { DataTable, type Column } from "@/components/hr/data-table";
-import { PageBanner } from "@/components/hr/page-banner";
 import { Badge } from "@/components/ui/badge";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
@@ -131,13 +130,7 @@ export default function ComplianceTrackerPage() {
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <PageBanner
-          title="Compliance Tracker"
-          description="Track annual reports, BOI filings, IRS compliance, and state alerts"
-          iconSrc="/3d-icons/attendance.webp"
-        />
-
-        {loading ? (
+{loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatsCardSkeleton />
             <StatsCardSkeleton />

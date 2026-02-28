@@ -19,7 +19,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/hr/status-badge";
-import { PageBanner } from "@/components/hr/page-banner";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -134,15 +133,7 @@ export default function EtsSettingsPage() {
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <PageBanner
-          title="Settings"
-          description="Configure pricing defaults, duty rates, and package tiers"
-          iconSrc="/3d-icons/departments.webp"
-          actionLabel={isEditing ? undefined : "Edit Settings"}
-          onAction={isEditing ? undefined : handleEdit}
-        />
-
-        <div className="flex items-center justify-end gap-2 mb-6">
+<div className="flex items-center justify-end gap-2 mb-6">
           {isEditing && (
             <>
               <Button variant="outline" size="sm" onClick={handleCancel} data-testid="button-cancel-edit">
