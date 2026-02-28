@@ -1,7 +1,7 @@
 # TeamSync - Multi-Vertical Team Portal
 
 ## Overview
-TeamSync is a multi-vertical team portal with exceptional UI/UX inspired by the Dropship.io design system. It supports 6 branded products — LegalNations (HR), USDrop AI (Sales), GoyoTours (Events), LBM Lifestyle (Admin), Developer (Internal), EazyToSell (Retail Franchise) — with a config-driven navigation system. Each vertical has its own dashboard, pages, brand logo, and workflows. Built with React, TypeScript, Tailwind CSS, and Shadcn UI.
+TeamSync is a multi-vertical team portal with exceptional UI/UX inspired by the Dropship.io design system. It supports 7 branded products — LegalNations (HR), USDrop AI (Sales), GoyoTours (Events), Event Hub (Networking), LBM Lifestyle (Admin), Developer (Internal), EazyToSell (Retail Franchise) — with a config-driven navigation system. Each vertical has its own dashboard, pages, brand logo, and workflows. Built with React, TypeScript, Tailwind CSS, and Shadcn UI.
 
 ## User Preferences
 - Single font: Plus Jakarta Sans only (Inter fully removed)
@@ -33,9 +33,16 @@ The portal supports multiple business verticals, each with its own navigation, b
    - Operations (Shopify Stores, Fulfillment, Competitor Stores)
    - Support & Learning (Support Tickets, Courses, Help Center)
    - Analytics (Revenue Analytics, User Analytics, Product Performance)
-3. **GoyoTours** (id: `events`, color: #E91E63) — Events, Venues, Check-in — Routes: `/events/*`
-4. **LBM Lifestyle** (id: `admin`, color: #673AB7) — Team, Settings, Reports — Routes: `/admin/*`
-5. **Developer** (id: `dev`, color: #10B981) — Internal Developer Hub — Routes: `/dev/*`
+3. **GoyoTours** (id: `events`, color: #E91E63) — China Tour & Travel Business — Routes: `/events/*`
+4. **Event Hub** (id: `eventhub`, color: #7C3AED) — Networking Events & Engagement Platform — Routes: `/hub/*`
+   - Dashboard (4 KPI cards: upcoming events, total attendees, active vendors, budget utilized; upcoming events grid, this week countdown, vendor status sidebar, organizers section, recently completed with check-in bars)
+   - Events: All Events (DataTable with 10 events, status/type/city filters, Create Event dialog), Event Detail (5 tabs: Overview, Attendees, Vendors, Budget, Tasks checklist)
+   - Attendees: All Attendees (DataTable 35 records across events, multi-filter), Live Check-in (event selector, stats, search, quick check-in input, per-attendee toggle, Check In All button)
+   - Venues (card grid of 6 venues with status dot, capacity, rating, amenities, hover contact reveal, city/type/status filters)
+   - Vendors (DataTable 8 vendors with star ratings, event counts, category badges, Copy Email action)
+   - Operations: Budget Tracker (30 budget items, category progress bars, planned vs actual, over-budget highlighting), Analytics (type distribution bars, attendee source mix, event performance table, top vendors, budget by category)
+5. **LBM Lifestyle** (id: `admin`, color: #673AB7) — Team, Settings, Reports — Routes: `/admin/*`
+6. **Developer** (id: `dev`, color: #10B981) — Internal Developer Hub — Routes: `/dev/*`
    - Dashboard (quick links to all sections, My Tasks list, Project Progress bars, recent prompts, credential status)
    - Design System (Style Guide, Components, Icons)
    - Prompts (AI prompt library — categorized by agent/frontend/backend/database/debug, model tracking)
@@ -64,6 +71,7 @@ Each vertical has a unique SVG logo in hexagonal mascot style:
 - `client/src/components/brand/lbm-lifestyle-logo.tsx` — Heart-star/lifestyle icon
 - `client/src/components/brand/developer-logo.tsx` — Terminal/code icon
 - `client/src/components/brand/eazytosell-logo.tsx` — Shopping bag/lock/retail icon
+- `client/src/components/brand/eventhub-logo.tsx` — Network nodes/connection graph icon (violet)
 
 ### Frontend Technology
 React with TypeScript, Tailwind CSS, Shadcn UI, Wouter routing, motion/react animations.
@@ -127,10 +135,20 @@ client/src/pages/
 │   ├── user-analytics.tsx      # User Analytics (route: /sales/user-analytics)
 │   └── product-performance.tsx # Product Performance (route: /sales/product-performance)
 ├── events/
-│   ├── dashboard.tsx      # Events Hub (route: /events)
+│   ├── dashboard.tsx      # GoyoTours Dashboard (route: /events)
 │   ├── events-list.tsx    # All Events (route: /events/list)
 │   ├── venues.tsx         # Venue Directory (route: /events/venues)
 │   └── checkin.tsx        # Event Check-in (route: /events/checkin)
+├── eventhub/
+│   ├── dashboard.tsx      # Event Hub Dashboard (route: /hub)
+│   ├── events-list.tsx    # All Events DataTable (route: /hub/events)
+│   ├── event-detail.tsx   # Event Detail 5-tab view (route: /hub/events/:id)
+│   ├── attendees.tsx      # All Attendees DataTable (route: /hub/attendees)
+│   ├── checkin.tsx        # Live Check-in (route: /hub/checkin)
+│   ├── venues.tsx         # Venue Card Grid (route: /hub/venues)
+│   ├── vendors.tsx        # Vendor Directory (route: /hub/vendors)
+│   ├── budget.tsx         # Budget Tracker (route: /hub/budget)
+│   └── analytics.tsx      # Analytics Overview (route: /hub/analytics)
 ├── admin/
 │   ├── dashboard.tsx      # System Overview (route: /admin)
 │   ├── team.tsx           # Team Management (route: /admin/team)
@@ -168,7 +186,8 @@ client/src/pages/
   - `DevPrompt` (12 prompts) — AI prompt library with model tracking
   - `DevResource` (8 resources) — dev process docs and playbooks
 - `client/src/components/dev/task-detail-dialog.tsx` — Task detail Sheet panel with subtask toggles, comments, right sidebar for status/priority/type editing
-- `client/src/lib/mock-data-events.ts` — Events (events, venues, attendees)
+- `client/src/lib/mock-data-events.ts` — GoyoTours (events, venues, attendees)
+- `client/src/lib/mock-data-eventhub.ts` — Event Hub entities: NetworkingEvent (10 events across Delhi/Mumbai/Bengaluru/Pune/Chennai, varied types: Seminar/Workshop/Conference/Investor Meet/Launch Event/Roundtable), EventAttendee (35 attendees across events with ticket types VIP/Standard/Speaker/Sponsor), EventVendor (8 vendors across 7 categories with ratings), EventVenue (6 premium venues), BudgetItem (30 items with on-track/over-budget/under-budget/pending status)
 - `client/src/lib/mock-data-admin.ts` — Admin (team members, activity logs, reports)
 - `client/src/lib/mock-data-ets.ts` — EazyToSell entities (15 franchise clients across 8 pipeline stages, 20 products with pricing, 8 orders, 12 payments, 3 proposal templates Lite/Pro/Elite, 8 WhatsApp templates, price settings, calculator templates) + `calculateEtsPrices()` price engine
 

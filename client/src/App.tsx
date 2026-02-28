@@ -69,6 +69,15 @@ import EtsPayments from "@/pages/ets/payments";
 import EtsProposals from "@/pages/ets/proposals";
 import EtsTemplates from "@/pages/ets/templates";
 import EtsSettings from "@/pages/ets/settings";
+import HubDashboard from "@/pages/eventhub/dashboard";
+import HubEventsList from "@/pages/eventhub/events-list";
+import HubEventDetail from "@/pages/eventhub/event-detail";
+import HubAttendees from "@/pages/eventhub/attendees";
+import HubCheckin from "@/pages/eventhub/checkin";
+import HubVenues from "@/pages/eventhub/venues";
+import HubVendors from "@/pages/eventhub/vendors";
+import HubBudget from "@/pages/eventhub/budget";
+import HubAnalytics from "@/pages/eventhub/analytics";
 
 function Router() {
   return (
@@ -133,6 +142,15 @@ function Router() {
       <Route path="/ets/proposals" component={EtsProposals} />
       <Route path="/ets/templates" component={EtsTemplates} />
       <Route path="/ets/settings" component={EtsSettings} />
+      <Route path="/hub" component={HubDashboard} />
+      <Route path="/hub/events/:id" component={HubEventDetail} />
+      <Route path="/hub/events" component={HubEventsList} />
+      <Route path="/hub/attendees" component={HubAttendees} />
+      <Route path="/hub/checkin" component={HubCheckin} />
+      <Route path="/hub/venues" component={HubVenues} />
+      <Route path="/hub/vendors" component={HubVendors} />
+      <Route path="/hub/budget" component={HubBudget} />
+      <Route path="/hub/analytics" component={HubAnalytics} />
       <Route component={NotFound} />
     </Switch>
   );

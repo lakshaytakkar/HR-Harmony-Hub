@@ -41,6 +41,7 @@ import { GoyoToursLogo } from "@/components/brand/goyotours-logo";
 import { LbmLifestyleLogo } from "@/components/brand/lbm-lifestyle-logo";
 import { DeveloperLogo } from "@/components/brand/developer-logo";
 import { EazyToSellLogo } from "@/components/brand/eazytosell-logo";
+import { EventHubLogo } from "@/components/brand/eventhub-logo";
 
 export interface NavItem {
   title: string;
@@ -238,6 +239,62 @@ export const verticals: Vertical[] = [
     ],
   },
   {
+    id: "eventhub",
+    name: "Event Hub",
+    shortName: "Event Hub",
+    icon: CalendarCheck,
+    logo: EventHubLogo,
+    color: "#7C3AED",
+    tagline: "Networking Events",
+    description: "Networking events & engagement platform",
+    navCategories: [
+      {
+        title: "Dashboard",
+        defaultUrl: "/hub",
+        icon: LayoutDashboard,
+        items: [],
+      },
+      {
+        title: "Events",
+        defaultUrl: "/hub/events",
+        icon: CalendarDays,
+        items: [
+          { title: "All Events", url: "/hub/events" },
+        ],
+      },
+      {
+        title: "Attendees",
+        defaultUrl: "/hub/attendees",
+        icon: Users,
+        items: [
+          { title: "All Attendees", url: "/hub/attendees" },
+          { title: "Live Check-in", url: "/hub/checkin" },
+        ],
+      },
+      {
+        title: "Venues",
+        defaultUrl: "/hub/venues",
+        icon: MapPin,
+        items: [],
+      },
+      {
+        title: "Vendors",
+        defaultUrl: "/hub/vendors",
+        icon: Briefcase,
+        items: [],
+      },
+      {
+        title: "Operations",
+        defaultUrl: "/hub/budget",
+        icon: BarChart3,
+        items: [
+          { title: "Budget Tracker", url: "/hub/budget" },
+          { title: "Analytics", url: "/hub/analytics" },
+        ],
+      },
+    ],
+  },
+  {
     id: "admin",
     name: "LBM Lifestyle",
     shortName: "LBM Lifestyle",
@@ -416,6 +473,7 @@ export function detectVerticalFromUrl(location: string): Vertical | undefined {
   if (location.startsWith("/hr")) return getVerticalById("hr");
   if (location.startsWith("/sales")) return getVerticalById("sales");
   if (location.startsWith("/events")) return getVerticalById("events");
+  if (location.startsWith("/hub")) return getVerticalById("eventhub");
   if (location.startsWith("/admin")) return getVerticalById("admin");
   if (location.startsWith("/dev")) return getVerticalById("dev");
   if (location.startsWith("/ets")) return getVerticalById("ets");
