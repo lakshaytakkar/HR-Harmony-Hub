@@ -70,6 +70,8 @@ function formatLabel(s: string): string {
 export default function DevDashboard() {
   const loading = useSimulatedLoading();
   const [, navigate] = useLocation();
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   const totalPrompts = devPrompts.length;
   const activeCredentials = appCredentials.filter((c) => c.status === "active").length;
@@ -142,14 +144,16 @@ export default function DevDashboard() {
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
         <Fade direction="up" delay={0}>
-          <div className="mb-6" data-testid="section-welcome-banner">
-            <div className="flex items-center gap-3 mb-1">
-              <Terminal className="size-6 text-emerald-500" />
-              <h1 className="text-2xl font-semibold font-heading tracking-tight">Developer Hub</h1>
+          <div
+            className="rounded-2xl px-8 py-7 mb-6 relative overflow-hidden"
+            data-testid="section-welcome"
+            style={{ background: "linear-gradient(135deg, #10B981 0%, #0a9064 100%)" }}
+          >
+            <div className="relative z-10">
+              <p className="text-white/75 text-sm font-medium mb-2">👋 {greeting}, Sneha Patel</p>
+              <h1 className="text-3xl font-bold text-white font-heading tracking-tight">Developer Hub</h1>
+              <p className="text-white/70 text-sm mt-1.5 max-w-2xl">Design system, internal tooling & developer resources</p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Internal tools, prompts, credentials & resources for the dev team.
-            </p>
           </div>
         </Fade>
 

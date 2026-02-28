@@ -40,11 +40,27 @@ function getRelativeTime(timestamp: string): string {
 
 export default function AdminDashboard() {
   const loading = useSimulatedLoading();
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const activeUsers = teamMembers.filter((m) => m.status === "active").length;
 
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
+        <Fade direction="up" delay={0}>
+          <div
+            className="rounded-2xl px-8 py-7 mb-6 relative overflow-hidden"
+            data-testid="section-welcome"
+            style={{ background: "linear-gradient(135deg, #673AB7 0%, #512d9e 100%)" }}
+          >
+            <div className="relative z-10">
+              <p className="text-white/75 text-sm font-medium mb-2">👋 {greeting}, Sneha Patel</p>
+              <h1 className="text-3xl font-bold text-white font-heading tracking-tight">LBM Lifestyle Admin</h1>
+              <p className="text-white/70 text-sm mt-1.5 max-w-2xl">Wholesale & trade portal for lifestyle brand management</p>
+            </div>
+          </div>
+        </Fade>
+
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatsCardSkeleton />

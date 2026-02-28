@@ -34,6 +34,8 @@ const typeColorMap: Record<string, string> = {
 
 export default function HubDashboard() {
   const loading = useSimulatedLoading();
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   const upcomingEvents = hubEvents.filter((e) => e.status === "upcoming");
   const completedEvents = hubEvents.filter((e) => e.status === "completed");
@@ -53,10 +55,19 @@ export default function HubDashboard() {
   return (
     <div className="px-16 py-6 lg:px-24">
       <PageTransition>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground" data-testid="hub-dashboard-title">Event Hub</h1>
-          <p className="text-sm text-muted-foreground">Networking events overview</p>
-        </div>
+        <Fade direction="up" delay={0}>
+          <div
+            className="rounded-2xl px-8 py-7 mb-6 relative overflow-hidden"
+            data-testid="section-welcome"
+            style={{ background: "linear-gradient(135deg, #7C3AED 0%, #6025d8 100%)" }}
+          >
+            <div className="relative z-10">
+              <p className="text-white/75 text-sm font-medium mb-2">👋 {greeting}, Sneha Patel</p>
+              <h1 className="text-3xl font-bold text-white font-heading tracking-tight">Event Hub</h1>
+              <p className="text-white/70 text-sm mt-1.5 max-w-2xl">Internal networking events, vendor coordination & engagement platform</p>
+            </div>
+          </div>
+        </Fade>
 
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
