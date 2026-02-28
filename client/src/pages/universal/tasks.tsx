@@ -26,7 +26,6 @@ import {
 } from "@/lib/mock-data-shared";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { PageTransition, Fade } from "@/components/ui/animated";
-import { StatsCard } from "@/components/hr/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -177,29 +176,19 @@ export default function UniversalTasks() {
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 border-b bg-muted/20 shrink-0">
-        <StatsCard 
-          title="Total Tasks" 
-          value={stats.total} 
-          icon={<CheckSquare className="h-5 w-5" />}
-        />
-        <StatsCard 
-          title="In Progress" 
-          value={stats.inProgress} 
-          icon={<Clock className="h-5 w-5" />}
-        />
-        <StatsCard 
-          title="Overdue" 
-          value={stats.overdue} 
-          icon={<Calendar className="h-5 w-5" />}
-          changeType="negative"
-        />
-        <StatsCard 
-          title="Completed" 
-          value={stats.done} 
-          icon={<CheckSquare className="h-5 w-5 text-emerald-500" />}
-        />
+      {/* Stats Row — compact inline strip */}
+      <div className="flex items-stretch border-b bg-card shrink-0">
+        {([
+          { label: "Total Tasks", value: stats.total },
+          { label: "In Progress", value: stats.inProgress },
+          { label: "Overdue",     value: stats.overdue, red: true },
+          { label: "Completed",   value: stats.done,    green: true },
+        ] as { label: string; value: number; red?: boolean; green?: boolean }[]).map((s, i) => (
+          <div key={i} className="flex-1 px-5 py-3 flex flex-col justify-center border-r last:border-r-0">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{s.label}</span>
+            <span className={cn("text-lg font-semibold", s.red && "text-red-500", s.green && "text-emerald-600")}>{s.value}</span>
+          </div>
+        ))}
       </div>
 
       {/* Filter Bar */}

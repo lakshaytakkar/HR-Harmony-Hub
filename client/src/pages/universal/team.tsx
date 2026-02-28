@@ -8,15 +8,13 @@ import {
   Phone, 
   MapPin, 
   MessageSquare,
-  MoreVertical,
-  Filter
+  MoreVertical
 } from "lucide-react";
 import { detectVerticalFromUrl } from "@/lib/verticals-config";
 import { verticalMembers, type VerticalMember } from "@/lib/mock-data-shared";
 import { getPersonAvatar } from "@/lib/avatars";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
-import { StatsCard } from "@/components/hr/stats-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -107,37 +105,25 @@ export default function UniversalTeam() {
         actionIcon={<UserPlus className="h-4 w-4 mr-2" />}
       />
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="h-24">
-              <CardContent className="p-5 flex flex-col justify-center">
-                <Skeleton className="h-4 w-24 mb-2" />
-                <Skeleton className="h-8 w-16" />
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <>
-            <StatsCard
-              title="Total Members"
-              value={stats.total}
-              icon={<Users className="h-5 w-5" />}
-            />
-            <StatsCard
-              title="Online Now"
-              value={stats.online}
-              icon={<div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />}
-            />
-            <StatsCard
-              title="Departments"
-              value={stats.departments}
-              icon={<Filter className="h-5 w-5" />}
-            />
-          </>
-        )}
-      </div>
+      {/* Stats Row — compact inline strip */}
+      {isLoading ? (
+        <div className="h-[54px] animate-pulse bg-muted rounded-lg border" />
+      ) : (
+        <div className="flex items-stretch bg-card border rounded-lg overflow-hidden">
+          <div className="flex-1 px-5 py-3 flex flex-col justify-center border-r">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Total Members</span>
+            <span className="text-lg font-semibold">{stats.total}</span>
+          </div>
+          <div className="flex-1 px-5 py-3 flex flex-col justify-center border-r">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Online Now</span>
+            <span className="text-lg font-semibold text-emerald-600">{stats.online}</span>
+          </div>
+          <div className="flex-1 px-5 py-3 flex flex-col justify-center">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Departments</span>
+            <span className="text-lg font-semibold">{stats.departments}</span>
+          </div>
+        </div>
+      )}
 
       {/* Filter Bar */}
       <Card className="bg-card/50 border-dashed">

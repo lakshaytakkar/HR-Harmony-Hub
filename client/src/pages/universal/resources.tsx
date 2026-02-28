@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
 import { 
   Search, 
@@ -6,6 +6,7 @@ import {
   List, 
   Plus, 
   ExternalLink, 
+  Download,
   Star, 
   FileText, 
   FileSpreadsheet, 
@@ -16,14 +17,12 @@ import {
   File,
   Copy,
   Check,
-  ChevronRight,
-  MoreVertical
+  Loader2
 } from "lucide-react";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
+import { PageTransition, Fade } from "@/components/ui/animated";
 import { detectVerticalFromUrl } from "@/lib/verticals-config";
 import { sharedResources, type SharedResource } from "@/lib/mock-data-shared";
-import { StatsCard } from "@/components/hr/stats-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,8 +30,9 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Dialog, 
   DialogContent, 
-  DialogHeader, 
+  DialogHeader,
   DialogTitle,
+  DialogClose,
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
@@ -108,9 +108,16 @@ export default function UniversalResources() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedResource, setSelectedResource] = useState<SharedResource | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [iframeError, setIframeError] = useState(false);
+
+  useEffect(() => {
+    setIframeLoaded(false);
+    setIframeError(false);
+  }, [selectedResource]);
 
   const verticalResources = useMemo(() => {
     if (!vertical) return [];
@@ -209,7 +216,8 @@ export default function UniversalResources() {
           size="sm" 
           onClick={(e) => {
             e.stopPropagation();
-            window.open(r.url, '_blank');
+            setSelectedResource(r);
+            setPreviewOpen(true);
           }}
           data-testid={`btn-open-${r.id}`}
         >
@@ -238,30 +246,6 @@ export default function UniversalResources() {
           Add Resource
         </Button>
       </div>
-
-      <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StaggerItem>
-          <StatsCard
-            title="Total Resources"
-            value={verticalResources.length}
-            icon={<File className="size-5" />}
-          />
-        </StaggerItem>
-        <StaggerItem>
-          <StatsCard
-            title="Pinned"
-            value={pinnedResources.length}
-            icon={<Star className="size-5" />}
-          />
-        </StaggerItem>
-        <StaggerItem>
-          <StatsCard
-            title="Categories"
-            value={categories.length - 1}
-            icon={<LayoutGrid className="size-5" />}
-          />
-        </StaggerItem>
-      </Stagger>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -334,7 +318,7 @@ export default function UniversalResources() {
                   className="flex items-center gap-3 bg-card p-3 rounded-lg border shadow-sm hover-elevate cursor-pointer group min-w-[200px]"
                   onClick={() => {
                     setSelectedResource(res);
-                    setDetailOpen(true);
+                    setPreviewOpen(true);
                   }}
                 >
                   <div className={cn("p-2 rounded-lg", getIconColors(res.type))}>
@@ -378,7 +362,7 @@ export default function UniversalResources() {
                     className="hover-elevate transition-all cursor-pointer group overflow-hidden"
                     onClick={() => {
                       setSelectedResource(res);
-                      setDetailOpen(true);
+                      setPreviewOpen(true);
                     }}
                     data-testid={`card-resource-${res.id}`}
                   >
@@ -435,7 +419,7 @@ export default function UniversalResources() {
               columns={listColumns} 
               onRowClick={(r) => {
                 setSelectedResource(r);
-                setDetailOpen(true);
+                setPreviewOpen(true);
               }}
             />
           )}
@@ -452,86 +436,169 @@ export default function UniversalResources() {
         </>
       )}
 
-      {/* Resource Detail Dialog */}
-      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-lg">
-          {selectedResource && (
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className={cn("size-16 rounded-xl flex items-center justify-center shrink-0", getIconColors(selectedResource.type))}>
-                  {(() => {
-                    const Icon = getFileIcon(selectedResource.type);
-                    return <Icon className="size-8" />;
-                  })()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <DialogHeader className="p-0 text-left">
-                    <DialogTitle className="text-xl font-bold pr-6">{selectedResource.title}</DialogTitle>
-                    <div className="flex gap-2 mt-2">
-                      <Badge variant="secondary" className="capitalize">{selectedResource.type}</Badge>
-                      <Badge variant="outline">{selectedResource.category}</Badge>
+      {/* Resource Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-[1000px] h-[85vh] p-0 gap-0 overflow-hidden flex flex-row">
+          <DialogTitle className="sr-only">Resource Preview</DialogTitle>
+          <DialogDescription className="sr-only">Preview and download resource</DialogDescription>
+          {selectedResource && (() => {
+            const Icon = getFileIcon(selectedResource.type);
+            const getPreviewSrc = () => {
+              const t = selectedResource.type.toLowerCase();
+              if (t === "link") return selectedResource.url;
+              return `https://docs.google.com/viewer?url=${encodeURIComponent(selectedResource.url)}&embedded=true`;
+            };
+
+            return (
+              <>
+                {/* Left: Preview panel */}
+                <div className="flex-1 flex flex-col bg-muted overflow-hidden">
+                  {/* Header bar */}
+                  <div className="h-12 px-4 bg-card border-b flex items-center gap-3 shrink-0">
+                    <div className={cn("size-6 rounded flex items-center justify-center shrink-0", getIconColors(selectedResource.type))}>
+                      <Icon className="size-3.5" />
                     </div>
-                  </DialogHeader>
-                </div>
-              </div>
+                    <span className="text-sm font-semibold truncate flex-1">{selectedResource.title}</span>
+                    <Badge variant="secondary" className="capitalize text-[10px] shrink-0">{selectedResource.type}</Badge>
+                    <DialogClose asChild>
+                      <Button variant="ghost" size="icon" className="size-7 shrink-0">
+                        <Check className="size-4 hidden" />
+                        <span className="text-muted-foreground text-lg leading-none">&times;</span>
+                      </Button>
+                    </DialogClose>
+                  </div>
 
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold">Description</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {selectedResource.description}
-                </p>
-              </div>
+                  {/* Preview area */}
+                  <div className="flex-1 overflow-hidden relative">
+                    {/* Loading spinner */}
+                    {!iframeLoaded && !iframeError && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-muted z-10">
+                        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                          <Loader2 className="size-8 animate-spin" />
+                          <span className="text-sm">Loading preview…</span>
+                        </div>
+                      </div>
+                    )}
 
-              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border">
-                <div>
-                  <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Added By</div>
-                  <div className="text-sm font-medium">{selectedResource.addedBy}</div>
-                </div>
-                <div>
-                  <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Date Added</div>
-                  <div className="text-sm font-medium">{selectedResource.addedDate}</div>
-                </div>
-                <div>
-                  <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">File Size</div>
-                  <div className="text-sm font-medium">{selectedResource.fileSize || "N/A"}</div>
-                </div>
-                <div>
-                  <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Version</div>
-                  <div className="text-sm font-medium">{selectedResource.version}</div>
-                </div>
-              </div>
+                    {/* Fallback */}
+                    {iframeError && (
+                      <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
+                        <div className={cn("size-20 rounded-2xl flex items-center justify-center", getIconColors(selectedResource.type))}>
+                          <Icon className="size-10" />
+                        </div>
+                        <div className="text-center">
+                          <p className="font-semibold text-foreground">Preview unavailable</p>
+                          <p className="text-sm mt-1">Use "Open in New Tab" to view this file</p>
+                        </div>
+                      </div>
+                    )}
 
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold">Tags</h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedResource.tags.map(tag => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+                    {/* Image preview */}
+                    {selectedResource.type.toLowerCase() === "image" && !iframeError && (
+                      <img
+                        src={selectedResource.url}
+                        alt={selectedResource.title}
+                        className="w-full h-full object-contain p-6"
+                        onLoad={() => setIframeLoaded(true)}
+                        onError={() => setIframeError(true)}
+                      />
+                    )}
 
-              <div className="flex flex-col gap-2 pt-2">
-                <Button 
-                  className="w-full gap-2" 
-                  style={{ backgroundColor: vertical.color }}
-                  onClick={() => window.open(selectedResource.url, '_blank')}
-                >
-                  <ExternalLink className="size-4" />
-                  Open Resource
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full gap-2"
-                  onClick={() => handleCopyLink(selectedResource.url)}
-                >
-                  {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                  {copied ? "Copied!" : "Copy Link"}
-                </Button>
-              </div>
-            </div>
-          )}
+                    {/* iframe preview (pdf, doc, ppt, excel, link, template) */}
+                    {selectedResource.type.toLowerCase() !== "image" && !iframeError && (
+                      <iframe
+                        key={selectedResource.id}
+                        src={getPreviewSrc()}
+                        className="w-full h-full border-0"
+                        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                        onLoad={() => setIframeLoaded(true)}
+                        onError={() => setIframeError(true)}
+                        title={selectedResource.title}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Right: Sidebar */}
+                <div className="w-72 border-l bg-card flex flex-col overflow-y-auto shrink-0">
+                  {/* Icon + title + badges */}
+                  <div className="p-5 flex flex-col items-center text-center border-b">
+                    <div className={cn("size-16 rounded-xl flex items-center justify-center", getIconColors(selectedResource.type))}>
+                      <Icon className="size-8" />
+                    </div>
+                    <p className="text-base font-semibold mt-3 px-2 leading-snug">{selectedResource.title}</p>
+                    <div className="flex justify-center gap-2 mt-2 flex-wrap">
+                      <Badge variant="secondary" className="capitalize text-xs">{selectedResource.type}</Badge>
+                      <Badge variant="outline" className="text-xs">{selectedResource.category}</Badge>
+                    </div>
+                  </div>
+
+                  {/* Metadata */}
+                  <div className="p-5 space-y-3 border-b">
+                    {[
+                      { label: "Added By",   value: selectedResource.addedBy },
+                      { label: "Date Added", value: selectedResource.addedDate },
+                      { label: "File Size",  value: selectedResource.fileSize || "N/A" },
+                      { label: "Version",    value: selectedResource.version },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex justify-between items-start gap-2">
+                        <span className="text-[11px] uppercase font-medium text-muted-foreground tracking-wide shrink-0">{label}</span>
+                        <span className="text-sm font-medium text-right">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Description */}
+                  <div className="p-5 border-b">
+                    <p className="text-[11px] uppercase font-medium text-muted-foreground tracking-wide mb-2">Description</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{selectedResource.description}</p>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="p-5 border-b">
+                    <p className="text-[11px] uppercase font-medium text-muted-foreground tracking-wide mb-2">Tags</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedResource.tags.map(tag => (
+                        <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="p-5 space-y-2 mt-auto">
+                    <a
+                      href={selectedResource.url}
+                      download={selectedResource.title}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block"
+                    >
+                      <Button className="w-full gap-2" style={{ backgroundColor: vertical.color }}>
+                        <Download className="size-4" />
+                        Download
+                      </Button>
+                    </a>
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={() => window.open(selectedResource.url, '_blank')}
+                    >
+                      <ExternalLink className="size-4" />
+                      Open in New Tab
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full gap-2"
+                      onClick={() => handleCopyLink(selectedResource.url)}
+                    >
+                      {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                      {copied ? "Copied!" : "Copy Link"}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
