@@ -6,6 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DualCurrency, formatINRFromDollars } from "@/lib/faire-currency";
+import {
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+} from "@/components/layout";
 
 const BRAND_COLOR = "#1A6B45";
 
@@ -143,33 +149,35 @@ export default function FaireRetailerDetail() {
                 {retailerOrders.length === 0 ? (
                   <div className="p-4 text-sm text-muted-foreground" data-testid="text-no-orders">No orders from this retailer yet.</div>
                 ) : (
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-3 font-medium text-muted-foreground text-xs">Display ID</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground text-xs">Store</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground text-xs">Date</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground text-xs">Total</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground text-xs">State</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {retailerOrders.map((order: any) => {
-                        const store = stores.find(s => s.id === order._storeId);
-                        const cfg = stateConfig[order.state as OrderState] ?? stateConfig.NEW;
-                        const itemsTotal = (order.items ?? []).reduce((s: number, i: any) => s + (i.price_cents ?? 0) * (i.quantity ?? 0), 0);
-                        return (
-                          <tr key={order.id} className="border-b hover:bg-accent/30 cursor-pointer" onClick={() => setLocation(`/faire/orders/${order.id}`)} data-testid={`order-history-row-${order.id}`}>
-                            <td className="p-3"><Badge variant="outline" className="text-[9px] font-mono">{order.display_id}</Badge></td>
-                            <td className="p-3"><Badge variant="outline" className="text-[10px]">{store?.name?.split(" ")[0] ?? "Store"}</Badge></td>
-                            <td className="p-3 text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</td>
-                            <td className="p-3 text-xs font-semibold"><DualCurrency cents={itemsTotal} /></td>
-                            <td className="p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span></td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                  <DataTableContainer>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/30">
+                          <DataTH>Display ID</DataTH>
+                          <DataTH>Store</DataTH>
+                          <DataTH>Date</DataTH>
+                          <DataTH>Total</DataTH>
+                          <DataTH>State</DataTH>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {retailerOrders.map((order: any) => {
+                          const store = stores.find(s => s.id === order._storeId);
+                          const cfg = stateConfig[order.state as OrderState] ?? stateConfig.NEW;
+                          const itemsTotal = (order.items ?? []).reduce((s: number, i: any) => s + (i.price_cents ?? 0) * (i.quantity ?? 0), 0);
+                          return (
+                            <DataTR key={order.id} onClick={() => setLocation(`/faire/orders/${order.id}`)} data-testid={`order-history-row-${order.id}`}>
+                              <DataTD><Badge variant="outline" className="text-[10px] font-mono">{order.display_id}</Badge></DataTD>
+                              <DataTD><Badge variant="outline" className="text-[10px]">{store?.name?.split(" ")[0] ?? "Store"}</Badge></DataTD>
+                              <DataTD className="text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</DataTD>
+                              <DataTD className="font-semibold"><DualCurrency cents={itemsTotal} /></DataTD>
+                              <DataTD><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span></DataTD>
+                            </DataTR>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </DataTableContainer>
                 )}
               </CardContent>
             </Card>

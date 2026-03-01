@@ -158,7 +158,7 @@ export default function FaireBankTransactions() {
           {!isLoading && filtered.length === 0 && <div className="p-8 text-center text-sm text-muted-foreground">No transactions match current filters.</div>}
           {!isLoading && filtered.length > 0 && <table className="w-full text-sm">
             <thead>
-              <tr>
+              <tr className="border-b bg-muted/30">
                 <DataTH>Date</DataTH>
                 <DataTH>Description</DataTH>
                 <DataTH>Bank</DataTH>
@@ -170,20 +170,20 @@ export default function FaireBankTransactions() {
                 <DataTH>Action</DataTH>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y">
               {filtered.map(t => (
                 <DataTR
                   key={t.id}
                   data-testid={`row-txn-${t.id}`}
                   className={!t.reconciled ? "border-l-[3px] border-l-amber-400" : ""}
                 >
-                  <DataTD className="text-xs text-slate-500 whitespace-nowrap">{t.date}</DataTD>
+                  <DataTD className="text-muted-foreground whitespace-nowrap">{t.date}</DataTD>
                   <DataTD>
                     <div className="max-w-xs">
-                      <div className="font-medium text-sm leading-tight">{t.description}</div>
+                      <div className="font-medium leading-tight">{t.description}</div>
                     </div>
                   </DataTD>
-                  <DataTD className="text-xs text-slate-500">{t.bank_name}</DataTD>
+                  <DataTD className="text-muted-foreground">{t.bank_name}</DataTD>
                   <DataTD>
                     <Badge
                       className="border-0 text-xs"
@@ -221,7 +221,7 @@ export default function FaireBankTransactions() {
                           ) : null;
                         })}
                       </div>
-                    ) : <span className="text-slate-400 text-xs">—</span>}
+                    ) : <span className="text-muted-foreground">—</span>}
                   </DataTD>
                   <DataTD>
                     {t.reconciled ? (
@@ -271,7 +271,7 @@ export default function FaireBankTransactions() {
         <div className="space-y-4">
           <div className="p-3 rounded-lg bg-slate-50 text-sm">
             <div className="font-medium">{mapModal?.description}</div>
-            <div className="text-slate-500 mt-1">
+            <div className="text-muted-foreground mt-1">
               {mapModal?.type} · {mapModal && <DualCurrencyInline cents={mapModal.amount_cents} />} · {mapModal?.date}
             </div>
           </div>
@@ -298,8 +298,8 @@ export default function FaireBankTransactions() {
                   />
                   <div className="text-sm">
                     <span className="font-mono font-bold">#{o.display_id}</span>
-                    <span className="text-slate-500 ml-2">{o.state}</span>
-                    <span className="text-slate-400 ml-2">
+                    <span className="text-muted-foreground ml-2">{o.state}</span>
+                    <span className="text-muted-foreground ml-2">
                       <DualCurrencyInline cents={o.items.reduce((s: number, i: any) => s + i.price_cents * i.quantity, 0)} />
                     </span>
                   </div>
@@ -308,7 +308,7 @@ export default function FaireBankTransactions() {
             </div>
           )}
           {mapSearch.length > 1 && mapSearchResults.length === 0 && (
-            <p className="text-sm text-slate-500">No orders found for "{mapSearch}".</p>
+            <p className="text-sm text-muted-foreground">No orders found for "{mapSearch}".</p>
           )}
         </div>
       </DetailModal>

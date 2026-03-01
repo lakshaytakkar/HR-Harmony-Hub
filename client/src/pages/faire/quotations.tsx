@@ -168,7 +168,7 @@ export default function FaireQuotations() {
           {!isLoading && filtered.length === 0 && <div className="p-8 text-center text-sm text-muted-foreground">No quotations match current filters.</div>}
           {!isLoading && filtered.length > 0 && <table className="w-full text-sm">
             <thead>
-              <tr>
+              <tr className="border-b bg-muted/30">
                 <DataTH>Quote ID</DataTH>
                 <DataTH>Order</DataTH>
                 <DataTH>Fulfiller</DataTH>
@@ -181,7 +181,7 @@ export default function FaireQuotations() {
                 <DataTH>Action</DataTH>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y">
               {filtered.map(q => {
                 const order = allOrders.find((o: any) => o.id === q.order_id);
                 const fulfiller = faireFulfillers.find(f => f.id === q.fulfiller_id);
@@ -229,7 +229,7 @@ export default function FaireQuotations() {
                     <DataTD>
                       <Badge style={{ background: sc.bg, color: sc.color }} className="border-0">{sc.label}</Badge>
                     </DataTD>
-                    <DataTD className="text-xs text-slate-500">
+                    <DataTD className="text-muted-foreground">
                       <div>{q.sent_at ? new Date(q.sent_at).toLocaleDateString() : "—"}</div>
                       <div>{q.received_at ? new Date(q.received_at).toLocaleDateString() : "—"}</div>
                     </DataTD>

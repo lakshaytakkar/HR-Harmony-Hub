@@ -162,9 +162,9 @@ export default function FaireInventory() {
                 const isLow = v.available_quantity > 0 && v.available_quantity < 5;
                 return (
                   <DataTR key={v.id} className={isOut ? "bg-red-50/30 dark:bg-red-950/5" : isLow ? "bg-amber-50/30 dark:bg-amber-950/5" : ""} data-testid={`inv-row-${v.id}`}>
-                    <DataTD className="font-semibold text-xs">{v.product.name}</DataTD>
+                    <DataTD className="font-medium">{v.product.name}</DataTD>
                     <DataTD><Badge variant="outline" className="text-[10px] font-medium">{v.store?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
-                    <DataTD className="font-mono text-[10px] text-muted-foreground">{v.sku}</DataTD>
+                    <DataTD className="font-mono text-muted-foreground">{v.sku}</DataTD>
                     <DataTD>
                       <div className="flex flex-wrap gap-1">
                         {(v.options ?? []).map((o: any) => (
@@ -178,8 +178,8 @@ export default function FaireInventory() {
                         <span className={`text-sm font-bold ${isOut ? "text-red-600" : isLow ? "text-amber-600" : "text-foreground"}`}>
                           {v.available_quantity}
                         </span>
-                        {isOut && <span className="text-[9px] px-1 bg-red-100 text-red-600 rounded font-bold uppercase tracking-tighter">OUT</span>}
-                        {isLow && <span className="text-[9px] px-1 bg-amber-100 text-amber-600 rounded font-bold uppercase tracking-tighter">LOW</span>}
+                        {isOut && <span className="text-[10px] px-1 bg-red-100 text-red-600 rounded font-medium uppercase tracking-tighter">OUT</span>}
+                        {isLow && <span className="text-[10px] px-1 bg-amber-100 text-amber-600 rounded font-medium uppercase tracking-tighter">LOW</span>}
                       </div>
                     </DataTD>
                     <DataTD className="text-muted-foreground font-medium">

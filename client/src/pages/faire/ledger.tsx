@@ -129,7 +129,7 @@ export default function FaireLedger() {
           {!isLoading && filtered.length === 0 && <div className="p-8 text-center text-sm text-muted-foreground">No ledger entries match current filters.</div>}
           {!isLoading && filtered.length > 0 && <table className="w-full text-sm">
             <thead>
-              <tr>
+              <tr className="border-b bg-muted/30">
                 <DataTH>Order</DataTH>
                 <DataTH>Store</DataTH>
                 <DataTH>Faire Payout</DataTH>
@@ -144,7 +144,7 @@ export default function FaireLedger() {
                 <DataTH>Action</DataTH>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y">
               {filtered.map(e => {
                 const order = allOrders.find((o: any) => o.id === e.order_id);
                 const store = allStores.find((s: any) => s.id === e.store_id);
@@ -165,11 +165,11 @@ export default function FaireLedger() {
                         </button>
                       ) : e.order_id}
                     </DataTD>
-                    <DataTD className="text-xs text-slate-600">{store?.name ?? e.store_id}</DataTD>
+                    <DataTD className="text-muted-foreground">{store?.name ?? e.store_id}</DataTD>
                     <DataTD className="font-medium"><DualCurrency cents={e.faire_payout_cents} /></DataTD>
-                    <DataTD className="text-xs text-slate-500"><DualCurrency cents={e.commission_cents} /></DataTD>
+                    <DataTD className="text-muted-foreground"><DualCurrency cents={e.commission_cents} /></DataTD>
                     <DataTD><DualCurrency cents={e.fulfiller_cost_cents} /></DataTD>
-                    <DataTD className="text-xs text-slate-500"><DualCurrency cents={e.shipping_cost_cents} /></DataTD>
+                    <DataTD className="text-muted-foreground"><DualCurrency cents={e.shipping_cost_cents} /></DataTD>
                     <DataTD>
                       <div className="font-semibold" style={{ color: marginColor }}><DualCurrency cents={e.net_margin_cents} /></div>
                       <div className="text-xs" style={{ color: marginColor }}>{marginPct}%</div>
@@ -177,10 +177,10 @@ export default function FaireLedger() {
                     <DataTD>
                       <Badge style={{ background: sc.bg, color: sc.color }} className="border-0 text-xs">{sc.label}</Badge>
                     </DataTD>
-                    <DataTD className="text-xs text-slate-500">
+                    <DataTD className="text-muted-foreground">
                       {e.faire_paid_at ? new Date(e.faire_paid_at).toLocaleDateString() : "—"}
                     </DataTD>
-                    <DataTD className="text-xs text-slate-500">
+                    <DataTD className="text-muted-foreground">
                       {e.fulfiller_paid_at ? new Date(e.fulfiller_paid_at).toLocaleDateString() : "—"}
                     </DataTD>
                     <DataTD>
@@ -193,7 +193,7 @@ export default function FaireLedger() {
                         >
                           {e.bank_transaction_ids.length} txn{e.bank_transaction_ids.length > 1 ? "s" : ""}
                         </span>
-                      ) : <span className="text-slate-400 text-xs">—</span>}
+                      ) : <span className="text-muted-foreground">—</span>}
                     </DataTD>
                     <DataTD>
                       {e.payment_status !== "CLEARED" ? (
@@ -237,7 +237,7 @@ export default function FaireLedger() {
           <div>
             <Label className="font-semibold mb-2 block">Link Bank Transactions</Label>
             {unmappedTxns.length === 0 ? (
-              <p className="text-sm text-slate-500">No unreconciled transactions available.</p>
+              <p className="text-sm text-muted-foreground">No unreconciled transactions available.</p>
             ) : (
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {unmappedTxns.map(t => (
@@ -251,7 +251,7 @@ export default function FaireLedger() {
                     />
                     <div className="text-sm flex-1">
                       <div className="font-medium">{t.description}</div>
-                      <div className="text-xs text-slate-500">{t.reference} · {t.date} · <DualCurrencyInline cents={t.amount_cents} /></div>
+                      <div className="text-xs text-muted-foreground">{t.reference} · {t.date} · <DualCurrencyInline cents={t.amount_cents} /></div>
                     </div>
                   </label>
                 ))}

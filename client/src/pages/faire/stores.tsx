@@ -296,31 +296,31 @@ export default function FaireStores() {
                       {s ? (
                         <div className="flex items-center gap-1 flex-wrap">
                           {s.orders_new > 0 && (
-                            <Badge variant="outline" className="text-[9px] bg-amber-50 text-amber-700 border-amber-200 px-1.5 py-0">
+                            <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200 px-1.5 py-0">
                               {s.orders_new} new
                             </Badge>
                           )}
                           {s.orders_processing > 0 && (
-                            <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-700 border-blue-200 px-1.5 py-0">
+                            <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 px-1.5 py-0">
                               {s.orders_processing} processing
                             </Badge>
                           )}
                           {s.orders_in_transit > 0 && (
-                            <Badge variant="outline" className="text-[9px] bg-purple-50 text-purple-700 border-purple-200 px-1.5 py-0">
+                            <Badge variant="outline" className="text-[10px] bg-purple-50 text-purple-700 border-purple-200 px-1.5 py-0">
                               {s.orders_in_transit} shipping
                             </Badge>
                           )}
                           {s.orders_delivered > 0 && (
-                            <Badge variant="outline" className="text-[9px] bg-emerald-50 text-emerald-700 border-emerald-200 px-1.5 py-0">
+                            <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 px-1.5 py-0">
                               {s.orders_delivered} delivered
                             </Badge>
                           )}
                           {s.orders_canceled > 0 && (
-                            <Badge variant="outline" className="text-[9px] bg-red-50 text-red-700 border-red-200 px-1.5 py-0">
+                            <Badge variant="outline" className="text-[10px] bg-red-50 text-red-700 border-red-200 px-1.5 py-0">
                               {s.orders_canceled} canceled
                             </Badge>
                           )}
-                          {s.total_orders === 0 && <span className="text-muted-foreground text-[10px]">No orders</span>}
+                          {s.total_orders === 0 && <span className="text-muted-foreground text-xs">No orders</span>}
                         </div>
                       ) : <span className="text-muted-foreground text-xs">—</span>}
                     </DataTD>

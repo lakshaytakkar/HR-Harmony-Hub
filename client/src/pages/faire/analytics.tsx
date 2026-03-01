@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { PageTransition, Fade } from "@/components/ui/animated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTableContainer, DataTH, DataTD, DataTR } from "@/components/layout";
 import { formatINR, formatINRFromDollars, DualFromDollars } from "@/lib/faire-currency";
 
 const BRAND_COLOR = "#1A6B45";
@@ -234,64 +235,64 @@ export default function FaireAnalytics() {
         </Fade>
 
         <Fade>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Top 10 Products</CardTitle></CardHeader>
-            <CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">#</th>
-                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Product</th>
-                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Store</th>
-                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Qty in Stock</th>
-                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Avg Rating</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topProducts.map(p => (
-                    <tr key={p.rank} className="border-b hover:bg-accent/20" data-testid={`top-product-row-${p.rank}`}>
-                      <td className="p-2.5 text-xs font-bold text-muted-foreground">{p.rank}</td>
-                      <td className="p-2.5 text-xs font-medium">{p.name}</td>
-                      <td className="p-2.5 text-xs text-muted-foreground">{p.store?.name?.split(" ")[0] ?? "\u2014"}</td>
-                      <td className="p-2.5 text-xs font-semibold">{p.totalQty}</td>
-                      <td className="p-2.5 text-xs">{p.rating}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
+          <DataTableContainer>
+            <div className="px-4 py-3 border-b">
+              <h3 className="text-sm font-semibold">Top 10 Products</h3>
+            </div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/30">
+                  <DataTH>#</DataTH>
+                  <DataTH>Product</DataTH>
+                  <DataTH>Store</DataTH>
+                  <DataTH>Qty in Stock</DataTH>
+                  <DataTH>Avg Rating</DataTH>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {topProducts.map(p => (
+                  <DataTR key={p.rank} data-testid={`top-product-row-${p.rank}`}>
+                    <DataTD className="font-medium text-muted-foreground">{p.rank}</DataTD>
+                    <DataTD className="font-medium">{p.name}</DataTD>
+                    <DataTD className="text-muted-foreground">{p.store?.name?.split(" ")[0] ?? "\u2014"}</DataTD>
+                    <DataTD className="font-medium">{p.totalQty}</DataTD>
+                    <DataTD>{p.rating}</DataTD>
+                  </DataTR>
+                ))}
+              </tbody>
+            </table>
+          </DataTableContainer>
         </Fade>
 
         <Fade>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Retailer Geography</CardTitle></CardHeader>
-            <CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">State</th>
-                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Retailers</th>
-                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Orders</th>
-                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Revenue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {geoData.map(row => (
-                    <tr key={row.state} className="border-b hover:bg-accent/20" data-testid={`geo-row-${row.state}`}>
-                      <td className="p-2.5 text-xs font-semibold">{row.state}</td>
-                      <td className="p-2.5 text-xs">{row.retailers}</td>
-                      <td className="p-2.5 text-xs">{row.orders}</td>
-                      <td className="p-2.5 text-xs font-semibold"><DualFromDollars dollars={row.revenue} /></td>
-                    </tr>
-                  ))}
-                  {geoData.length === 0 && (
-                    <tr><td colSpan={4} className="p-4 text-center text-xs text-muted-foreground">No geographic data available</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
+          <DataTableContainer>
+            <div className="px-4 py-3 border-b">
+              <h3 className="text-sm font-semibold">Retailer Geography</h3>
+            </div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/30">
+                  <DataTH>State</DataTH>
+                  <DataTH>Retailers</DataTH>
+                  <DataTH>Orders</DataTH>
+                  <DataTH>Revenue</DataTH>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {geoData.map(row => (
+                  <DataTR key={row.state} data-testid={`geo-row-${row.state}`}>
+                    <DataTD className="font-medium">{row.state}</DataTD>
+                    <DataTD>{row.retailers}</DataTD>
+                    <DataTD>{row.orders}</DataTD>
+                    <DataTD className="font-semibold"><DualFromDollars dollars={row.revenue} /></DataTD>
+                  </DataTR>
+                ))}
+                {geoData.length === 0 && (
+                  <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">No geographic data available</td></tr>
+                )}
+              </tbody>
+            </table>
+          </DataTableContainer>
         </Fade>
       </div>
 
@@ -312,14 +313,14 @@ export default function FaireAnalytics() {
                         <div className="w-full rounded-t-md transition-all" style={{ height: `${barH}%`, background: BRAND_COLOR, opacity: i === monthlyData.length - 1 ? 1 : 0.7 }} />
                       </div>
                       <div className="text-center">
-                        <p className="text-[9px] font-bold"><DualFromDollars dollars={month.revenue} /></p>
+                        <p className="text-[10px] font-bold"><DualFromDollars dollars={month.revenue} /></p>
                         {pct !== null && (
-                          <div className={`flex items-center gap-0.5 text-[9px] font-medium ${pct >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                          <div className={`flex items-center gap-0.5 text-[10px] font-medium ${pct >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                             {pct >= 0 ? <TrendingUp size={8} /> : <TrendingDown size={8} />}
                             {Math.abs(pct)}%
                           </div>
                         )}
-                        <p className="text-[9px] text-muted-foreground">{month.label}</p>
+                        <p className="text-[10px] text-muted-foreground">{month.label}</p>
                       </div>
                     </div>
                   );

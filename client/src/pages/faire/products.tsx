@@ -343,13 +343,13 @@ export default function FaireProducts() {
                             </div>
                           )}
                           <div>
-                            <p className="font-semibold text-sm">{product.name}</p>
+                            <p className="font-medium">{product.name}</p>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{category}</p>
                           </div>
                         </div>
                       </DataTD>
                       <DataTD>
-                        <div className="text-xs font-mono text-muted-foreground">
+                        <div className="font-mono text-muted-foreground">
                           {variants.length === 1 ? (variants[0].sku || "—") : (
                             <span title={variants.map(v => v.sku).filter(Boolean).join(", ")}>
                               {variants[0]?.sku || "—"}
@@ -360,7 +360,7 @@ export default function FaireProducts() {
                       </DataTD>
                       <DataTD><Badge variant="outline" className="text-[10px]">{storeName(product._storeId).split(" ")[0]}</Badge></DataTD>
                       <DataTD align="center" className="font-medium">{variants.length}</DataTD>
-                      <DataTD className="text-foreground/80 font-medium">
+                      <DataTD className="font-semibold">
                         {wMin === 0 ? "—" : wMin === wMax ? (
                           <DualCurrency cents={wMin} />
                         ) : (
@@ -370,7 +370,7 @@ export default function FaireProducts() {
                           </span>
                         )}
                       </DataTD>
-                      <DataTD className="text-foreground/80 font-medium">
+                      <DataTD className="font-semibold">
                         {rMin === 0 ? "—" : rMin === rMax ? (
                           <DualCurrency cents={rMin} />
                         ) : (
@@ -381,7 +381,7 @@ export default function FaireProducts() {
                         )}
                       </DataTD>
                       <DataTD>
-                        <div className="text-xs">
+                        <div>
                           <span className="font-medium">{moq}</span>
                           <span className="text-muted-foreground"> / </span>
                           <span className="font-medium">{caseSize}</span>
@@ -389,8 +389,8 @@ export default function FaireProducts() {
                       </DataTD>
                       <DataTD>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter" style={{ background: lc.bg, color: lc.text }}>{lifecycleLabels[product.lifecycle_state] ?? product.lifecycle_state}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter" style={{ background: sc.bg, color: sc.text }}>{product.sale_state === "FOR_SALE" ? "For Sale" : "Paused"}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium uppercase tracking-tighter" style={{ background: lc.bg, color: lc.text }}>{lifecycleLabels[product.lifecycle_state] ?? product.lifecycle_state}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium uppercase tracking-tighter" style={{ background: sc.bg, color: sc.text }}>{product.sale_state === "FOR_SALE" ? "For Sale" : "Paused"}</span>
                         </div>
                       </DataTD>
                       <DataTD align="right" onClick={e => e.stopPropagation()}>

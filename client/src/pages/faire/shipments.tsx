@@ -135,23 +135,23 @@ export default function FaireShipments() {
                 const cfg = orderStateConfig[orderState] ?? { label: orderState, color: "#6B7280", bg: "#F9FAFB" };
                 return (
                   <DataTR key={ship.id} data-testid={`shipment-row-${ship.id}`}>
-                    <DataTD className="text-xs font-mono text-muted-foreground">{ship.id}</DataTD>
+                    <DataTD className="font-mono text-muted-foreground">{ship.id}</DataTD>
                     <DataTD>
-                      <Badge variant="outline" className="text-[9px] font-mono">{ship.order?.display_id}</Badge>
+                      <Badge variant="outline" className="text-[10px] font-mono">{ship.order?.display_id}</Badge>
                     </DataTD>
                     <DataTD>
                       <Badge variant="outline" className="text-[10px]">{ship.store?.name?.split(" ")[0] ?? "—"}</Badge>
                     </DataTD>
-                    <DataTD className="text-xs">{ship.retailerId ?? "—"}</DataTD>
-                    <DataTD className="text-xs font-medium">{ship.carrier}</DataTD>
+                    <DataTD>{ship.retailerId ?? "—"}</DataTD>
+                    <DataTD className="font-medium">{ship.carrier}</DataTD>
                     <DataTD>
                       <div className="flex items-center gap-1">
                         <span className="text-[10px] font-mono bg-muted rounded px-1.5 py-0.5 max-w-[120px] truncate">{ship.tracking_code}</span>
                         <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyTracking(ship.tracking_code)} data-testid={`btn-copy-tracking-${ship.id}`}><Copy size={10} /></Button>
                       </div>
                     </DataTD>
-                    <DataTD className="text-xs">{ship.shipped_at ? new Date(ship.shipped_at).toLocaleDateString() : "—"}</DataTD>
-                    <DataTD className="text-xs font-medium">{ship.maker_cost_cents != null ? <DualCurrency cents={ship.maker_cost_cents} /> : "—"}</DataTD>
+                    <DataTD>{ship.shipped_at ? new Date(ship.shipped_at).toLocaleDateString() : "—"}</DataTD>
+                    <DataTD className="font-semibold">{ship.maker_cost_cents != null ? <DualCurrency cents={ship.maker_cost_cents} /> : "—"}</DataTD>
                     <DataTD>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">{shipTypeLabels[ship.shipping_type] ?? ship.shipping_type ?? "—"}</span>
                     </DataTD>

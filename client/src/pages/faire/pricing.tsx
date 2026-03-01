@@ -150,17 +150,17 @@ export default function FairePricing() {
                       <input type="checkbox" checked={selectedRows.includes(r.id)} onChange={() => toggleRow(r.id)} className="rounded" data-testid={`check-${r.id}`} />
                     </DataTD>
                     <DataTD>
-                      <p className="text-xs font-medium">{r.productName}</p>
+                      <p className="font-medium">{r.productName}</p>
                       <p className="text-[10px] text-muted-foreground">{(r.options ?? []).map((o: any) => o.value).join(" / ")}</p>
                     </DataTD>
                     <DataTD><Badge variant="outline" className="text-[10px]">{r.store?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
-                    <DataTD className="text-xs font-mono text-muted-foreground">{r.sku}</DataTD>
-                    <DataTD className="text-xs font-semibold"><DualCurrency cents={wholesaleCents} /></DataTD>
-                    <DataTD className="text-xs"><DualCurrency cents={retailCents} /></DataTD>
+                    <DataTD className="font-mono text-muted-foreground">{r.sku}</DataTD>
+                    <DataTD className="font-semibold"><DualCurrency cents={wholesaleCents} /></DataTD>
+                    <DataTD><DualCurrency cents={retailCents} /></DataTD>
                     <DataTD>
                       <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: mc.bg, color: mc.text }}>{margin}%</span>
                     </DataTD>
-                    <DataTD className="text-xs">{r.moq}</DataTD>
+                    <DataTD>{r.moq}</DataTD>
                   </DataTR>
                 );
               })}
@@ -219,10 +219,10 @@ export default function FairePricing() {
             <tbody className="divide-y">
               {filteredPrepacks.map(pp => (
                 <DataTR key={pp.id} data-testid={`prepack-row-${pp.id}`}>
-                  <DataTD className="text-xs font-medium">{pp.name}</DataTD>
-                  <DataTD className="text-xs text-muted-foreground">{pp.products.join(", ")}</DataTD>
-                  <DataTD className="text-xs">{pp.units}</DataTD>
-                  <DataTD className="text-xs font-semibold"><DualCurrency cents={pp.wholesale_price_cents} /></DataTD>
+                  <DataTD className="font-medium">{pp.name}</DataTD>
+                  <DataTD className="text-muted-foreground">{pp.products.join(", ")}</DataTD>
+                  <DataTD>{pp.units}</DataTD>
+                  <DataTD className="font-semibold"><DualCurrency cents={pp.wholesale_price_cents} /></DataTD>
                   <DataTD><Badge variant="outline" className="text-[10px]">{stores.find((s: any) => s.id === pp.storeId)?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
                 </DataTR>
               ))}
