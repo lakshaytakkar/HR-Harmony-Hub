@@ -393,13 +393,14 @@ export const verticals: Vertical[] = [
   },
   {
     id: "eventhub",
-    name: "Event Hub",
-    shortName: "Event Hub",
+    name: "Event Management",
+    shortName: "Events",
     icon: CalendarCheck,
     logo: EventHubLogo,
     color: "#7C3AED",
-    tagline: "Networking Events",
-    description: "Networking events & engagement platform",
+    tagline: "Events & Networking",
+    description: "Networking events, venue management & attendee engagement",
+    isDepartment: true,
     navCategories: [
       {
         title: "Dashboard",
@@ -549,12 +550,13 @@ export const verticals: Vertical[] = [
   {
     id: "dev",
     name: "Developer",
-    shortName: "Developer",
+    shortName: "Dev",
     icon: Code2,
     logo: DeveloperLogo,
     color: "#10B981",
     tagline: "Internal Tools",
     description: "Developer hub, design system & internal resources",
+    isDepartment: true,
     navCategories: [
       {
         title: "Dashboard",
@@ -1259,13 +1261,13 @@ export const verticals: Vertical[] = [
   },
   {
     id: "social",
-    name: "SocialDesk",
-    shortName: "SocialDesk",
+    name: "SMM",
+    shortName: "SMM",
     icon: BarChart3,
     logo: SocialLogo,
     color: "#0D9488",
-    tagline: "Content & Brand",
-    description: "Social media ops, scheduling & analytics",
+    tagline: "Social Media Marketing",
+    description: "Social media ops, content scheduling & brand analytics",
     isDepartment: true,
     navCategories: [
       {

@@ -1,7 +1,11 @@
 # TeamSync - Multi-Vertical Team Portal
 
 ## Overview
-TeamSync is a multi-vertical team portal with exceptional UI/UX inspired by the Dropship.io design system. It supports 7 branded business products — LegalNations (HR), USDrop AI (Sales), GoyoTours (Events), Event Hub (Networking), LBM Lifestyle (Admin), Developer (Internal), EazyToSell (Retail Franchise) — PLUS 4 cross-business departments: **HRMS** (People & Culture, `/hrms`), **ATS** (Recruitment, `/ats`), **Sales CRM** (`/crm`, #0369A1), and **Finance & Accounts** (`/finance`, #B45309). The vertical switcher shows two labeled groups: "Business Products" and "Departments". Each vertical/department has its own dashboard, pages, brand logo, and workflows. Built with React, TypeScript, Tailwind CSS, and Shadcn UI.
+TeamSync is a multi-vertical team portal with exceptional UI/UX inspired by the Dropship.io design system. The vertical switcher shows two labeled groups: "Business Products" and "Departments". Each vertical/department has its own dashboard, pages, brand logo, and workflows. Built with React, TypeScript, Tailwind CSS, and Shadcn UI.
+
+**Business Products** (6): LegalNations (`/hr`), USDrop AI (`/sales`), GoyoTours (`/events`), LBM Lifestyle (`/admin`), EazyToSell (`/ets`), FaireDesk (`/faire`)
+
+**Departments** (7): HRMS (`/hrms`), ATS (`/ats`), Sales CRM (`/crm`), Finance & Accounts (`/finance`), Event Management (`/hub`), Developer (`/dev`), SMM (`/social`)
 
 ## Finance & Accounts Department (`/finance/*`) — amber #B45309
 
