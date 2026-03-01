@@ -84,8 +84,16 @@ Complete end-to-end order operations pipeline with 5 new pages:
 - **retailers.tsx** — retailers from `/api/faire/retailers` with pre-computed stats (total_orders, total_spent_cents, last_order_at, store_ids); no orders query needed; paginated
 - **retailer-detail.tsx** — single retailer + order history; computed stats
 - **analytics.tsx** — revenue trends, order state breakdowns, geo data, top products from real data
-- **stores.tsx** — store list + counts + sync
+- **stores.tsx** — store list with per-store summary stats (revenue, order count, product count, retailer count, order pipeline badges); merged `?summary` endpoint with 5min server-side cache; DualCurrency INR subtext on revenue; Sync All + per-store sync + Orders nav
 - **quotations.tsx, quotation-detail.tsx, partner-portal.tsx, ledger.tsx, bank-transactions.tsx** — orders/stores from real API; operational mock data from mock-data-faire-ops retained
+
+**INR Dual-Currency Display (all 18 pages):**
+- All USD amounts show INR conversion as muted subtext at 90x rate
+- `<DualCurrency cents={n} />` — table cells: `$12.34` with `₹1,111` below
+- `<DualCurrencyInline cents={n} />` — inline: `$12.34 (₹1,111)`
+- `<DualFromDollars dollars={n} />` — for dollar-based values
+- StatCards use `trend={formatINR(cents)}` or `trend={formatINRFromDollars(dollars)}`
+- Shared utility: `client/src/lib/faire-currency.tsx`
 
 **Slim products endpoint (`/api/faire/products?slim`):**
 - Strips `images[]`, `description`, `short_description` from products; includes `thumb_url` (first image CDN URL) and `sku` per variant

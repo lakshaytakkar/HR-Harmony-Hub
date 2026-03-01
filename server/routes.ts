@@ -22,6 +22,9 @@ import { fetchAllOrders, fetchAllProducts, fetchBrandProfile, fetchRetailerProfi
 const productCache: { data: unknown[] | null; ts: number } = { data: null, ts: 0 };
 const PRODUCT_CACHE_TTL = 5 * 60 * 1000;
 
+const storeSummaryCache: { data: unknown | null; ts: number } = { data: null, ts: 0 };
+const SUMMARY_CACHE_TTL = 5 * 60 * 1000;
+
 const FAIRE_API_BASE = "https://www.faire.com/external-api/v2";
 
 async function faireRequest(
@@ -50,10 +53,76 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-  app.get("/api/faire/stores", async (_req, res) => {
+  app.get("/api/faire/stores", async (req, res) => {
     try {
       const stores = await listStores();
-      return res.json({ stores });
+      const includeSummary = req.query.summary !== undefined;
+      if (!includeSummary) {
+        return res.json({ stores });
+      }
+      if (storeSummaryCache.data && Date.now() - storeSummaryCache.ts < SUMMARY_CACHE_TTL) {
+        return res.json({ stores, summary: storeSummaryCache.data });
+      }
+      const allOrders = await getAllOrders({ limit: 5000 });
+      const summary: Record<string, {
+        total_orders: number;
+        total_revenue_cents: number;
+        unique_retailers: number;
+        orders_new: number;
+        orders_processing: number;
+        orders_in_transit: number;
+        orders_delivered: number;
+        orders_canceled: number;
+        total_products: number;
+        avg_order_value_cents: number;
+        last_order_at: string | null;
+      }> = {};
+      for (const store of stores) {
+        summary[store.id] = {
+          total_orders: 0, total_revenue_cents: 0, unique_retailers: 0,
+          orders_new: 0, orders_processing: 0, orders_in_transit: 0,
+          orders_delivered: 0, orders_canceled: 0, total_products: 0,
+          avg_order_value_cents: 0, last_order_at: null,
+        };
+      }
+      const retailerSets: Record<string, Set<string>> = {};
+      for (const rawOrder of allOrders) {
+        const order = rawOrder as Record<string, unknown>;
+        const storeId = order._storeId as string;
+        if (!summary[storeId]) continue;
+        if (!retailerSets[storeId]) retailerSets[storeId] = new Set();
+        summary[storeId].total_orders++;
+        const items = (order.items as { price_cents?: number; quantity?: number }[]) ?? [];
+        const orderTotal = items.reduce((s, i) => s + (i.price_cents ?? 0) * (i.quantity ?? 1), 0);
+        summary[storeId].total_revenue_cents += orderTotal;
+        const state = order.state as string;
+        if (state === "NEW") summary[storeId].orders_new++;
+        else if (state === "PROCESSING") summary[storeId].orders_processing++;
+        else if (state === "PRE_TRANSIT" || state === "IN_TRANSIT") summary[storeId].orders_in_transit++;
+        else if (state === "DELIVERED") summary[storeId].orders_delivered++;
+        else if (state === "CANCELED") summary[storeId].orders_canceled++;
+        const retailerId = order.retailer_id as string;
+        if (retailerId) retailerSets[storeId].add(retailerId);
+        const createdAt = order.created_at as string;
+        if (createdAt && (!summary[storeId].last_order_at || createdAt > summary[storeId].last_order_at!)) {
+          summary[storeId].last_order_at = createdAt;
+        }
+      }
+      for (const storeId of Object.keys(summary)) {
+        summary[storeId].unique_retailers = retailerSets[storeId]?.size ?? 0;
+        if (summary[storeId].total_orders > 0) {
+          summary[storeId].avg_order_value_cents = Math.round(
+            summary[storeId].total_revenue_cents / summary[storeId].total_orders
+          );
+        }
+      }
+      const counts = await Promise.all(stores.map(s => getStoreCounts(s.id)));
+      stores.forEach((store, i) => {
+        if (summary[store.id]) summary[store.id].total_products = counts[i].total_products;
+      });
+      storeSummaryCache.data = summary;
+      storeSummaryCache.ts = Date.now();
+      return res.json({ stores, summary });
     } catch {
       return res.status(500).json({ error: "Failed to fetch stores" });
     }
@@ -169,6 +238,7 @@ export async function registerRoutes(
       const products = await fetchAllProducts(creds);
       const productsSynced = await syncProducts(storeId, products);
       productCache.data = null;
+      storeSummaryCache.data = null;
 
       const allStoreOrders = await getStoreOrders(storeId, { limit: 5000 });
       const retailersSynced = await extractAndUpsertRetailersFromOrders(allStoreOrders);
@@ -247,6 +317,7 @@ export async function registerRoutes(
       return res.status(500).json({ error: "Failed to fetch counts" });
     }
   });
+
 
   app.post("/api/faire/orders/:orderId/accept", async (req, res) => {
     const { orderId } = req.params;
