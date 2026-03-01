@@ -170,6 +170,11 @@ import FaireShipments from "@/pages/faire/shipments";
 import FaireRetailers from "@/pages/faire/retailers";
 import FaireRetailerDetail from "@/pages/faire/retailer-detail";
 import FaireAnalytics from "@/pages/faire/analytics";
+import FaireQuotations from "@/pages/faire/quotations";
+import FaireQuotationDetail from "@/pages/faire/quotation-detail";
+import FairePartnerPortal from "@/pages/faire/partner-portal";
+import FaireLedger from "@/pages/faire/ledger";
+import FaireBankTransactions from "@/pages/faire/bank-transactions";
 import SupransDashboard from "@/pages/suprans/dashboard";
 import SupransInbound from "@/pages/suprans/inbound";
 import SupransEnrichment from "@/pages/suprans/enrichment";
@@ -424,6 +429,11 @@ function Router() {
       <Route path="/faire/shipments" component={FaireShipments} />
       <Route path="/faire/retailers/:id" component={FaireRetailerDetail} />
       <Route path="/faire/retailers" component={FaireRetailers} />
+      <Route path="/faire/quotations/:id" component={FaireQuotationDetail} />
+      <Route path="/faire/quotations" component={FaireQuotations} />
+      <Route path="/faire/partner-portal" component={FairePartnerPortal} />
+      <Route path="/faire/ledger" component={FaireLedger} />
+      <Route path="/faire/bank-transactions" component={FaireBankTransactions} />
       <Route path="/faire/analytics" component={FaireAnalytics} />
       <Route component={NotFound} />
     </Switch>

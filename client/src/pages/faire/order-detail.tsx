@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Printer, Truck, CheckCircle, XCircle, Zap, AlertTriangle } from "lucide-react";
+import {
+  ArrowLeft, Printer, Truck, CheckCircle, XCircle, Zap, AlertTriangle,
+  FileText, BookOpen, ExternalLink,
+} from "lucide-react";
 import { PageTransition, Fade } from "@/components/ui/animated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +14,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { faireOrders, faireStores, faireRetailers, type OrderState } from "@/lib/mock-data-faire";
+import {
+  faireQuotations, faireFulfillers, faireLedgerEntries,
+} from "@/lib/mock-data-faire-ops";
 
 const BRAND_COLOR = "#1A6B45";
 const CARRIERS = ["UPS", "FedEx", "USPS", "DHL"];
@@ -40,13 +46,29 @@ const stateConfig: Record<OrderState, { label: string; color: string; bg: string
   CANCELED: { label: "Canceled", color: "#6B7280", bg: "#F9FAFB" },
 };
 
-const TIMELINE_STATES: OrderState[] = ["NEW", "PROCESSING", "PRE_TRANSIT", "IN_TRANSIT", "DELIVERED"];
+const QUOT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  DRAFT: { label: "Draft", color: "#6B7280", bg: "#F9FAFB" },
+  SENT: { label: "Sent", color: "#2563EB", bg: "#EFF6FF" },
+  QUOTE_RECEIVED: { label: "Quote Received", color: "#D97706", bg: "#FFFBEB" },
+  ACCEPTED: { label: "Accepted", color: "#059669", bg: "#ECFDF5" },
+  CHALLENGED: { label: "Challenged", color: "#EA580C", bg: "#FFF7ED" },
+  SENT_ELSEWHERE: { label: "Sent Elsewhere", color: "#64748B", bg: "#F1F5F9" },
+};
 
+const LED_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  PENDING: { label: "Pending", color: "#D97706", bg: "#FFFBEB" },
+  PARTIALLY_PAID: { label: "Partially Paid", color: "#2563EB", bg: "#EFF6FF" },
+  CLEARED: { label: "Cleared", color: "#059669", bg: "#ECFDF5" },
+};
+
+const TIMELINE_STATES: OrderState[] = ["NEW", "PROCESSING", "PRE_TRANSIT", "IN_TRANSIT", "DELIVERED"];
 const SOURCE_LABELS: Record<string, string> = {
   MARKETPLACE: "Marketplace",
   FAIRE_DIRECT: "Faire Direct",
   TRADESHOW: "Tradeshow",
 };
+
+function cents(n: number) { return `$${(n / 100).toFixed(2)}`; }
 
 export default function FaireOrderDetail() {
   const [, setLocation] = useLocation();
@@ -58,13 +80,23 @@ export default function FaireOrderDetail() {
   const store = faireStores.find(s => s.id === order.storeId);
   const retailer = faireRetailers.find(r => r.id === order.retailer_id);
 
+  const linkedQuote = faireQuotations.find(q => q.order_id === order.id);
+  const linkedFulfiller = linkedQuote ? faireFulfillers.find(f => f.id === linkedQuote.fulfiller_id) : null;
+  const linkedLedger = faireLedgerEntries.find(e => e.order_id === order.id);
+
   const [addShipOpen, setAddShipOpen] = useState(false);
   const [carrier, setCarrier] = useState("UPS");
   const [tracking, setTracking] = useState("");
   const [makerCostDollars, setMakerCostDollars] = useState("");
   const [shipType, setShipType] = useState("SHIP_ON_YOUR_OWN");
+  const [shipLoading, setShipLoading] = useState(false);
+  const [shipFaireResult, setShipFaireResult] = useState<string | null>(null);
+
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("REQUESTED_BY_RETAILER");
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  const [acceptLoading, setAcceptLoading] = useState(false);
 
   const cfg = stateConfig[order.state];
   const timelineIdx = TIMELINE_STATES.indexOf(order.state as OrderState);
@@ -72,12 +104,107 @@ export default function FaireOrderDetail() {
   const commissionAmt = order.payout_costs.commission_cents;
   const payout = itemsTotal - commissionAmt - order.payout_costs.payout_fee_cents;
 
+  async function handleAccept() {
+    setAcceptLoading(true);
+    try {
+      const res = await fetch(`/api/faire/orders/${order.id}/accept`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandToken: store?.brandToken }),
+      });
+      const data = await res.json() as { success: boolean; state?: string; mock?: boolean; error?: string };
+      if (data.success) {
+        toast({
+          title: "Order Accepted",
+          description: `Moved to Processing${data.mock ? " (mock — no live Faire API key)" : ""}`,
+        });
+      } else {
+        toast({ title: "Faire API Error", description: data.error ?? "Unknown error", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Network error", variant: "destructive" });
+    } finally {
+      setAcceptLoading(false);
+    }
+  }
+
+  async function handleCancel() {
+    setCancelLoading(true);
+    try {
+      const res = await fetch(`/api/faire/orders/${order.id}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandToken: store?.brandToken, reason: cancelReason }),
+      });
+      const data = await res.json() as { success: boolean; state?: string; mock?: boolean; error?: string };
+      if (data.success) {
+        toast({
+          title: "Order Canceled",
+          description: `${CANCEL_REASONS.find(r => r.value === cancelReason)?.label}${data.mock ? " (mock)" : ""}`,
+        });
+        setCancelOpen(false);
+      } else {
+        toast({ title: "Faire API Error", description: data.error ?? "Unknown error", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Network error", variant: "destructive" });
+    } finally {
+      setCancelLoading(false);
+    }
+  }
+
+  async function handleAddShipment() {
+    if (!tracking) {
+      toast({ title: "Enter a tracking code", variant: "destructive" });
+      return;
+    }
+    setShipLoading(true);
+    setShipFaireResult(null);
+    try {
+      const res = await fetch(`/api/faire/orders/${order.id}/shipments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandToken: store?.brandToken,
+          carrier,
+          tracking_code: tracking,
+          maker_cost_cents: Math.round(parseFloat(makerCostDollars || "0") * 100),
+          shipping_type: shipType,
+        }),
+      });
+      const data = await res.json() as { success: boolean; shipment?: object; mock?: boolean; error?: string };
+      if (data.success) {
+        const mockNote = data.mock ? " (mock — tracking pushed to local, not Faire)" : " — Pushed to Faire ✓";
+        setShipFaireResult(`${carrier} ${tracking}${mockNote}`);
+        toast({
+          title: "Shipment Added",
+          description: `${carrier} — ${tracking}${data.mock ? " (mock mode)" : " — pushed to Faire"}`,
+        });
+      } else {
+        toast({ title: "Error", description: data.error ?? "Failed to add shipment", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Network error", variant: "destructive" });
+    } finally {
+      setShipLoading(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="px-16 py-6 lg:px-24 space-y-5 animate-pulse">
         <div className="h-8 bg-muted rounded w-48" />
         <div className="h-16 bg-muted rounded-xl" />
-        <div className="grid grid-cols-5 gap-5"><div className="col-span-3 space-y-3"><div className="h-48 bg-muted rounded-xl" /><div className="h-32 bg-muted rounded-xl" /></div><div className="col-span-2 space-y-3"><div className="h-32 bg-muted rounded-xl" /><div className="h-24 bg-muted rounded-xl" /></div></div>
+        <div className="grid grid-cols-5 gap-5">
+          <div className="col-span-3 space-y-3">
+            <div className="h-48 bg-muted rounded-xl" />
+            <div className="h-32 bg-muted rounded-xl" />
+          </div>
+          <div className="col-span-2 space-y-3">
+            <div className="h-32 bg-muted rounded-xl" />
+            <div className="h-24 bg-muted rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -251,6 +378,7 @@ export default function FaireOrderDetail() {
         </div>
 
         <div className="col-span-2 space-y-4">
+          {/* Retailer */}
           <Fade>
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm">Retailer</CardTitle></CardHeader>
@@ -278,6 +406,128 @@ export default function FaireOrderDetail() {
             </Card>
           </Fade>
 
+          {/* Quotation panel */}
+          <Fade>
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-1.5">
+                  <FileText size={13} className="text-muted-foreground" />
+                  <CardTitle className="text-sm">Quotation</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {linkedQuote ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Fulfiller</span>
+                      <span className="text-xs font-medium">{linkedFulfiller?.name ?? linkedQuote.fulfiller_id}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Status</span>
+                      {(() => {
+                        const qsc = QUOT_STATUS_CONFIG[linkedQuote.status];
+                        return <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: qsc.bg, color: qsc.color }}>{qsc.label}</span>;
+                      })()}
+                    </div>
+                    {linkedQuote.status !== "DRAFT" && linkedQuote.status !== "SENT" && (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Fulfiller Total</span>
+                          <span className="text-xs font-semibold">
+                            {cents(linkedQuote.items.reduce((s, i) => s + i.fulfiller_unit_cost_cents * i.ordered_quantity, 0) + linkedQuote.fulfiller_shipping_cost_cents)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Est. Margin</span>
+                          <span className="text-xs font-semibold text-emerald-600">
+                            {(() => {
+                              const ftotal = linkedQuote.items.reduce((s, i) => s + i.fulfiller_unit_cost_cents * i.ordered_quantity, 0) + linkedQuote.fulfiller_shipping_cost_cents;
+                              const mp = payout > 0 ? Math.round(((payout - ftotal) / payout) * 100) : 0;
+                              return `${mp}%`;
+                            })()}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-xs mt-1"
+                      onClick={() => setLocation(`/faire/quotations/${linkedQuote.id}`)}
+                      data-testid="btn-view-quotation"
+                    >
+                      <ExternalLink size={11} className="mr-1" /> View Quotation
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-2">
+                    <p className="text-xs text-muted-foreground mb-2">No quotation yet</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs"
+                      onClick={() => setLocation("/faire/quotations")}
+                      data-testid="btn-request-quote-from-detail"
+                    >
+                      Request Quote
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </Fade>
+
+          {/* Financials panel */}
+          <Fade>
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-1.5">
+                  <BookOpen size={13} className="text-muted-foreground" />
+                  <CardTitle className="text-sm">Financials</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {linkedLedger ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Faire Payout</span>
+                      <span className="text-xs font-semibold text-emerald-600">{cents(linkedLedger.faire_payout_cents)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Fulfiller Cost</span>
+                      <span className="text-xs font-medium">{cents(linkedLedger.fulfiller_cost_cents + linkedLedger.shipping_cost_cents)}</span>
+                    </div>
+                    <div className="flex items-center justify-between border-t pt-1.5">
+                      <span className="text-xs text-muted-foreground">Net Margin</span>
+                      <span className="text-xs font-bold" style={{ color: linkedLedger.net_margin_cents > 0 ? "#059669" : "#DC2626" }}>
+                        {cents(linkedLedger.net_margin_cents)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Payment</span>
+                      {(() => {
+                        const lsc = LED_STATUS_CONFIG[linkedLedger.payment_status];
+                        return <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: lsc.bg, color: lsc.color }}>{lsc.label}</span>;
+                      })()}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-xs mt-1"
+                      onClick={() => setLocation("/faire/ledger")}
+                      data-testid="btn-view-ledger"
+                    >
+                      <ExternalLink size={11} className="mr-1" /> View in Ledger
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-1">No ledger entry</p>
+                )}
+              </CardContent>
+            </Card>
+          </Fade>
+
+          {/* Order Details */}
           <Fade>
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm">Order Details</CardTitle></CardHeader>
@@ -303,15 +553,21 @@ export default function FaireOrderDetail() {
             </Card>
           </Fade>
 
+          {/* Shipments */}
           <Fade>
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm">Shipments</CardTitle>
-                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setAddShipOpen(true); setCarrier("UPS"); setTracking(""); setMakerCostDollars(""); setShipType("SHIP_ON_YOUR_OWN"); }} data-testid="btn-add-shipment">+ Add</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setAddShipOpen(true); setCarrier("UPS"); setTracking(""); setMakerCostDollars(""); setShipType("SHIP_ON_YOUR_OWN"); setShipFaireResult(null); }} data-testid="btn-add-shipment">+ Add</Button>
                 </div>
               </CardHeader>
               <CardContent>
+                {shipFaireResult && (
+                  <div className="mb-2 p-2 rounded bg-emerald-50 border border-emerald-200 text-xs text-emerald-700">
+                    <CheckCircle size={11} className="inline mr-1" />{shipFaireResult}
+                  </div>
+                )}
                 {order.shipments.length === 0 ? (
                   <p className="text-xs text-muted-foreground">No shipments yet.</p>
                 ) : (
@@ -337,13 +593,14 @@ export default function FaireOrderDetail() {
             </Card>
           </Fade>
 
+          {/* Actions */}
           <Fade>
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm">Actions</CardTitle></CardHeader>
               <CardContent className="space-y-2">
                 {order.state === "NEW" && (
-                  <Button className="w-full text-sm" style={{ background: BRAND_COLOR }} onClick={() => toast({ title: "Order Accepted", description: "Moved to Processing." })} data-testid="btn-accept">
-                    <CheckCircle size={14} className="mr-2" /> Accept → Processing
+                  <Button className="w-full text-sm text-white" style={{ background: BRAND_COLOR }} onClick={handleAccept} disabled={acceptLoading} data-testid="btn-accept">
+                    <CheckCircle size={14} className="mr-2" /> {acceptLoading ? "Accepting…" : "Accept → Processing"}
                   </Button>
                 )}
                 <Button variant="outline" className="w-full text-sm" onClick={() => toast({ title: "Printing Packing Slip..." })} data-testid="btn-print">
@@ -360,22 +617,29 @@ export default function FaireOrderDetail() {
         </div>
       </div>
 
+      {/* Add Shipment dialog */}
       <Dialog open={addShipOpen} onOpenChange={() => setAddShipOpen(false)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Add Shipment</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Add Shipment</DialogTitle>
+          </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5"><Label>Carrier</Label><select value={carrier} onChange={e => setCarrier(e.target.value)} className="w-full h-9 border rounded-lg px-3 text-sm" data-testid="select-carrier">{CARRIERS.map(c => <option key={c}>{c}</option>)}</select></div>
             <div className="space-y-1.5"><Label>Tracking Code</Label><Input value={tracking} onChange={e => setTracking(e.target.value)} placeholder="Enter tracking code..." data-testid="input-tracking" /></div>
             <div className="space-y-1.5"><Label>Shipping Cost ($)</Label><Input type="number" value={makerCostDollars} onChange={e => setMakerCostDollars(e.target.value)} placeholder="e.g. 18.50" data-testid="input-maker-cost" /></div>
             <div className="space-y-1.5"><Label>Shipping Type</Label><select value={shipType} onChange={e => setShipType(e.target.value)} className="w-full h-9 border rounded-lg px-3 text-sm" data-testid="select-ship-type">{SHIP_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select></div>
+            <p className="text-xs text-slate-400">Tracking will be pushed to the Faire API (mock mode if no API key configured).</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddShipOpen(false)}>Cancel</Button>
-            <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Shipment Added", description: `${carrier} — ${tracking || "No tracking"}` }); setAddShipOpen(false); }} data-testid="btn-save-shipment">Add Shipment</Button>
+            <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={handleAddShipment} disabled={shipLoading} data-testid="btn-save-shipment">
+              {shipLoading ? "Pushing…" : "Add Shipment"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Cancel dialog */}
       <Dialog open={cancelOpen} onOpenChange={() => setCancelOpen(false)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Cancel Order #{order.display_id}?</DialogTitle></DialogHeader>
@@ -390,7 +654,9 @@ export default function FaireOrderDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelOpen(false)}>Keep Order</Button>
-            <Button variant="destructive" onClick={() => { toast({ title: "Order Canceled" }); setCancelOpen(false); }} data-testid="btn-confirm-cancel">Cancel Order</Button>
+            <Button variant="destructive" onClick={handleCancel} disabled={cancelLoading} data-testid="btn-confirm-cancel">
+              {cancelLoading ? "Canceling…" : "Cancel Order"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

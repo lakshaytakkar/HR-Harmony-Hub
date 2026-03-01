@@ -865,15 +865,6 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
-        title: "Retailer Pipeline",
-        defaultUrl: "/faire/leads",
-        icon: UserPlus,
-        items: [
-          { title: "Leads", url: "/faire/leads" },
-          { title: "Pipeline", url: "/faire/pipeline" },
-        ],
-      },
-      {
         title: "Products & Catalog",
         defaultUrl: "/faire/products",
         icon: Package,
@@ -894,22 +885,28 @@ export const verticals: Vertical[] = [
         ],
       },
       {
+        title: "Quotations",
+        defaultUrl: "/faire/quotations",
+        icon: FileText,
+        items: [
+          { title: "All Quotations", url: "/faire/quotations" },
+          { title: "Partner Portal", url: "/faire/partner-portal" },
+        ],
+      },
+      {
         title: "Retailers",
         defaultUrl: "/faire/retailers",
         icon: Users,
         items: [],
       },
       {
-        title: "Campaigns",
-        defaultUrl: "/faire/campaigns",
-        icon: Target,
-        items: [],
-      },
-      {
-        title: "Disputes",
-        defaultUrl: "/faire/disputes",
-        icon: AlertTriangle,
-        items: [],
+        title: "Finance",
+        defaultUrl: "/faire/ledger",
+        icon: Landmark,
+        items: [
+          { title: "Ledger", url: "/faire/ledger" },
+          { title: "Bank Transactions", url: "/faire/bank-transactions" },
+        ],
       },
       {
         title: "Analytics",

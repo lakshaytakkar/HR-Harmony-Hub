@@ -1,26 +1,25 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { RefreshCw, CheckCircle, XCircle, Eye, ShoppingCart, Zap } from "lucide-react";
+import { RefreshCw, CheckCircle, XCircle, Eye, ShoppingCart, Zap, FileText, Plus } from "lucide-react";
 import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { faireOrders, faireStores, faireRetailers, type OrderState } from "@/lib/mock-data-faire";
 import {
-  PageShell,
-  PageHeader,
-  StatGrid,
-  StatCard,
-  IndexToolbar,
-  DataTableContainer,
-  DataTH,
-  DataTD,
-  DataTR,
-  DetailModal,
+  faireQuotations, faireFulfillers, type FaireQuotation,
+} from "@/lib/mock-data-faire-ops";
+import {
+  PageShell, PageHeader, StatGrid, StatCard, IndexToolbar, DataTableContainer,
+  DataTH, DataTD, DataTR, DetailModal,
 } from "@/components/layout";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 const BRAND_COLOR = "#1A6B45";
 
@@ -64,6 +63,15 @@ const SOURCE_LABELS: Record<string, string> = {
   TRADESHOW: "Tradeshow",
 };
 
+const QUOT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  DRAFT:          { label: "Draft",          color: "#6B7280", bg: "#F9FAFB" },
+  SENT:           { label: "Sent",           color: "#2563EB", bg: "#EFF6FF" },
+  QUOTE_RECEIVED: { label: "Quote Received", color: "#D97706", bg: "#FFFBEB" },
+  ACCEPTED:       { label: "Accepted",       color: "#059669", bg: "#ECFDF5" },
+  CHALLENGED:     { label: "Challenged",     color: "#EA580C", bg: "#FFF7ED" },
+  SENT_ELSEWHERE: { label: "Sent Elsewhere", color: "#64748B", bg: "#F1F5F9" },
+};
+
 export default function FaireOrders() {
   const [, setLocation] = useLocation();
   const isLoading = useSimulatedLoading(650);
@@ -71,11 +79,19 @@ export default function FaireOrders() {
   const [selectedStore, setSelectedStore] = useState("all");
   const [stateFilter, setStateFilter] = useState<OrderState | "all">("all");
   const [search, setSearch] = useState("");
+  const [syncing, setSyncing] = useState(false);
+
   const [acceptId, setAcceptId] = useState<string | null>(null);
+  const [acceptLoading, setAcceptLoading] = useState(false);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("REQUESTED_BY_RETAILER");
   const [cancelNotes, setCancelNotes] = useState("");
-  const [syncing, setSyncing] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  const [quoteOrderId, setQuoteOrderId] = useState<string | null>(null);
+  const [quoteFulfillerId, setQuoteFulfillerId] = useState("");
+  const [quoteNotes, setQuoteNotes] = useState("");
+  const [quotations, setQuotations] = useState(faireQuotations);
 
   const filtered = faireOrders.filter(o => {
     if (selectedStore !== "all" && o.storeId !== selectedStore) return false;
@@ -101,6 +117,91 @@ export default function FaireOrders() {
     setSyncing(false);
     toast({ title: "Sync Complete", description: "Fetched latest orders from Faire API." });
   };
+
+  async function handleAccept() {
+    if (!acceptId) return;
+    const order = faireOrders.find(o => o.id === acceptId);
+    const store = faireStores.find(s => s.id === order?.storeId);
+    setAcceptLoading(true);
+    try {
+      const res = await fetch(`/api/faire/orders/${acceptId}/accept`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandToken: store?.brandToken }),
+      });
+      const data = await res.json() as { success: boolean; state?: string; mock?: boolean; error?: string };
+      if (data.success) {
+        toast({
+          title: "Order Accepted",
+          description: `Moved to Processing${data.mock ? " (mock mode — configure Faire API key to push live)" : ""}`,
+        });
+      } else {
+        toast({ title: "Faire API Error", description: data.error ?? "Unknown error", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Network error", description: "Could not reach server", variant: "destructive" });
+    } finally {
+      setAcceptLoading(false);
+      setAcceptId(null);
+    }
+  }
+
+  async function handleCancel() {
+    if (!cancelId) return;
+    const order = faireOrders.find(o => o.id === cancelId);
+    const store = faireStores.find(s => s.id === order?.storeId);
+    setCancelLoading(true);
+    try {
+      const res = await fetch(`/api/faire/orders/${cancelId}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandToken: store?.brandToken, reason: cancelReason }),
+      });
+      const data = await res.json() as { success: boolean; state?: string; mock?: boolean; error?: string };
+      if (data.success) {
+        toast({
+          title: "Order Canceled",
+          description: `Reason: ${CANCEL_LABELS[cancelReason]}${data.mock ? " (mock)" : ""}`,
+        });
+      } else {
+        toast({ title: "Faire API Error", description: data.error ?? "Unknown error", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Network error", description: "Could not reach server", variant: "destructive" });
+    } finally {
+      setCancelLoading(false);
+      setCancelId(null);
+      setCancelNotes("");
+    }
+  }
+
+  function handleRequestQuote() {
+    if (!quoteOrderId || !quoteFulfillerId) {
+      toast({ title: "Select an order and fulfiller", variant: "destructive" });
+      return;
+    }
+    const order = faireOrders.find(o => o.id === quoteOrderId)!;
+    const id = `q_new_${Date.now()}`;
+    const newQ: FaireQuotation = {
+      id, order_id: quoteOrderId, store_id: order.storeId, fulfiller_id: quoteFulfillerId,
+      status: "DRAFT",
+      items: order.items.map((oi, idx) => ({
+        id: `qi_new_${idx}`, quotation_id: id, order_item_id: oi.id,
+        variant_id: oi.variant_id, product_id: oi.product_id,
+        product_name: oi.product_name, variant_options: [], image_url: "",
+        ordered_quantity: oi.quantity, fulfiller_unit_cost_cents: 0,
+      })),
+      fulfiller_shipping_cost_cents: 0, fulfiller_notes: "", our_notes: quoteNotes,
+      lead_days: 0, sent_at: null, received_at: null, accepted_at: null, challenged_at: null,
+      created_at: new Date().toISOString(),
+    };
+    setQuotations(prev => [newQ, ...prev]);
+    setQuoteOrderId(null);
+    setQuoteFulfillerId("");
+    setQuoteNotes("");
+    toast({ title: "Quotation created", description: `Draft #${id}` });
+    setLocation(`/faire/quotations/${id}`);
+  }
 
   if (isLoading) {
     return (
@@ -170,7 +271,7 @@ export default function FaireOrders() {
           color={BRAND_COLOR}
           filters={ALL_STATES.map(s => ({ value: s, label: STATE_LABELS[s] }))}
           activeFilter={stateFilter}
-          onFilter={(v) => setStateFilter(v as any)}
+          onFilter={(v) => setStateFilter(v as OrderState | "all")}
         />
       </Fade>
 
@@ -186,6 +287,7 @@ export default function FaireOrders() {
                 <DataTH align="center">Items</DataTH>
                 <DataTH>Total</DataTH>
                 <DataTH>Commission</DataTH>
+                <DataTH>Quotation</DataTH>
                 <DataTH>State</DataTH>
                 <DataTH>Date</DataTH>
                 <DataTH align="right">Actions</DataTH>
@@ -198,6 +300,9 @@ export default function FaireOrders() {
                 const cfg = stateConfig[order.state];
                 const itemsTotal = order.items.reduce((sum, i) => sum + i.price_cents * i.quantity, 0);
                 const commPct = (order.payout_costs.commission_bps / 100).toFixed(0);
+                const linkedQuote = quotations.find(q => q.order_id === order.id);
+                const qsc = linkedQuote ? QUOT_STATUS_CONFIG[linkedQuote.status] : null;
+                const canRequestQuote = !linkedQuote && (order.state === "NEW" || order.state === "PROCESSING");
                 return (
                   <DataTR key={order.id} onClick={() => setLocation(`/faire/orders/${order.id}`)} data-testid={`order-row-${order.id}`}>
                     <DataTD>
@@ -217,6 +322,28 @@ export default function FaireOrders() {
                     <DataTD align="center">{order.items.length}</DataTD>
                     <DataTD className="font-semibold">${(itemsTotal / 100).toFixed(2)}</DataTD>
                     <DataTD className="text-muted-foreground font-medium">{commPct}%</DataTD>
+                    <DataTD onClick={e => e.stopPropagation()}>
+                      {linkedQuote && qsc ? (
+                        <button
+                          className="text-[10px] px-2 py-0.5 rounded-full font-medium hover:opacity-80"
+                          style={{ background: qsc.bg, color: qsc.color }}
+                          onClick={() => setLocation(`/faire/quotations/${linkedQuote.id}`)}
+                          data-testid={`link-quote-${order.id}`}
+                        >
+                          <FileText size={9} className="inline mr-1" />{qsc.label}
+                        </button>
+                      ) : canRequestQuote ? (
+                        <button
+                          className="text-[10px] px-2 py-0.5 rounded-full font-medium border border-dashed border-slate-300 text-slate-400 hover:border-emerald-400 hover:text-emerald-600 flex items-center gap-1"
+                          onClick={e => { e.stopPropagation(); setQuoteOrderId(order.id); }}
+                          data-testid={`btn-request-quote-${order.id}`}
+                        >
+                          <Plus size={9} /> Quote
+                        </button>
+                      ) : (
+                        <span className="text-slate-300 text-xs">—</span>
+                      )}
+                    </DataTD>
                     <DataTD>
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
                     </DataTD>
@@ -236,30 +363,43 @@ export default function FaireOrders() {
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={10} className="p-8 text-center text-sm text-muted-foreground">No orders match your filters.</td></tr>
+                <tr><td colSpan={11} className="p-8 text-center text-sm text-muted-foreground">No orders match your filters.</td></tr>
               )}
             </tbody>
           </table>
         </DataTableContainer>
       </Fade>
 
+      {/* Accept dialog */}
       <DetailModal
         open={!!acceptId}
         onClose={() => setAcceptId(null)}
         title="Accept Order"
-        subtitle="Move order to Processing status"
+        subtitle="This will call the Faire API to move the order to Processing"
         footer={
           <>
-            <Button variant="outline" onClick={() => setAcceptId(null)}>Cancel</Button>
-            <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Order Accepted", description: "Order moved to Processing." }); setAcceptId(null); }} data-testid="btn-confirm-accept">Accept → Processing</Button>
+            <Button variant="outline" onClick={() => setAcceptId(null)} disabled={acceptLoading}>Cancel</Button>
+            <Button
+              style={{ background: BRAND_COLOR }}
+              className="text-white hover:opacity-90"
+              onClick={handleAccept}
+              disabled={acceptLoading}
+              data-testid="btn-confirm-accept"
+            >
+              {acceptLoading ? "Accepting…" : "Accept → Processing"}
+            </Button>
           </>
         }
       >
         <div className="px-6 py-5">
-          <p className="text-sm text-muted-foreground">Accepting this order will move it to Processing status. The retailer will be notified automatically.</p>
+          <p className="text-sm text-muted-foreground">
+            Accepting this order calls the Faire External API to move it to Processing. The retailer will be notified.
+          </p>
+          <p className="text-xs text-slate-400 mt-2">If no Faire API key is configured, this will run in mock mode.</p>
         </div>
       </DetailModal>
 
+      {/* Cancel dialog */}
       <DetailModal
         open={!!cancelId}
         onClose={() => setCancelId(null)}
@@ -267,8 +407,10 @@ export default function FaireOrders() {
         subtitle="Select a reason for cancellation"
         footer={
           <>
-            <Button variant="outline" onClick={() => setCancelId(null)}>Back</Button>
-            <Button variant="destructive" onClick={() => { toast({ title: "Order Canceled", description: `Reason: ${CANCEL_LABELS[cancelReason]}` }); setCancelId(null); setCancelNotes(""); }} data-testid="btn-confirm-cancel">Cancel Order</Button>
+            <Button variant="outline" onClick={() => setCancelId(null)} disabled={cancelLoading}>Back</Button>
+            <Button variant="destructive" onClick={handleCancel} disabled={cancelLoading} data-testid="btn-confirm-cancel">
+              {cancelLoading ? "Canceling…" : "Cancel Order"}
+            </Button>
           </>
         }
       >
@@ -282,6 +424,47 @@ export default function FaireOrders() {
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes (optional)</Label>
             <Input value={cancelNotes} onChange={e => setCancelNotes(e.target.value)} placeholder="Additional context..." data-testid="input-cancel-notes" />
+          </div>
+        </div>
+      </DetailModal>
+
+      {/* Request Quote dialog */}
+      <DetailModal
+        open={!!quoteOrderId}
+        onClose={() => setQuoteOrderId(null)}
+        title="Request Quote"
+        subtitle="Create a draft quotation to send to a fulfiller."
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setQuoteOrderId(null)}>Cancel</Button>
+            <Button style={{ background: BRAND_COLOR }} className="text-white" onClick={handleRequestQuote} data-testid="btn-confirm-request-quote">
+              Create Draft
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4 px-1">
+          <div>
+            <Label>Fulfiller</Label>
+            <Select value={quoteFulfillerId} onValueChange={setQuoteFulfillerId}>
+              <SelectTrigger data-testid="select-quote-fulfiller">
+                <SelectValue placeholder="Select fulfiller…" />
+              </SelectTrigger>
+              <SelectContent>
+                {faireFulfillers.map(f => (
+                  <SelectItem key={f.id} value={f.id}>{f.name} ({f.country})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Notes</Label>
+            <Textarea
+              value={quoteNotes}
+              onChange={e => setQuoteNotes(e.target.value)}
+              placeholder="Internal notes for this quote…"
+              data-testid="input-quote-notes"
+            />
           </div>
         </div>
       </DetailModal>

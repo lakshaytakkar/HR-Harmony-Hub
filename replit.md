@@ -32,6 +32,33 @@ Primary lead source and routing hub for all business verticals. Leads flow in �
 - Payment link table: search, filter pills (All/Pending/Paid/Expired), Mark as Paid inline action
 - Grouped under CRM "Performance" nav category
 
+### FaireDesk — Faire Order Operations Pipeline (Mar 2026)
+
+Complete end-to-end order operations pipeline with 5 new pages:
+
+**New Pages:**
+- **Quotations** `/faire/quotations` — List + "New Quotation" dialog; 4 KPI cards; filter tabs (All/Draft/Sent/Quote Received/Accepted/Challenged); table with margin % color-coding; links to detail
+- **Quotation Detail** `/faire/quotations/:id` — 3-column layout: order context (with product images) / quotation (status timeline, fulfiller card, line items, costs) / decision panel (margin health bar, action buttons); status transitions (DRAFT→SENT→QUOTE_RECEIVED→ACCEPTED/CHALLENGED/SENT_ELSEWHERE); Challenge + Send Elsewhere dialogs
+- **Partner Portal** `/faire/partner-portal` — Fulfiller-facing quote submission UI; fulfiller selector; SENT quotations as cards with product image grids; inline quote submission form; updates quotation to QUOTE_RECEIVED
+- **Financial Ledger** `/faire/ledger` — Per-order financials; 4 stat cards; filter tabs; full table with Faire payout vs fulfiller cost vs net margin; Mark as Cleared dialog linking bank transactions
+- **Bank Transactions** `/faire/bank-transactions` — Reconciliation table; 3 stat cards; unreconciled rows amber-highlighted; Map to Order dialog; Add Transaction dialog
+
+**Real Faire API integration (server/routes.ts):**
+- `POST /api/faire/orders/:id/accept` → `POST faire.com/external-api/v2/orders/:id/processing`
+- `POST /api/faire/orders/:id/cancel` → `POST faire.com/external-api/v2/orders/:id/cancel`
+- `POST /api/faire/orders/:id/shipments` → `POST faire.com/external-api/v2/orders/:id/shipments`
+- Mock mode auto-detected when token absent or contains "mock"
+
+**Updated existing pages:**
+- **orders.tsx** — Added "Quote" column with linked quotation status badges; "Request Quote" inline button for NEW/PROCESSING orders; Accept/Cancel buttons now call real API routes
+- **order-detail.tsx** — Accept/Cancel/Add Shipment all call real Faire API; Quotation sidebar panel shows linked quote with fulfiller+margin; Financials sidebar panel shows linked ledger entry
+
+**Mock data (client/src/lib/mock-data-faire-ops.ts):**
+- 4 fulfillers: ShipFast Logistics, GlobalPack Co, QuickFulfill EU, AsiaDirect Supply
+- 10 quotations in mixed statuses linked to existing orders
+- 11 ledger entries with payout vs cost calculations
+- 14 bank transactions (9 reconciled, 5 unreconciled)
+
 ### FaireDesk — Full Faire External API v2 Overhaul (Feb 2026)
 - Removed 4 fake pages with no API backing: leads, pipeline, campaigns, disputes
 - Rewrote mock-data-faire.ts to exactly match Faire External API v2: correct ID prefixes (p_, po_, bo_, oi_, s_, r_), all prices in cents, options as Array<{name,value}>, 8 OrderStates (NEW/PROCESSING/PRE_TRANSIT/IN_TRANSIT/DELIVERED/PENDING_RETAILER_CONFIRMATION/BACKORDERED/CANCELED), FaireAddress, payout_costs with commission_bps/commission_cents, display_id, source, is_free_shipping, brand_discounts, shipment tracking_code+maker_cost_cents+shipping_type
