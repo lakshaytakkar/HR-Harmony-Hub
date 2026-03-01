@@ -32,9 +32,11 @@ Primary lead source and routing hub for all business verticals. Leads flow in �
 - Payment link table: search, filter pills (All/Pending/Paid/Expired), Mark as Paid inline action
 - Grouped under CRM "Performance" nav category
 
-### FaireDesk Retailer Pipeline
-- **Retailer Leads** `/faire/leads` — 15 leads with stage badges, search, filter pills (All/New/Contacted/Qualified/Converted)
-- **Retailer Pipeline** `/faire/pipeline` — Kanban board (Prospect→Outreach→Demo Scheduled→Proposal Sent→Partner Signed), 12 leads with deal values
+### FaireDesk — Full Faire External API v2 Overhaul (Feb 2026)
+- Removed 4 fake pages with no API backing: leads, pipeline, campaigns, disputes
+- Rewrote mock-data-faire.ts to exactly match Faire External API v2: correct ID prefixes (p_, po_, bo_, oi_, s_, r_), all prices in cents, options as Array<{name,value}>, 8 OrderStates (NEW/PROCESSING/PRE_TRANSIT/IN_TRANSIT/DELIVERED/PENDING_RETAILER_CONFIRMATION/BACKORDERED/CANCELED), FaireAddress, payout_costs with commission_bps/commission_cents, display_id, source, is_free_shipping, brand_discounts, shipment tracking_code+maker_cost_cents+shipping_type
+- Updated all 8 feature pages to consume corrected data model: orders, order-detail, products, product-detail, inventory, pricing, shipments, fulfillment
+- Also updated dashboard, analytics, retailer-detail for correct stateConfig (8 states) and API v2 field names
 
 ### EventHub Event Inquiries (`/hub/leads`)
 - 15 event inquiry leads (Corporate/Wedding/Social/Conference/Exhibition)

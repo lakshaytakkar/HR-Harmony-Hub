@@ -9,13 +9,16 @@ const BRAND_COLOR = "#1A6B45";
 
 const stateConfig: Record<OrderState, { label: string; color: string; bg: string }> = {
   NEW: { label: "New", color: "#2563EB", bg: "#EFF6FF" },
-  PRE_TRANSIT: { label: "Pre-Transit", color: "#7C3AED", bg: "#F5F3FF" },
+  PROCESSING: { label: "Processing", color: "#7C3AED", bg: "#F5F3FF" },
+  PRE_TRANSIT: { label: "Pre-Transit", color: "#9333EA", bg: "#FAF5FF" },
   IN_TRANSIT: { label: "In Transit", color: "#D97706", bg: "#FFFBEB" },
   DELIVERED: { label: "Delivered", color: "#059669", bg: "#ECFDF5" },
-  CLOSED: { label: "Closed", color: "#6B7280", bg: "#F9FAFB" },
-  CANCELLED: { label: "Cancelled", color: "#DC2626", bg: "#FEF2F2" },
-  BACK_ORDERED: { label: "Backordered", color: "#EA580C", bg: "#FFF7ED" },
+  PENDING_RETAILER_CONFIRMATION: { label: "Pending", color: "#EA580C", bg: "#FFF7ED" },
+  BACKORDERED: { label: "Backordered", color: "#DC4A26", bg: "#FFF1EE" },
+  CANCELED: { label: "Canceled", color: "#6B7280", bg: "#F9FAFB" },
 };
+
+const ALL_ORDER_STATES: OrderState[] = ["NEW", "PROCESSING", "PRE_TRANSIT", "IN_TRANSIT", "DELIVERED", "PENDING_RETAILER_CONFIRMATION", "BACKORDERED", "CANCELED"];
 
 const MONTHS = ["Sep '25", "Oct '25", "Nov '25", "Dec '25", "Jan '26", "Feb '26"];
 const MONTHLY_REVENUE = [98400, 112600, 156800, 189200, 134500, 174800];
@@ -45,21 +48,24 @@ export default function FaireAnalytics() {
 
   const totalOrders = storeOrders.length;
   const uniqueRetailers = new Set(storeOrders.map(o => o.retailer_id)).size;
-  const avgOrderValue = totalOrders > 0 ? Math.round(storeOrders.reduce((s, o) => s + o.total, 0) / totalOrders) : 0;
+  const totalItemsCents = storeOrders.reduce((s, o) => s + o.items.reduce((si, i) => si + i.price_cents * i.quantity, 0), 0);
+  const avgOrderValueCents = totalOrders > 0 ? Math.round(totalItemsCents / totalOrders) : 0;
   const unitsSold = storeOrders.reduce((s, o) => s + o.items.reduce((si, i) => si + i.quantity, 0), 0);
-  const cancelledOrders = storeOrders.filter(o => o.state === "CANCELLED").length;
-  const returnRate = totalOrders > 0 ? ((cancelledOrders / totalOrders) * 100).toFixed(1) : "0.0";
+  const canceledOrders = storeOrders.filter(o => o.state === "CANCELED").length;
+  const cancelRate = totalOrders > 0 ? ((canceledOrders / totalOrders) * 100).toFixed(1) : "0.0";
 
   const maxRevenue = Math.max(...faireStores.map(s => s.monthlyRevenue));
 
-  const topProducts = storeProducts
-    .sort((a, b) => b.retailer_count - a.retailer_count)
+  const topProducts = [...storeProducts]
+    .sort((a, b) => b.variants.length - a.variants.length)
     .slice(0, 10)
     .map((p, i) => {
       const store = faireStores.find(s => s.id === p.storeId);
+      const avgRating = p.reviews.length > 0
+        ? (p.reviews.reduce((s, r) => s + r.rating, 0) / p.reviews.length).toFixed(1)
+        : "—";
       const unitsSold = p.variants.reduce((s, v) => s + v.available_quantity, 0);
-      const revenue = p.variants.reduce((s, v) => s + v.wholesale_price * 10, 0);
-      return { rank: i + 1, name: p.name, store, unitsSold, revenue, rating: p.avg_rating };
+      return { rank: i + 1, name: p.name, store, unitsSold, rating: avgRating };
     });
 
   const monthPct = (i: number) => {
@@ -116,10 +122,10 @@ export default function FaireAnalytics() {
           {[
             { label: "Revenue MTD", value: `$${(totalRevenue / 1000).toFixed(0)}K` },
             { label: "Total Orders", value: totalOrders },
-            { label: "Avg Order Value", value: `$${avgOrderValue}` },
+            { label: "Avg Order Value", value: `$${(avgOrderValueCents / 100).toFixed(0)}` },
             { label: "Unique Retailers", value: uniqueRetailers },
             { label: "Units Sold", value: unitsSold },
-            { label: "Return Rate", value: `${returnRate}%` },
+            { label: "Cancel Rate", value: `${cancelRate}%` },
           ].map((k, i) => (
             <div key={i} className="rounded-xl border bg-card p-3" data-testid={`analytics-kpi-${i}`}>
               <p className="text-lg font-bold">{k.value}</p>
@@ -157,7 +163,7 @@ export default function FaireAnalytics() {
             <CardHeader className="pb-2"><CardTitle className="text-sm">Orders by State</CardTitle></CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {(["NEW", "PRE_TRANSIT", "IN_TRANSIT", "DELIVERED", "CLOSED", "CANCELLED", "BACK_ORDERED"] as OrderState[]).map(state => {
+                {ALL_ORDER_STATES.map(state => {
                   const cfg = stateConfig[state];
                   const count = storeOrders.filter(o => o.state === state).length;
                   return (
@@ -182,8 +188,8 @@ export default function FaireAnalytics() {
                     <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">#</th>
                     <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Product</th>
                     <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Store</th>
-                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Retailers</th>
-                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">⭐</th>
+                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Qty in Stock</th>
+                    <th className="text-left p-2.5 font-medium text-muted-foreground text-xs">Avg ⭐</th>
                   </tr>
                 </thead>
                 <tbody>

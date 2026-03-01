@@ -20,9 +20,9 @@ function marginColor(pct: number) {
 }
 
 const mockPrepacks = [
-  { id: "pp-001", name: "Candle Sampler Trio", products: ["Soy Wax Pillar Candle Set (3 scents)"], units: 3, wholesale_price: 75, storeId: "store-001" },
-  { id: "pp-002", name: "Wellness Starter Kit", products: ["Lavender Body Oil 4oz", "Rose Facial Serum 1oz"], units: 2, wholesale_price: 36, storeId: "store-005" },
-  { id: "pp-003", name: "Kitchen Essentials Bundle", products: ["Rattan Fruit Bowl Lg", "Linen Napkin Set (Natural)"], units: 2, wholesale_price: 44, storeId: "store-002" },
+  { id: "pp-001", name: "Candle Sampler Trio", products: ["Soy Wax Pillar Candle Set (3 scents)"], units: 3, wholesale_price_cents: 7500, storeId: "store-001" },
+  { id: "pp-002", name: "Wellness Starter Kit", products: ["Lavender Body Oil 4oz", "Rose Facial Serum 1oz"], units: 2, wholesale_price_cents: 3600, storeId: "store-005" },
+  { id: "pp-003", name: "Kitchen Essentials Bundle", products: ["Rattan Fruit Bowl Lg", "Linen Napkin Set (Natural)"], units: 2, wholesale_price_cents: 4400, storeId: "store-002" },
 ];
 
 export default function FairePricing() {
@@ -54,7 +54,6 @@ export default function FairePricing() {
   });
 
   const toggleRow = (id: string) => setSelectedRows(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-
   const filteredPrepacks = selectedStore === "all" ? mockPrepacks : mockPrepacks.filter(pp => pp.storeId === selectedStore);
 
   if (isLoading) {
@@ -114,7 +113,7 @@ export default function FairePricing() {
                 </thead>
                 <tbody>
                   {rows.map(r => {
-                    const margin = Math.round(((r.retail_price - r.wholesale_price) / r.retail_price) * 100);
+                    const margin = Math.round(((r.retail_price_cents - r.wholesale_price_cents) / r.retail_price_cents) * 100);
                     const mc = marginColor(margin);
                     return (
                       <tr key={r.id} className="border-b hover:bg-accent/20" data-testid={`pricing-row-${r.id}`}>
@@ -123,12 +122,12 @@ export default function FairePricing() {
                         </td>
                         <td className="p-3">
                           <p className="text-xs font-medium">{r.productName}</p>
-                          <p className="text-[10px] text-muted-foreground">{Object.entries(r.options).map(([, v]) => v).join(" / ")}</p>
+                          <p className="text-[10px] text-muted-foreground">{r.options.map(o => o.value).join(" / ")}</p>
                         </td>
                         <td className="p-3"><Badge variant="outline" className="text-[10px]">{r.store?.name.split(" ")[0]}</Badge></td>
                         <td className="p-3 text-xs font-mono text-muted-foreground">{r.sku}</td>
-                        <td className="p-3 text-xs font-semibold">${r.wholesale_price}</td>
-                        <td className="p-3 text-xs">${r.retail_price}</td>
+                        <td className="p-3 text-xs font-semibold">${(r.wholesale_price_cents / 100).toFixed(2)}</td>
+                        <td className="p-3 text-xs">${(r.retail_price_cents / 100).toFixed(2)}</td>
                         <td className="p-3">
                           <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: mc.bg, color: mc.text }}>{margin}%</span>
                         </td>
@@ -168,7 +167,7 @@ export default function FairePricing() {
                     <td className="p-2 text-xs font-medium">{pp.name}</td>
                     <td className="p-2 text-xs text-muted-foreground">{pp.products.join(", ")}</td>
                     <td className="p-2 text-xs">{pp.units}</td>
-                    <td className="p-2 text-xs font-semibold">${pp.wholesale_price}</td>
+                    <td className="p-2 text-xs font-semibold">${(pp.wholesale_price_cents / 100).toFixed(2)}</td>
                     <td className="p-2"><Badge variant="outline" className="text-[10px]">{faireStores.find(s => s.id === pp.storeId)?.name.split(" ")[0]}</Badge></td>
                   </tr>
                 ))}
@@ -203,7 +202,7 @@ export default function FairePricing() {
           <DialogHeader><DialogTitle>Add Prepack</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5"><Label>Prepack Name</Label><Input value={prepackName} onChange={e => setPrepackName(e.target.value)} placeholder="e.g. Wellness Starter Kit" data-testid="input-prepack-name" /></div>
-            <div className="space-y-1.5"><Label>Wholesale Price ($)</Label><Input type="number" value={prepackPrice} onChange={e => setPrepackPrice(e.target.value)} data-testid="input-prepack-price" /></div>
+            <div className="space-y-1.5"><Label>Wholesale Price ($)</Label><Input type="number" value={prepackPrice} onChange={e => setPrepackPrice(e.target.value)} placeholder="e.g. 75.00" data-testid="input-prepack-price" /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddPrepackOpen(false)}>Cancel</Button>

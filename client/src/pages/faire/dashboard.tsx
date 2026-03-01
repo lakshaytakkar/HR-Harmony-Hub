@@ -12,22 +12,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
-import { faireStores, faireOrders, faireProducts, faireDisputes, type OrderState } from "@/lib/mock-data-faire";
+import { faireStores, faireOrders, faireProducts, faireRetailers, type OrderState } from "@/lib/mock-data-faire";
 import { Badge } from "@/components/ui/badge";
 
 const BRAND_COLOR = "#1A6B45";
 
 const stateConfig: Record<OrderState, { label: string; color: string; bg: string }> = {
   NEW: { label: "New", color: "#2563EB", bg: "#EFF6FF" },
-  PRE_TRANSIT: { label: "Pre-Transit", color: "#7C3AED", bg: "#F5F3FF" },
+  PROCESSING: { label: "Processing", color: "#7C3AED", bg: "#F5F3FF" },
+  PRE_TRANSIT: { label: "Pre-Transit", color: "#9333EA", bg: "#FAF5FF" },
   IN_TRANSIT: { label: "In Transit", color: "#D97706", bg: "#FFFBEB" },
   DELIVERED: { label: "Delivered", color: "#059669", bg: "#ECFDF5" },
-  CLOSED: { label: "Closed", color: "#6B7280", bg: "#F9FAFB" },
-  CANCELLED: { label: "Cancelled", color: "#DC2626", bg: "#FEF2F2" },
-  BACK_ORDERED: { label: "Backordered", color: "#EA580C", bg: "#FFF7ED" },
+  PENDING_RETAILER_CONFIRMATION: { label: "Pending", color: "#EA580C", bg: "#FFF7ED" },
+  BACKORDERED: { label: "Backordered", color: "#DC4A26", bg: "#FFF1EE" },
+  CANCELED: { label: "Canceled", color: "#6B7280", bg: "#F9FAFB" },
 };
 
-const ORDER_STATES: OrderState[] = ["NEW", "PRE_TRANSIT", "IN_TRANSIT", "DELIVERED", "CLOSED"];
+const ORDER_STATES: OrderState[] = ["NEW", "PROCESSING", "PRE_TRANSIT", "IN_TRANSIT", "DELIVERED"];
 
 export default function FaireDashboard() {
   const [, setLocation] = useLocation();
@@ -39,16 +40,15 @@ export default function FaireDashboard() {
 
   const totalRevenueMTD = faireStores.reduce((s, st) => s + st.monthlyRevenue, 0);
   const newOrdersToday = faireStores.reduce((s, st) => s + st.todayOrders, 0);
-  const pendingFulfillment = faireOrders.filter(o => o.state === "NEW" || o.state === "PRE_TRANSIT").length;
+  const pendingFulfillment = faireOrders.filter(o => o.state === "NEW" || o.state === "PROCESSING").length;
   const activeRetailers = faireStores.reduce((s, st) => s + st.activeRetailers, 0);
-  const openDisputes = faireDisputes.filter(d => d.status === "open" || d.status === "escalated").length;
 
   const recentOrders = [...faireOrders]
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
     .slice(0, 6);
 
-  const topProducts = faireProducts
-    .sort((a, b) => b.retailer_count - a.retailer_count)
+  const topProducts = [...faireProducts]
+    .sort((a, b) => b.variants.length - a.variants.length)
     .slice(0, 5);
 
   const handleSync = () => {
@@ -88,25 +88,17 @@ export default function FaireDashboard() {
         }
       />
 
-      {(pendingFulfillment > 0 || openDisputes > 0) && (
+      {pendingFulfillment > 0 && (
         <Fade>
           <div className="rounded-xl border-2 border-amber-400 bg-amber-50 dark:bg-amber-950/20 p-4 flex items-center gap-4" data-testid="urgent-actions-widget">
             <div className="size-10 rounded-full bg-amber-400 flex items-center justify-center shrink-0">
               <AlertTriangle size={18} className="text-white" />
             </div>
             <div className="flex-1 space-y-1">
-              {pendingFulfillment > 0 && (
-                <button onClick={() => setLocation("/faire/fulfillment")} className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-300 hover:underline" data-testid="link-fulfillment">
-                  <span className="font-semibold">{pendingFulfillment} orders need fulfillment</span>
-                  <span className="text-amber-600">→</span>
-                </button>
-              )}
-              {openDisputes > 0 && (
-                <button onClick={() => setLocation("/faire/disputes")} className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-300 hover:underline" data-testid="link-disputes">
-                  <span className="font-semibold">{openDisputes} disputes open</span>
-                  <span className="text-amber-600">→</span>
-                </button>
-              )}
+              <button onClick={() => setLocation("/faire/fulfillment")} className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-300 hover:underline" data-testid="link-fulfillment">
+                <span className="font-semibold">{pendingFulfillment} orders need fulfillment</span>
+                <span className="text-amber-600">→</span>
+              </button>
             </div>
             <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white shrink-0" onClick={() => setLocation("/faire/fulfillment")} data-testid="btn-urgent-action">
               Take Action
@@ -203,7 +195,9 @@ export default function FaireDashboard() {
             <div className="space-y-1 p-2">
               {recentOrders.map(order => {
                 const store = faireStores.find(s => s.id === order.storeId);
+                const retailer = faireRetailers.find(r => r.id === order.retailer_id);
                 const cfg = stateConfig[order.state];
+                const itemsTotal = order.items.reduce((s, i) => s + i.price_cents * i.quantity, 0);
                 return (
                   <div
                     key={order.id}
@@ -211,13 +205,13 @@ export default function FaireDashboard() {
                     onClick={() => setLocation(`/faire/orders/${order.id}`)}
                     data-testid={`recent-order-${order.id}`}
                   >
-                    <Badge variant="outline" className="text-[9px] font-mono shrink-0">{order.order_number}</Badge>
+                    <Badge variant="outline" className="text-[9px] font-mono shrink-0">{order.display_id}</Badge>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">{order.retailer_name}</p>
-                      <p className="text-[10px] text-muted-foreground">{order.retailer_city}, {order.retailer_state}</p>
+                      <p className="text-xs font-medium truncate">{retailer?.store_name ?? order.retailer_id}</p>
+                      <p className="text-[10px] text-muted-foreground">{retailer?.city}, {retailer?.state}</p>
                     </div>
                     <Badge variant="outline" className="text-[9px] shrink-0" style={{ color: BRAND_COLOR, borderColor: `${BRAND_COLOR}40` }}>{store?.name.split(" ")[0]}</Badge>
-                    <p className="text-xs font-semibold shrink-0">${order.total}</p>
+                    <p className="text-xs font-semibold shrink-0">${(itemsTotal / 100).toFixed(0)}</p>
                     <span className="text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
                   </div>
                 );
@@ -242,8 +236,8 @@ export default function FaireDashboard() {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-xs font-bold">{product.retailer_count}</p>
-                      <p className="text-[10px] text-muted-foreground">retailers</p>
+                      <p className="text-xs font-bold">{product.variants.length}</p>
+                      <p className="text-[10px] text-muted-foreground">variants</p>
                     </div>
                   </div>
                 );

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Plus, Star, Trash2, Pencil, Package } from "lucide-react";
+import { Plus, Trash2, Pencil, Package } from "lucide-react";
 import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,13 +21,21 @@ import {
 const BRAND_COLOR = "#1A6B45";
 
 const lifecycleColors: Record<ProductLifecycleState, { bg: string; text: string }> = {
-  ACTIVE: { bg: "#ECFDF5", text: "#059669" },
-  INACTIVE: { bg: "#F9FAFB", text: "#6B7280" },
+  PUBLISHED: { bg: "#ECFDF5", text: "#059669" },
   DRAFT: { bg: "#EFF6FF", text: "#2563EB" },
+  UNPUBLISHED: { bg: "#F9FAFB", text: "#6B7280" },
+  DELETED: { bg: "#FEF2F2", text: "#DC2626" },
 };
+const lifecycleLabels: Record<ProductLifecycleState, string> = {
+  PUBLISHED: "Published",
+  DRAFT: "Draft",
+  UNPUBLISHED: "Unpublished",
+  DELETED: "Deleted",
+};
+
 const saleColors: Record<ProductSaleState, { bg: string; text: string }> = {
   FOR_SALE: { bg: "#ECFDF5", text: "#059669" },
-  NOT_FOR_SALE: { bg: "#FEF2F2", text: "#DC2626" },
+  SALES_PAUSED: { bg: "#FFF7ED", text: "#EA580C" },
 };
 
 const categoryColors: Record<string, string> = {
@@ -82,10 +90,10 @@ export default function FaireProducts() {
           subtitle={`${filtered.length} products across ${faireStores.length} stores`}
           actions={
             <div className="flex items-center gap-2">
-              <select 
-                value={selectedStore} 
-                onChange={e => setSelectedStore(e.target.value)} 
-                className="h-9 text-sm border rounded-lg px-3 bg-background" 
+              <select
+                value={selectedStore}
+                onChange={e => setSelectedStore(e.target.value)}
+                className="h-9 text-sm border rounded-lg px-3 bg-background"
                 data-testid="select-store-filter"
               >
                 <option value="all">All Stores</option>
@@ -107,23 +115,24 @@ export default function FaireProducts() {
           color={BRAND_COLOR}
           filters={[
             { value: "all", label: "All Lifecycle" },
-            { value: "ACTIVE", label: "Active" },
+            { value: "PUBLISHED", label: "Published" },
             { value: "DRAFT", label: "Draft" },
-            { value: "INACTIVE", label: "Inactive" },
+            { value: "UNPUBLISHED", label: "Unpublished" },
+            { value: "DELETED", label: "Deleted" },
           ]}
           activeFilter={lifecycle}
           onFilter={(v) => setLifecycle(v as any)}
           extra={
             <div className="flex gap-1 ml-auto">
-              {(["all", "FOR_SALE", "NOT_FOR_SALE"] as const).map(s => (
-                <button 
-                  key={s} 
-                  onClick={() => setSaleState(s)} 
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${saleState === s ? "text-white border-transparent" : "bg-background hover:bg-muted"}`} 
-                  style={saleState === s ? { background: BRAND_COLOR } : {}} 
+              {(["all", "FOR_SALE", "SALES_PAUSED"] as const).map(s => (
+                <button
+                  key={s}
+                  onClick={() => setSaleState(s)}
+                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${saleState === s ? "text-white border-transparent" : "bg-background hover:bg-muted"}`}
+                  style={saleState === s ? { background: BRAND_COLOR } : {}}
                   data-testid={`filter-sale-${s}`}
                 >
-                  {s === "all" ? "All Sales" : s === "FOR_SALE" ? "For Sale" : "Not For Sale"}
+                  {s === "all" ? "All Sales" : s === "FOR_SALE" ? "For Sale" : "Paused"}
                 </button>
               ))}
             </div>
@@ -135,8 +144,8 @@ export default function FaireProducts() {
         <Fade>
           <div className="flex items-center gap-2 bg-muted/60 rounded-lg px-4 py-2">
             <span className="text-xs text-muted-foreground font-medium">{selectedIds.length} selected</span>
-            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { toast({ title: "Marked Active" }); setSelectedIds([]); }}>Mark Active</Button>
-            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { toast({ title: "Marked Inactive" }); setSelectedIds([]); }}>Mark Inactive</Button>
+            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { toast({ title: "Marked Published" }); setSelectedIds([]); }}>Mark Published</Button>
+            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { toast({ title: "Marked Unpublished" }); setSelectedIds([]); }}>Unpublish</Button>
             <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { toast({ title: "Exported CSV" }); setSelectedIds([]); }}>Export CSV</Button>
             <button className="text-xs text-muted-foreground ml-2 hover:text-foreground underline underline-offset-4" onClick={() => setSelectedIds([])}>Clear</button>
           </div>
@@ -149,10 +158,10 @@ export default function FaireProducts() {
             <thead>
               <tr className="border-b bg-muted/30">
                 <th className="text-left p-4 w-10">
-                  <input 
-                    type="checkbox" 
-                    className="rounded border-muted-foreground/30" 
-                    onChange={e => setSelectedIds(e.target.checked ? filtered.map(p => p.id) : [])} 
+                  <input
+                    type="checkbox"
+                    className="rounded border-muted-foreground/30"
+                    onChange={e => setSelectedIds(e.target.checked ? filtered.map(p => p.id) : [])}
                   />
                 </th>
                 <DataTH>Product</DataTH>
@@ -162,7 +171,7 @@ export default function FaireProducts() {
                 <DataTH>Retail</DataTH>
                 <DataTH>Inventory</DataTH>
                 <DataTH>State</DataTH>
-                <DataTH>Rating</DataTH>
+                <DataTH>Reviews</DataTH>
                 <DataTH align="right">Actions</DataTH>
               </tr>
             </thead>
@@ -173,18 +182,21 @@ export default function FaireProducts() {
                 const lc = lifecycleColors[product.lifecycle_state];
                 const sc = saleColors[product.sale_state];
                 const totalInventory = product.variants.reduce((s, v) => s + v.available_quantity, 0);
-                const wholesalePrices = product.variants.map(v => v.wholesale_price);
-                const retailPrices = product.variants.map(v => v.retail_price);
+                const wholesalePrices = product.variants.map(v => v.wholesale_price_cents);
+                const retailPrices = product.variants.map(v => v.retail_price_cents);
                 const wMin = Math.min(...wholesalePrices), wMax = Math.max(...wholesalePrices);
                 const rMin = Math.min(...retailPrices), rMax = Math.max(...retailPrices);
+                const avgRating = product.reviews.length > 0
+                  ? (product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length).toFixed(1)
+                  : "—";
                 return (
                   <DataTR key={product.id} onClick={() => setLocation(`/faire/products/${product.id}`)} data-testid={`product-row-${product.id}`}>
                     <td className="p-4" onClick={e => e.stopPropagation()}>
-                      <input 
-                        type="checkbox" 
-                        checked={selectedIds.includes(product.id)} 
-                        onChange={() => toggleSelect(product.id)} 
-                        className="rounded border-muted-foreground/30" 
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(product.id)}
+                        onChange={() => toggleSelect(product.id)}
+                        className="rounded border-muted-foreground/30"
                       />
                     </td>
                     <DataTD>
@@ -200,8 +212,12 @@ export default function FaireProducts() {
                     </DataTD>
                     <DataTD><Badge variant="outline" className="text-[10px]">{store?.name.split(" ")[0]}</Badge></DataTD>
                     <DataTD align="center" className="font-medium">{product.variants.length}</DataTD>
-                    <DataTD className="text-foreground/80 font-medium">{wMin === wMax ? `$${wMin}` : `$${wMin}–$${wMax}`}</DataTD>
-                    <DataTD className="text-foreground/80 font-medium">{rMin === rMax ? `$${rMin}` : `$${rMin}–$${rMax}`}</DataTD>
+                    <DataTD className="text-foreground/80 font-medium">
+                      {wMin === wMax ? `$${(wMin / 100).toFixed(2)}` : `$${(wMin / 100).toFixed(0)}–$${(wMax / 100).toFixed(0)}`}
+                    </DataTD>
+                    <DataTD className="text-foreground/80 font-medium">
+                      {rMin === rMax ? `$${(rMin / 100).toFixed(2)}` : `$${(rMin / 100).toFixed(0)}–$${(rMax / 100).toFixed(0)}`}
+                    </DataTD>
                     <DataTD>
                       <div className="flex items-center gap-2">
                         <Package size={12} className="text-muted-foreground" />
@@ -210,16 +226,12 @@ export default function FaireProducts() {
                     </DataTD>
                     <DataTD>
                       <div className="flex flex-col gap-1">
-                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter" style={{ background: lc.bg, color: lc.text }}>{product.lifecycle_state}</span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter" style={{ background: sc.bg, color: sc.text }}>{product.sale_state === "FOR_SALE" ? "For Sale" : "Not Sale"}</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter" style={{ background: lc.bg, color: lc.text }}>{lifecycleLabels[product.lifecycle_state]}</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter" style={{ background: sc.bg, color: sc.text }}>{product.sale_state === "FOR_SALE" ? "For Sale" : "Paused"}</span>
                       </div>
                     </DataTD>
-                    <DataTD>
-                      <div className="flex items-center gap-1">
-                        <Star size={12} className="text-amber-400 fill-amber-400" />
-                        <span className="font-bold text-xs">{product.avg_rating}</span>
-                        <span className="text-[10px] text-muted-foreground font-medium">({product.review_count})</span>
-                      </div>
+                    <DataTD className="text-xs text-muted-foreground">
+                      {avgRating !== "—" ? `★ ${avgRating} (${product.reviews.length})` : "—"}
                     </DataTD>
                     <DataTD align="right" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">

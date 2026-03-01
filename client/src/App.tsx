@@ -169,10 +169,6 @@ import FaireFulfillment from "@/pages/faire/fulfillment";
 import FaireShipments from "@/pages/faire/shipments";
 import FaireRetailers from "@/pages/faire/retailers";
 import FaireRetailerDetail from "@/pages/faire/retailer-detail";
-import FaireLeads from "@/pages/faire/leads";
-import FairePipeline from "@/pages/faire/pipeline";
-import FaireCampaigns from "@/pages/faire/campaigns";
-import FaireDisputes from "@/pages/faire/disputes";
 import FaireAnalytics from "@/pages/faire/analytics";
 import SupransDashboard from "@/pages/suprans/dashboard";
 import SupransInbound from "@/pages/suprans/inbound";
@@ -428,10 +424,6 @@ function Router() {
       <Route path="/faire/shipments" component={FaireShipments} />
       <Route path="/faire/retailers/:id" component={FaireRetailerDetail} />
       <Route path="/faire/retailers" component={FaireRetailers} />
-      <Route path="/faire/leads" component={FaireLeads} />
-      <Route path="/faire/pipeline" component={FairePipeline} />
-      <Route path="/faire/campaigns" component={FaireCampaigns} />
-      <Route path="/faire/disputes" component={FaireDisputes} />
       <Route path="/faire/analytics" component={FaireAnalytics} />
       <Route component={NotFound} />
     </Switch>

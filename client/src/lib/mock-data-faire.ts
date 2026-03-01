@@ -1,11 +1,12 @@
 export type FaireStoreStatus = "connected" | "disconnected" | "error";
-export type ProductLifecycleState = "ACTIVE" | "INACTIVE" | "DRAFT";
-export type ProductSaleState = "FOR_SALE" | "NOT_FOR_SALE";
-export type OrderState = "NEW" | "PRE_TRANSIT" | "IN_TRANSIT" | "DELIVERED" | "CLOSED" | "CANCELLED" | "BACK_ORDERED";
-export type OrderItemState = "NEW" | "BACKORDERED" | "CANCELLED" | "SHIPPED";
-export type DisputeStatus = "open" | "resolved" | "escalated";
-export type CampaignType = "sale" | "featured" | "new_arrival" | "custom";
-export type CampaignStatus = "active" | "scheduled" | "ended" | "draft";
+export type ProductLifecycleState = "DRAFT" | "PUBLISHED" | "UNPUBLISHED" | "DELETED";
+export type ProductSaleState = "FOR_SALE" | "SALES_PAUSED";
+export type OrderState = "NEW" | "PROCESSING" | "PRE_TRANSIT" | "IN_TRANSIT" | "DELIVERED" | "PENDING_RETAILER_CONFIRMATION" | "BACKORDERED" | "CANCELED";
+export type OrderItemState = "PROCESSING" | "PRE_TRANSIT" | "IN_TRANSIT" | "DELIVERED" | "RETURNED" | "PENDING_RETAILER_CONFIRMATION" | "BACKORDERED" | "CANCELED" | "DAMAGED_OR_MISSING";
+export type OrderCancelReason = "REQUESTED_BY_RETAILER" | "RETAILER_NOT_GOOD_FIT" | "CHANGE_REPLACE_ORDER" | "ITEM_OUT_OF_STOCK" | "INCORRECT_PRICING" | "ORDER_TOO_SMALL" | "REJECT_INTERNATIONAL_ORDER" | "OTHER";
+export type FreeShippingReason = "INSIDER_FREE_SHIPPING" | "FAIRE_DIRECT" | "BRAND_DISCOUNT" | "FIRST_ORDER" | "PROMO_CODE" | "FREE_SHIPPING_THRESHOLD";
+export type OrderSource = "MARKETPLACE" | "FAIRE_DIRECT" | "TRADESHOW";
+export type ShipmentType = "SHIP_ON_YOUR_OWN" | "FAIRE_SHIPPING_LABEL";
 
 export interface FaireStore {
   id: string;
@@ -32,11 +33,11 @@ export interface FaireProductVariant {
   productId: string;
   sku: string;
   name: string;
-  wholesale_price: number;
-  retail_price: number;
+  wholesale_price_cents: number;
+  retail_price_cents: number;
   available_quantity: number;
   backordered_until: string | null;
-  options: Record<string, string>;
+  options: Array<{ name: string; value: string }>;
   lifecycle_state: ProductLifecycleState;
   sale_state: ProductSaleState;
 }
@@ -56,83 +57,108 @@ export interface FaireProduct {
   name: string;
   description: string;
   category: string;
-  subcategory: string;
-  brand: string;
   variants: FaireProductVariant[];
   lifecycle_state: ProductLifecycleState;
   sale_state: ProductSaleState;
   minimum_order_quantity: number;
   units_per_case: number;
-  made_in_countries: string[];
-  taxable: boolean;
-  retailer_count: number;
-  review_count: number;
-  avg_rating: number;
+  made_in_country: string;
+  taxonomy_type?: string;
+  short_description?: string;
+  unit_multiplier?: number;
+  preorderable?: boolean;
   created_at: string;
   updated_at: string;
   tags: string[];
   reviews: FaireProductReview[];
 }
 
+export interface FaireAddress {
+  name: string;
+  company_name?: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state: string;
+  state_code?: string;
+  postal_code: string;
+  country: string;
+  country_code: string;
+  phone_number?: string;
+}
+
+export interface FaireOrderItemDiscount {
+  id: string;
+  code: string;
+  includes_free_shipping: boolean;
+  discount_percentage?: number;
+  discount_type: "PERCENTAGE" | "FLAT_AMOUNT";
+}
+
 export interface FaireOrderItem {
   id: string;
+  order_id: string;
   product_id: string;
   variant_id: string;
   product_name: string;
   variant_name: string;
   sku: string;
   quantity: number;
-  wholesale_price: number;
-  total_price: number;
+  price_cents: number;
   state: OrderItemState;
-  backordered_until: string | null;
+  includes_tester: boolean;
+  discounts: FaireOrderItemDiscount[];
 }
 
 export interface FaireShipment {
   id: string;
   orderId: string;
-  tracking_number: string;
-  tracking_url: string;
+  tracking_code: string;
   carrier: string;
   shipped_at: string;
-  estimated_delivery: string;
-  status: "shipped" | "in_transit" | "delivered";
-  package_count: number;
-  weight_oz: number;
+  maker_cost_cents: number;
+  shipping_type: ShipmentType;
 }
 
-export interface FaireShippingAddress {
-  name: string;
-  address1: string;
-  city: string;
-  state: string;
-  zip: string;
-  country: string;
+export interface FairePayoutCosts {
+  payout_fee_cents: number;
+  payout_fee_bps: number;
+  commission_cents: number;
+  commission_bps: number;
+}
+
+export interface FaireBrandDiscount {
+  id: string;
+  code: string;
+  includes_free_shipping: boolean;
+  discount_percentage?: number;
+  discount_type: "PERCENTAGE" | "FLAT_AMOUNT";
 }
 
 export interface FaireOrder {
   id: string;
+  display_id: string;
   storeId: string;
-  order_number: string;
   retailer_id: string;
-  retailer_name: string;
-  retailer_city: string;
-  retailer_state: string;
   state: OrderState;
   items: FaireOrderItem[];
-  subtotal: number;
-  shipping: number;
-  taxes: number;
-  total: number;
-  payout_amount: number;
-  discount_amount: number;
-  free_shipping_reason: string | null;
-  shipped_at: string | null;
+  shipments: FaireShipment[];
+  address: FaireAddress;
+  payout_costs: FairePayoutCosts;
+  source: OrderSource;
+  is_free_shipping: boolean;
+  free_shipping_reason?: FreeShippingReason;
+  faire_covered_shipping_cost?: number;
+  ship_after?: string;
+  payment_initiated_at?: string;
+  brand_discounts: FaireBrandDiscount[];
+  estimated_payout_at?: string;
+  purchase_order_number?: string;
+  notes: string | null;
+  has_pending_retailer_cancellation_request: boolean;
+  sales_rep_name?: string;
   created_at: string;
   updated_at: string;
-  shipments: FaireShipment[];
-  shipping_address: FaireShippingAddress;
-  notes: string | null;
 }
 
 export interface FaireRetailer {
@@ -155,57 +181,7 @@ export interface FaireRetailer {
   status: "active" | "inactive";
 }
 
-export interface FaireCampaign {
-  id: string;
-  storeId: string;
-  name: string;
-  type: CampaignType;
-  status: CampaignStatus;
-  description: string;
-  discount_percent: number | null;
-  discount_min_order: number | null;
-  start_date: string;
-  end_date: string;
-  product_ids: string[];
-  impressions: number;
-  clicks: number;
-  orders_attributed: number;
-  revenue_attributed: number;
-}
-
-export interface FaireDispute {
-  id: string;
-  orderId: string;
-  order_number: string;
-  storeId: string;
-  retailer_name: string;
-  reason: string;
-  description: string;
-  amount: number;
-  status: DisputeStatus;
-  created_at: string;
-  resolved_at: string | null;
-  resolution: string | null;
-  priority: "high" | "normal";
-}
-
-export type RetailerLeadStage = "Prospect" | "Outreach" | "Demo Scheduled" | "Proposal Sent" | "Partner Signed";
-export type RetailerLeadSource = "Website" | "Referral" | "Instagram" | "LinkedIn" | "Google Ads" | "Trade Show";
-
-export interface RetailerLead {
-  id: string;
-  name: string;
-  storeType: string;
-  location: string;
-  email: string;
-  phone: string;
-  source: RetailerLeadSource;
-  stage: RetailerLeadStage;
-  lastContact: string;
-  dealValue: number;
-  daysInStage: number;
-  notes?: string;
-}
+// ─── Stores ────────────────────────────────────────────────────────────────────
 
 export const faireStores: FaireStore[] = [
   {
@@ -324,517 +300,573 @@ export const faireStores: FaireStore[] = [
   },
 ];
 
+// ─── Products ──────────────────────────────────────────────────────────────────
+
 export const faireProducts: FaireProduct[] = [
   {
-    id: "prod-001",
+    id: "p_prod001",
     storeId: "store-001",
     name: "Handwoven Cotton Throw",
     description: "Luxurious hand-woven cotton throw blanket with natural dyes. Perfect for boutique and home goods retailers.",
     category: "Textiles",
-    subcategory: "Throws & Blankets",
-    brand: "Suprans Lifestyle",
-    lifecycle_state: "ACTIVE",
+    lifecycle_state: "PUBLISHED",
     sale_state: "FOR_SALE",
     minimum_order_quantity: 4,
     units_per_case: 4,
-    made_in_countries: ["India"],
-    taxable: true,
-    retailer_count: 24,
-    review_count: 18,
-    avg_rating: 4.8,
+    made_in_country: "IND",
+    taxonomy_type: "HOME_DECOR",
+    unit_multiplier: 1,
+    preorderable: false,
     created_at: "2023-04-10",
     updated_at: "2026-01-15",
     tags: ["handwoven", "natural", "cotton", "sustainable"],
     variants: [
-      { id: "var-001a", productId: "prod-001", sku: "SUP-THR-IVR", name: "Ivory", wholesale_price: 42, retail_price: 98, available_quantity: 84, backordered_until: null, options: { Color: "Ivory" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-001b", productId: "prod-001", sku: "SUP-THR-TER", name: "Terracotta", wholesale_price: 42, retail_price: 98, available_quantity: 56, backordered_until: null, options: { Color: "Terracotta" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-001c", productId: "prod-001", sku: "SUP-THR-SLA", name: "Slate Blue", wholesale_price: 42, retail_price: 98, available_quantity: 0, backordered_until: "2026-03-15", options: { Color: "Slate Blue" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
+      { id: "po_var001a", productId: "p_prod001", sku: "SUP-THR-IVR", name: "Ivory", wholesale_price_cents: 4200, retail_price_cents: 9800, available_quantity: 84, backordered_until: null, options: [{ name: "Color", value: "Ivory" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var001b", productId: "p_prod001", sku: "SUP-THR-TER", name: "Terracotta", wholesale_price_cents: 4200, retail_price_cents: 9800, available_quantity: 56, backordered_until: null, options: [{ name: "Color", value: "Terracotta" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var001c", productId: "p_prod001", sku: "SUP-THR-SLA", name: "Slate Blue", wholesale_price_cents: 4200, retail_price_cents: 9800, available_quantity: 0, backordered_until: "2026-03-15", options: [{ name: "Color", value: "Slate Blue" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
     ],
     reviews: [
-      { id: "rev-001a", productId: "prod-001", retailer_name: "The Cozy Corner Boutique", rating: 5, comment: "Our customers absolutely love these throws. Great quality and fast shipping!", created_at: "2026-01-20" },
-      { id: "rev-001b", productId: "prod-001", retailer_name: "Nest & Nook", rating: 5, comment: "Reordered 3 times already. Always consistent quality.", created_at: "2025-12-05" },
+      { id: "rev-001a", productId: "p_prod001", retailer_name: "The Cozy Corner Boutique", rating: 5, comment: "Our customers absolutely love these throws. Great quality and fast shipping!", created_at: "2026-01-20" },
+      { id: "rev-001b", productId: "p_prod001", retailer_name: "Nest & Nook", rating: 5, comment: "Reordered 3 times already. Always consistent quality.", created_at: "2025-12-05" },
     ],
   },
   {
-    id: "prod-002",
+    id: "p_prod002",
     storeId: "store-001",
     name: "Soy Wax Pillar Candle Set",
     description: "Set of 3 hand-poured soy wax pillar candles with botanical inclusions. 50-hour burn time per candle.",
     category: "Candles & Home Fragrance",
-    subcategory: "Pillar Candles",
-    brand: "Suprans Lifestyle",
-    lifecycle_state: "ACTIVE",
+    lifecycle_state: "PUBLISHED",
     sale_state: "FOR_SALE",
     minimum_order_quantity: 6,
     units_per_case: 6,
-    made_in_countries: ["USA"],
-    taxable: true,
-    retailer_count: 31,
-    review_count: 22,
-    avg_rating: 4.9,
+    made_in_country: "USA",
+    taxonomy_type: "CANDLES",
+    unit_multiplier: 1,
+    preorderable: false,
     created_at: "2023-05-22",
     updated_at: "2026-02-01",
     tags: ["soy", "candle", "botanical", "gift"],
     variants: [
-      { id: "var-002a", productId: "prod-002", sku: "SUP-CND-LAV", name: "Lavender & Cedar", wholesale_price: 28, retail_price: 68, available_quantity: 120, backordered_until: null, options: { Scent: "Lavender & Cedar" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-002b", productId: "prod-002", sku: "SUP-CND-SAN", name: "Sandalwood & Amber", wholesale_price: 28, retail_price: 68, available_quantity: 96, backordered_until: null, options: { Scent: "Sandalwood & Amber" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-002c", productId: "prod-002", sku: "SUP-CND-CIT", name: "Citrus & Sea Salt", wholesale_price: 28, retail_price: 68, available_quantity: 72, backordered_until: null, options: { Scent: "Citrus & Sea Salt" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
+      { id: "po_var002a", productId: "p_prod002", sku: "SUP-CND-LAV", name: "Lavender & Cedar", wholesale_price_cents: 2800, retail_price_cents: 6800, available_quantity: 120, backordered_until: null, options: [{ name: "Scent", value: "Lavender & Cedar" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var002b", productId: "p_prod002", sku: "SUP-CND-SAN", name: "Sandalwood & Amber", wholesale_price_cents: 2800, retail_price_cents: 6800, available_quantity: 96, backordered_until: null, options: [{ name: "Scent", value: "Sandalwood & Amber" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var002c", productId: "p_prod002", sku: "SUP-CND-CIT", name: "Citrus & Sea Salt", wholesale_price_cents: 2800, retail_price_cents: 6800, available_quantity: 72, backordered_until: null, options: [{ name: "Scent", value: "Citrus & Sea Salt" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
     ],
     reviews: [
-      { id: "rev-002a", productId: "prod-002", retailer_name: "Bloom & Gather", rating: 5, comment: "Best-selling candles in our store!", created_at: "2026-02-10" },
+      { id: "rev-002a", productId: "p_prod002", retailer_name: "Bloom & Gather", rating: 5, comment: "Best-selling candles in our store!", created_at: "2026-02-10" },
     ],
   },
   {
-    id: "prod-003",
+    id: "p_prod003",
     storeId: "store-002",
     name: "Rattan Fruit Bowl",
     description: "Handcrafted rattan fruit bowl with natural finish. Sustainably sourced materials from certified suppliers.",
     category: "Kitchen & Dining",
-    subcategory: "Bowls & Baskets",
-    brand: "LBM Home & Living",
-    lifecycle_state: "ACTIVE",
+    lifecycle_state: "PUBLISHED",
     sale_state: "FOR_SALE",
     minimum_order_quantity: 6,
     units_per_case: 6,
-    made_in_countries: ["Indonesia"],
-    taxable: true,
-    retailer_count: 42,
-    review_count: 35,
-    avg_rating: 4.6,
+    made_in_country: "IDN",
+    taxonomy_type: "KITCHEN",
+    unit_multiplier: 1,
+    preorderable: false,
     created_at: "2022-12-01",
     updated_at: "2025-11-20",
     tags: ["rattan", "natural", "kitchen", "sustainable"],
     variants: [
-      { id: "var-003a", productId: "prod-003", sku: "LBM-RFB-SM", name: "Small (10\")", wholesale_price: 18, retail_price: 42, available_quantity: 200, backordered_until: null, options: { Size: "Small" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-003b", productId: "prod-003", sku: "LBM-RFB-LG", name: "Large (14\")", wholesale_price: 26, retail_price: 62, available_quantity: 140, backordered_until: null, options: { Size: "Large" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
+      { id: "po_var003a", productId: "p_prod003", sku: "LBM-RFB-SM", name: "Small (10\")", wholesale_price_cents: 1800, retail_price_cents: 4200, available_quantity: 200, backordered_until: null, options: [{ name: "Size", value: "Small" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var003b", productId: "p_prod003", sku: "LBM-RFB-LG", name: "Large (14\")", wholesale_price_cents: 2600, retail_price_cents: 6200, available_quantity: 140, backordered_until: null, options: [{ name: "Size", value: "Large" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
     ],
     reviews: [
-      { id: "rev-003a", productId: "prod-003", retailer_name: "The Green Pantry", rating: 4, comment: "Beautiful product. Packaging could be improved.", created_at: "2025-10-15" },
+      { id: "rev-003a", productId: "p_prod003", retailer_name: "The Green Pantry", rating: 4, comment: "Beautiful product. Packaging could be improved.", created_at: "2025-10-15" },
     ],
   },
   {
-    id: "prod-004",
+    id: "p_prod004",
     storeId: "store-002",
     name: "Linen Napkin Set",
     description: "Set of 4 stonewashed linen napkins. Gets softer with every wash. Available in 6 earthy tones.",
     category: "Kitchen & Dining",
-    subcategory: "Table Linens",
-    brand: "LBM Home & Living",
-    lifecycle_state: "ACTIVE",
+    lifecycle_state: "PUBLISHED",
     sale_state: "FOR_SALE",
     minimum_order_quantity: 4,
     units_per_case: 4,
-    made_in_countries: ["Lithuania"],
-    taxable: true,
-    retailer_count: 58,
-    review_count: 41,
-    avg_rating: 4.7,
+    made_in_country: "LTU",
+    taxonomy_type: "KITCHEN",
+    unit_multiplier: 1,
+    preorderable: false,
     created_at: "2022-12-15",
     updated_at: "2025-12-10",
     tags: ["linen", "stonewashed", "napkins", "table"],
     variants: [
-      { id: "var-004a", productId: "prod-004", sku: "LBM-NAP-NTR", name: "Natural", wholesale_price: 22, retail_price: 52, available_quantity: 180, backordered_until: null, options: { Color: "Natural" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-004b", productId: "prod-004", sku: "LBM-NAP-SAG", name: "Sage", wholesale_price: 22, retail_price: 52, available_quantity: 120, backordered_until: null, options: { Color: "Sage" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-004c", productId: "prod-004", sku: "LBM-NAP-DUS", name: "Dusty Rose", wholesale_price: 22, retail_price: 52, available_quantity: 96, backordered_until: null, options: { Color: "Dusty Rose" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
+      { id: "po_var004a", productId: "p_prod004", sku: "LBM-NAP-NTR", name: "Natural", wholesale_price_cents: 2200, retail_price_cents: 5200, available_quantity: 180, backordered_until: null, options: [{ name: "Color", value: "Natural" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var004b", productId: "p_prod004", sku: "LBM-NAP-SAG", name: "Sage", wholesale_price_cents: 2200, retail_price_cents: 5200, available_quantity: 120, backordered_until: null, options: [{ name: "Color", value: "Sage" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var004c", productId: "p_prod004", sku: "LBM-NAP-DUS", name: "Dusty Rose", wholesale_price_cents: 2200, retail_price_cents: 5200, available_quantity: 96, backordered_until: null, options: [{ name: "Color", value: "Dusty Rose" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
     ],
     reviews: [],
   },
   {
-    id: "prod-005",
+    id: "p_prod005",
     storeId: "store-003",
     name: "Hand-Stamped Leather Journal",
     description: "Refillable leather journal with hand-stamped botanical cover. A5 size, 200 pages of cream paper.",
     category: "Stationery & Office",
-    subcategory: "Journals & Notebooks",
-    brand: "Gullee Craft Co.",
-    lifecycle_state: "ACTIVE",
+    lifecycle_state: "PUBLISHED",
     sale_state: "FOR_SALE",
     minimum_order_quantity: 3,
     units_per_case: 6,
-    made_in_countries: ["USA"],
-    taxable: true,
-    retailer_count: 18,
-    review_count: 14,
-    avg_rating: 4.9,
+    made_in_country: "USA",
+    taxonomy_type: "STATIONERY",
+    unit_multiplier: 1,
+    preorderable: false,
     created_at: "2023-08-01",
     updated_at: "2026-01-05",
     tags: ["leather", "journal", "handmade", "botanical"],
     variants: [
-      { id: "var-005a", productId: "prod-005", sku: "GLC-JRN-BRN", name: "Brown — Fern", wholesale_price: 34, retail_price: 82, available_quantity: 60, backordered_until: null, options: { Color: "Brown", Design: "Fern" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-005b", productId: "prod-005", sku: "GLC-JRN-TAN", name: "Tan — Wildflower", wholesale_price: 34, retail_price: 82, available_quantity: 45, backordered_until: null, options: { Color: "Tan", Design: "Wildflower" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
+      { id: "po_var005a", productId: "p_prod005", sku: "GLC-JRN-BRN", name: "Brown — Fern", wholesale_price_cents: 3400, retail_price_cents: 8200, available_quantity: 60, backordered_until: null, options: [{ name: "Color", value: "Brown" }, { name: "Design", value: "Fern" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var005b", productId: "p_prod005", sku: "GLC-JRN-TAN", name: "Tan — Wildflower", wholesale_price_cents: 3400, retail_price_cents: 8200, available_quantity: 45, backordered_until: null, options: [{ name: "Color", value: "Tan" }, { name: "Design", value: "Wildflower" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
     ],
     reviews: [
-      { id: "rev-005a", productId: "prod-005", retailer_name: "Papercraft Studio", rating: 5, comment: "One of our top-10 best sellers. Customers come back for refills.", created_at: "2026-02-05" },
+      { id: "rev-005a", productId: "p_prod005", retailer_name: "Papercraft Studio", rating: 5, comment: "One of our top-10 best sellers. Customers come back for refills.", created_at: "2026-02-05" },
     ],
   },
   {
-    id: "prod-006",
+    id: "p_prod006",
     storeId: "store-003",
     name: "Macramé Wall Hanging",
     description: "Hand-knotted macramé wall art using natural cotton rope. Each piece is unique.",
     category: "Wall Art & Decor",
-    subcategory: "Macramé",
-    brand: "Gullee Craft Co.",
-    lifecycle_state: "ACTIVE",
+    lifecycle_state: "PUBLISHED",
     sale_state: "FOR_SALE",
     minimum_order_quantity: 2,
     units_per_case: 2,
-    made_in_countries: ["USA"],
-    taxable: true,
-    retailer_count: 22,
-    review_count: 19,
-    avg_rating: 4.8,
+    made_in_country: "USA",
+    taxonomy_type: "HOME_DECOR",
+    unit_multiplier: 1,
+    preorderable: false,
     created_at: "2023-09-10",
     updated_at: "2025-12-20",
     tags: ["macrame", "wall art", "handmade", "cotton"],
     variants: [
-      { id: "var-006a", productId: "prod-006", sku: "GLC-MAC-SM", name: "Small (12\"×18\")", wholesale_price: 38, retail_price: 88, available_quantity: 32, backordered_until: null, options: { Size: "Small" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-006b", productId: "prod-006", sku: "GLC-MAC-LG", name: "Large (18\"×36\")", wholesale_price: 68, retail_price: 158, available_quantity: 14, backordered_until: null, options: { Size: "Large" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
+      { id: "po_var006a", productId: "p_prod006", sku: "GLC-MAC-SM", name: "Small (12\"×18\")", wholesale_price_cents: 3800, retail_price_cents: 8800, available_quantity: 32, backordered_until: null, options: [{ name: "Size", value: "Small" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var006b", productId: "p_prod006", sku: "GLC-MAC-LG", name: "Large (18\"×36\")", wholesale_price_cents: 6800, retail_price_cents: 15800, available_quantity: 14, backordered_until: null, options: [{ name: "Size", value: "Large" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
     ],
     reviews: [],
   },
   {
-    id: "prod-007",
+    id: "p_prod007",
     storeId: "store-004",
     name: "Wheel-Thrown Ceramic Mug",
     description: "Artisan wheel-thrown ceramic mug with speckled glaze. Microwave and dishwasher safe. 12oz capacity.",
     category: "Kitchen & Dining",
-    subcategory: "Mugs & Cups",
-    brand: "Heritage Artisan",
-    lifecycle_state: "ACTIVE",
+    lifecycle_state: "PUBLISHED",
     sale_state: "FOR_SALE",
     minimum_order_quantity: 6,
     units_per_case: 6,
-    made_in_countries: ["USA"],
-    taxable: true,
-    retailer_count: 12,
-    review_count: 9,
-    avg_rating: 4.7,
+    made_in_country: "USA",
+    taxonomy_type: "KITCHEN",
+    unit_multiplier: 1,
+    preorderable: false,
     created_at: "2024-02-01",
     updated_at: "2026-02-10",
     tags: ["ceramic", "handmade", "mug", "pottery"],
     variants: [
-      { id: "var-007a", productId: "prod-007", sku: "HRT-MUG-WHT", name: "White Speckle", wholesale_price: 24, retail_price: 58, available_quantity: 72, backordered_until: null, options: { Glaze: "White Speckle" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-007b", productId: "prod-007", sku: "HRT-MUG-BLU", name: "Ocean Blue", wholesale_price: 24, retail_price: 58, available_quantity: 48, backordered_until: null, options: { Glaze: "Ocean Blue" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-007c", productId: "prod-007", sku: "HRT-MUG-MOS", name: "Mossy Green", wholesale_price: 24, retail_price: 58, available_quantity: 0, backordered_until: "2026-04-01", options: { Glaze: "Mossy Green" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
+      { id: "po_var007a", productId: "p_prod007", sku: "HRT-MUG-WHT", name: "White Speckle", wholesale_price_cents: 2400, retail_price_cents: 5800, available_quantity: 72, backordered_until: null, options: [{ name: "Glaze", value: "White Speckle" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var007b", productId: "p_prod007", sku: "HRT-MUG-BLU", name: "Ocean Blue", wholesale_price_cents: 2400, retail_price_cents: 5800, available_quantity: 48, backordered_until: null, options: [{ name: "Glaze", value: "Ocean Blue" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var007c", productId: "p_prod007", sku: "HRT-MUG-MOS", name: "Mossy Green", wholesale_price_cents: 2400, retail_price_cents: 5800, available_quantity: 0, backordered_until: "2026-04-01", options: [{ name: "Glaze", value: "Mossy Green" }], lifecycle_state: "PUBLISHED", sale_state: "SALES_PAUSED" },
     ],
     reviews: [
-      { id: "rev-007a", productId: "prod-007", retailer_name: "Gather & Grind Coffee", rating: 5, comment: "Our café carries these and customers always ask where to buy more.", created_at: "2025-11-28" },
+      { id: "rev-007a", productId: "p_prod007", retailer_name: "Gather & Grind Coffee", rating: 5, comment: "Our café carries these and customers always ask where to buy more.", created_at: "2025-11-28" },
     ],
   },
   {
-    id: "prod-008",
+    id: "p_prod008",
     storeId: "store-005",
     name: "Lavender Body Oil",
     description: "Cold-pressed lavender and jojoba body oil. Organic certified, vegan, and cruelty-free. 4oz amber bottle.",
     category: "Bath & Body",
-    subcategory: "Body Oils",
-    brand: "Pure Essentials",
-    lifecycle_state: "ACTIVE",
+    lifecycle_state: "PUBLISHED",
     sale_state: "FOR_SALE",
     minimum_order_quantity: 6,
     units_per_case: 12,
-    made_in_countries: ["USA"],
-    taxable: false,
-    retailer_count: 56,
-    review_count: 48,
-    avg_rating: 4.5,
+    made_in_country: "USA",
+    taxonomy_type: "BEAUTY",
+    unit_multiplier: 1,
+    preorderable: false,
     created_at: "2022-07-15",
     updated_at: "2026-01-20",
     tags: ["organic", "vegan", "lavender", "body oil"],
     variants: [
-      { id: "var-008a", productId: "prod-008", sku: "PRE-OIL-LAV-4", name: "4oz", wholesale_price: 16, retail_price: 38, available_quantity: 240, backordered_until: null, options: { Size: "4oz" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-008b", productId: "prod-008", sku: "PRE-OIL-LAV-8", name: "8oz", wholesale_price: 28, retail_price: 64, available_quantity: 120, backordered_until: null, options: { Size: "8oz" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
+      { id: "po_var008a", productId: "p_prod008", sku: "PRE-OIL-LAV-4", name: "4oz", wholesale_price_cents: 1600, retail_price_cents: 3800, available_quantity: 240, backordered_until: null, options: [{ name: "Size", value: "4oz" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var008b", productId: "p_prod008", sku: "PRE-OIL-LAV-8", name: "8oz", wholesale_price_cents: 2800, retail_price_cents: 6400, available_quantity: 120, backordered_until: null, options: [{ name: "Size", value: "8oz" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
     ],
     reviews: [
-      { id: "rev-008a", productId: "prod-008", retailer_name: "Serenity Spa Boutique", rating: 5, comment: "Our #1 selling body oil. Clients love the scent.", created_at: "2026-02-14" },
-      { id: "rev-008b", productId: "prod-008", retailer_name: "Bloom Wellness", rating: 4, comment: "Great product, wish there were more scent options.", created_at: "2025-12-20" },
+      { id: "rev-008a", productId: "p_prod008", retailer_name: "Serenity Spa Boutique", rating: 5, comment: "Our #1 selling body oil. Clients love the scent.", created_at: "2026-02-14" },
+      { id: "rev-008b", productId: "p_prod008", retailer_name: "Bloom Wellness", rating: 4, comment: "Great product, wish there were more scent options.", created_at: "2025-12-20" },
     ],
   },
   {
-    id: "prod-009",
+    id: "p_prod009",
     storeId: "store-005",
     name: "Rose Facial Serum",
     description: "Concentrated rose hip and vitamin C facial serum. Brightening and anti-aging formula. 1oz dropper bottle.",
     category: "Skincare",
-    subcategory: "Serums",
-    brand: "Pure Essentials",
-    lifecycle_state: "ACTIVE",
+    lifecycle_state: "PUBLISHED",
     sale_state: "FOR_SALE",
     minimum_order_quantity: 6,
     units_per_case: 12,
-    made_in_countries: ["USA"],
-    taxable: false,
-    retailer_count: 38,
-    review_count: 32,
-    avg_rating: 4.6,
+    made_in_country: "USA",
+    taxonomy_type: "BEAUTY",
+    unit_multiplier: 1,
+    preorderable: false,
     created_at: "2022-09-01",
     updated_at: "2026-02-01",
     tags: ["serum", "vitamin C", "rosehip", "anti-aging"],
     variants: [
-      { id: "var-009a", productId: "prod-009", sku: "PRE-SRM-ROS-1", name: "1oz Dropper", wholesale_price: 22, retail_price: 52, available_quantity: 180, backordered_until: null, options: { Size: "1oz" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
+      { id: "po_var009a", productId: "p_prod009", sku: "PRE-SRM-ROS-1", name: "1oz Dropper", wholesale_price_cents: 2200, retail_price_cents: 5200, available_quantity: 180, backordered_until: null, options: [{ name: "Size", value: "1oz" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
     ],
     reviews: [],
   },
   {
-    id: "prod-010",
+    id: "p_prod010",
     storeId: "store-006",
     name: "Wildflower Honey",
     description: "Raw, unfiltered Pacific Northwest wildflower honey. Harvested from our partner bee farms. 12oz jar.",
     category: "Food & Beverage",
-    subcategory: "Honey & Spreads",
-    brand: "Nature's Basket",
-    lifecycle_state: "ACTIVE",
+    lifecycle_state: "PUBLISHED",
     sale_state: "FOR_SALE",
     minimum_order_quantity: 12,
     units_per_case: 12,
-    made_in_countries: ["USA"],
-    taxable: false,
-    retailer_count: 20,
-    review_count: 16,
-    avg_rating: 4.3,
+    made_in_country: "USA",
+    taxonomy_type: "FOOD",
+    unit_multiplier: 1,
+    preorderable: false,
     created_at: "2024-06-01",
     updated_at: "2026-02-05",
     tags: ["honey", "organic", "raw", "PNW"],
     variants: [
-      { id: "var-010a", productId: "prod-010", sku: "NAT-HON-WLD-12", name: "12oz Jar", wholesale_price: 12, retail_price: 28, available_quantity: 360, backordered_until: null, options: { Size: "12oz" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
-      { id: "var-010b", productId: "prod-010", sku: "NAT-HON-WLD-32", name: "32oz Jar", wholesale_price: 28, retail_price: 64, available_quantity: 80, backordered_until: null, options: { Size: "32oz" }, lifecycle_state: "ACTIVE", sale_state: "FOR_SALE" },
+      { id: "po_var010a", productId: "p_prod010", sku: "NAT-HON-WLD-12", name: "12oz Jar", wholesale_price_cents: 1200, retail_price_cents: 2800, available_quantity: 360, backordered_until: null, options: [{ name: "Size", value: "12oz" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
+      { id: "po_var010b", productId: "p_prod010", sku: "NAT-HON-WLD-32", name: "32oz Jar", wholesale_price_cents: 2800, retail_price_cents: 6400, available_quantity: 80, backordered_until: null, options: [{ name: "Size", value: "32oz" }], lifecycle_state: "PUBLISHED", sale_state: "FOR_SALE" },
     ],
     reviews: [
-      { id: "rev-010a", productId: "prod-010", retailer_name: "The Harvest Table", rating: 4, comment: "Pure quality. Customers love supporting local beekeepers.", created_at: "2025-12-01" },
+      { id: "rev-010a", productId: "p_prod010", retailer_name: "The Harvest Table", rating: 4, comment: "Pure quality. Customers love supporting local beekeepers.", created_at: "2025-12-01" },
     ],
+  },
+  {
+    id: "p_prod011",
+    storeId: "store-003",
+    name: "Pressed Botanical Print",
+    description: "Archival quality pressed botanical prints. Printed on 300gsm cotton rag paper. Unframed.",
+    category: "Wall Art & Decor",
+    lifecycle_state: "DRAFT",
+    sale_state: "FOR_SALE",
+    minimum_order_quantity: 4,
+    units_per_case: 4,
+    made_in_country: "USA",
+    taxonomy_type: "ART",
+    unit_multiplier: 1,
+    preorderable: true,
+    created_at: "2026-02-01",
+    updated_at: "2026-02-28",
+    tags: ["botanical", "print", "art", "wall decor"],
+    variants: [
+      { id: "po_var011a", productId: "p_prod011", sku: "GLC-PRT-FRN-8", name: "Fern — 8\"×10\"", wholesale_price_cents: 2200, retail_price_cents: 5200, available_quantity: 0, backordered_until: null, options: [{ name: "Design", value: "Fern" }, { name: "Size", value: "8×10" }], lifecycle_state: "DRAFT", sale_state: "FOR_SALE" },
+      { id: "po_var011b", productId: "p_prod011", sku: "GLC-PRT-WLD-8", name: "Wildflower — 8\"×10\"", wholesale_price_cents: 2200, retail_price_cents: 5200, available_quantity: 0, backordered_until: null, options: [{ name: "Design", value: "Wildflower" }, { name: "Size", value: "8×10" }], lifecycle_state: "DRAFT", sale_state: "FOR_SALE" },
+    ],
+    reviews: [],
+  },
+  {
+    id: "p_prod012",
+    storeId: "store-001",
+    name: "Chunky Knit Pillow Cover",
+    description: "Hand-knitted chunky pillow covers in natural undyed wool. Fits 18×18 inserts.",
+    category: "Textiles",
+    lifecycle_state: "UNPUBLISHED",
+    sale_state: "SALES_PAUSED",
+    minimum_order_quantity: 4,
+    units_per_case: 4,
+    made_in_country: "PER",
+    taxonomy_type: "HOME_DECOR",
+    unit_multiplier: 1,
+    preorderable: false,
+    created_at: "2024-10-15",
+    updated_at: "2026-01-10",
+    tags: ["knit", "pillow", "wool", "handmade"],
+    variants: [
+      { id: "po_var012a", productId: "p_prod012", sku: "SUP-PIL-OAT", name: "Oatmeal", wholesale_price_cents: 3600, retail_price_cents: 8400, available_quantity: 0, backordered_until: null, options: [{ name: "Color", value: "Oatmeal" }], lifecycle_state: "UNPUBLISHED", sale_state: "SALES_PAUSED" },
+    ],
+    reviews: [],
   },
 ];
 
-const shipment1: FaireShipment = {
-  id: "ship-001", orderId: "ord-009", tracking_number: "1Z999AA10123456784",
-  tracking_url: "https://www.ups.com/track?tracknum=1Z999AA10123456784",
-  carrier: "UPS", shipped_at: "2026-02-20", estimated_delivery: "2026-02-24",
-  status: "delivered", package_count: 1, weight_oz: 48,
+// ─── Shipments ─────────────────────────────────────────────────────────────────
+
+const s_ship001: FaireShipment = {
+  id: "s_ship001", orderId: "bo_ord009", tracking_code: "1Z999AA10123456784",
+  carrier: "UPS", shipped_at: "2026-02-18", maker_cost_cents: 2300, shipping_type: "SHIP_ON_YOUR_OWN",
 };
-const shipment2: FaireShipment = {
-  id: "ship-002", orderId: "ord-010", tracking_number: "9400111899223408332000",
-  tracking_url: "https://tools.usps.com/go/TrackConfirmAction?tLabels=9400111899223408332000",
-  carrier: "USPS", shipped_at: "2026-02-22", estimated_delivery: "2026-02-27",
-  status: "delivered", package_count: 1, weight_oz: 32,
+const s_ship002: FaireShipment = {
+  id: "s_ship002", orderId: "bo_ord010", tracking_code: "9400111899223408332000",
+  carrier: "USPS", shipped_at: "2026-02-20", maker_cost_cents: 1500, shipping_type: "SHIP_ON_YOUR_OWN",
 };
-const shipment3: FaireShipment = {
-  id: "ship-003", orderId: "ord-011", tracking_number: "774899172137",
-  tracking_url: "https://www.fedex.com/fedextrack/?trknbr=774899172137",
-  carrier: "FedEx", shipped_at: "2026-02-24", estimated_delivery: "2026-02-28",
-  status: "in_transit", package_count: 2, weight_oz: 120,
+const s_ship003: FaireShipment = {
+  id: "s_ship003", orderId: "bo_ord007", tracking_code: "774899172137",
+  carrier: "FedEx", shipped_at: "2026-02-24", maker_cost_cents: 1800, shipping_type: "SHIP_ON_YOUR_OWN",
 };
-const shipment4: FaireShipment = {
-  id: "ship-004", orderId: "ord-012", tracking_number: "1Z999AA10123456790",
-  tracking_url: "https://www.ups.com/track?tracknum=1Z999AA10123456790",
-  carrier: "UPS", shipped_at: "2026-02-25", estimated_delivery: "2026-03-01",
-  status: "in_transit", package_count: 1, weight_oz: 64,
+const s_ship003b: FaireShipment = {
+  id: "s_ship003b", orderId: "bo_ord011", tracking_code: "774899172138",
+  carrier: "FedEx", shipped_at: "2026-02-24", maker_cost_cents: 2200, shipping_type: "SHIP_ON_YOUR_OWN",
 };
-const shipment5: FaireShipment = {
-  id: "ship-005", orderId: "ord-013", tracking_number: "9400111899223408332111",
-  tracking_url: "https://tools.usps.com/go/TrackConfirmAction?tLabels=9400111899223408332111",
-  carrier: "USPS", shipped_at: "2026-02-26", estimated_delivery: "2026-03-02",
-  status: "shipped", package_count: 1, weight_oz: 24,
+const s_ship004: FaireShipment = {
+  id: "s_ship004", orderId: "bo_ord008", tracking_code: "1Z999AA10123456790",
+  carrier: "UPS", shipped_at: "2026-02-25", maker_cost_cents: 1900, shipping_type: "SHIP_ON_YOUR_OWN",
 };
+const s_ship004b: FaireShipment = {
+  id: "s_ship004b", orderId: "bo_ord012", tracking_code: "1Z999AA10123456791",
+  carrier: "UPS", shipped_at: "2026-02-25", maker_cost_cents: 1600, shipping_type: "SHIP_ON_YOUR_OWN",
+};
+const s_ship005: FaireShipment = {
+  id: "s_ship005", orderId: "bo_ord013", tracking_code: "9400111899223408332111",
+  carrier: "USPS", shipped_at: "2026-02-26", maker_cost_cents: 1200, shipping_type: "SHIP_ON_YOUR_OWN",
+};
+const s_ship006: FaireShipment = {
+  id: "s_ship006", orderId: "bo_ord014", tracking_code: "1Z999AA10123456799",
+  carrier: "UPS", shipped_at: "2026-01-20", maker_cost_cents: 2300, shipping_type: "SHIP_ON_YOUR_OWN",
+};
+
+// ─── Orders ────────────────────────────────────────────────────────────────────
 
 export const faireOrders: FaireOrder[] = [
   {
-    id: "ord-001", storeId: "store-001", order_number: "FO-28841", retailer_id: "ret-001",
-    retailer_name: "The Cozy Corner Boutique", retailer_city: "Nashville", retailer_state: "TN",
-    state: "NEW", items: [
-      { id: "oi-001a", product_id: "prod-001", variant_id: "var-001a", product_name: "Handwoven Cotton Throw", variant_name: "Ivory", sku: "SUP-THR-IVR", quantity: 4, wholesale_price: 42, total_price: 168, state: "NEW", backordered_until: null },
-      { id: "oi-001b", product_id: "prod-002", variant_id: "var-002a", product_name: "Soy Wax Pillar Candle Set", variant_name: "Lavender & Cedar", sku: "SUP-CND-LAV", quantity: 6, wholesale_price: 28, total_price: 168, state: "NEW", backordered_until: null },
+    id: "bo_ord001", display_id: "28841AA", storeId: "store-001", retailer_id: "r_ret001",
+    state: "NEW", source: "MARKETPLACE", is_free_shipping: false, free_shipping_reason: undefined,
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: null, purchase_order_number: undefined,
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 8400, commission_bps: 2500 },
+    items: [
+      { id: "oi_001a", order_id: "bo_ord001", product_id: "p_prod001", variant_id: "po_var001a", product_name: "Handwoven Cotton Throw", variant_name: "Ivory", sku: "SUP-THR-IVR", quantity: 4, price_cents: 4200, state: "PROCESSING", includes_tester: false, discounts: [] },
+      { id: "oi_001b", order_id: "bo_ord001", product_id: "p_prod002", variant_id: "po_var002a", product_name: "Soy Wax Pillar Candle Set", variant_name: "Lavender & Cedar", sku: "SUP-CND-LAV", quantity: 6, price_cents: 2800, state: "PROCESSING", includes_tester: false, discounts: [] },
     ],
-    subtotal: 336, shipping: 18, taxes: 0, total: 354, payout_amount: 318, discount_amount: 0,
-    free_shipping_reason: null, shipped_at: null, created_at: "2026-02-28T07:12:00Z", updated_at: "2026-02-28T07:12:00Z",
-    shipments: [], notes: null,
-    shipping_address: { name: "The Cozy Corner Boutique", address1: "142 Broadway Ave", city: "Nashville", state: "TN", zip: "37201", country: "US" },
+    shipments: [],
+    address: { name: "The Cozy Corner Boutique", address1: "142 Broadway Ave", city: "Nashville", state: "Tennessee", state_code: "TN", postal_code: "37201", country: "United States", country_code: "USA" },
+    created_at: "2026-02-28T07:12:00Z", updated_at: "2026-02-28T07:12:00Z",
   },
   {
-    id: "ord-002", storeId: "store-002", order_number: "FO-28842", retailer_id: "ret-002",
-    retailer_name: "Bloom & Gather", retailer_city: "Chicago", retailer_state: "IL",
-    state: "NEW", items: [
-      { id: "oi-002a", product_id: "prod-003", variant_id: "var-003b", product_name: "Rattan Fruit Bowl", variant_name: "Large (14\")", sku: "LBM-RFB-LG", quantity: 6, wholesale_price: 26, total_price: 156, state: "NEW", backordered_until: null },
+    id: "bo_ord002", display_id: "28842BB", storeId: "store-002", retailer_id: "r_ret002",
+    state: "NEW", source: "MARKETPLACE", is_free_shipping: false,
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: "Please include brand catalog in package.", purchase_order_number: "PO-7842",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 3900, commission_bps: 2500 },
+    items: [
+      { id: "oi_002a", order_id: "bo_ord002", product_id: "p_prod003", variant_id: "po_var003b", product_name: "Rattan Fruit Bowl", variant_name: "Large (14\")", sku: "LBM-RFB-LG", quantity: 6, price_cents: 2600, state: "PROCESSING", includes_tester: false, discounts: [] },
     ],
-    subtotal: 156, shipping: 14, taxes: 0, total: 170, payout_amount: 153, discount_amount: 0,
-    free_shipping_reason: null, shipped_at: null, created_at: "2026-02-28T08:04:00Z", updated_at: "2026-02-28T08:04:00Z",
-    shipments: [], notes: "Please include brand catalog in package.",
-    shipping_address: { name: "Bloom & Gather", address1: "881 N Michigan Ave", city: "Chicago", state: "IL", zip: "60611", country: "US" },
+    shipments: [],
+    address: { name: "Bloom & Gather", address1: "881 N Michigan Ave", city: "Chicago", state: "Illinois", state_code: "IL", postal_code: "60611", country: "United States", country_code: "USA" },
+    created_at: "2026-02-28T08:04:00Z", updated_at: "2026-02-28T08:04:00Z",
   },
   {
-    id: "ord-003", storeId: "store-005", order_number: "FO-28843", retailer_id: "ret-003",
-    retailer_name: "Serenity Spa Boutique", retailer_city: "Scottsdale", retailer_state: "AZ",
-    state: "NEW", items: [
-      { id: "oi-003a", product_id: "prod-008", variant_id: "var-008a", product_name: "Lavender Body Oil", variant_name: "4oz", sku: "PRE-OIL-LAV-4", quantity: 12, wholesale_price: 16, total_price: 192, state: "NEW", backordered_until: null },
-      { id: "oi-003b", product_id: "prod-009", variant_id: "var-009a", product_name: "Rose Facial Serum", variant_name: "1oz Dropper", sku: "PRE-SRM-ROS-1", quantity: 6, wholesale_price: 22, total_price: 132, state: "NEW", backordered_until: null },
+    id: "bo_ord003", display_id: "28843CC", storeId: "store-005", retailer_id: "r_ret003",
+    state: "NEW", source: "FAIRE_DIRECT", is_free_shipping: true, free_shipping_reason: "FREE_SHIPPING_THRESHOLD",
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: null, sales_rep_name: "Jordan Rivera",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 0, commission_bps: 0 },
+    items: [
+      { id: "oi_003a", order_id: "bo_ord003", product_id: "p_prod008", variant_id: "po_var008a", product_name: "Lavender Body Oil", variant_name: "4oz", sku: "PRE-OIL-LAV-4", quantity: 12, price_cents: 1600, state: "PROCESSING", includes_tester: false, discounts: [] },
+      { id: "oi_003b", order_id: "bo_ord003", product_id: "p_prod009", variant_id: "po_var009a", product_name: "Rose Facial Serum", variant_name: "1oz Dropper", sku: "PRE-SRM-ROS-1", quantity: 6, price_cents: 2200, state: "PROCESSING", includes_tester: false, discounts: [] },
     ],
-    subtotal: 324, shipping: 0, taxes: 0, total: 324, payout_amount: 291, discount_amount: 0,
-    free_shipping_reason: "FREE_SHIPPING_THRESHOLD", shipped_at: null, created_at: "2026-02-28T08:45:00Z", updated_at: "2026-02-28T08:45:00Z",
-    shipments: [], notes: null,
-    shipping_address: { name: "Serenity Spa Boutique", address1: "7299 N Scottsdale Rd", city: "Scottsdale", state: "AZ", zip: "85253", country: "US" },
+    shipments: [],
+    address: { name: "Serenity Spa Boutique", address1: "7299 N Scottsdale Rd", city: "Scottsdale", state: "Arizona", state_code: "AZ", postal_code: "85253", country: "United States", country_code: "USA" },
+    created_at: "2026-02-28T08:45:00Z", updated_at: "2026-02-28T08:45:00Z",
   },
   {
-    id: "ord-004", storeId: "store-001", order_number: "FO-28800", retailer_id: "ret-004",
-    retailer_name: "Nest & Nook", retailer_city: "Portland", retailer_state: "OR",
-    state: "PRE_TRANSIT", items: [
-      { id: "oi-004a", product_id: "prod-001", variant_id: "var-001b", product_name: "Handwoven Cotton Throw", variant_name: "Terracotta", sku: "SUP-THR-TER", quantity: 4, wholesale_price: 42, total_price: 168, state: "SHIPPED", backordered_until: null },
+    id: "bo_ord004", display_id: "28800DD", storeId: "store-001", retailer_id: "r_ret004",
+    state: "PROCESSING", source: "MARKETPLACE", is_free_shipping: false,
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: null, ship_after: "2026-03-01T00:00:00Z",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 4200, commission_bps: 2500 },
+    items: [
+      { id: "oi_004a", order_id: "bo_ord004", product_id: "p_prod001", variant_id: "po_var001b", product_name: "Handwoven Cotton Throw", variant_name: "Terracotta", sku: "SUP-THR-TER", quantity: 4, price_cents: 4200, state: "PRE_TRANSIT", includes_tester: false, discounts: [] },
     ],
-    subtotal: 168, shipping: 12, taxes: 0, total: 180, payout_amount: 162, discount_amount: 0,
-    free_shipping_reason: null, shipped_at: null, created_at: "2026-02-26T14:30:00Z", updated_at: "2026-02-27T09:00:00Z",
-    shipments: [], notes: null,
-    shipping_address: { name: "Nest & Nook", address1: "2204 NW Thurman St", city: "Portland", state: "OR", zip: "97210", country: "US" },
+    shipments: [],
+    address: { name: "Nest & Nook", address1: "2204 NW Thurman St", city: "Portland", state: "Oregon", state_code: "OR", postal_code: "97210", country: "United States", country_code: "USA" },
+    created_at: "2026-02-26T14:30:00Z", updated_at: "2026-02-27T09:00:00Z",
   },
   {
-    id: "ord-005", storeId: "store-002", order_number: "FO-28801", retailer_id: "ret-005",
-    retailer_name: "The Green Pantry", retailer_city: "San Francisco", retailer_state: "CA",
-    state: "PRE_TRANSIT", items: [
-      { id: "oi-005a", product_id: "prod-004", variant_id: "var-004a", product_name: "Linen Napkin Set", variant_name: "Natural", sku: "LBM-NAP-NTR", quantity: 8, wholesale_price: 22, total_price: 176, state: "SHIPPED", backordered_until: null },
-      { id: "oi-005b", product_id: "prod-004", variant_id: "var-004b", product_name: "Linen Napkin Set", variant_name: "Sage", sku: "LBM-NAP-SAG", quantity: 4, wholesale_price: 22, total_price: 88, state: "SHIPPED", backordered_until: null },
+    id: "bo_ord005", display_id: "28801EE", storeId: "store-002", retailer_id: "r_ret005",
+    state: "PRE_TRANSIT", source: "MARKETPLACE", is_free_shipping: false,
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: null,
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 6600, commission_bps: 2500 },
+    items: [
+      { id: "oi_005a", order_id: "bo_ord005", product_id: "p_prod004", variant_id: "po_var004a", product_name: "Linen Napkin Set", variant_name: "Natural", sku: "LBM-NAP-NTR", quantity: 8, price_cents: 2200, state: "PRE_TRANSIT", includes_tester: false, discounts: [] },
+      { id: "oi_005b", order_id: "bo_ord005", product_id: "p_prod004", variant_id: "po_var004b", product_name: "Linen Napkin Set", variant_name: "Sage", sku: "LBM-NAP-SAG", quantity: 4, price_cents: 2200, state: "PRE_TRANSIT", includes_tester: false, discounts: [] },
     ],
-    subtotal: 264, shipping: 16, taxes: 0, total: 280, payout_amount: 252, discount_amount: 0,
-    free_shipping_reason: null, shipped_at: null, created_at: "2026-02-25T11:15:00Z", updated_at: "2026-02-26T08:00:00Z",
-    shipments: [], notes: null,
-    shipping_address: { name: "The Green Pantry", address1: "401 Hayes St", city: "San Francisco", state: "CA", zip: "94102", country: "US" },
+    shipments: [],
+    address: { name: "The Green Pantry", address1: "401 Hayes St", city: "San Francisco", state: "California", state_code: "CA", postal_code: "94102", country: "United States", country_code: "USA" },
+    created_at: "2026-02-25T11:15:00Z", updated_at: "2026-02-26T08:00:00Z",
   },
   {
-    id: "ord-006", storeId: "store-003", order_number: "FO-28790", retailer_id: "ret-006",
-    retailer_name: "Papercraft Studio", retailer_city: "Denver", retailer_state: "CO",
-    state: "PRE_TRANSIT", items: [
-      { id: "oi-006a", product_id: "prod-005", variant_id: "var-005a", product_name: "Hand-Stamped Leather Journal", variant_name: "Brown — Fern", sku: "GLC-JRN-BRN", quantity: 6, wholesale_price: 34, total_price: 204, state: "SHIPPED", backordered_until: null },
-      { id: "oi-006b", product_id: "prod-005", variant_id: "var-005b", product_name: "Hand-Stamped Leather Journal", variant_name: "Tan — Wildflower", sku: "GLC-JRN-TAN", quantity: 6, wholesale_price: 34, total_price: 204, state: "SHIPPED", backordered_until: null },
+    id: "bo_ord006", display_id: "28790FF", storeId: "store-003", retailer_id: "r_ret006",
+    state: "PRE_TRANSIT", source: "TRADESHOW", is_free_shipping: true, free_shipping_reason: "FREE_SHIPPING_THRESHOLD",
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: "Gift wrap each journal please.",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 10200, commission_bps: 2500 },
+    items: [
+      { id: "oi_006a", order_id: "bo_ord006", product_id: "p_prod005", variant_id: "po_var005a", product_name: "Hand-Stamped Leather Journal", variant_name: "Brown — Fern", sku: "GLC-JRN-BRN", quantity: 6, price_cents: 3400, state: "PRE_TRANSIT", includes_tester: false, discounts: [] },
+      { id: "oi_006b", order_id: "bo_ord006", product_id: "p_prod005", variant_id: "po_var005b", product_name: "Hand-Stamped Leather Journal", variant_name: "Tan — Wildflower", sku: "GLC-JRN-TAN", quantity: 6, price_cents: 3400, state: "PRE_TRANSIT", includes_tester: false, discounts: [] },
     ],
-    subtotal: 408, shipping: 0, taxes: 0, total: 408, payout_amount: 367, discount_amount: 0,
-    free_shipping_reason: "FREE_SHIPPING_THRESHOLD", shipped_at: null, created_at: "2026-02-24T09:20:00Z", updated_at: "2026-02-25T11:00:00Z",
-    shipments: [], notes: "Gift wrap each journal please.",
-    shipping_address: { name: "Papercraft Studio", address1: "1550 17th St", city: "Denver", state: "CO", zip: "80202", country: "US" },
+    shipments: [],
+    address: { name: "Papercraft Studio", address1: "1550 17th St", city: "Denver", state: "Colorado", state_code: "CO", postal_code: "80202", country: "United States", country_code: "USA" },
+    created_at: "2026-02-24T09:20:00Z", updated_at: "2026-02-25T11:00:00Z",
   },
   {
-    id: "ord-007", storeId: "store-005", order_number: "FO-28780", retailer_id: "ret-007",
-    retailer_name: "Bloom Wellness", retailer_city: "Austin", retailer_state: "TX",
-    state: "IN_TRANSIT", items: [
-      { id: "oi-007a", product_id: "prod-008", variant_id: "var-008b", product_name: "Lavender Body Oil", variant_name: "8oz", sku: "PRE-OIL-LAV-8", quantity: 12, wholesale_price: 28, total_price: 336, state: "SHIPPED", backordered_until: null },
+    id: "bo_ord007", display_id: "28780GG", storeId: "store-005", retailer_id: "r_ret007",
+    state: "IN_TRANSIT", source: "MARKETPLACE", is_free_shipping: true, free_shipping_reason: "FREE_SHIPPING_THRESHOLD",
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: null, payment_initiated_at: undefined, estimated_payout_at: "2026-03-10T00:00:00Z",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 8400, commission_bps: 2500 },
+    items: [
+      { id: "oi_007a", order_id: "bo_ord007", product_id: "p_prod008", variant_id: "po_var008b", product_name: "Lavender Body Oil", variant_name: "8oz", sku: "PRE-OIL-LAV-8", quantity: 12, price_cents: 2800, state: "IN_TRANSIT", includes_tester: false, discounts: [] },
     ],
-    subtotal: 336, shipping: 0, taxes: 0, total: 336, payout_amount: 302, discount_amount: 0,
-    free_shipping_reason: "FREE_SHIPPING_THRESHOLD", shipped_at: "2026-02-24", created_at: "2026-02-22T10:30:00Z", updated_at: "2026-02-24T14:00:00Z",
-    shipments: [shipment3], notes: null,
-    shipping_address: { name: "Bloom Wellness", address1: "2222 S Lamar Blvd", city: "Austin", state: "TX", zip: "78704", country: "US" },
+    shipments: [s_ship003],
+    address: { name: "Bloom Wellness", address1: "2222 S Lamar Blvd", city: "Austin", state: "Texas", state_code: "TX", postal_code: "78704", country: "United States", country_code: "USA" },
+    created_at: "2026-02-22T10:30:00Z", updated_at: "2026-02-24T14:00:00Z",
   },
   {
-    id: "ord-008", storeId: "store-002", order_number: "FO-28770", retailer_id: "ret-008",
-    retailer_name: "Gather & Grind Coffee", retailer_city: "Seattle", retailer_state: "WA",
-    state: "IN_TRANSIT", items: [
-      { id: "oi-008a", product_id: "prod-003", variant_id: "var-003a", product_name: "Rattan Fruit Bowl", variant_name: "Small (10\")", sku: "LBM-RFB-SM", quantity: 12, wholesale_price: 18, total_price: 216, state: "SHIPPED", backordered_until: null },
-      { id: "oi-008b", product_id: "prod-004", variant_id: "var-004c", product_name: "Linen Napkin Set", variant_name: "Dusty Rose", sku: "LBM-NAP-DUS", quantity: 4, wholesale_price: 22, total_price: 88, state: "SHIPPED", backordered_until: null },
+    id: "bo_ord008", display_id: "28770HH", storeId: "store-002", retailer_id: "r_ret008",
+    state: "IN_TRANSIT", source: "MARKETPLACE", is_free_shipping: false,
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: null, estimated_payout_at: "2026-03-12T00:00:00Z",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 7600, commission_bps: 2500 },
+    items: [
+      { id: "oi_008a", order_id: "bo_ord008", product_id: "p_prod003", variant_id: "po_var003a", product_name: "Rattan Fruit Bowl", variant_name: "Small (10\")", sku: "LBM-RFB-SM", quantity: 12, price_cents: 1800, state: "IN_TRANSIT", includes_tester: false, discounts: [] },
+      { id: "oi_008b", order_id: "bo_ord008", product_id: "p_prod004", variant_id: "po_var004c", product_name: "Linen Napkin Set", variant_name: "Dusty Rose", sku: "LBM-NAP-DUS", quantity: 4, price_cents: 2200, state: "IN_TRANSIT", includes_tester: false, discounts: [] },
     ],
-    subtotal: 304, shipping: 18, taxes: 0, total: 322, payout_amount: 290, discount_amount: 0,
-    free_shipping_reason: null, shipped_at: "2026-02-25", created_at: "2026-02-21T16:00:00Z", updated_at: "2026-02-25T10:00:00Z",
-    shipments: [shipment4], notes: null,
-    shipping_address: { name: "Gather & Grind Coffee", address1: "1600 Pike Place", city: "Seattle", state: "WA", zip: "98101", country: "US" },
+    shipments: [s_ship004],
+    address: { name: "Gather & Grind Coffee", address1: "1600 Pike Place", city: "Seattle", state: "Washington", state_code: "WA", postal_code: "98101", country: "United States", country_code: "USA" },
+    created_at: "2026-02-21T16:00:00Z", updated_at: "2026-02-25T10:00:00Z",
   },
   {
-    id: "ord-009", storeId: "store-001", order_number: "FO-28700", retailer_id: "ret-001",
-    retailer_name: "The Cozy Corner Boutique", retailer_city: "Nashville", retailer_state: "TN",
-    state: "DELIVERED", items: [
-      { id: "oi-009a", product_id: "prod-002", variant_id: "var-002b", product_name: "Soy Wax Pillar Candle Set", variant_name: "Sandalwood & Amber", sku: "SUP-CND-SAN", quantity: 12, wholesale_price: 28, total_price: 336, state: "SHIPPED", backordered_until: null },
+    id: "bo_ord009", display_id: "28700II", storeId: "store-001", retailer_id: "r_ret001",
+    state: "DELIVERED", source: "MARKETPLACE", is_free_shipping: true, free_shipping_reason: "FREE_SHIPPING_THRESHOLD",
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: null, payment_initiated_at: "2026-02-22T00:10:34Z", estimated_payout_at: "2026-02-22T00:00:00Z",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 8400, commission_bps: 2500 },
+    items: [
+      { id: "oi_009a", order_id: "bo_ord009", product_id: "p_prod002", variant_id: "po_var002b", product_name: "Soy Wax Pillar Candle Set", variant_name: "Sandalwood & Amber", sku: "SUP-CND-SAN", quantity: 12, price_cents: 2800, state: "DELIVERED", includes_tester: false, discounts: [] },
     ],
-    subtotal: 336, shipping: 0, taxes: 0, total: 336, payout_amount: 302, discount_amount: 0,
-    free_shipping_reason: "FREE_SHIPPING_THRESHOLD", shipped_at: "2026-02-18", created_at: "2026-02-14T09:00:00Z", updated_at: "2026-02-20T12:00:00Z",
-    shipments: [shipment1], notes: null,
-    shipping_address: { name: "The Cozy Corner Boutique", address1: "142 Broadway Ave", city: "Nashville", state: "TN", zip: "37201", country: "US" },
+    shipments: [s_ship001],
+    address: { name: "The Cozy Corner Boutique", address1: "142 Broadway Ave", city: "Nashville", state: "Tennessee", state_code: "TN", postal_code: "37201", country: "United States", country_code: "USA" },
+    created_at: "2026-02-14T09:00:00Z", updated_at: "2026-02-20T12:00:00Z",
   },
   {
-    id: "ord-010", storeId: "store-005", order_number: "FO-28680", retailer_id: "ret-009",
-    retailer_name: "Sol Wellness", retailer_city: "Miami", retailer_state: "FL",
-    state: "DELIVERED", items: [
-      { id: "oi-010a", product_id: "prod-009", variant_id: "var-009a", product_name: "Rose Facial Serum", variant_name: "1oz Dropper", sku: "PRE-SRM-ROS-1", quantity: 12, wholesale_price: 22, total_price: 264, state: "SHIPPED", backordered_until: null },
-      { id: "oi-010b", product_id: "prod-008", variant_id: "var-008a", product_name: "Lavender Body Oil", variant_name: "4oz", sku: "PRE-OIL-LAV-4", quantity: 12, wholesale_price: 16, total_price: 192, state: "SHIPPED", backordered_until: null },
+    id: "bo_ord010", display_id: "28680JJ", storeId: "store-005", retailer_id: "r_ret009",
+    state: "DELIVERED", source: "MARKETPLACE", is_free_shipping: true, free_shipping_reason: "FREE_SHIPPING_THRESHOLD",
+    brand_discounts: [
+      { id: "bpc_k3w2kb97tp", code: "WELLNESS10", includes_free_shipping: false, discount_percentage: 10, discount_type: "PERCENTAGE" },
     ],
-    subtotal: 456, shipping: 0, taxes: 0, total: 456, payout_amount: 410, discount_amount: 22,
-    free_shipping_reason: "FREE_SHIPPING_THRESHOLD", shipped_at: "2026-02-20", created_at: "2026-02-16T08:00:00Z", updated_at: "2026-02-22T16:00:00Z",
-    shipments: [shipment2], notes: null,
-    shipping_address: { name: "Sol Wellness", address1: "800 Lincoln Rd", city: "Miami", state: "FL", zip: "33139", country: "US" },
+    has_pending_retailer_cancellation_request: false,
+    notes: null, payment_initiated_at: "2026-02-24T00:10:34Z", estimated_payout_at: "2026-02-24T00:00:00Z",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 11400, commission_bps: 2500 },
+    items: [
+      { id: "oi_010a", order_id: "bo_ord010", product_id: "p_prod009", variant_id: "po_var009a", product_name: "Rose Facial Serum", variant_name: "1oz Dropper", sku: "PRE-SRM-ROS-1", quantity: 12, price_cents: 2200, state: "DELIVERED", includes_tester: false, discounts: [] },
+      { id: "oi_010b", order_id: "bo_ord010", product_id: "p_prod008", variant_id: "po_var008a", product_name: "Lavender Body Oil", variant_name: "4oz", sku: "PRE-OIL-LAV-4", quantity: 12, price_cents: 1600, state: "DELIVERED", includes_tester: false, discounts: [] },
+    ],
+    shipments: [s_ship002],
+    address: { name: "Sol Wellness", address1: "800 Lincoln Rd", city: "Miami", state: "Florida", state_code: "FL", postal_code: "33139", country: "United States", country_code: "USA" },
+    created_at: "2026-02-16T08:00:00Z", updated_at: "2026-02-22T16:00:00Z",
   },
   {
-    id: "ord-011", storeId: "store-003", order_number: "FO-28650", retailer_id: "ret-010",
-    retailer_name: "The Artful Home", retailer_city: "Atlanta", retailer_state: "GA",
-    state: "IN_TRANSIT", items: [
-      { id: "oi-011a", product_id: "prod-006", variant_id: "var-006b", product_name: "Macramé Wall Hanging", variant_name: "Large (18\"×36\")", sku: "GLC-MAC-LG", quantity: 4, wholesale_price: 68, total_price: 272, state: "SHIPPED", backordered_until: null },
+    id: "bo_ord011", display_id: "28650KK", storeId: "store-003", retailer_id: "r_ret010",
+    state: "IN_TRANSIT", source: "MARKETPLACE", is_free_shipping: false,
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: null, estimated_payout_at: "2026-03-11T00:00:00Z",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 6800, commission_bps: 2500 },
+    items: [
+      { id: "oi_011a", order_id: "bo_ord011", product_id: "p_prod006", variant_id: "po_var006b", product_name: "Macramé Wall Hanging", variant_name: "Large (18\"×36\")", sku: "GLC-MAC-LG", quantity: 4, price_cents: 6800, state: "IN_TRANSIT", includes_tester: false, discounts: [] },
     ],
-    subtotal: 272, shipping: 22, taxes: 0, total: 294, payout_amount: 265, discount_amount: 0,
-    free_shipping_reason: null, shipped_at: "2026-02-24", created_at: "2026-02-20T13:00:00Z", updated_at: "2026-02-24T11:00:00Z",
-    shipments: [shipment3], notes: null,
-    shipping_address: { name: "The Artful Home", address1: "675 Ponce De Leon Ave", city: "Atlanta", state: "GA", zip: "30308", country: "US" },
+    shipments: [s_ship003b],
+    address: { name: "The Artful Home", address1: "675 Ponce De Leon Ave", city: "Atlanta", state: "Georgia", state_code: "GA", postal_code: "30308", country: "United States", country_code: "USA" },
+    created_at: "2026-02-20T13:00:00Z", updated_at: "2026-02-24T11:00:00Z",
   },
   {
-    id: "ord-012", storeId: "store-006", order_number: "FO-28620", retailer_id: "ret-011",
-    retailer_name: "The Harvest Table", retailer_city: "Phoenix", retailer_state: "AZ",
-    state: "IN_TRANSIT", items: [
-      { id: "oi-012a", product_id: "prod-010", variant_id: "var-010a", product_name: "Wildflower Honey", variant_name: "12oz Jar", sku: "NAT-HON-WLD-12", quantity: 24, wholesale_price: 12, total_price: 288, state: "SHIPPED", backordered_until: null },
+    id: "bo_ord012", display_id: "28620LL", storeId: "store-006", retailer_id: "r_ret011",
+    state: "IN_TRANSIT", source: "MARKETPLACE", is_free_shipping: false,
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: null, estimated_payout_at: "2026-03-12T00:00:00Z",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 7200, commission_bps: 2500 },
+    items: [
+      { id: "oi_012a", order_id: "bo_ord012", product_id: "p_prod010", variant_id: "po_var010a", product_name: "Wildflower Honey", variant_name: "12oz Jar", sku: "NAT-HON-WLD-12", quantity: 24, price_cents: 1200, state: "IN_TRANSIT", includes_tester: false, discounts: [] },
     ],
-    subtotal: 288, shipping: 16, taxes: 0, total: 304, payout_amount: 274, discount_amount: 0,
-    free_shipping_reason: null, shipped_at: "2026-02-25", created_at: "2026-02-19T10:00:00Z", updated_at: "2026-02-25T09:00:00Z",
-    shipments: [shipment4], notes: null,
-    shipping_address: { name: "The Harvest Table", address1: "3601 E Thomas Rd", city: "Phoenix", state: "AZ", zip: "85018", country: "US" },
+    shipments: [s_ship004b],
+    address: { name: "The Harvest Table", address1: "3601 E Thomas Rd", city: "Phoenix", state: "Arizona", state_code: "AZ", postal_code: "85018", country: "United States", country_code: "USA" },
+    created_at: "2026-02-19T10:00:00Z", updated_at: "2026-02-25T09:00:00Z",
   },
   {
-    id: "ord-013", storeId: "store-005", order_number: "FO-28590", retailer_id: "ret-012",
-    retailer_name: "Petal + Co", retailer_city: "Minneapolis", retailer_state: "MN",
-    state: "IN_TRANSIT", items: [
-      { id: "oi-013a", product_id: "prod-008", variant_id: "var-008a", product_name: "Lavender Body Oil", variant_name: "4oz", sku: "PRE-OIL-LAV-4", quantity: 6, wholesale_price: 16, total_price: 96, state: "SHIPPED", backordered_until: null },
+    id: "bo_ord013", display_id: "28590MM", storeId: "store-005", retailer_id: "r_ret012",
+    state: "IN_TRANSIT", source: "MARKETPLACE", is_free_shipping: false,
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: null, estimated_payout_at: "2026-03-13T00:00:00Z",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 2400, commission_bps: 2500 },
+    items: [
+      { id: "oi_013a", order_id: "bo_ord013", product_id: "p_prod008", variant_id: "po_var008a", product_name: "Lavender Body Oil", variant_name: "4oz", sku: "PRE-OIL-LAV-4", quantity: 6, price_cents: 1600, state: "IN_TRANSIT", includes_tester: false, discounts: [] },
     ],
-    subtotal: 96, shipping: 12, taxes: 0, total: 108, payout_amount: 97, discount_amount: 0,
-    free_shipping_reason: null, shipped_at: "2026-02-26", created_at: "2026-02-21T08:00:00Z", updated_at: "2026-02-26T14:00:00Z",
-    shipments: [shipment5], notes: null,
-    shipping_address: { name: "Petal + Co", address1: "100 N 6th St", city: "Minneapolis", state: "MN", zip: "55403", country: "US" },
+    shipments: [s_ship005],
+    address: { name: "Petal + Co", address1: "100 N 6th St", city: "Minneapolis", state: "Minnesota", state_code: "MN", postal_code: "55403", country: "United States", country_code: "USA" },
+    created_at: "2026-02-21T08:00:00Z", updated_at: "2026-02-26T14:00:00Z",
   },
   {
-    id: "ord-014", storeId: "store-001", order_number: "FO-28400", retailer_id: "ret-004",
-    retailer_name: "Nest & Nook", retailer_city: "Portland", retailer_state: "OR",
-    state: "CLOSED", items: [
-      { id: "oi-014a", product_id: "prod-001", variant_id: "var-001a", product_name: "Handwoven Cotton Throw", variant_name: "Ivory", sku: "SUP-THR-IVR", quantity: 8, wholesale_price: 42, total_price: 336, state: "SHIPPED", backordered_until: null },
+    id: "bo_ord014", display_id: "28400NN", storeId: "store-001", retailer_id: "r_ret004",
+    state: "DELIVERED", source: "MARKETPLACE", is_free_shipping: true, free_shipping_reason: "FREE_SHIPPING_THRESHOLD",
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: null, payment_initiated_at: "2026-01-27T00:10:34Z",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 8400, commission_bps: 2500 },
+    items: [
+      { id: "oi_014a", order_id: "bo_ord014", product_id: "p_prod001", variant_id: "po_var001a", product_name: "Handwoven Cotton Throw", variant_name: "Ivory", sku: "SUP-THR-IVR", quantity: 8, price_cents: 4200, state: "DELIVERED", includes_tester: false, discounts: [] },
     ],
-    subtotal: 336, shipping: 0, taxes: 0, total: 336, payout_amount: 302, discount_amount: 0,
-    free_shipping_reason: "FREE_SHIPPING_THRESHOLD", shipped_at: "2026-01-20", created_at: "2026-01-14T10:00:00Z", updated_at: "2026-01-25T12:00:00Z",
-    shipments: [], notes: null,
-    shipping_address: { name: "Nest & Nook", address1: "2204 NW Thurman St", city: "Portland", state: "OR", zip: "97210", country: "US" },
+    shipments: [s_ship006],
+    address: { name: "Nest & Nook", address1: "2204 NW Thurman St", city: "Portland", state: "Oregon", state_code: "OR", postal_code: "97210", country: "United States", country_code: "USA" },
+    created_at: "2026-01-14T10:00:00Z", updated_at: "2026-01-25T12:00:00Z",
   },
   {
-    id: "ord-015", storeId: "store-002", order_number: "FO-28380", retailer_id: "ret-002",
-    retailer_name: "Bloom & Gather", retailer_city: "Chicago", retailer_state: "IL",
-    state: "CANCELLED", items: [
-      { id: "oi-015a", product_id: "prod-004", variant_id: "var-004a", product_name: "Linen Napkin Set", variant_name: "Natural", sku: "LBM-NAP-NTR", quantity: 4, wholesale_price: 22, total_price: 88, state: "CANCELLED", backordered_until: null },
+    id: "bo_ord015", display_id: "28380OO", storeId: "store-002", retailer_id: "r_ret002",
+    state: "CANCELED", source: "MARKETPLACE", is_free_shipping: false,
+    brand_discounts: [], has_pending_retailer_cancellation_request: false,
+    notes: "Retailer requested cancel — ordering different variant.",
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 0, commission_bps: 2500 },
+    items: [
+      { id: "oi_015a", order_id: "bo_ord015", product_id: "p_prod004", variant_id: "po_var004a", product_name: "Linen Napkin Set", variant_name: "Natural", sku: "LBM-NAP-NTR", quantity: 4, price_cents: 2200, state: "CANCELED", includes_tester: false, discounts: [] },
     ],
-    subtotal: 88, shipping: 10, taxes: 0, total: 98, payout_amount: 0, discount_amount: 0,
-    free_shipping_reason: null, shipped_at: null, created_at: "2026-01-12T09:00:00Z", updated_at: "2026-01-13T11:00:00Z",
-    shipments: [], notes: "Retailer cancelled — ordering different variant.",
-    shipping_address: { name: "Bloom & Gather", address1: "881 N Michigan Ave", city: "Chicago", state: "IL", zip: "60611", country: "US" },
+    shipments: [],
+    address: { name: "Bloom & Gather", address1: "881 N Michigan Ave", city: "Chicago", state: "Illinois", state_code: "IL", postal_code: "60611", country: "United States", country_code: "USA" },
+    created_at: "2026-01-12T09:00:00Z", updated_at: "2026-01-13T11:00:00Z",
   },
   {
-    id: "ord-016", storeId: "store-005", order_number: "FO-28350", retailer_id: "ret-013",
-    retailer_name: "Inner Glow Studio", retailer_city: "Los Angeles", retailer_state: "CA",
-    state: "BACK_ORDERED", items: [
-      { id: "oi-016a", product_id: "prod-007", variant_id: "var-007c", product_name: "Wheel-Thrown Ceramic Mug", variant_name: "Mossy Green", sku: "HRT-MUG-MOS", quantity: 12, wholesale_price: 24, total_price: 288, state: "BACKORDERED", backordered_until: "2026-04-01" },
+    id: "bo_ord016", display_id: "28350PP", storeId: "store-004", retailer_id: "r_ret013",
+    state: "BACKORDERED", source: "MARKETPLACE", is_free_shipping: false,
+    brand_discounts: [], has_pending_retailer_cancellation_request: true,
+    notes: null,
+    payout_costs: { payout_fee_cents: 0, payout_fee_bps: 0, commission_cents: 7200, commission_bps: 2500 },
+    items: [
+      { id: "oi_016a", order_id: "bo_ord016", product_id: "p_prod007", variant_id: "po_var007c", product_name: "Wheel-Thrown Ceramic Mug", variant_name: "Mossy Green", sku: "HRT-MUG-MOS", quantity: 12, price_cents: 2400, state: "BACKORDERED", includes_tester: false, discounts: [] },
     ],
-    subtotal: 288, shipping: 18, taxes: 0, total: 306, payout_amount: 275, discount_amount: 0,
-    free_shipping_reason: null, shipped_at: null, created_at: "2026-02-10T08:00:00Z", updated_at: "2026-02-10T08:00:00Z",
-    shipments: [], notes: null,
-    shipping_address: { name: "Inner Glow Studio", address1: "8605 Santa Monica Blvd", city: "Los Angeles", state: "CA", zip: "90069", country: "US" },
+    shipments: [],
+    address: { name: "Inner Glow Studio", address1: "8605 Santa Monica Blvd", city: "Los Angeles", state: "California", state_code: "CA", postal_code: "90069", country: "United States", country_code: "USA" },
+    created_at: "2026-02-10T08:00:00Z", updated_at: "2026-02-10T08:00:00Z",
   },
 ];
 
+// ─── Shipments export ──────────────────────────────────────────────────────────
+
 export const faireShipments: FaireShipment[] = [
-  shipment1, shipment2, shipment3, shipment4, shipment5,
-  {
-    id: "ship-006", orderId: "ord-014", tracking_number: "1Z999AA10123456799",
-    tracking_url: "https://www.ups.com/track?tracknum=1Z999AA10123456799",
-    carrier: "UPS", shipped_at: "2026-01-20", estimated_delivery: "2026-01-24",
-    status: "delivered", package_count: 1, weight_oz: 96,
-  },
+  s_ship001, s_ship002, s_ship003, s_ship003b, s_ship004, s_ship004b, s_ship005, s_ship006,
 ];
+
+// ─── Retailers ─────────────────────────────────────────────────────────────────
 
 export const faireRetailers: FaireRetailer[] = [
   {
-    id: "ret-001", name: "Sarah Mitchell", email: "orders@cozycorner.com", retailer_token: "r_coz_8f2a1c",
+    id: "r_ret001", name: "Sarah Mitchell", email: "orders@cozycorner.com", retailer_token: "r_coz_8f2a1c",
     store_name: "The Cozy Corner Boutique", city: "Nashville", state: "TN", country: "US",
     website: "https://cozycornerboutique.com", instagram: "@cozycornerboutique",
     description: "Curated home goods and lifestyle boutique in the heart of Nashville.",
@@ -842,7 +874,7 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-001", "store-002"], status: "active",
   },
   {
-    id: "ret-002", name: "Emma Rodriguez", email: "buying@bloomandgather.co", retailer_token: "r_blm_4d7e2b",
+    id: "r_ret002", name: "Emma Rodriguez", email: "buying@bloomandgather.co", retailer_token: "r_blm_4d7e2b",
     store_name: "Bloom & Gather", city: "Chicago", state: "IL", country: "US",
     website: "https://bloomandgather.co", instagram: "@bloomandgatherchi",
     description: "Floral design studio and home goods shop in Chicago's West Loop.",
@@ -850,7 +882,7 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-002", "store-003"], status: "active",
   },
   {
-    id: "ret-003", name: "Jennifer Park", email: "orders@serenityspa.com", retailer_token: "r_ser_9c3f5a",
+    id: "r_ret003", name: "Jennifer Park", email: "orders@serenityspa.com", retailer_token: "r_ser_9c3f5a",
     store_name: "Serenity Spa Boutique", city: "Scottsdale", state: "AZ", country: "US",
     website: "https://serenityspa.com", instagram: "@serenityspaaz",
     description: "Luxury day spa and wellness retail boutique in Scottsdale.",
@@ -858,7 +890,7 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-005"], status: "active",
   },
   {
-    id: "ret-004", name: "Alex Chen", email: "wholesale@nestandnook.com", retailer_token: "r_nst_6a1d8c",
+    id: "r_ret004", name: "Alex Chen", email: "wholesale@nestandnook.com", retailer_token: "r_nst_6a1d8c",
     store_name: "Nest & Nook", city: "Portland", state: "OR", country: "US",
     website: "https://nestandnook.com", instagram: "@nestandnookpdx",
     description: "Scandinavian-inspired home goods and gifts shop in Portland.",
@@ -866,7 +898,7 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-001", "store-003"], status: "active",
   },
   {
-    id: "ret-005", name: "Marcus Johnson", email: "wholesale@thegreenpantry.com", retailer_token: "r_grn_2e9b4f",
+    id: "r_ret005", name: "Marcus Johnson", email: "wholesale@thegreenpantry.com", retailer_token: "r_grn_2e9b4f",
     store_name: "The Green Pantry", city: "San Francisco", state: "CA", country: "US",
     website: "https://thegreenpantry.com", instagram: "@thegreenpantrysf",
     description: "Sustainable food and home goods store focused on zero-waste living.",
@@ -874,7 +906,7 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-002", "store-006"], status: "active",
   },
   {
-    id: "ret-006", name: "Diana Patel", email: "orders@papercraftstudio.com", retailer_token: "r_pap_7f4a2d",
+    id: "r_ret006", name: "Diana Patel", email: "orders@papercraftstudio.com", retailer_token: "r_pap_7f4a2d",
     store_name: "Papercraft Studio", city: "Denver", state: "CO", country: "US",
     website: "https://papercraftstudio.com", instagram: "@papercraftstudioco",
     description: "Artisan stationery and craft supply shop with curated maker goods.",
@@ -882,7 +914,7 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-003"], status: "active",
   },
   {
-    id: "ret-007", name: "Priya Kumar", email: "wholesale@bloomwellness.co", retailer_token: "r_blw_1b8c4e",
+    id: "r_ret007", name: "Priya Kumar", email: "wholesale@bloomwellness.co", retailer_token: "r_blw_1b8c4e",
     store_name: "Bloom Wellness", city: "Austin", state: "TX", country: "US",
     website: "https://bloomwellness.co", instagram: "@bloomwellnessatx",
     description: "Holistic wellness boutique and apothecary in South Austin.",
@@ -890,7 +922,7 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-005"], status: "active",
   },
   {
-    id: "ret-008", name: "Tyler Brooks", email: "orders@gatherandgrind.com", retailer_token: "r_gg_5d2a7f",
+    id: "r_ret008", name: "Tyler Brooks", email: "orders@gatherandgrind.com", retailer_token: "r_gg_5d2a7f",
     store_name: "Gather & Grind Coffee", city: "Seattle", state: "WA", country: "US",
     website: "https://gatherandgrind.com", instagram: "@gatherandgrindcoffee",
     description: "Specialty coffee shop and curated home goods destination in Pike Place.",
@@ -898,7 +930,7 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-002", "store-004"], status: "active",
   },
   {
-    id: "ret-009", name: "Isabella Santos", email: "buyer@solwellness.com", retailer_token: "r_sol_3c6e9a",
+    id: "r_ret009", name: "Isabella Santos", email: "buyer@solwellness.com", retailer_token: "r_sol_3c6e9a",
     store_name: "Sol Wellness", city: "Miami", state: "FL", country: "US",
     website: "https://solwellness.com", instagram: "@solwellnessmiami",
     description: "Luxury wellness and beauty boutique on Lincoln Road, Miami Beach.",
@@ -906,7 +938,7 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-005"], status: "active",
   },
   {
-    id: "ret-010", name: "Robert Kim", email: "wholesale@artfulhome.com", retailer_token: "r_art_8e1b3d",
+    id: "r_ret010", name: "Robert Kim", email: "wholesale@artfulhome.com", retailer_token: "r_art_8e1b3d",
     store_name: "The Artful Home", city: "Atlanta", state: "GA", country: "US",
     website: "https://artfulhome.com", instagram: "@artfulhomeatlanta",
     description: "Contemporary art and home decor gallery in Ponce City Market.",
@@ -914,7 +946,7 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-003", "store-004"], status: "active",
   },
   {
-    id: "ret-011", name: "Olivia Turner", email: "orders@harvesttable.com", retailer_token: "r_hrv_4f9c2b",
+    id: "r_ret011", name: "Olivia Turner", email: "orders@harvesttable.com", retailer_token: "r_hrv_4f9c2b",
     store_name: "The Harvest Table", city: "Phoenix", state: "AZ", country: "US",
     website: "https://harvesttable.com", instagram: "@harvesttablephx",
     description: "Farm-to-table restaurant retail shop specializing in local and artisan foods.",
@@ -922,7 +954,7 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-006"], status: "active",
   },
   {
-    id: "ret-012", name: "Grace Lee", email: "wholesale@petalandco.com", retailer_token: "r_ptl_6d8e1a",
+    id: "r_ret012", name: "Grace Lee", email: "wholesale@petalandco.com", retailer_token: "r_ptl_6d8e1a",
     store_name: "Petal + Co", city: "Minneapolis", state: "MN", country: "US",
     website: "https://petalandco.com", instagram: "@petalandcomn",
     description: "Botanically inspired lifestyle boutique in Minneapolis.",
@@ -930,346 +962,11 @@ export const faireRetailers: FaireRetailer[] = [
     storeIds: ["store-005"], status: "active",
   },
   {
-    id: "ret-013", name: "Natalie Wong", email: "orders@innerglowstudio.com", retailer_token: "r_ing_2a5f8c",
+    id: "r_ret013", name: "Natalie Wong", email: "orders@innerglowstudio.com", retailer_token: "r_ing_2a5f8c",
     store_name: "Inner Glow Studio", city: "Los Angeles", state: "CA", country: "US",
     website: "https://innerglowstudio.com", instagram: "@innerglowla",
     description: "Wellness and beauty studio in West Hollywood with curated retail.",
     created_at: "2024-03-20", total_orders: 3, total_spent: 860, last_ordered: "2026-02-10",
     storeIds: ["store-004", "store-005"], status: "active",
   },
-];
-
-export const faireCampaigns: FaireCampaign[] = [
-  {
-    id: "camp-001", storeId: "store-001", name: "Spring Home Refresh",
-    type: "sale", status: "active",
-    description: "15% off all throws and textiles for spring buying season.",
-    discount_percent: 15, discount_min_order: 200, start_date: "2026-02-15", end_date: "2026-03-31",
-    product_ids: ["prod-001"], impressions: 4820, clicks: 341, orders_attributed: 18, revenue_attributed: 5640,
-  },
-  {
-    id: "camp-002", storeId: "store-005", name: "Wellness Week",
-    type: "featured", status: "active",
-    description: "Featured placement on Faire wellness homepage during March.",
-    discount_percent: null, discount_min_order: null, start_date: "2026-03-01", end_date: "2026-03-07",
-    product_ids: ["prod-008", "prod-009"], impressions: 8400, clicks: 620, orders_attributed: 34, revenue_attributed: 9280,
-  },
-  {
-    id: "camp-003", storeId: "store-002", name: "New Arrivals — Spring Linens",
-    type: "new_arrival", status: "active",
-    description: "Showcase new linen napkin colors for spring table settings.",
-    discount_percent: null, discount_min_order: null, start_date: "2026-02-20", end_date: "2026-04-20",
-    product_ids: ["prod-004"], impressions: 3200, clicks: 218, orders_attributed: 12, revenue_attributed: 3120,
-  },
-  {
-    id: "camp-004", storeId: "store-003", name: "Handmade Maker Month",
-    type: "featured", status: "active",
-    description: "Featured in Faire's \"Made in America\" editorial collection.",
-    discount_percent: null, discount_min_order: null, start_date: "2026-02-01", end_date: "2026-02-28",
-    product_ids: ["prod-005", "prod-006"], impressions: 6100, clicks: 480, orders_attributed: 22, revenue_attributed: 7040,
-  },
-  {
-    id: "camp-005", storeId: "store-006", name: "Gift Shop Special",
-    type: "sale", status: "scheduled",
-    description: "10% off honey bundles for Mother's Day gift shop buyers.",
-    discount_percent: 10, discount_min_order: 150, start_date: "2026-04-15", end_date: "2026-05-10",
-    product_ids: ["prod-010"], impressions: 0, clicks: 0, orders_attributed: 0, revenue_attributed: 0,
-  },
-  {
-    id: "camp-006", storeId: "store-004", name: "Ceramics Showcase",
-    type: "new_arrival", status: "scheduled",
-    description: "New mug colors launch campaign for spring.",
-    discount_percent: null, discount_min_order: null, start_date: "2026-03-15", end_date: "2026-04-30",
-    product_ids: ["prod-007"], impressions: 0, clicks: 0, orders_attributed: 0, revenue_attributed: 0,
-  },
-  {
-    id: "camp-007", storeId: "store-001", name: "Holiday Gifting 2025",
-    type: "sale", status: "ended",
-    description: "Holiday gift set campaign — 20% off minimum orders of $300.",
-    discount_percent: 20, discount_min_order: 300, start_date: "2025-11-15", end_date: "2025-12-31",
-    product_ids: ["prod-001", "prod-002"], impressions: 12400, clicks: 980, orders_attributed: 64, revenue_attributed: 22800,
-  },
-  {
-    id: "camp-008", storeId: "store-002", name: "Back-to-Basics Kitchen",
-    type: "custom", status: "ended",
-    description: "Custom editorial feature in Faire's Editors' Picks.",
-    discount_percent: null, discount_min_order: null, start_date: "2025-10-01", end_date: "2025-11-30",
-    product_ids: ["prod-003", "prod-004"], impressions: 9800, clicks: 740, orders_attributed: 48, revenue_attributed: 14200,
-  },
-];
-
-export const faireDisputes: FaireDispute[] = [
-  {
-    id: "disp-001", orderId: "ord-009", order_number: "FO-28700", storeId: "store-001",
-    retailer_name: "The Cozy Corner Boutique",
-    reason: "Damaged goods", description: "2 out of 12 candle sets arrived with broken glass lids. Requesting replacement or credit.",
-    amount: 56, status: "open", created_at: "2026-02-22", resolved_at: null, resolution: null, priority: "high",
-  },
-  {
-    id: "disp-002", orderId: "ord-010", order_number: "FO-28680", storeId: "store-005",
-    retailer_name: "Sol Wellness",
-    reason: "Wrong item sent", description: "Received Sandalwood scent instead of Lavender for 3 units. Requested Lavender.",
-    amount: 48, status: "open", created_at: "2026-02-24", resolved_at: null, resolution: null, priority: "normal",
-  },
-  {
-    id: "disp-003", orderId: "ord-014", order_number: "FO-28400", storeId: "store-001",
-    retailer_name: "Nest & Nook",
-    reason: "Late delivery", description: "Order arrived 5 days after estimated delivery. Had to turn away several customers.",
-    amount: 0, status: "escalated", created_at: "2026-02-01", resolved_at: null, resolution: null, priority: "high",
-  },
-  {
-    id: "disp-004", orderId: "ord-011", order_number: "FO-28650", storeId: "store-003",
-    retailer_name: "The Artful Home",
-    reason: "Missing items", description: "Only received 3 macramé pieces but was charged for 4.",
-    amount: 68, status: "open", created_at: "2026-02-27", resolved_at: null, resolution: null, priority: "high",
-  },
-  {
-    id: "disp-005", orderId: "ord-008", order_number: "FO-28770", storeId: "store-002",
-    retailer_name: "Gather & Grind Coffee",
-    reason: "Quality issue", description: "Some rattan bowls have visible defects — split weaving on the base.",
-    amount: 54, status: "open", created_at: "2026-02-26", resolved_at: null, resolution: null, priority: "normal",
-  },
-  {
-    id: "disp-006", orderId: "ord-007", order_number: "FO-28780", storeId: "store-005",
-    retailer_name: "Bloom Wellness",
-    reason: "Damaged goods", description: "2 bottles arrived leaking due to poor cap seal.",
-    amount: 56, status: "resolved", created_at: "2026-02-18", resolved_at: "2026-02-20", resolution: "Issued store credit of $56. Retailer satisfied. Will update packaging.", priority: "normal",
-  },
-  {
-    id: "disp-007", orderId: "ord-004", order_number: "FO-28800", storeId: "store-001",
-    retailer_name: "Nest & Nook",
-    reason: "Wrong quantity", description: "Received 6 units instead of ordered 4 — billed for 4, received 6.",
-    amount: 0, status: "resolved", created_at: "2026-02-10", resolved_at: "2026-02-12", resolution: "Retailer kept extra units as goodwill. No charge. Updated picking process.", priority: "normal",
-  },
-  {
-    id: "disp-008", orderId: "ord-005", order_number: "FO-28801", storeId: "store-002",
-    retailer_name: "The Green Pantry",
-    reason: "Packaging damage", description: "Outer box was completely crushed in transit. Products okay but will affect display.",
-    amount: 0, status: "resolved", created_at: "2026-02-15", resolved_at: "2026-02-16", resolution: "Sent complimentary replacement packaging inserts. Upgraded carrier for this retailer.", priority: "normal",
-  },
-  {
-    id: "disp-009", orderId: "ord-006", order_number: "FO-28790", storeId: "store-003",
-    retailer_name: "Papercraft Studio",
-    reason: "Not as described", description: "Journals have different stitching than shown in product photos.",
-    amount: 204, status: "escalated", created_at: "2026-02-20", resolved_at: null, resolution: null, priority: "high",
-  },
-  {
-    id: "disp-010", orderId: "ord-013", order_number: "FO-28590", storeId: "store-005",
-    retailer_name: "Petal + Co",
-    reason: "Late delivery", description: "Package arrived 4 days late. Missed pre-Valentine's Day window.",
-    amount: 0, status: "resolved", created_at: "2026-02-20", resolved_at: "2026-02-21", resolution: "Offered 10% discount on next order as goodwill. Retailer accepted.", priority: "normal",
-  },
-];
-
-export const faireRetailerLeads: RetailerLead[] = [
-  {
-    id: "lead-001",
-    name: "Modern Home Mumbai",
-    storeType: "Lifestyle Boutique",
-    location: "Mumbai, MH",
-    email: "contact@modernhomemumbai.in",
-    phone: "+91 98765 43210",
-    source: "Instagram",
-    stage: "Prospect",
-    lastContact: "2026-02-20",
-    dealValue: 5000,
-    daysInStage: 8,
-    notes: "Interested in sustainable home decor lines."
-  },
-  {
-    id: "lead-002",
-    name: "Jaipur Artisan Collective",
-    storeType: "Craft Store",
-    location: "Jaipur, RJ",
-    email: "info@jaipurartisans.com",
-    phone: "+91 91234 56789",
-    source: "Trade Show",
-    stage: "Outreach",
-    lastContact: "2026-02-22",
-    dealValue: 12000,
-    daysInStage: 6,
-    notes: "Met at Delhi Trade Fair. Sent initial introduction."
-  },
-  {
-    id: "lead-003",
-    name: "EcoLiving Bangalore",
-    storeType: "Organic Retailer",
-    location: "Bangalore, KA",
-    email: "hello@ecoliving.in",
-    phone: "+91 80234 56781",
-    source: "Website",
-    stage: "Demo Scheduled",
-    lastContact: "2026-02-25",
-    dealValue: 8500,
-    daysInStage: 3,
-    notes: "Demo scheduled for next Tuesday at 2 PM."
-  },
-  {
-    id: "lead-004",
-    name: "Heritage Homes Delhi",
-    storeType: "Premium Furniture",
-    location: "New Delhi, DL",
-    email: "sales@heritagehomes.in",
-    phone: "+91 11456 78901",
-    source: "Referral",
-    stage: "Proposal Sent",
-    lastContact: "2026-02-24",
-    dealValue: 25000,
-    daysInStage: 4,
-    notes: "Bulk order proposal sent for the upcoming festive season."
-  },
-  {
-    id: "lead-005",
-    name: "Urban Decor Pune",
-    storeType: "Home Improvement",
-    location: "Pune, MH",
-    email: "urban.decor@gmail.com",
-    phone: "+91 77654 32109",
-    source: "LinkedIn",
-    stage: "Partner Signed",
-    lastContact: "2026-02-27",
-    dealValue: 15000,
-    daysInStage: 1,
-    notes: "Agreement signed. Onboarding starts next week."
-  },
-  {
-    id: "lead-006",
-    name: "The Gift Studio Hyderabad",
-    storeType: "Gift Shop",
-    location: "Hyderabad, TS",
-    email: "gifts@thestudio.in",
-    phone: "+91 99887 76655",
-    source: "Instagram",
-    stage: "Prospect",
-    lastContact: "2026-02-18",
-    dealValue: 3500,
-    daysInStage: 10,
-    notes: "Looking for unique gifting items for corporate clients."
-  },
-  {
-    id: "lead-007",
-    name: "Coastal Crafts Kochi",
-    storeType: "Souvenir Shop",
-    location: "Kochi, KL",
-    email: "coastal@kochi.in",
-    phone: "+91 48423 45678",
-    source: "Google Ads",
-    stage: "Outreach",
-    lastContact: "2026-02-23",
-    dealValue: 6000,
-    daysInStage: 5,
-    notes: "Cold call successful. Follow-up email sent."
-  },
-  {
-    id: "lead-008",
-    name: "Royal Interiors Udaipur",
-    storeType: "Interior Design",
-    location: "Udaipur, RJ",
-    email: "royal@udaipur.in",
-    phone: "+91 29423 45678",
-    source: "Website",
-    stage: "Demo Scheduled",
-    lastContact: "2026-02-26",
-    dealValue: 45000,
-    daysInStage: 2,
-    notes: "Interested in exclusive distribution rights for Rajasthan."
-  },
-  {
-    id: "lead-009",
-    name: "Minimalist Living Gurgaon",
-    storeType: "Concept Store",
-    location: "Gurgaon, HR",
-    email: "minimalist@gurgaon.in",
-    phone: "+91 12423 45678",
-    source: "Referral",
-    stage: "Proposal Sent",
-    lastContact: "2026-02-21",
-    dealValue: 9000,
-    daysInStage: 7,
-    notes: "Proposal under review by their procurement team."
-  },
-  {
-    id: "lead-010",
-    name: "Traditional Treasures Kolkata",
-    storeType: "Ethnic Wear & Decor",
-    location: "Kolkata, WB",
-    email: "treasures@kolkata.in",
-    phone: "+91 33234 56789",
-    source: "Trade Show",
-    stage: "Prospect",
-    lastContact: "2026-02-15",
-    dealValue: 7000,
-    daysInStage: 13,
-    notes: "Interested in traditional hand-loomed textiles."
-  },
-  {
-    id: "lead-011",
-    name: "Nature's Nest Ahmedabad",
-    storeType: "Eco-friendly Store",
-    location: "Ahmedabad, GJ",
-    email: "nest@ahmedabad.in",
-    phone: "+91 79234 56789",
-    source: "Instagram",
-    stage: "Outreach",
-    lastContact: "2026-02-24",
-    dealValue: 5500,
-    daysInStage: 4,
-    notes: "Sent digital catalog and price list."
-  },
-  {
-    id: "lead-012",
-    name: "Luxe Living Chennai",
-    storeType: "Furniture Showroom",
-    location: "Chennai, TN",
-    email: "luxe@chennai.in",
-    phone: "+91 44234 56789",
-    source: "LinkedIn",
-    stage: "Demo Scheduled",
-    lastContact: "2026-02-27",
-    dealValue: 30000,
-    daysInStage: 1,
-    notes: "Video conference scheduled for product walkthrough."
-  },
-  {
-    id: "lead-013",
-    name: "The Decor Den Lucknow",
-    storeType: "Home Accessories",
-    location: "Lucknow, UP",
-    email: "den@lucknow.in",
-    phone: "+91 52223 45678",
-    source: "Website",
-    stage: "Prospect",
-    lastContact: "2026-02-19",
-    dealValue: 4000,
-    daysInStage: 9,
-    notes: "Initial inquiry from website contact form."
-  },
-  {
-    id: "lead-014",
-    name: "Indie Art Hub Goa",
-    storeType: "Art Gallery & Shop",
-    location: "Panaji, GA",
-    email: "art@goa.in",
-    phone: "+91 83223 45678",
-    source: "Referral",
-    stage: "Partner Signed",
-    lastContact: "2026-02-28",
-    dealValue: 10000,
-    daysInStage: 0,
-    notes: "First order placed. Onboarding in progress."
-  },
-  {
-    id: "lead-015",
-    name: "Elite Esthetics Chandigarh",
-    storeType: "Design Studio",
-    location: "Chandigarh, CH",
-    email: "elite@chandigarh.in",
-    phone: "+91 17223 45678",
-    source: "Trade Show",
-    stage: "Outreach",
-    lastContact: "2026-02-26",
-    dealValue: 18000,
-    daysInStage: 2,
-    notes: "Interested in wholesale pricing for interior projects."
-  }
 ];

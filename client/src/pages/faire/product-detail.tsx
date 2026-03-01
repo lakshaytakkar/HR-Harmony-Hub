@@ -10,9 +10,21 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
-import { faireProducts, faireStores } from "@/lib/mock-data-faire";
+import { faireProducts, faireStores, type ProductLifecycleState, type ProductSaleState } from "@/lib/mock-data-faire";
 
 const BRAND_COLOR = "#1A6B45";
+
+const lifecycleBadge: Record<ProductLifecycleState, { bg: string; color: string; label: string }> = {
+  PUBLISHED: { bg: "#ECFDF5", color: "#059669", label: "Published" },
+  DRAFT: { bg: "#EFF6FF", color: "#2563EB", label: "Draft" },
+  UNPUBLISHED: { bg: "#F9FAFB", color: "#6B7280", label: "Unpublished" },
+  DELETED: { bg: "#FEF2F2", color: "#DC2626", label: "Deleted" },
+};
+
+const saleBadge: Record<ProductSaleState, { bg: string; color: string; label: string }> = {
+  FOR_SALE: { bg: "#ECFDF5", color: "#059669", label: "For Sale" },
+  SALES_PAUSED: { bg: "#FFF7ED", color: "#EA580C", label: "Sales Paused" },
+};
 
 export default function FaireProductDetail() {
   const [, setLocation] = useLocation();
@@ -33,6 +45,11 @@ export default function FaireProductDetail() {
   const [editQty, setEditQty] = useState("");
 
   const selectedVariant = product.variants.find(v => v.id === selectedVariantId);
+  const lc = lifecycleBadge[product.lifecycle_state];
+  const sl = saleBadge[product.sale_state];
+  const avgRating = product.reviews.length > 0
+    ? product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length
+    : null;
 
   if (isLoading) {
     return (
@@ -53,8 +70,8 @@ export default function FaireProductDetail() {
               <ArrowLeft size={15} className="mr-1.5" /> Products
             </Button>
             <h1 className="text-xl font-bold font-heading">{product.name}</h1>
-            <span className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "#ECFDF5", color: "#059669" }}>{product.lifecycle_state}</span>
-            <span className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "#ECFDF5", color: "#059669" }}>{product.sale_state === "FOR_SALE" ? "For Sale" : "Not For Sale"}</span>
+            <span className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: lc.bg, color: lc.color }}>{lc.label}</span>
+            <span className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: sl.bg, color: sl.color }}>{sl.label}</span>
           </div>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => setEditOpen(true)} data-testid="btn-edit-product"><Pencil size={13} className="mr-1.5" /> Edit</Button>
@@ -67,11 +84,10 @@ export default function FaireProductDetail() {
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">{store?.name}</Badge>
           <Badge variant="outline">{product.category}</Badge>
-          <Badge variant="outline">{product.subcategory}</Badge>
-          <Badge variant="outline">Made in: {product.made_in_countries.join(", ")}</Badge>
+          <Badge variant="outline">Made in: {product.made_in_country}</Badge>
           <Badge variant="outline">MOQ: {product.minimum_order_quantity}</Badge>
           <Badge variant="outline">Units/Case: {product.units_per_case}</Badge>
-          {product.taxable && <Badge variant="outline">Taxable</Badge>}
+          {product.preorderable && <Badge variant="outline">Pre-orderable</Badge>}
           {product.tags.map(tag => (
             <div key={tag} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">
               <Tag size={9} /> {tag}
@@ -87,15 +103,17 @@ export default function FaireProductDetail() {
         </Card>
       </Fade>
 
-      <Fade>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            {[...Array(5)].map((_, i) => <Star key={i} size={14} className={i < Math.floor(product.avg_rating) ? "text-amber-400 fill-amber-400" : "text-muted-foreground"} />)}
-            <span className="text-sm font-semibold ml-1">{product.avg_rating}</span>
+      {avgRating !== null && (
+        <Fade>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => <Star key={i} size={14} className={i < Math.floor(avgRating) ? "text-amber-400 fill-amber-400" : "text-muted-foreground"} />)}
+              <span className="text-sm font-semibold ml-1">{avgRating.toFixed(1)}</span>
+            </div>
+            <span className="text-sm text-muted-foreground">{product.reviews.length} review{product.reviews.length !== 1 ? "s" : ""}</span>
           </div>
-          <span className="text-sm text-muted-foreground">{product.review_count} reviews · {product.retailer_count} retailers carry this</span>
-        </div>
-      </Fade>
+        </Fade>
+      )}
 
       <Fade>
         <Card>
@@ -117,24 +135,25 @@ export default function FaireProductDetail() {
                 {product.variants.map(variant => {
                   const isLow = variant.available_quantity > 0 && variant.available_quantity < 5;
                   const isOut = variant.available_quantity === 0;
+                  const vlc = lifecycleBadge[variant.lifecycle_state];
                   return (
                     <tr key={variant.id} className={`border-b ${isOut ? "bg-red-50/40 dark:bg-red-950/10" : isLow ? "bg-amber-50/40 dark:bg-amber-950/10" : ""}`} data-testid={`variant-row-${variant.id}`}>
                       <td className="p-3 text-xs font-mono">{variant.sku}</td>
                       <td className="p-3">
-                        {Object.entries(variant.options).map(([k, v]) => (
-                          <Badge key={k} variant="outline" className="text-[9px] mr-1">{k}: {v}</Badge>
+                        {variant.options.map(o => (
+                          <Badge key={o.name} variant="outline" className="text-[9px] mr-1">{o.name}: {o.value}</Badge>
                         ))}
                       </td>
-                      <td className="p-3 text-xs font-medium">${variant.wholesale_price}</td>
-                      <td className="p-3 text-xs">${variant.retail_price}</td>
+                      <td className="p-3 text-xs font-medium">${(variant.wholesale_price_cents / 100).toFixed(2)}</td>
+                      <td className="p-3 text-xs">${(variant.retail_price_cents / 100).toFixed(2)}</td>
                       <td className="p-3">
                         <span className={`text-xs font-semibold ${isOut ? "text-red-600" : isLow ? "text-amber-600" : ""}`}>{variant.available_quantity}</span>
-                        {variant.backordered_until && <p className="text-[9px] text-muted-foreground">Backorder until {new Date(variant.backordered_until).toLocaleDateString()}</p>}
+                        {variant.backordered_until && <p className="text-[9px] text-muted-foreground">Until {new Date(variant.backordered_until).toLocaleDateString()}</p>}
                       </td>
-                      <td className="p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 text-emerald-700">{variant.lifecycle_state}</span></td>
+                      <td className="p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ background: vlc.bg, color: vlc.color }}>{vlc.label}</span></td>
                       <td className="p-3">
                         <div className="flex gap-1">
-                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setSelectedVariantId(variant.id); setEditWholesale(String(variant.wholesale_price)); setEditRetail(String(variant.retail_price)); setPriceOpen(true); }} data-testid={`btn-edit-price-${variant.id}`}>Edit Price</Button>
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setSelectedVariantId(variant.id); setEditWholesale((variant.wholesale_price_cents / 100).toFixed(2)); setEditRetail((variant.retail_price_cents / 100).toFixed(2)); setPriceOpen(true); }} data-testid={`btn-edit-price-${variant.id}`}>Edit Price</Button>
                           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setSelectedVariantId(variant.id); setEditQty(String(variant.available_quantity)); setStockOpen(true); }} data-testid={`btn-update-stock-${variant.id}`}>Stock</Button>
                         </div>
                       </td>
@@ -202,10 +221,17 @@ export default function FaireProductDetail() {
             <div className="space-y-1.5"><Label>Description</Label><textarea className="w-full h-20 border rounded-lg px-3 py-2 text-sm resize-none" defaultValue={product.description} data-testid="input-description" /></div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label>Lifecycle State</Label>
-                <select className="w-full h-9 border rounded-lg px-3 text-sm" defaultValue={product.lifecycle_state} data-testid="select-lifecycle"><option>ACTIVE</option><option>DRAFT</option><option>INACTIVE</option></select>
+                <select className="w-full h-9 border rounded-lg px-3 text-sm" defaultValue={product.lifecycle_state} data-testid="select-lifecycle">
+                  <option value="PUBLISHED">Published</option>
+                  <option value="DRAFT">Draft</option>
+                  <option value="UNPUBLISHED">Unpublished</option>
+                </select>
               </div>
               <div className="space-y-1.5"><Label>Sale State</Label>
-                <select className="w-full h-9 border rounded-lg px-3 text-sm" defaultValue={product.sale_state} data-testid="select-sale-state"><option value="FOR_SALE">For Sale</option><option value="NOT_FOR_SALE">Not For Sale</option></select>
+                <select className="w-full h-9 border rounded-lg px-3 text-sm" defaultValue={product.sale_state} data-testid="select-sale-state">
+                  <option value="FOR_SALE">For Sale</option>
+                  <option value="SALES_PAUSED">Sales Paused</option>
+                </select>
               </div>
             </div>
           </div>

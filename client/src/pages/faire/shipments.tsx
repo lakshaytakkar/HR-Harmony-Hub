@@ -1,37 +1,43 @@
 import { useState } from "react";
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy } from "lucide-react";
 import { PageTransition, Fade } from "@/components/ui/animated";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
-import { faireShipments, faireOrders, faireStores } from "@/lib/mock-data-faire";
+import { faireShipments, faireOrders, faireStores, faireRetailers, type OrderState } from "@/lib/mock-data-faire";
 
-const statusConfig = {
-  shipped: { label: "Shipped", color: "#2563EB", bg: "#EFF6FF" },
-  in_transit: { label: "In Transit", color: "#D97706", bg: "#FFFBEB" },
-  delivered: { label: "Delivered", color: "#059669", bg: "#ECFDF5" },
+const orderStateConfig: Record<string, { label: string; color: string; bg: string }> = {
+  PRE_TRANSIT: { label: "Pre-Transit", color: "#9333EA", bg: "#FAF5FF" },
+  IN_TRANSIT: { label: "In Transit", color: "#D97706", bg: "#FFFBEB" },
+  DELIVERED: { label: "Delivered", color: "#059669", bg: "#ECFDF5" },
+};
+
+const shipTypeLabels: Record<string, string> = {
+  SHIP_ON_YOUR_OWN: "Own Label",
+  FAIRE_SHIPPING_LABEL: "Faire Label",
 };
 
 export default function FaireShipments() {
   const isLoading = useSimulatedLoading(600);
   const { toast } = useToast();
   const [selectedStore, setSelectedStore] = useState("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "shipped" | "in_transit" | "delivered">("all");
+  const [stateFilter, setStateFilter] = useState<"all" | "PRE_TRANSIT" | "IN_TRANSIT" | "DELIVERED">("all");
 
   const enriched = faireShipments.map(ship => {
     const order = faireOrders.find(o => o.id === ship.orderId);
     const store = order ? faireStores.find(s => s.id === order.storeId) : null;
-    return { ...ship, order, store };
+    const retailer = order ? faireRetailers.find(r => r.id === order.retailer_id) : null;
+    return { ...ship, order, store, retailer };
   }).filter(s => {
     if (selectedStore !== "all" && s.store?.id !== selectedStore) return false;
-    if (statusFilter !== "all" && s.status !== statusFilter) return false;
+    if (stateFilter !== "all" && s.order?.state !== stateFilter) return false;
     return true;
   });
 
-  const copyTracking = (num: string) => {
-    navigator.clipboard.writeText(num).then(() => toast({ title: "Copied", description: num }));
+  const copyTracking = (code: string) => {
+    navigator.clipboard.writeText(code).then(() => toast({ title: "Copied", description: code }));
   };
 
   if (isLoading) {
@@ -57,9 +63,9 @@ export default function FaireShipments() {
               {faireStores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
             <div className="flex gap-1">
-              {(["all", "shipped", "in_transit", "delivered"] as const).map(s => (
-                <button key={s} onClick={() => setStatusFilter(s)} className={`px-3 py-1 text-xs rounded-lg border transition-colors ${statusFilter === s ? "text-white border-transparent" : "bg-background hover:bg-muted"}`} style={statusFilter === s ? { background: "#1A6B45" } : {}} data-testid={`filter-status-${s}`}>
-                  {s === "all" ? "All" : s === "in_transit" ? "In Transit" : s.charAt(0).toUpperCase() + s.slice(1)}
+              {(["all", "PRE_TRANSIT", "IN_TRANSIT", "DELIVERED"] as const).map(s => (
+                <button key={s} onClick={() => setStateFilter(s)} className={`px-3 py-1 text-xs rounded-lg border transition-colors ${stateFilter === s ? "text-white border-transparent" : "bg-background hover:bg-muted"}`} style={stateFilter === s ? { background: "#1A6B45" } : {}} data-testid={`filter-state-${s}`}>
+                  {s === "all" ? "All" : s === "PRE_TRANSIT" ? "Pre-Transit" : s === "IN_TRANSIT" ? "In Transit" : "Delivered"}
                 </button>
               ))}
             </div>
@@ -75,55 +81,46 @@ export default function FaireShipments() {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left p-3 font-medium text-muted-foreground text-xs">Shipment ID</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Order #</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Order ID</th>
                     <th className="text-left p-3 font-medium text-muted-foreground text-xs">Store</th>
                     <th className="text-left p-3 font-medium text-muted-foreground text-xs">Retailer</th>
                     <th className="text-left p-3 font-medium text-muted-foreground text-xs">Carrier</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Tracking #</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Tracking Code</th>
                     <th className="text-left p-3 font-medium text-muted-foreground text-xs">Shipped</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Est. Delivery</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Status</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Pkgs</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Shipping Cost</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Type</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Order State</th>
                   </tr>
                 </thead>
                 <tbody>
                   {enriched.map(ship => {
-                    const cfg = statusConfig[ship.status];
+                    const orderState = ship.order?.state ?? "IN_TRANSIT";
+                    const cfg = orderStateConfig[orderState] ?? { label: orderState, color: "#6B7280", bg: "#F9FAFB" };
                     return (
                       <tr key={ship.id} className="border-b hover:bg-accent/30" data-testid={`shipment-row-${ship.id}`}>
                         <td className="p-3 text-xs font-mono text-muted-foreground">{ship.id}</td>
                         <td className="p-3">
-                          <Badge variant="outline" className="text-[9px] font-mono">{ship.order?.order_number}</Badge>
+                          <Badge variant="outline" className="text-[9px] font-mono">{ship.order?.display_id}</Badge>
                         </td>
                         <td className="p-3">
                           <Badge variant="outline" className="text-[10px]">{ship.store?.name.split(" ")[0]}</Badge>
                         </td>
-                        <td className="p-3 text-xs">{ship.order?.retailer_name}</td>
+                        <td className="p-3 text-xs">{ship.retailer?.store_name ?? "—"}</td>
                         <td className="p-3 text-xs font-medium">{ship.carrier}</td>
                         <td className="p-3">
                           <div className="flex items-center gap-1">
-                            <span className="text-[10px] font-mono bg-muted rounded px-1.5 py-0.5 max-w-[120px] truncate">{ship.tracking_number}</span>
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyTracking(ship.tracking_number)} data-testid={`btn-copy-tracking-${ship.id}`}><Copy size={10} /></Button>
-                            <a href={ship.tracking_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
-                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0" data-testid={`btn-track-${ship.id}`}><ExternalLink size={10} /></Button>
-                            </a>
+                            <span className="text-[10px] font-mono bg-muted rounded px-1.5 py-0.5 max-w-[120px] truncate">{ship.tracking_code}</span>
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyTracking(ship.tracking_code)} data-testid={`btn-copy-tracking-${ship.id}`}><Copy size={10} /></Button>
                           </div>
                         </td>
                         <td className="p-3 text-xs">{new Date(ship.shipped_at).toLocaleDateString()}</td>
+                        <td className="p-3 text-xs font-medium">${(ship.maker_cost_cents / 100).toFixed(2)}</td>
                         <td className="p-3">
-                          <div>
-                            <p className="text-xs">{new Date(ship.estimated_delivery).toLocaleDateString()}</p>
-                            {ship.status === "in_transit" && (
-                              <div className="mt-1 w-20 h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div className="h-full rounded-full" style={{ width: "60%", background: "#D97706" }} />
-                              </div>
-                            )}
-                          </div>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">{shipTypeLabels[ship.shipping_type] ?? ship.shipping_type}</span>
                         </td>
                         <td className="p-3">
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
                         </td>
-                        <td className="p-3 text-xs text-center">{ship.package_count}</td>
                       </tr>
                     );
                   })}

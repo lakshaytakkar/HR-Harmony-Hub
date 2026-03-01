@@ -73,10 +73,10 @@ export default function FaireInventory() {
           subtitle="Track stock levels across all stores and variants"
           actions={
             <div className="flex items-center gap-2">
-              <select 
-                value={selectedStore} 
-                onChange={e => setSelectedStore(e.target.value)} 
-                className="h-9 text-sm border rounded-lg px-3 bg-background font-medium" 
+              <select
+                value={selectedStore}
+                onChange={e => setSelectedStore(e.target.value)}
+                className="h-9 text-sm border rounded-lg px-3 bg-background font-medium"
                 data-testid="select-store"
               >
                 <option value="all">All Stores</option>
@@ -128,6 +128,7 @@ export default function FaireInventory() {
                 <DataTH>Store</DataTH>
                 <DataTH>SKU</DataTH>
                 <DataTH>Options</DataTH>
+                <DataTH>Wholesale</DataTH>
                 <DataTH>Available Qty</DataTH>
                 <DataTH>Backordered Until</DataTH>
                 <DataTH align="right">Actions</DataTH>
@@ -144,11 +145,12 @@ export default function FaireInventory() {
                     <DataTD className="font-mono text-[10px] text-muted-foreground">{v.sku}</DataTD>
                     <DataTD>
                       <div className="flex flex-wrap gap-1">
-                        {Object.entries(v.options).map(([k, val]) => (
-                          <span key={k} className="text-[10px] bg-muted/80 rounded px-1.5 py-0.5 font-medium border border-muted-foreground/10">{val}</span>
+                        {v.options.map(o => (
+                          <span key={o.name} className="text-[10px] bg-muted/80 rounded px-1.5 py-0.5 font-medium border border-muted-foreground/10">{o.value}</span>
                         ))}
                       </div>
                     </DataTD>
+                    <DataTD className="font-medium">${(v.wholesale_price_cents / 100).toFixed(2)}</DataTD>
                     <DataTD>
                       <div className="flex items-center gap-1.5">
                         <span className={`text-sm font-bold ${isOut ? "text-red-600" : isLow ? "text-amber-600" : "text-foreground"}`}>
@@ -171,7 +173,7 @@ export default function FaireInventory() {
                 );
               })}
               {allVariants.length === 0 && (
-                <tr><td colSpan={7} className="p-8 text-center text-sm text-muted-foreground font-medium">No inventory variants match your search.</td></tr>
+                <tr><td colSpan={8} className="p-8 text-center text-sm text-muted-foreground font-medium">No inventory variants match your search.</td></tr>
               )}
             </tbody>
           </table>

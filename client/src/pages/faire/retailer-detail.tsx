@@ -12,12 +12,13 @@ const BRAND_COLOR = "#1A6B45";
 
 const stateConfig: Record<OrderState, { label: string; color: string; bg: string }> = {
   NEW: { label: "New", color: "#2563EB", bg: "#EFF6FF" },
-  PRE_TRANSIT: { label: "Pre-Transit", color: "#7C3AED", bg: "#F5F3FF" },
+  PROCESSING: { label: "Processing", color: "#7C3AED", bg: "#F5F3FF" },
+  PRE_TRANSIT: { label: "Pre-Transit", color: "#9333EA", bg: "#FAF5FF" },
   IN_TRANSIT: { label: "In Transit", color: "#D97706", bg: "#FFFBEB" },
   DELIVERED: { label: "Delivered", color: "#059669", bg: "#ECFDF5" },
-  CLOSED: { label: "Closed", color: "#6B7280", bg: "#F9FAFB" },
-  CANCELLED: { label: "Cancelled", color: "#DC2626", bg: "#FEF2F2" },
-  BACK_ORDERED: { label: "Backordered", color: "#EA580C", bg: "#FFF7ED" },
+  PENDING_RETAILER_CONFIRMATION: { label: "Pending", color: "#EA580C", bg: "#FFF7ED" },
+  BACKORDERED: { label: "Backordered", color: "#DC4A26", bg: "#FFF1EE" },
+  CANCELED: { label: "Canceled", color: "#6B7280", bg: "#F9FAFB" },
 };
 
 export default function FaireRetailerDetail() {
@@ -105,7 +106,7 @@ export default function FaireRetailerDetail() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left p-3 font-medium text-muted-foreground text-xs">Order #</th>
+                        <th className="text-left p-3 font-medium text-muted-foreground text-xs">Display ID</th>
                         <th className="text-left p-3 font-medium text-muted-foreground text-xs">Store</th>
                         <th className="text-left p-3 font-medium text-muted-foreground text-xs">Date</th>
                         <th className="text-left p-3 font-medium text-muted-foreground text-xs">Total</th>
@@ -116,12 +117,13 @@ export default function FaireRetailerDetail() {
                       {retailerOrders.map(order => {
                         const store = faireStores.find(s => s.id === order.storeId);
                         const cfg = stateConfig[order.state];
+                        const itemsTotal = order.items.reduce((s, i) => s + i.price_cents * i.quantity, 0);
                         return (
                           <tr key={order.id} className="border-b hover:bg-accent/30 cursor-pointer" onClick={() => setLocation(`/faire/orders/${order.id}`)} data-testid={`order-history-row-${order.id}`}>
-                            <td className="p-3"><Badge variant="outline" className="text-[9px] font-mono">{order.order_number}</Badge></td>
+                            <td className="p-3"><Badge variant="outline" className="text-[9px] font-mono">{order.display_id}</Badge></td>
                             <td className="p-3"><Badge variant="outline" className="text-[10px]">{store?.name.split(" ")[0]}</Badge></td>
                             <td className="p-3 text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</td>
-                            <td className="p-3 text-xs font-semibold">${order.total}</td>
+                            <td className="p-3 text-xs font-semibold">${(itemsTotal / 100).toFixed(2)}</td>
                             <td className="p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span></td>
                           </tr>
                         );
