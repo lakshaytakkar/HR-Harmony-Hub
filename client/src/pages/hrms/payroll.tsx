@@ -1,12 +1,25 @@
 import { useState } from "react";
 import { DollarSign, Play } from "lucide-react";
-import { PageTransition, Fade } from "@/components/ui/animated";
-import { Card, CardContent } from "@/components/ui/card";
+import { Fade } from "@/components/ui/animated";
+import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { payrollEntries } from "@/lib/mock-data-hrms";
+import {
+  PageShell,
+  PageHeader,
+  StatGrid,
+  StatCard,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+  IndexToolbar,
+  PrimaryAction,
+  DetailModal,
+  DetailSection,
+} from "@/components/layout";
 
 const statusColors: Record<string, string> = {
   processed: "bg-emerald-100 text-emerald-700",
@@ -19,125 +32,172 @@ export default function HrmsPayroll() {
   const [monthFilter, setMonthFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [runDialog, setRunDialog] = useState(false);
+  const [search, setSearch] = useState("");
 
   const totalThisMonth = payrollEntries.filter(p => p.month === "Feb 2026").reduce((sum, p) => sum + p.netSalary, 0);
   const processed = payrollEntries.filter(p => p.status === "processed").length;
   const pending = payrollEntries.filter(p => p.status === "pending").length;
   const onHold = payrollEntries.filter(p => p.status === "on-hold").length;
 
-  const months = [...new Set(payrollEntries.map(p => p.month))];
+  const months = Array.from(new Set(payrollEntries.map(p => p.month)));
 
   const filtered = payrollEntries.filter(p => {
     const matchMonth = monthFilter === "all" || p.month === monthFilter;
     const matchStatus = statusFilter === "all" || p.status === statusFilter;
-    return matchMonth && matchStatus;
+    const matchSearch = p.employeeName.toLowerCase().includes(search.toLowerCase());
+    return matchMonth && matchStatus && matchSearch;
   });
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-4 animate-pulse">
+      <PageShell className="animate-pulse">
         <div className="h-10 bg-muted rounded w-48" />
-        <div className="grid grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-muted rounded-xl" />)}</div>
+        <StatGrid>
+          <div className="h-20 bg-muted rounded-xl" />
+          <div className="h-20 bg-muted rounded-xl" />
+          <div className="h-20 bg-muted rounded-xl" />
+          <div className="h-20 bg-muted rounded-xl" />
+        </StatGrid>
         <div className="h-72 bg-muted rounded-xl" />
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Payroll</h1>
-            <p className="text-sm text-muted-foreground">Manage monthly payroll processing and disbursements</p>
-          </div>
-          <Button onClick={() => setRunDialog(true)} className="bg-sky-600 hover:bg-sky-700" data-testid="run-payroll-btn">
-            <Play className="size-4 mr-2" /> Run Payroll
-          </Button>
-        </div>
+        <PageHeader
+          title="Payroll"
+          subtitle="Manage monthly payroll processing and disbursements"
+          actions={
+            <PrimaryAction
+              color="#0284c7"
+              icon={Play}
+              onClick={() => setRunDialog(true)}
+              testId="run-payroll-btn"
+            >
+              Run Payroll
+            </PrimaryAction>
+          }
+        />
       </Fade>
 
       <Fade>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="border-0 shadow-sm"><CardContent className="p-4"><p className="text-xl font-bold text-sky-600">₹{(totalThisMonth / 100000).toFixed(2)}L</p><p className="text-xs text-muted-foreground mt-0.5">Total Payroll (Feb)</p></CardContent></Card>
-          <Card className="border-0 shadow-sm"><CardContent className="p-4"><p className="text-2xl font-bold text-emerald-600">{processed}</p><p className="text-xs text-muted-foreground mt-0.5">Processed</p></CardContent></Card>
-          <Card className="border-0 shadow-sm"><CardContent className="p-4"><p className="text-2xl font-bold text-amber-600">{pending}</p><p className="text-xs text-muted-foreground mt-0.5">Pending</p></CardContent></Card>
-          <Card className="border-0 shadow-sm"><CardContent className="p-4"><p className="text-2xl font-bold text-red-600">{onHold}</p><p className="text-xs text-muted-foreground mt-0.5">On Hold</p></CardContent></Card>
-        </div>
+        <StatGrid>
+          <StatCard
+            label="Total Payroll (Feb)"
+            value={`₹${(totalThisMonth / 100000).toFixed(2)}L`}
+            icon={DollarSign}
+            iconBg="rgba(14, 165, 233, 0.1)"
+            iconColor="#0ea5e9"
+          />
+          <StatCard
+            label="Processed"
+            value={processed}
+            icon={DollarSign}
+            iconBg="rgba(16, 185, 129, 0.1)"
+            iconColor="#10b981"
+          />
+          <StatCard
+            label="Pending"
+            value={pending}
+            icon={DollarSign}
+            iconBg="rgba(245, 158, 11, 0.1)"
+            iconColor="#f59e0b"
+          />
+          <StatCard
+            label="On Hold"
+            value={onHold}
+            icon={DollarSign}
+            iconBg="rgba(239, 68, 68, 0.1)"
+            iconColor="#ef4444"
+          />
+        </StatGrid>
       </Fade>
 
       <Fade>
-        <div className="flex gap-3">
-          <Select value={monthFilter} onValueChange={setMonthFilter}>
-            <SelectTrigger className="w-36" data-testid="month-filter"><SelectValue placeholder="All Months" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Months</SelectItem>
-              {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36" data-testid="status-filter"><SelectValue placeholder="All Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="processed">Processed</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="on-hold">On Hold</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <IndexToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search employee..."
+          color="#0284c7"
+          extra={
+            <div className="flex gap-2">
+              <Select value={monthFilter} onValueChange={setMonthFilter}>
+                <SelectTrigger className="w-36" data-testid="month-filter"><SelectValue placeholder="All Months" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Months</SelectItem>
+                  {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-36" data-testid="status-filter"><SelectValue placeholder="All Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="processed">Processed</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="on-hold">On Hold</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
+        />
       </Fade>
 
       <Fade>
-        <Card className="border-0 shadow-sm overflow-hidden">
-          <CardContent className="p-0">
-            <table className="w-full">
-              <thead className="border-b bg-muted/30">
-                <tr>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Employee</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Month</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Gross Salary</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Deductions</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Net Salary</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Status</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Pay Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {filtered.map((p) => (
-                  <tr key={p.id} className="hover:bg-muted/20" data-testid={`payroll-row-${p.id}`}>
-                    <td className="px-4 py-3 text-sm font-medium">{p.employeeName}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{p.month}</td>
-                    <td className="px-4 py-3 text-sm">₹{p.grossSalary.toLocaleString("en-IN")}</td>
-                    <td className="px-4 py-3 text-sm text-red-600">-₹{p.deductions.toLocaleString("en-IN")}</td>
-                    <td className="px-4 py-3 text-sm font-semibold text-emerald-600">₹{p.netSalary.toLocaleString("en-IN")}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[p.status]}`}>{p.status}</span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{p.payDate}</td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">No payroll records found</td></tr>}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+        <DataTableContainer>
+          <table className="w-full text-sm">
+            <thead className="border-b bg-muted/30">
+              <tr>
+                <DataTH>Employee</DataTH>
+                <DataTH>Month</DataTH>
+                <DataTH>Gross Salary</DataTH>
+                <DataTH>Deductions</DataTH>
+                <DataTH>Net Salary</DataTH>
+                <DataTH>Status</DataTH>
+                <DataTH>Pay Date</DataTH>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filtered.map((p) => (
+                <DataTR key={p.id} data-testid={`payroll-row-${p.id}`}>
+                  <DataTD className="font-medium">{p.employeeName}</DataTD>
+                  <DataTD className="text-muted-foreground">{p.month}</DataTD>
+                  <DataTD>₹{p.grossSalary.toLocaleString("en-IN")}</DataTD>
+                  <DataTD className="text-red-600">-₹{p.deductions.toLocaleString("en-IN")}</DataTD>
+                  <DataTD className="font-semibold text-emerald-600">₹{p.netSalary.toLocaleString("en-IN")}</DataTD>
+                  <DataTD>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[p.status]}`}>{p.status}</span>
+                  </DataTD>
+                  <DataTD className="text-muted-foreground">{p.payDate}</DataTD>
+                </DataTR>
+              ))}
+              {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">No payroll records found</td></tr>}
+            </tbody>
+          </table>
+        </DataTableContainer>
       </Fade>
 
-      <Dialog open={runDialog} onOpenChange={setRunDialog}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Run Payroll — Feb 2026</DialogTitle></DialogHeader>
+      <DetailModal
+        open={runDialog}
+        onClose={() => setRunDialog(false)}
+        title="Run Payroll — Feb 2026"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setRunDialog(false)} data-testid="cancel-run-payroll">Cancel</Button>
+            <PrimaryAction color="#0284c7" onClick={() => setRunDialog(false)} data-testid="confirm-run-payroll">Confirm & Process</PrimaryAction>
+          </>
+        }
+      >
+        <DetailSection title="Payroll Summary">
           <div className="space-y-3 text-sm">
             <p className="text-muted-foreground">This will process payroll for all <strong>{pending}</strong> pending employees for <strong>February 2026</strong>.</p>
             <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-amber-700 dark:text-amber-300 text-xs">
               Total payout: <strong>₹{(totalThisMonth / 100000).toFixed(2)} Lakhs</strong>. Ensure bank balance is sufficient before proceeding.
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRunDialog(false)} data-testid="cancel-run-payroll">Cancel</Button>
-            <Button className="bg-sky-600 hover:bg-sky-700" onClick={() => setRunDialog(false)} data-testid="confirm-run-payroll">Confirm & Process</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </PageTransition>
+        </DetailSection>
+      </DetailModal>
+    </PageShell>
   );
 }

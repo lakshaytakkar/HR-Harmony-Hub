@@ -191,7 +191,7 @@ export default function HubVenues() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           title="Add Venue"
-          description="Register a new venue for upcoming events."
+          onSubmit={() => setDialogOpen(false)}
         >
           <div className="grid gap-4">
             <div className="grid gap-1.5">

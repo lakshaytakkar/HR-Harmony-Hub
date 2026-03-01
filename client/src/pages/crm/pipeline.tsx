@@ -26,7 +26,7 @@ const priorityDot: Record<string, string> = {
   high: "bg-red-500", medium: "bg-amber-400", low: "bg-emerald-500",
 };
 
-const REPS = [...new Set(crmDeals.map(d => d.assignedTo))].sort();
+const REPS = Array.from(new Set(crmDeals.map(d => d.assignedTo))).sort();
 
 function formatValue(d: CrmDeal) {
   if (d.currency === "USD") return `$${(d.value / 1000).toFixed(0)}K`;

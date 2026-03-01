@@ -1,16 +1,21 @@
 import { useState } from "react";
-import { Phone, Mail, MessageCircle, CalendarCheck, CheckSquare, FileText, Plus, Clock } from "lucide-react";
-import { PageTransition, Fade } from "@/components/ui/animated";
+import { Phone, Mail, MessageCircle, CalendarCheck, CheckSquare, FileText, Clock } from "lucide-react";
+import { Fade } from "@/components/ui/animated";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { crmActivities, ALL_VERTICALS_IN_CRM, type CrmActivity, type ActivityType } from "@/lib/mock-data-crm";
+import {
+  PageShell,
+  PageHeader,
+  IndexToolbar,
+  DetailModal,
+} from "@/components/layout";
 
-const BRAND = "#0369A1";
+const BRAND = "#0284C7";
 
 const typeConfig: Record<ActivityType, { label: string; icon: typeof Phone; color: string; bg: string; pill: string }> = {
   call: { label: "Call", icon: Phone, color: "text-blue-600", bg: "bg-blue-50", pill: "bg-blue-50 text-blue-700" },
@@ -55,7 +60,7 @@ function groupByDate(activities: CrmActivity[]): { label: string; items: CrmActi
 const ALL_TYPES: (ActivityType | "all")[] = ["all", "call", "email", "whatsapp", "meeting", "task", "note"];
 const ALL_STATUSES = ["all", "completed", "scheduled", "overdue"];
 
-const REPS = [...new Set(crmActivities.map(a => a.performedBy))].sort();
+const REPS = Array.from(new Set(crmActivities.map(a => a.performedBy))).sort();
 
 export default function CrmActivities() {
   const isLoading = useSimulatedLoading(600);
@@ -81,145 +86,176 @@ export default function CrmActivities() {
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-4 animate-pulse">
-        <div className="h-10 bg-muted rounded w-48" />
-        <div className="space-y-3">{[...Array(10)].map((_, i) => <div key={i} className="h-20 bg-muted rounded-xl" />)}</div>
-      </div>
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-48 animate-pulse" />
+        <div className="space-y-3">
+          {[...Array(10)].map((_, i) => (
+            <div key={i} className="h-20 bg-muted rounded-xl animate-pulse" />
+          ))}
+        </div>
+      </PageShell>
     );
   }
 
+  const verticalOptions = [
+    { value: "all", label: "All Verticals" },
+    ...ALL_VERTICALS_IN_CRM.map((v) => ({ value: v.id, label: v.name })),
+  ];
+
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold">Activities</h1>
-            <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-semibold px-2.5 py-1 rounded-full">
-              {filtered.length}
-            </span>
-          </div>
-          <Button size="sm" className="rounded-full gap-1.5 text-white" style={{ backgroundColor: BRAND }} onClick={() => setLogOpen(true)} data-testid="btn-log-activity">
-            <Plus className="size-4" /> Log Activity
-          </Button>
-        </div>
+        <PageHeader title="Activities" subtitle={`${filtered.length} total activities`} />
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {ALL_TYPES.map(t => {
-            const cfg = t === "all" ? null : typeConfig[t as ActivityType];
-            const Icon = cfg?.icon;
-            return (
-              <button
-                key={t}
-                onClick={() => setTypeFilter(t)}
-                data-testid={`pill-type-${t}`}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                  typeFilter === t
-                    ? "text-white border-transparent"
-                    : "bg-background border-border text-muted-foreground hover:border-foreground/30"
-                }`}
-                style={typeFilter === t ? { backgroundColor: BRAND } : {}}
-              >
-                {Icon && <Icon className="size-3" />}
-                {t === "all" ? "All" : cfg?.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            {ALL_STATUSES.map(s => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                data-testid={`pill-status-${s}`}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border capitalize ${
-                  statusFilter === s ? "text-white border-transparent" : "bg-background border-border text-muted-foreground hover:border-foreground/30"
-                }`}
-                style={statusFilter === s ? { backgroundColor: BRAND } : {}}
-              >
-                {s === "all" ? "All Status" : s}
-              </button>
-            ))}
-          </div>
-          <Select value={verticalFilter} onValueChange={setVerticalFilter}>
-            <SelectTrigger className="h-9 w-44 rounded-lg" data-testid="select-vertical"><SelectValue placeholder="Vertical" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Verticals</SelectItem>
-              {ALL_VERTICALS_IN_CRM.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={repFilter} onValueChange={setRepFilter}>
-            <SelectTrigger className="h-9 w-44 rounded-lg" data-testid="select-rep"><SelectValue placeholder="Performed By" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Reps</SelectItem>
-              {REPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+        <IndexToolbar
+          search=""
+          onSearch={() => {}}
+          color={BRAND}
+          filters={verticalOptions}
+          activeFilter={verticalFilter}
+          onFilter={setVerticalFilter}
+          primaryAction={{
+            label: "Log Activity",
+            onClick: () => setLogOpen(true),
+          }}
+          extra={
+            <div className="flex items-center gap-2">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="h-9 w-40 bg-muted/30" data-testid="select-type">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {ALL_TYPES.filter(t => t !== "all").map(t => (
+                    <SelectItem key={t} value={t}>
+                      {typeConfig[t as ActivityType].label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-9 w-40 bg-muted/30" data-testid="select-status">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  {ALL_STATUSES.filter(s => s !== "all").map(s => (
+                    <SelectItem key={s} value={s}>
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={repFilter} onValueChange={setRepFilter}>
+                <SelectTrigger className="h-9 w-44 bg-muted/30" data-testid="select-rep">
+                  <SelectValue placeholder="Performed By" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Reps</SelectItem>
+                  {REPS.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          }
+        />
       </Fade>
 
       <Fade>
         {groups.length === 0 ? (
-          <div className="py-20 text-center text-muted-foreground text-sm">No activities match the current filters.</div>
+          <div className="py-20 text-center text-muted-foreground text-sm">
+            No activities match the current filters.
+          </div>
         ) : (
           <div className="space-y-6">
-            {groups.map(group => (
+            {groups.map((group) => (
               <div key={group.label}>
                 <div className="flex items-center gap-3 mb-3">
-                  <h2 className="text-sm font-semibold text-muted-foreground">{group.label}</h2>
+                  <h2 className="text-sm font-semibold text-muted-foreground">
+                    {group.label}
+                  </h2>
                   <div className="flex-1 h-px bg-border" />
-                  <span className="text-xs text-muted-foreground">{group.items.length} activities</span>
+                  <span className="text-xs text-muted-foreground">
+                    {group.items.length} activities
+                  </span>
                 </div>
                 <div className="space-y-2 relative">
                   <div className="absolute left-4 top-4 bottom-4 w-px bg-border" />
-                  {group.items.map(act => {
+                  {group.items.map((act) => {
                     const cfg = typeConfig[act.type];
                     const Icon = cfg.icon;
                     const sc = statusConfig[act.status];
-                    const vert = ALL_VERTICALS_IN_CRM.find(v => v.id === act.vertical);
+                    const vert = ALL_VERTICALS_IN_CRM.find(
+                      (v) => v.id === act.vertical
+                    );
                     const ts = (act.completedAt || act.scheduledAt || "").split("T");
                     const timeStr = ts[1] ? ts[1].slice(0, 5) : "";
                     return (
                       <div
                         key={act.id}
                         className={`flex items-start gap-4 p-4 rounded-xl border transition-colors ${
-                          act.status === "overdue" ? "bg-red-50/50 dark:bg-red-950/20 border-red-100" : "bg-card border-border hover:bg-muted/30"
+                          act.status === "overdue"
+                            ? "bg-red-50/50 dark:bg-red-950/20 border-red-100"
+                            : "bg-card border-border hover:bg-muted/20"
                         }`}
                         data-testid={`activity-${act.id}`}
                       >
-                        <div className={`size-8 rounded-full ${cfg.bg} flex items-center justify-center shrink-0 z-10`}>
+                        <div
+                          className={`size-8 rounded-full ${cfg.bg} flex items-center justify-center shrink-0 z-10`}
+                        >
                           <Icon className={`size-4 ${cfg.color}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium">{act.title}</p>
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{act.description}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                                {act.description}
+                              </p>
                               <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                                 {act.contactName && (
-                                  <span className="text-xs text-blue-600 font-medium">re: {act.contactName}</span>
+                                  <span className="text-xs text-blue-600 font-medium">
+                                    re: {act.contactName}
+                                  </span>
                                 )}
                                 {act.dealTitle && (
-                                  <span className="text-xs text-muted-foreground">Deal: {act.dealTitle.split("—")[0].trim()}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    Deal: {act.dealTitle.split("—")[0].trim()}
+                                  </span>
                                 )}
-                                <span className="text-xs text-muted-foreground">by {act.performedBy}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  by {act.performedBy}
+                                </span>
                                 {vert && (
-                                  <span className="text-xs px-1.5 py-0.5 rounded-full text-white font-medium" style={{ backgroundColor: vert.color }}>
+                                  <span
+                                    className="text-xs px-1.5 py-0.5 rounded-full text-white font-medium"
+                                    style={{ backgroundColor: vert.color }}
+                                  >
                                     {vert.name}
                                   </span>
                                 )}
                               </div>
                               {act.outcome && (
-                                <p className="text-xs text-emerald-600 mt-1 font-medium">→ {act.outcome.split(".")[0]}</p>
+                                <p className="text-xs text-emerald-600 mt-1 font-medium">
+                                  → {act.outcome.split(".")[0]}
+                                </p>
                               )}
                             </div>
                             <div className="flex flex-col items-end gap-1.5 shrink-0">
-                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sc.cls}`}>{sc.label}</span>
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded-full font-medium ${sc.cls}`}
+                              >
+                                {sc.label}
+                              </span>
                               {timeStr && (
                                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                   <Clock className="size-3" />
-                                  <span>{ts[0]} {timeStr}</span>
+                                  <span>
+                                    {ts[0]} {timeStr}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -235,55 +271,96 @@ export default function CrmActivities() {
         )}
       </Fade>
 
-      <Dialog open={logOpen} onOpenChange={setLogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Log Activity</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Activity Type</label>
-              <div className="flex flex-wrap gap-2">
-                {(["call", "email", "whatsapp", "meeting", "task", "note"] as ActivityType[]).map(t => {
-                  const cfg = typeConfig[t];
-                  const Icon = cfg.icon;
-                  return (
-                    <button key={t} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${cfg.pill} border-transparent`} data-testid={`type-btn-${t}`}>
-                      <Icon className="size-3" /> {cfg.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Contact</label>
-              <Input placeholder="Select or type contact name" className="rounded-lg" data-testid="input-contact" />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Linked Deal (optional)</label>
-              <Input placeholder="Search deals..." className="rounded-lg" data-testid="input-deal" />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Description</label>
-              <Textarea placeholder="What happened? Any important notes..." className="rounded-lg resize-none" rows={3} data-testid="input-description" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Date</label>
-                <Input type="date" className="rounded-lg" defaultValue="2026-02-28" data-testid="input-date" />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Outcome (optional)</label>
-                <Input placeholder="e.g. Follow-up in 2 days" className="rounded-lg" data-testid="input-outcome" />
-              </div>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1 rounded-lg" onClick={() => setLogOpen(false)} data-testid="btn-cancel">Cancel</Button>
-              <Button className="flex-1 rounded-lg text-white" style={{ backgroundColor: BRAND }} data-testid="btn-save-activity">Save Activity</Button>
+      <DetailModal
+        open={logOpen}
+        onClose={() => setLogOpen(false)}
+        title="Log Activity"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setLogOpen(false)}>
+              Cancel
+            </Button>
+            <Button style={{ backgroundColor: BRAND }} className="text-white">
+              Save Activity
+            </Button>
+          </>
+        }
+      >
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">
+              Activity Type
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {(
+                ["call", "email", "whatsapp", "meeting", "task", "note"] as ActivityType[]
+              ).map((t) => {
+                const cfg = typeConfig[t];
+                const Icon = cfg.icon;
+                return (
+                  <button
+                    key={t}
+                    className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium border rounded-full transition-colors ${cfg.pill} border-transparent`}
+                    data-testid={`type-btn-${t}`}
+                  >
+                    <Icon className="size-3" /> {cfg.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </PageTransition>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Contact</label>
+              <Input
+                placeholder="Select contact"
+                className="h-9 bg-muted/30"
+                data-testid="input-contact"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">
+                Linked Deal (optional)
+              </label>
+              <Input
+                placeholder="Search deals..."
+                className="h-9 bg-muted/30"
+                data-testid="input-deal"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Description</label>
+            <Textarea
+              placeholder="What happened? Any important notes..."
+              className="resize-none bg-muted/30"
+              rows={3}
+              data-testid="input-description"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Date</label>
+              <Input
+                type="date"
+                className="h-9 bg-muted/30"
+                defaultValue="2026-02-28"
+                data-testid="input-date"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">
+                Outcome (optional)
+              </label>
+              <Input
+                placeholder="e.g. Follow-up in 2 days"
+                className="h-9 bg-muted/30"
+                data-testid="input-outcome"
+              />
+            </div>
+          </div>
+        </div>
+      </DetailModal>
+    </PageShell>
   );
 }

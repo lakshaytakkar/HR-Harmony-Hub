@@ -1,29 +1,41 @@
-import { useState, useMemo } from "react";
-import { Plus, LayoutList, KanbanSquare, Calendar, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { Plus, LayoutList, KanbanSquare, Calendar, AlertCircle, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { SiWhatsapp } from "react-icons/si";
-
+import { Fade } from "@/components/ui/animated";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DataTable, type Column } from "@/components/hr/data-table";
 import { StatusBadge } from "@/components/hr/status-badge";
-import { FormDialog } from "@/components/hr/form-dialog";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { leads, tourPackages, type Lead, type LeadStatus } from "@/lib/mock-data-goyo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
+import { useToast } from "@/hooks/use-toast";
+import {
+  PageShell,
+  PageHeader,
+  StatGrid,
+  StatCard,
+  IndexToolbar,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+  DetailModal,
+  DetailSection,
+} from "@/components/layout";
+
+const BRAND_COLOR = "#E91E63";
 
 const formatDate = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
 const sourceConfig: Record<string, { label: string; color: string }> = {
-  website: { label: "Website", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  whatsapp: { label: "WhatsApp", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  referral: { label: "Referral", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
-  social: { label: "Social", color: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400" },
-  walk_in: { label: "Walk-in", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  phone: { label: "Phone", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" },
+  website: { label: "Website", color: "bg-blue-100 text-blue-700" },
+  whatsapp: { label: "WhatsApp", color: "bg-green-100 text-green-700" },
+  referral: { label: "Referral", color: "bg-purple-100 text-purple-700" },
+  social: { label: "Social", color: "bg-pink-100 text-pink-700" },
+  walk_in: { label: "Walk-in", color: "bg-amber-100 text-amber-700" },
+  phone: { label: "Phone", color: "bg-indigo-100 text-indigo-700" },
 };
 
 const kanbanColumns: { key: LeadStatus; label: string; headerColor: string }[] = [
@@ -44,37 +56,6 @@ const statusVariantMap: Record<string, "success" | "info" | "warning" | "neutral
   lost: "error",
 };
 
-const tableColumns: Column<Lead>[] = [
-  { key: "name", header: "Name", sortable: true },
-  { key: "phone", header: "Phone" },
-  { key: "city", header: "City", sortable: true },
-  { key: "business_type", header: "Business Type" },
-  {
-    key: "interested_package_id",
-    header: "Package",
-    render: (item) => {
-      const pkg = tourPackages.find((p) => p.id === item.interested_package_id);
-      return <span className="text-xs text-muted-foreground">{pkg?.name.substring(0, 30)}...</span>;
-    },
-  },
-  { key: "source", header: "Source", render: (item) => {
-    const s = sourceConfig[item.source] || { label: item.source, color: "" };
-    return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.color}`}>{s.label}</span>;
-  }},
-  { key: "status", header: "Status", render: (item) => <StatusBadge status={item.status} variant={statusVariantMap[item.status]} /> },
-  { key: "follow_up_date", header: "Follow-up", sortable: true, render: (item) => {
-    const today = new Date().toISOString().split("T")[0];
-    const isOverdue = item.follow_up_date < today && item.status !== "booked" && item.status !== "lost";
-    const isToday = item.follow_up_date === today;
-    return (
-      <span className={`text-xs font-medium ${isOverdue ? "text-red-500" : isToday ? "text-amber-500" : "text-muted-foreground"}`} data-testid={`text-followup-${item.id}`}>
-        {isOverdue && <AlertCircle className="size-3 inline mr-1" />}
-        {formatDate(item.follow_up_date)}
-      </span>
-    );
-  }},
-];
-
 function LeadKanbanCard({ lead }: { lead: Lead }) {
   const today = new Date().toISOString().split("T")[0];
   const isOverdue = lead.follow_up_date < today && lead.status !== "booked" && lead.status !== "lost";
@@ -87,38 +68,35 @@ function LeadKanbanCard({ lead }: { lead: Lead }) {
       className="rounded-lg border border-border bg-card p-3 transition-all duration-200 hover:shadow-sm"
       data-testid={`card-lead-${lead.id}`}
     >
-      <p className="text-sm font-semibold mb-0.5" data-testid={`text-lead-name-${lead.id}`}>{lead.name}</p>
-      <p className="text-xs text-muted-foreground mb-2">{lead.business_type} · {lead.city}</p>
+      <p className="text-sm font-semibold mb-0.5">{lead.name}</p>
+      <p className="text-[10px] text-muted-foreground mb-2 font-medium uppercase tracking-tight">{lead.business_type} · {lead.city}</p>
 
       {pkg && (
-        <p className="text-xs bg-pink-50 dark:bg-pink-950/20 text-pink-700 dark:text-pink-400 rounded px-1.5 py-0.5 mb-2 line-clamp-1">
-          {pkg.name.substring(0, 35)}{pkg.name.length > 35 ? "…" : ""}
+        <p className="text-[10px] bg-pink-50 dark:bg-pink-950/20 text-pink-700 dark:text-pink-400 rounded px-1.5 py-0.5 mb-2 line-clamp-1 font-bold">
+          {pkg.name}
         </p>
       )}
 
       <div className="flex items-center gap-1.5 mb-2">
-        {src && <span className={`rounded-full px-1.5 py-0.5 text-xs ${src.color}`}>{src.label}</span>}
+        {src && <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-tighter ${src.color}`}>{src.label}</span>}
         <span
-          className={`ml-auto text-xs font-medium flex items-center gap-0.5 ${isOverdue ? "text-red-500" : isToday ? "text-amber-500" : "text-muted-foreground"}`}
-          data-testid={`followup-${lead.id}`}
+          className={`ml-auto text-[10px] font-bold flex items-center gap-0.5 ${isOverdue ? "text-red-500" : isToday ? "text-amber-500" : "text-muted-foreground"}`}
         >
           <Calendar className="size-3" />
           {formatDate(lead.follow_up_date)}
-          {isOverdue && " ⚠"}
         </span>
       </div>
 
-      <div className="flex items-center justify-between">
-        <a href={`tel:${lead.phone}`} className="text-xs text-blue-500 hover:underline" data-testid={`tel-${lead.id}`}>
+      <div className="flex items-center justify-between border-t pt-2 mt-2">
+        <a href={`tel:${lead.phone}`} className="text-[10px] font-bold text-blue-500 hover:underline">
           {lead.phone}
         </a>
         <a
           href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
           target="_blank"
           rel="noreferrer"
-          data-testid={`btn-wa-lead-${lead.id}`}
         >
-          <Button variant="ghost" size="icon" className="size-7 text-green-600 hover:bg-green-50">
+          <Button variant="ghost" size="icon" className="size-7 text-green-600">
             <SiWhatsapp className="size-3.5" />
           </Button>
         </a>
@@ -129,8 +107,10 @@ function LeadKanbanCard({ lead }: { lead: Lead }) {
 
 export default function EventsLeads() {
   const loading = useSimulatedLoading(650);
+  const { toast } = useToast();
   const [view, setView] = useState<"kanban" | "table">("kanban");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
   const totalLeads = leads.length;
@@ -138,218 +118,207 @@ export default function EventsLeads() {
   const followUpsDue = leads.filter((l) => l.follow_up_date <= today && !["booked", "lost"].includes(l.status)).length;
   const conversionRate = Math.round((leads.filter((l) => l.status === "booked").length / leads.length) * 100);
 
-  const getLeadsByStatus = (status: LeadStatus) => leads.filter((l) => l.status === status);
+  const getLeadsByStatus = (status: LeadStatus) => leads.filter((l) => 
+    l.status === status && (search === "" || l.name.toLowerCase().includes(search.toLowerCase()) || l.city.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  if (loading) {
+    return (
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-64 animate-pulse" />
+        <StatGrid>
+          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />)}
+        </StatGrid>
+        <div className="h-80 bg-muted rounded-xl animate-pulse" />
+      </PageShell>
+    );
+  }
 
   return (
-    <div className="px-16 py-6 lg:px-24">
-      <PageTransition>
-        <Fade direction="up" delay={0}>
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold font-heading text-foreground" data-testid="leads-title">Leads & Pipeline</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">{totalLeads} leads · {conversionRate}% conversion rate</p>
-            </div>
+    <PageShell>
+      <Fade>
+        <PageHeader
+          title="Leads & Pipeline"
+          subtitle={`${totalLeads} total leads · ${conversionRate}% conversion rate`}
+          actions={
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className={`gap-1.5 ${view === "kanban" ? "bg-muted" : ""}`}
-                onClick={() => setView("kanban")}
-                data-testid="btn-kanban-view"
-              >
-                <KanbanSquare className="size-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className={`gap-1.5 ${view === "table" ? "bg-muted" : ""}`}
-                onClick={() => setView("table")}
-                data-testid="btn-table-view"
-              >
-                <LayoutList className="size-4" />
-              </Button>
+              <div className="flex bg-muted rounded-lg p-1">
+                <Button
+                  variant={view === "kanban" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-8 px-3"
+                  onClick={() => setView("kanban")}
+                >
+                  <KanbanSquare className="size-4 mr-2" /> Kanban
+                </Button>
+                <Button
+                  variant={view === "table" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-8 px-3"
+                  onClick={() => setView("table")}
+                >
+                  <LayoutList className="size-4 mr-2" /> Table
+                </Button>
+              </div>
               <Button
                 onClick={() => setDialogOpen(true)}
                 className="gap-2 text-white"
-                style={{ backgroundColor: "#E91E63" }}
+                style={{ backgroundColor: BRAND_COLOR }}
                 data-testid="button-add-lead"
               >
-                <Plus className="size-4" />
-                Add Lead
+                <Plus className="size-4" /> Add Lead
               </Button>
             </div>
-          </div>
-        </Fade>
+          }
+        />
+      </Fade>
 
-        {loading ? (
-          <div className="mb-5 grid grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
-          </div>
-        ) : (
-          <Fade direction="up" delay={0.05} className="mb-5 grid grid-cols-4 gap-3">
-            <div className="rounded-lg border bg-card p-3 text-center" data-testid="stat-total-leads">
-              <p className="text-xl font-bold text-foreground">{totalLeads}</p>
-              <p className="text-xs text-muted-foreground">Total Leads</p>
-            </div>
-            <div className="rounded-lg border bg-card p-3 text-center" data-testid="stat-new-today">
-              <p className="text-xl font-bold text-blue-500">{newToday}</p>
-              <p className="text-xs text-muted-foreground">New Today</p>
-            </div>
-            <div className="rounded-lg border bg-card p-3 text-center" data-testid="stat-followups">
-              <p className={`text-xl font-bold ${followUpsDue > 0 ? "text-amber-500" : "text-green-500"}`}>{followUpsDue}</p>
-              <p className="text-xs text-muted-foreground">Follow-ups Due</p>
-            </div>
-            <div className="rounded-lg border bg-card p-3 text-center" data-testid="stat-conversion">
-              <p className="text-xl font-bold text-pink-500">{conversionRate}%</p>
-              <p className="text-xs text-muted-foreground">Conversion Rate</p>
-            </div>
-          </Fade>
-        )}
+      <Fade>
+        <StatGrid>
+          <StatCard label="Total Leads" value={totalLeads} icon={Users} iconBg="rgba(33, 150, 243, 0.1)" iconColor="#2196F3" />
+          <StatCard label="New Today" value={newToday} icon={Calendar} iconBg="rgba(37, 99, 235, 0.1)" iconColor="#2563EB" />
+          <StatCard label="Follow-ups Due" value={followUpsDue} icon={AlertCircle} iconBg="rgba(255, 152, 0, 0.1)" iconColor="#FF9800" />
+          <StatCard label="Conversion Rate" value={`${conversionRate}%`} icon={Users} iconBg="rgba(233, 30, 99, 0.1)" iconColor={BRAND_COLOR} />
+        </StatGrid>
+      </Fade>
 
-        {loading ? (
-          view === "kanban" ? (
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {kanbanColumns.map((col) => (
-                <div key={col.key} className="min-w-[200px] rounded-xl border bg-card p-3">
-                  <Skeleton className="h-4 w-24 mb-3" />
-                  <Skeleton className="h-24 w-full mb-2 rounded-lg" />
-                  <Skeleton className="h-24 w-full rounded-lg" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <TableSkeleton rows={8} columns={7} />
-          )
-        ) : view === "kanban" ? (
-          <div className="flex gap-3 overflow-x-auto pb-4 -mx-1 px-1" data-testid="kanban-board">
+      <Fade>
+        <IndexToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search leads by name or city..."
+          color={BRAND_COLOR}
+        />
+      </Fade>
+
+      {view === "kanban" ? (
+        <Fade>
+          <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-400px)] min-h-[500px]">
             {kanbanColumns.map((col) => {
               const colLeads = getLeadsByStatus(col.key);
               return (
-                <div key={col.key} className={`min-w-[210px] max-w-[210px] rounded-xl border border-border bg-muted/30 ${col.headerColor}`} data-testid={`kanban-col-${col.key}`}>
-                  <div className="flex items-center justify-between px-3 py-2.5">
-                    <span className="text-sm font-semibold font-heading">{col.label}</span>
-                    <span className="rounded-full bg-background border border-border text-xs font-bold px-2 py-0.5">{colLeads.length}</span>
+                <div key={col.key} className={`min-w-[240px] flex flex-col rounded-xl border bg-muted/30 ${col.headerColor}`}>
+                  <div className="flex items-center justify-between px-3 py-3">
+                    <span className="text-xs font-bold uppercase tracking-wider">{col.label}</span>
+                    <Badge variant="secondary" className="rounded-full h-5 px-1.5 text-[10px] font-bold">{colLeads.length}</Badge>
                   </div>
-                  <div className="flex flex-col gap-2 p-2 max-h-[calc(100vh-280px)] overflow-y-auto">
+                  <div className="flex-1 overflow-y-auto p-2 space-y-2">
                     {colLeads.map((lead) => (
                       <LeadKanbanCard key={lead.id} lead={lead} />
                     ))}
-                    {colLeads.length === 0 && (
-                      <p className="text-xs text-muted-foreground text-center py-6">No leads</p>
-                    )}
                   </div>
                 </div>
               );
             })}
           </div>
-        ) : (
-          <DataTable
-            columns={tableColumns}
-            data={leads}
-            searchPlaceholder="Search leads by name, city..."
-            searchKey="name"
-            filters={[
-              { label: "Source", key: "source", options: ["website", "whatsapp", "referral", "social", "walk_in", "phone"] },
-              { label: "Status", key: "status", options: ["new", "contacted", "interested", "booked", "cold", "lost"] },
-            ]}
-          />
-        )}
+        </Fade>
+      ) : (
+        <Fade>
+          <DataTableContainer>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/30">
+                  <DataTH>Name</DataTH>
+                  <DataTH>Phone</DataTH>
+                  <DataTH>City</DataTH>
+                  <DataTH>Business Type</DataTH>
+                  <DataTH>Package</DataTH>
+                  <DataTH>Source</DataTH>
+                  <DataTH>Status</DataTH>
+                  <DataTH>Follow-up</DataTH>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {leads.filter(l => search === "" || l.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
+                  <DataTR key={item.id}>
+                    <DataTD className="font-semibold">{item.name}</DataTD>
+                    <DataTD className="font-medium text-blue-600">{item.phone}</DataTD>
+                    <DataTD>{item.city}</DataTD>
+                    <DataTD className="text-xs font-medium uppercase text-muted-foreground">{item.business_type}</DataTD>
+                    <DataTD className="text-xs max-w-[150px] line-clamp-1">
+                      {tourPackages.find(p => p.id === item.interested_package_id)?.name}
+                    </DataTD>
+                    <DataTD>
+                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-tighter ${sourceConfig[item.source]?.color}`}>
+                        {item.source}
+                      </span>
+                    </DataTD>
+                    <DataTD>
+                      <StatusBadge status={item.status} variant={statusVariantMap[item.status]} />
+                    </DataTD>
+                    <DataTD className="font-bold text-xs">
+                      {formatDate(item.follow_up_date)}
+                    </DataTD>
+                  </DataTR>
+                ))}
+              </tbody>
+            </table>
+          </DataTableContainer>
+        </Fade>
+      )}
 
-        <FormDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          title="Add New Lead"
-          description="Add a new lead to the sales pipeline."
-          onSubmit={() => setDialogOpen(false)}
-          submitLabel="Add Lead"
-        >
-          <div className="grid gap-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="l-name">Full Name</Label>
-                <Input id="l-name" placeholder="Client full name" data-testid="input-lead-name" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="l-phone">Phone</Label>
-                <Input id="l-phone" placeholder="+91 98xxx xxxxx" data-testid="input-lead-phone" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="l-email">Email</Label>
-                <Input id="l-email" type="email" placeholder="client@email.com" data-testid="input-lead-email" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="l-business">Business Type</Label>
-                <Input id="l-business" placeholder="e.g. Textile Importer" data-testid="input-lead-business" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="l-city">City</Label>
-                <Input id="l-city" placeholder="City" data-testid="input-lead-city" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="l-state">State</Label>
-                <Input id="l-state" placeholder="State" data-testid="input-lead-state" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="l-package">Interested Package</Label>
-                <Select>
-                  <SelectTrigger id="l-package" data-testid="input-lead-package">
-                    <SelectValue placeholder="Select package" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tourPackages.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.name.substring(0, 40)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="l-source">Source</Label>
-                <Select>
-                  <SelectTrigger id="l-source" data-testid="input-lead-source">
-                    <SelectValue placeholder="How did they find us?" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="website">Website</SelectItem>
-                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                    <SelectItem value="referral">Referral</SelectItem>
-                    <SelectItem value="social">Social Media</SelectItem>
-                    <SelectItem value="walk_in">Walk-in</SelectItem>
-                    <SelectItem value="phone">Phone</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="l-followup">Follow-up Date</Label>
-                <Input id="l-followup" type="date" data-testid="input-lead-followup" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="l-assigned">Assigned To</Label>
-                <Select>
-                  <SelectTrigger id="l-assigned" data-testid="input-lead-assigned">
-                    <SelectValue placeholder="Assign to" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Priya Kapoor">Priya Kapoor</SelectItem>
-                    <SelectItem value="Amit Verma">Amit Verma</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+      <DetailModal
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title="Add New Lead"
+        subtitle="Register a new interest in the pipeline"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button 
+              style={{ backgroundColor: BRAND_COLOR }} 
+              className="text-white hover:opacity-90"
+              onClick={() => setDialogOpen(false)}
+            >
+              Add Lead
+            </Button>
+          </>
+        }
+      >
+        <DetailSection title="Contact Information">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <Label>Full Name</Label>
+              <Input placeholder="Client full name" />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="l-notes">Notes</Label>
-              <Input id="l-notes" placeholder="Any relevant notes about this lead..." data-testid="input-lead-notes" />
+              <Label>Phone</Label>
+              <Input placeholder="+91 98xxx xxxxx" />
             </div>
           </div>
-        </FormDialog>
-      </PageTransition>
-    </div>
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <div className="grid gap-1.5">
+              <Label>Email</Label>
+              <Input type="email" placeholder="client@email.com" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Business Type</Label>
+              <Input placeholder="e.g. Textile Importer" />
+            </div>
+          </div>
+        </DetailSection>
+        <DetailSection title="Sourcing Interest">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <Label>Interested Package</Label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select package" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tourPackages.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Follow-up Date</Label>
+              <Input type="date" />
+            </div>
+          </div>
+        </DetailSection>
+      </DetailModal>
+    </PageShell>
   );
 }

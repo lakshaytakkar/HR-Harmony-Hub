@@ -345,7 +345,7 @@ export const hubBudgetItems: BudgetItem[] = [
   { id: "HBI-015", eventId: "HEV-005", category: "Catering", description: "Gourmet breakfast + working lunch", plannedAmount: 120000, actualAmount: 125000, status: "over-budget" },
   { id: "HBI-016", eventId: "HEV-005", category: "AV & Tech", description: "Presentation display, mics", plannedAmount: 60000, actualAmount: 58000, status: "under-budget" },
   { id: "HBI-017", eventId: "HEV-005", category: "Miscellaneous", description: "Printed nameplace cards, notepads", plannedAmount: 30000, actualAmount: 27000, status: "under-budget" },
-  { id: "HBI-018", eventId: "HEV-005", category: "Photography", description: "Event photographer — half day", plannedAmount: 35000, actualAmount: 40000, status: "over-budget" },
+  { id: "HBI-018", eventId: "HEV-005", category: "Miscellaneous", description: "Event photographer — half day", plannedAmount: 35000, actualAmount: 40000, status: "over-budget" },
   { id: "HBI-019", eventId: "HEV-007", category: "Venue", description: "JW Marriott — 3 days", plannedAmount: 900000, actualAmount: 870000, status: "under-budget" },
   { id: "HBI-020", eventId: "HEV-007", category: "Catering", description: "All meals + gala dinner for 280 pax", plannedAmount: 840000, actualAmount: 800000, status: "under-budget" },
   { id: "HBI-021", eventId: "HEV-007", category: "AV & Tech", description: "Full conference AV + keynote stage", plannedAmount: 255000, actualAmount: 260000, status: "over-budget" },
@@ -355,7 +355,7 @@ export const hubBudgetItems: BudgetItem[] = [
   { id: "HBI-025", eventId: "HEV-009", category: "Venue", description: "Taj Palace boardroom — morning", plannedAmount: 100000, actualAmount: 95000, status: "under-budget" },
   { id: "HBI-026", eventId: "HEV-009", category: "Catering", description: "Full breakfast for 45 attendees", plannedAmount: 90000, actualAmount: 85000, status: "under-budget" },
   { id: "HBI-027", eventId: "HEV-009", category: "AV & Tech", description: "Microphones, name card displays", plannedAmount: 30000, actualAmount: 28000, status: "under-budget" },
-  { id: "HBI-028", eventId: "HEV-009", category: "Photography", description: "Event photographer + reel", plannedAmount: 35000, actualAmount: 35000, status: "on-track" },
+  { id: "HBI-028", eventId: "HEV-009", category: "Miscellaneous", description: "Event photographer + reel", plannedAmount: 35000, actualAmount: 35000, status: "on-track" },
   { id: "HBI-029", eventId: "HEV-009", category: "Miscellaneous", description: "Printed attendee portfolios", plannedAmount: 25000, actualAmount: 22000, status: "under-budget" },
   { id: "HBI-030", eventId: "HEV-006", category: "Venue", description: "Leela Palace grand ballroom", plannedAmount: 320000, actualAmount: 0, status: "pending" },
 ];

@@ -24,7 +24,13 @@ import {
 } from "@/lib/mock-data-shared";
 import { getPersonAvatar } from "@/lib/avatars";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { PageTransition, Fade } from "@/components/ui/animated";
+import { 
+  PageTransition, 
+  Fade 
+} from "@/components/ui/animated";
+import { 
+  FilterPill 
+} from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -103,51 +109,41 @@ export default function UniversalChat() {
   if (!vertical) return <div>Vertical not found</div>;
 
   return (
-    <PageTransition className="h-full px-16 py-6 lg:px-24 flex gap-6 overflow-hidden">
-      {/* Left Sidebar */}
+    <PageTransition className="flex h-full overflow-hidden">
+      {/* Left Sidebar - Pattern I: aside.w-64 */}
       <aside 
-        className="w-[380px] shrink-0 flex flex-col bg-card border rounded-xl shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none overflow-hidden"
+        className="w-64 shrink-0 flex flex-col bg-card border-r overflow-hidden"
       >
-        <div className="p-5 border-b space-y-4">
+        <div className="p-4 border-b space-y-4">
           <h2 className="text-base font-semibold">Team Chat</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="Search chats..." 
-              className="pl-9 h-10 bg-muted/50 border-none focus-visible:ring-1"
+              placeholder="Search..." 
+              className="pl-9 h-9 bg-muted/30 border-none focus-visible:ring-1"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               data-testid="input-search-chats"
             />
           </div>
           
-          <div className="flex p-1 bg-muted rounded-lg border">
-            <button
+          <div className="flex gap-2">
+            <FilterPill
+              active={activeTab === "channel"}
+              color={vertical.color}
               onClick={() => setActiveTab("channel")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-1.5 text-sm font-medium rounded-md transition-all",
-                activeTab === "channel" 
-                  ? "bg-card text-foreground shadow-sm" 
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              data-testid="tab-channels"
+              testId="tab-channels"
             >
-              <Hash className="h-4 w-4" />
               Channels
-            </button>
-            <button
+            </FilterPill>
+            <FilterPill
+              active={activeTab === "dm"}
+              color={vertical.color}
               onClick={() => setActiveTab("dm")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-1.5 text-sm font-medium rounded-md transition-all",
-                activeTab === "dm" 
-                  ? "bg-card text-foreground shadow-sm" 
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              data-testid="tab-dms"
+              testId="tab-dms"
             >
-              <Users className="h-4 w-4" />
-              Direct Messages
-            </button>
+              DMs
+            </FilterPill>
           </div>
         </div>
 
@@ -158,17 +154,16 @@ export default function UniversalChat() {
                 key={item.id}
                 onClick={() => setActiveChannelId(item.id)}
                 className={cn(
-                  "flex items-center gap-3 p-4 cursor-pointer transition-colors hover:bg-muted/50",
+                  "flex items-center gap-3 p-3 cursor-pointer transition-colors hover:bg-muted/50",
                   activeChannelId === item.id ? "bg-muted" : ""
                 )}
+                style={activeChannelId === item.id ? { backgroundColor: `${vertical.color}15`, color: vertical.color } : {}}
                 data-testid={item.type === "channel" ? `channel-item-${item.id}` : `dm-item-${item.id}`}
               >
                 {item.type === "channel" ? (
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-primary/10 border border-primary/20 rounded-lg text-primary">
-                    <Hash className="h-5 w-5" />
-                  </div>
+                  <Hash className="h-4 w-4 shrink-0" />
                 ) : (
-                  <Avatar className="h-11 w-11 shrink-0">
+                  <Avatar className="h-8 w-8 shrink-0">
                     <AvatarImage src={getPersonAvatar(item.name)} alt={item.name} />
                     <AvatarFallback>{item.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
@@ -176,22 +171,17 @@ export default function UniversalChat() {
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-[14px] truncate">
-                      {item.type === "channel" ? `#${item.name}` : item.name}
+                    <span className="font-medium text-sm truncate">
+                      {item.type === "channel" ? item.name : item.name}
                     </span>
-                    {item.type === "dm" && (
-                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                        {item.lastMessageTime}
-                      </span>
-                    )}
                   </div>
-                  <p className="text-[13px] text-muted-foreground truncate">
-                    {item.lastMessage || item.description}
-                  </p>
                 </div>
 
                 {item.unreadCount > 0 && (
-                  <div className="h-[18px] min-w-[18px] flex items-center justify-center bg-primary text-primary-foreground rounded-full text-[10px] font-medium px-1">
+                  <div 
+                    className="h-4 min-w-4 flex items-center justify-center text-white rounded-full text-[10px] font-medium px-1"
+                    style={{ backgroundColor: vertical.color }}
+                  >
                     {item.unreadCount}
                   </div>
                 )}
@@ -201,138 +191,131 @@ export default function UniversalChat() {
         </ScrollArea>
       </aside>
 
-      {/* Right Content Panel */}
+      {/* Right Content Panel - Pattern I: main.flex-1 */}
       <main 
-        className="flex-1 flex flex-col bg-card border rounded-xl shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none overflow-hidden"
+        className="flex-1 flex flex-col min-w-0 bg-background"
       >
         {activeChannel ? (
           <>
-            {/* Header */}
-            <header className="h-[72px] px-6 border-b flex items-center justify-between shrink-0">
+            {/* Thread Header */}
+            <div className="border-b px-4 py-3 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3 overflow-hidden">
                 {activeChannel.type === "channel" ? (
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-primary/10 border border-primary/20 rounded-lg text-primary">
-                    <Hash className="h-5 w-5" />
-                  </div>
+                  <Hash className="h-5 w-5 text-muted-foreground" />
                 ) : (
-                  <Avatar className="h-11 w-11 shrink-0">
+                  <Avatar className="h-8 w-8 shrink-0">
                     <AvatarImage src={getPersonAvatar(activeChannel.name)} alt={activeChannel.name} />
                     <AvatarFallback>{activeChannel.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 )}
                 <div className="min-w-0">
-                  <h3 className="text-[16px] font-semibold truncate">
-                    {activeChannel.type === "channel" ? `#${activeChannel.name}` : activeChannel.name}
+                  <h3 className="text-sm font-semibold truncate">
+                    {activeChannel.type === "channel" ? activeChannel.name : activeChannel.name}
                   </h3>
-                  <p className="text-[12px] text-muted-foreground truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {activeChannel.description || "Active now"}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-9 w-9">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Phone className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" className="h-9 w-9">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Video className="h-4 w-4" />
                 </Button>
-                <Separator orientation="vertical" className="h-6 mx-1" />
-                <Button variant="outline" size="icon" className="h-9 w-9">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </div>
-            </header>
-
-            {/* Messages Area */}
-            <div className="flex-1 overflow-hidden bg-muted/30">
-              <ScrollArea className="h-full p-6">
-                <div className="space-y-6">
-                  {messages.map((msg, idx) => {
-                    const showHeader = idx === 0 || messages[idx - 1].senderName !== msg.senderName;
-                    
-                    return (
-                      <Fade 
-                        key={msg.id} 
-                        direction="up" 
-                        distance={10} 
-                        delay={idx * 0.05}
-                        className={cn(
-                          "flex gap-3",
-                          msg.isMe ? "flex-row-reverse" : "flex-row"
-                        )}
-                        data-testid={`message-${msg.id}`}
-                      >
-                        {!msg.isMe && (
-                          <Avatar className="h-8 w-8 shrink-0 mt-1 border">
-                            <AvatarImage src={getPersonAvatar(msg.senderName)} alt={msg.senderName} />
-                            <AvatarFallback>{msg.senderName.substring(0, 2).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                        )}
-                        
-                        <div className={cn(
-                          "flex flex-col gap-1.5 max-w-[70%]",
-                          msg.isMe ? "items-end" : "items-start"
-                        )}>
-                          {showHeader && (
-                            <div className="flex items-center gap-2 px-1">
-                              <span className="text-[13px] font-semibold">{msg.senderName}</span>
-                              <span className="text-[11px] text-muted-foreground">{msg.timestamp}</span>
-                            </div>
-                          )}
-                          <div className={cn(
-                            "rounded-xl px-4 py-2.5 text-[14px] shadow-sm",
-                            msg.isMe 
-                              ? "bg-primary text-primary-foreground" 
-                              : "bg-card text-foreground"
-                          )}>
-                            {msg.content}
-                          </div>
-                        </div>
-                      </Fade>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
             </div>
 
-            {/* Input Bar */}
-            <div className="border-t px-6 py-4 shrink-0 flex items-center gap-3 bg-card">
-              <div className="flex-1 relative">
-                <Input 
-                  placeholder={`Message ${activeChannel.type === "channel" ? "#" + activeChannel.name : activeChannel.name}`}
-                  className="pr-20 h-11 bg-muted/50 border-none focus-visible:ring-1"
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                  data-testid="input-message"
-                />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                    <Smile className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+              {messages.map((msg, idx) => {
+                const showHeader = idx === 0 || messages[idx - 1].senderName !== msg.senderName;
+                
+                return (
+                  <div 
+                    key={msg.id} 
+                    className={cn(
+                      "flex gap-3",
+                      msg.isMe ? "flex-row-reverse" : "flex-row"
+                    )}
+                    data-testid={`message-${msg.id}`}
+                  >
+                    {!msg.isMe && (
+                      <Avatar className="h-8 w-8 shrink-0 mt-1">
+                        <AvatarImage src={getPersonAvatar(msg.senderName)} alt={msg.senderName} />
+                        <AvatarFallback>{msg.senderName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    )}
+                    
+                    <div className={cn(
+                      "flex flex-col gap-1 max-w-[70%]",
+                      msg.isMe ? "items-end" : "items-start"
+                    )}>
+                      {showHeader && (
+                        <div className="flex items-center gap-2 px-1">
+                          <span className="text-xs font-semibold">{msg.senderName}</span>
+                          <span className="text-[10px] text-muted-foreground">{msg.timestamp}</span>
+                        </div>
+                      )}
+                      <div className={cn(
+                        "rounded-2xl px-4 py-2 text-sm shadow-sm",
+                        msg.isMe 
+                          ? "text-white" 
+                          : "bg-card border text-foreground"
+                      )}
+                      style={msg.isMe ? { backgroundColor: vertical.color } : {}}
+                      >
+                        {msg.content}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Composer */}
+            <div className="border-t px-4 py-3 shrink-0 bg-background">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 relative">
+                  <Input 
+                    placeholder="Type a message..."
+                    className="h-10 bg-muted/30 border-none focus-visible:ring-1"
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                    data-testid="input-message"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
+                      <Smile className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
+                <Button 
+                  onClick={handleSendMessage}
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  style={{ backgroundColor: vertical.color }}
+                  data-testid="btn-send"
+                >
+                  <Send className="h-4 w-4 text-white" />
+                </Button>
               </div>
-              <Button 
-                onClick={handleSendMessage}
-                className="h-11 px-6 shadow-sm"
-                data-testid="btn-send"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Send
-              </Button>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground bg-muted/30">
-            <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
-              <MessageCircle className="h-8 w-8" />
-            </div>
-            <p className="text-sm">Select a channel or message to start chatting</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+            <MessageCircle className="h-12 w-12 mb-4 opacity-20" />
+            <p className="text-sm">Select a conversation to start chatting</p>
           </div>
         )}
       </main>

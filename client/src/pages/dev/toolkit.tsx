@@ -310,7 +310,7 @@ export default function ToolkitPage() {
                     title="Project Keys"
                     value={projectCredentials.length}
                     change={`${devProjects.length} projects`}
-                    changeType="info"
+                    changeType="neutral"
                     icon={<Globe className="size-5" />}
                   />
                 </StaggerItem>

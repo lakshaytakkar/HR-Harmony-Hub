@@ -1,16 +1,27 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { List, LayoutGrid, Plus, Search } from "lucide-react";
-import { PageTransition, Fade } from "@/components/ui/animated";
+import { List, LayoutGrid, Plus } from "lucide-react";
+import { Fade } from "@/components/ui/animated";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
-import { FormDialog } from "@/components/hr/form-dialog";
 import { candidates, jobOpenings } from "@/lib/mock-data-ats";
+import {
+  PageShell,
+  PageHeader,
+  IndexToolbar,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+  PrimaryAction,
+  DetailModal,
+  DetailSection,
+} from "@/components/layout";
+import { Input } from "@/components/ui/input";
 
 const pipelineStages = ["applied", "screening", "interview", "evaluation", "offer", "hired"] as const;
 
@@ -41,7 +52,7 @@ export default function AtsCandidates() {
   const [addOpen, setAddOpen] = useState(false);
 
   const activeCandidates = candidates.filter(c => c.stage !== "rejected");
-  const sources = [...new Set(candidates.map(c => c.source))];
+  const sources = Array.from(new Set(candidates.map(c => c.source)))
 
   const filtered = activeCandidates.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.currentRole.toLowerCase().includes(search.toLowerCase());
@@ -52,54 +63,63 @@ export default function AtsCandidates() {
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-4 animate-pulse">
+      <PageShell className="animate-pulse">
         <div className="h-10 bg-muted rounded w-48" />
         <div className="flex gap-4">{[...Array(6)].map((_, i) => <div key={i} className="flex-1 h-64 bg-muted rounded-xl" />)}</div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Candidates</h1>
-            <p className="text-sm text-muted-foreground">{activeCandidates.length} candidates in pipeline</p>
-          </div>
-          <div className="flex gap-2">
-            <div className="flex gap-1 bg-muted rounded-lg p-1">
-              <Button variant={view === "kanban" ? "default" : "ghost"} size="sm" onClick={() => setView("kanban")} data-testid="kanban-view-btn"><LayoutGrid className="size-4" /></Button>
-              <Button variant={view === "table" ? "default" : "ghost"} size="sm" onClick={() => setView("table")} data-testid="table-view-btn"><List className="size-4" /></Button>
+        <PageHeader
+          title="Candidates"
+          subtitle={`${activeCandidates.length} candidates in pipeline`}
+          actions={
+            <div className="flex gap-2">
+              <div className="flex gap-1 bg-muted rounded-lg p-1">
+                <Button variant={view === "kanban" ? "default" : "ghost"} size="sm" onClick={() => setView("kanban")} data-testid="kanban-view-btn"><LayoutGrid className="size-4" /></Button>
+                <Button variant={view === "table" ? "default" : "ghost"} size="sm" onClick={() => setView("table")} data-testid="table-view-btn"><List className="size-4" /></Button>
+              </div>
+              <PrimaryAction
+                color="#7c3aed"
+                icon={Plus}
+                onClick={() => setAddOpen(true)}
+                testId="add-candidate-btn"
+              >
+                Add Candidate
+              </PrimaryAction>
             </div>
-            <Button onClick={() => setAddOpen(true)} className="bg-violet-600 hover:bg-violet-700" data-testid="add-candidate-btn">
-              <Plus className="size-4 mr-2" /> Add Candidate
-            </Button>
-          </div>
-        </div>
+          }
+        />
       </Fade>
 
       <Fade>
-        <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input placeholder="Search candidates..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} data-testid="candidate-search" />
-          </div>
-          <Select value={jobFilter} onValueChange={setJobFilter}>
-            <SelectTrigger className="w-52" data-testid="job-filter"><SelectValue placeholder="All Jobs" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Jobs</SelectItem>
-              {jobOpenings.filter(j => j.status !== "closed").map(j => <SelectItem key={j.id} value={j.id}>{j.title}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="w-36" data-testid="source-filter"><SelectValue placeholder="Source" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Sources</SelectItem>
-              {sources.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+        <IndexToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search candidates..."
+          color="#7c3aed"
+          extra={
+            <div className="flex gap-2">
+              <Select value={jobFilter} onValueChange={setJobFilter}>
+                <SelectTrigger className="w-52" data-testid="job-filter"><SelectValue placeholder="All Jobs" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Jobs</SelectItem>
+                  {jobOpenings.filter(j => j.status !== "closed").map(j => <SelectItem key={j.id} value={j.id}>{j.title}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                <SelectTrigger className="w-36" data-testid="source-filter"><SelectValue placeholder="Source" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sources</SelectItem>
+                  {sources.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          }
+        />
       </Fade>
 
       {view === "kanban" ? (
@@ -154,73 +174,80 @@ export default function AtsCandidates() {
         </Fade>
       ) : (
         <Fade>
-          <Card className="border-0 shadow-sm overflow-hidden">
-            <CardContent className="p-0">
-              <table className="w-full">
-                <thead className="border-b bg-muted/30">
-                  <tr>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Candidate</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Current Role</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Job Applied</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Exp</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Source</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Stage</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filtered.map(c => (
-                    <tr key={c.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => setLocation(`/ats/candidates/${c.id}`)} data-testid={`candidate-row-${c.id}`}>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <Avatar className="size-8"><AvatarImage src={getPersonAvatar(c.name, 32)} /><AvatarFallback className="text-xs">{c.name.split(" ").map(n => n[0]).join("")}</AvatarFallback></Avatar>
-                          <div>
-                            <p className="text-sm font-medium">{c.name}</p>
-                            <p className="text-xs text-muted-foreground">{c.email}</p>
-                          </div>
+          <DataTableContainer>
+            <table className="w-full text-sm">
+              <thead className="border-b bg-muted/30">
+                <tr>
+                  <DataTH>Candidate</DataTH>
+                  <DataTH>Current Role</DataTH>
+                  <DataTH>Job Applied</DataTH>
+                  <DataTH>Exp</DataTH>
+                  <DataTH>Source</DataTH>
+                  <DataTH>Stage</DataTH>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filtered.map(c => (
+                  <DataTR key={c.id} onClick={() => setLocation(`/ats/candidates/${c.id}`)} data-testid={`candidate-row-${c.id}`}>
+                    <DataTD>
+                      <div className="flex items-center gap-2.5">
+                        <Avatar className="size-8"><AvatarImage src={getPersonAvatar(c.name, 32)} /><AvatarFallback className="text-xs">{c.name.split(" ").map(n => n[0]).join("")}</AvatarFallback></Avatar>
+                        <div>
+                          <p className="font-medium">{c.name}</p>
+                          <p className="text-xs text-muted-foreground">{c.email}</p>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">{c.currentRole} · {c.currentCompany}</td>
-                      <td className="px-4 py-3 text-sm">{c.appliedJobTitle}</td>
-                      <td className="px-4 py-3 text-sm">{c.experience}y</td>
-                      <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sourceColors[c.source]}`}>{c.source}</span></td>
-                      <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stageConfig[c.stage]?.bg || "bg-muted"} ${stageConfig[c.stage]?.color || "text-muted-foreground"}`}>{c.stage}</span></td>
-                    </tr>
-                  ))}
-                  {filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground text-sm">No candidates found</td></tr>}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
+                      </div>
+                    </DataTD>
+                    <DataTD className="text-muted-foreground">{c.currentRole} · {c.currentCompany}</DataTD>
+                    <DataTD>{c.appliedJobTitle}</DataTD>
+                    <DataTD>{c.experience}y</DataTD>
+                    <DataTD><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sourceColors[c.source]}`}>{c.source}</span></DataTD>
+                    <DataTD><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stageConfig[c.stage]?.bg || "bg-muted"} ${stageConfig[c.stage]?.color || "text-muted-foreground"}`}>{c.stage}</span></DataTD>
+                  </DataTR>
+                ))}
+                {filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground text-sm">No candidates found</td></tr>}
+              </tbody>
+            </table>
+          </DataTableContainer>
         </Fade>
       )}
 
-      <FormDialog title="Add Candidate" description="Add a new candidate to the recruitment pipeline" open={addOpen} onOpenChange={setAddOpen}>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5"><label className="text-sm font-medium">Full Name</label><Input placeholder="e.g. Aarav Sharma" /></div>
-          <div className="space-y-1.5"><label className="text-sm font-medium">Email</label><Input type="email" placeholder="aarav@email.com" /></div>
-          <div className="space-y-1.5"><label className="text-sm font-medium">Phone</label><Input placeholder="+91 98765 43210" /></div>
-          <div className="space-y-1.5"><label className="text-sm font-medium">Current Role</label><Input placeholder="e.g. Backend Engineer" /></div>
-          <div className="space-y-1.5"><label className="text-sm font-medium">Current Company</label><Input placeholder="e.g. Swiggy" /></div>
-          <div className="space-y-1.5"><label className="text-sm font-medium">Experience (years)</label><Input type="number" placeholder="e.g. 4" /></div>
-          <div className="space-y-1.5"><label className="text-sm font-medium">Applying For</label>
-            <Select><SelectTrigger><SelectValue placeholder="Select job opening" /></SelectTrigger>
-              <SelectContent>{jobOpenings.filter(j => j.status === "active").map(j => <SelectItem key={j.id} value={j.id}>{j.title}</SelectItem>)}</SelectContent>
-            </Select>
+      <DetailModal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Add Candidate"
+        subtitle="Add a new candidate to the recruitment pipeline"
+        footer={
+          <PrimaryAction color="#7c3aed" onClick={() => setAddOpen(false)} data-testid="submit-candidate">Add Candidate</PrimaryAction>
+        }
+      >
+        <DetailSection title="Candidate Details">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5"><label className="text-sm font-medium">Full Name</label><Input placeholder="e.g. Aarav Sharma" /></div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Email</label><Input type="email" placeholder="aarav@email.com" /></div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Phone</label><Input placeholder="+91 98765 43210" /></div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Current Role</label><Input placeholder="e.g. Backend Engineer" /></div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Current Company</label><Input placeholder="e.g. Swiggy" /></div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Experience (years)</label><Input type="number" placeholder="e.g. 4" /></div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Applying For</label>
+              <Select><SelectTrigger><SelectValue placeholder="Select job opening" /></SelectTrigger>
+                <SelectContent>{jobOpenings.filter(j => j.status === "active").map(j => <SelectItem key={j.id} value={j.id}>{j.title}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Source</label>
+              <Select><SelectTrigger><SelectValue placeholder="How did they apply?" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="linkedin">LinkedIn</SelectItem>
+                  <SelectItem value="referral">Referral</SelectItem>
+                  <SelectItem value="website">Website</SelectItem>
+                  <SelectItem value="job-board">Job Board</SelectItem>
+                  <SelectItem value="direct">Direct</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-1.5"><label className="text-sm font-medium">Source</label>
-            <Select><SelectTrigger><SelectValue placeholder="How did they apply?" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="linkedin">LinkedIn</SelectItem>
-                <SelectItem value="referral">Referral</SelectItem>
-                <SelectItem value="website">Website</SelectItem>
-                <SelectItem value="job-board">Job Board</SelectItem>
-                <SelectItem value="direct">Direct</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <Button className="w-full mt-4 bg-violet-600 hover:bg-violet-700" data-testid="submit-candidate">Add Candidate</Button>
-      </FormDialog>
-    </PageTransition>
+        </DetailSection>
+      </DetailModal>
+    </PageShell>
   );
 }

@@ -1,6 +1,14 @@
 import { Users, CreditCard, DollarSign, Package, Headphones, TrendingUp, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StatsCard } from "@/components/hr/stats-card";
+import {
+  PageShell,
+  PageHeader,
+  HeroBanner,
+  StatCard,
+  StatGrid,
+  SectionCard,
+  SectionGrid,
+} from "@/components/layout";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/hr/status-badge";
@@ -13,7 +21,7 @@ import {
 } from "@/lib/mock-data-sales";
 import { getPersonAvatar } from "@/lib/avatars";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { Fade, Stagger, StaggerItem, PageTransition } from "@/components/ui/animated";
+import { Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 import { useLocation } from "wouter";
 
 const formatCurrency = (value: number) =>
@@ -56,227 +64,168 @@ export default function SalesDashboard() {
   const maxMrr = Math.max(...revenueMetrics.map((m) => m.mrr));
 
   return (
-    <div className="px-16 py-6 lg:px-24">
-      <PageTransition>
-        <Fade direction="up" delay={0}>
-          <div
-            className="rounded-2xl px-8 py-7 mb-6 relative overflow-hidden"
-            data-testid="section-welcome"
-            style={{ background: "linear-gradient(135deg, #F34147 0%, #cc2a2f 100%)" }}
+    <PageShell>
+      <HeroBanner
+        eyebrow={`👋 ${greeting}, Sneha Patel`}
+        headline="USDrop AI"
+        tagline="AI-powered dropshipping automation & sales management platform"
+        color="#F34147"
+        colorDark="#cc2a2f"
+        metrics={[
+          { label: "Total Users", value: totalUsers },
+          { label: "Active Subs", value: activeSubscriptions },
+          { label: "Current MRR", value: formatCurrency(currentMrr) }
+        ]}
+      />
+
+      {loading ? (
+        <StatGrid>
+          <StatsCardSkeleton />
+          <StatsCardSkeleton />
+          <StatsCardSkeleton />
+          <StatsCardSkeleton />
+        </StatGrid>
+      ) : (
+        <StatGrid>
+          <StatCard
+            label="Total Users"
+            value={totalUsers}
+            trend="+18% from last month"
+            icon={Users}
+            iconBg="rgba(243, 65, 71, 0.1)"
+            iconColor="#F34147"
+          />
+          <StatCard
+            label="Active Subscriptions"
+            value={activeSubscriptions}
+            trend={`${subscriptions.length} total`}
+            icon={CreditCard}
+            iconBg="rgba(16, 185, 129, 0.1)"
+            iconColor="#10b981"
+          />
+          <StatCard
+            label="MRR"
+            value={formatCurrency(currentMrr)}
+            trend="+9.4% growth"
+            icon={DollarSign}
+            iconBg="rgba(245, 158, 11, 0.1)"
+            iconColor="#f59e0b"
+          />
+          <StatCard
+            label="Open Tickets"
+            value={openTickets}
+            trend={`${supportTickets.length} total`}
+            icon={Headphones}
+            iconBg="rgba(239, 68, 68, 0.1)"
+            iconColor="#ef4444"
+          />
+        </StatGrid>
+      )}
+
+      {loading ? (
+        <SectionGrid>
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+        </SectionGrid>
+      ) : (
+        <SectionGrid>
+          <SectionCard title="MRR Growth">
+            <div className="py-4">
+              <svg viewBox="0 0 400 200" className="w-full h-auto" data-testid="chart-mrr">
+                {revenueMetrics.map((m, i) => {
+                  const barWidth = 40;
+                  const gap = (400 - revenueMetrics.length * barWidth) / (revenueMetrics.length + 1);
+                  const x = gap + i * (barWidth + gap);
+                  const height = (m.mrr / maxMrr) * 150;
+                  return (
+                    <g key={m.month}>
+                      <rect
+                        x={x}
+                        y={170 - height}
+                        width={barWidth}
+                        height={height}
+                        rx={3}
+                        className="fill-primary"
+                        opacity={0.8}
+                        data-testid={`bar-mrr-${m.month}`}
+                      />
+                      <text
+                        x={x + barWidth / 2}
+                        y={190}
+                        textAnchor="middle"
+                        className="fill-muted-foreground text-[11px]"
+                      >
+                        {m.month}
+                      </text>
+                      <text
+                        x={x + barWidth / 2}
+                        y={170 - height - 6}
+                        textAnchor="middle"
+                        className="fill-foreground text-[10px] font-medium"
+                      >
+                        ${(m.mrr / 1000).toFixed(1)}k
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title="Recent Signups"
+            viewAllLabel="View All"
+            onViewAll={() => navigate("/sales/users")}
           >
-            <div className="relative z-10">
-              <p className="text-white/75 text-sm font-medium mb-2">👋 {greeting}, Sneha Patel</p>
-              <h1 className="text-3xl font-bold text-white font-heading tracking-tight">USDrop AI</h1>
-              <p className="text-white/70 text-sm mt-1.5 max-w-2xl">AI-powered dropshipping automation & sales management platform</p>
-            </div>
-          </div>
-        </Fade>
-
-        {loading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-          </div>
-        ) : (
-          <Stagger staggerInterval={0.05} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <StaggerItem>
-              <StatsCard
-                title="Total Users"
-                value={totalUsers}
-                change="+18% from last month"
-                changeType="positive"
-                icon={<Users className="size-5" />}
-                sparkline={{ values: [120, 145, 160, 178, 195, 210], color: "#6366f1" }}
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatsCard
-                title="Active Subscriptions"
-                value={activeSubscriptions}
-                change={`${subscriptions.length} total`}
-                changeType="neutral"
-                icon={<CreditCard className="size-5" />}
-                sparkline={{ values: [8, 9, 10, 10, 11, 11], color: "#10b981" }}
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatsCard
-                title="MRR"
-                value={formatCurrency(currentMrr)}
-                change="+9.4% growth"
-                changeType="positive"
-                icon={<DollarSign className="size-5" />}
-                sparkline={{ values: revenueMetrics.map((m) => m.mrr), color: "#f59e0b" }}
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatsCard
-                title="Products Listed"
-                value={activeProducts}
-                change={`${products.length} total`}
-                changeType="neutral"
-                icon={<Package className="size-5" />}
-                sparkline={{ values: [10, 12, 13, 14, 15, 16], color: "#3b82f6" }}
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatsCard
-                title="Open Tickets"
-                value={openTickets}
-                change={`${supportTickets.length} total`}
-                changeType={openTickets > 5 ? "warning" : "neutral"}
-                icon={<Headphones className="size-5" />}
-                sparkline={{ values: [4, 6, 5, 7, 8, openTickets], color: "#ef4444" }}
-              />
-            </StaggerItem>
-          </Stagger>
-        )}
-
-        {loading ? (
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="rounded-lg border bg-background p-5">
-              <div className="flex flex-col gap-3">
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-48 w-full" />
-              </div>
-            </div>
-            <div className="rounded-lg border bg-background p-5">
-              <div className="flex flex-col gap-3">
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-2/3" />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <Fade direction="up" delay={0.15} className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="rounded-lg border bg-background" data-testid="section-revenue-chart">
-              <div className="border-b px-5 py-4">
-                <h3 className="text-base font-semibold font-heading">MRR Growth</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Monthly recurring revenue trend</p>
-              </div>
-              <div className="p-5">
-                <svg viewBox="0 0 400 200" className="w-full h-auto" data-testid="chart-mrr">
-                  {revenueMetrics.map((m, i) => {
-                    const barWidth = 40;
-                    const gap = (400 - revenueMetrics.length * barWidth) / (revenueMetrics.length + 1);
-                    const x = gap + i * (barWidth + gap);
-                    const height = (m.mrr / maxMrr) * 150;
-                    return (
-                      <g key={m.month}>
-                        <rect
-                          x={x}
-                          y={170 - height}
-                          width={barWidth}
-                          height={height}
-                          rx={3}
-                          className="fill-primary"
-                          opacity={0.8}
-                          data-testid={`bar-mrr-${m.month}`}
-                        />
-                        <text
-                          x={x + barWidth / 2}
-                          y={190}
-                          textAnchor="middle"
-                          className="fill-muted-foreground text-[11px]"
-                        >
-                          {m.month}
-                        </text>
-                        <text
-                          x={x + barWidth / 2}
-                          y={170 - height - 6}
-                          textAnchor="middle"
-                          className="fill-foreground text-[10px] font-medium"
-                        >
-                          ${(m.mrr / 1000).toFixed(1)}k
-                        </text>
-                      </g>
-                    );
-                  })}
-                </svg>
-              </div>
-            </div>
-
-            <div className="rounded-lg border bg-background" data-testid="section-recent-signups">
-              <div className="border-b px-5 py-4 flex items-center justify-between gap-2 flex-wrap">
-                <div>
-                  <h3 className="text-base font-semibold font-heading">Recent Signups</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Latest user registrations</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/sales/users")} data-testid="link-view-all-users">
-                  View All <ArrowRight className="ml-1 size-3.5" />
-                </Button>
-              </div>
-              <div className="divide-y">
-                {recentSignups.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-muted/30"
-                    data-testid={`card-user-${user.id}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={getPersonAvatar(user.name, 32)}
-                        alt={user.name}
-                        className="size-8 rounded-full"
-                      />
-                      <div>
-                        <p className="text-sm font-medium">{user.name}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <StatusBadge
-                        status={user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}
-                        variant={user.plan === "enterprise" ? "info" : user.plan === "pro" ? "success" : user.plan === "starter" ? "warning" : "neutral"}
-                      />
+            <div className="divide-y -mx-5 -mb-5">
+              {recentSignups.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-muted/20"
+                  data-testid={`card-user-${user.id}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={getPersonAvatar(user.name, 32)}
+                      alt={user.name}
+                      className="size-8 rounded-full"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </Fade>
-        )}
-
-        {loading ? (
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="rounded-lg border bg-background p-5 lg:col-span-2">
-              <div className="flex flex-col gap-3">
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-2/3" />
-              </div>
-            </div>
-            <div className="rounded-lg border bg-background p-5">
-              <div className="flex flex-col gap-3">
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-8 w-full" />
-                <Skeleton className="h-8 w-full" />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <Fade direction="up" delay={0.25} className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="rounded-lg border bg-background lg:col-span-2" data-testid="section-recent-tickets">
-              <div className="border-b px-5 py-4 flex items-center justify-between gap-2 flex-wrap">
-                <div>
-                  <h3 className="text-base font-semibold font-heading">Recent Support Tickets</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Latest customer issues</p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <StatusBadge
+                      status={user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}
+                      variant={user.plan === "enterprise" ? "info" : user.plan === "pro" ? "success" : user.plan === "starter" ? "warning" : "neutral"}
+                    />
+                  </div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/sales/tickets")} data-testid="link-view-all-tickets">
-                  View All <ArrowRight className="ml-1 size-3.5" />
-                </Button>
-              </div>
-              <div className="divide-y">
+              ))}
+            </div>
+          </SectionCard>
+        </SectionGrid>
+      )}
+
+      {loading ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <Skeleton className="h-[400px] w-full lg:col-span-2 rounded-xl" />
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <SectionCard
+              title="Recent Support Tickets"
+              viewAllLabel="View All"
+              onViewAll={() => navigate("/sales/tickets")}
+            >
+              <div className="divide-y -mx-5 -mb-5">
                 {recentTickets.map((ticket) => (
                   <div
                     key={ticket.id}
-                    className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-muted/30"
+                    className="flex items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-muted/20"
                     data-testid={`card-ticket-${ticket.id}`}
                   >
                     <div className="flex-1 min-w-0">
@@ -296,31 +245,27 @@ export default function SalesDashboard() {
                   </div>
                 ))}
               </div>
-            </div>
+            </SectionCard>
+          </div>
 
-            <div className="rounded-lg border bg-background" data-testid="section-quick-actions">
-              <div className="border-b px-5 py-4">
-                <h3 className="text-base font-semibold font-heading">Quick Actions</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Common tasks</p>
-              </div>
-              <div className="flex flex-col gap-2 p-4">
-                <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/products")} data-testid="button-quick-products">
-                  <Package className="mr-2 size-4" /> Browse Products
-                </Button>
-                <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/users")} data-testid="button-quick-users">
-                  <Users className="mr-2 size-4" /> Manage Users
-                </Button>
-                <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/tickets")} data-testid="button-quick-tickets">
-                  <Headphones className="mr-2 size-4" /> Support Tickets
-                </Button>
-                <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/revenue")} data-testid="button-quick-analytics">
-                  <TrendingUp className="mr-2 size-4" /> Revenue Analytics
-                </Button>
-              </div>
+          <SectionCard title="Quick Actions">
+            <div className="flex flex-col gap-2">
+              <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/products")} data-testid="button-quick-products">
+                <Package className="mr-2 size-4" /> Browse Products
+              </Button>
+              <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/users")} data-testid="button-quick-users">
+                <Users className="mr-2 size-4" /> Manage Users
+              </Button>
+              <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/tickets")} data-testid="button-quick-tickets">
+                <Headphones className="mr-2 size-4" /> Support Tickets
+              </Button>
+              <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/revenue")} data-testid="button-quick-analytics">
+                <TrendingUp className="mr-2 size-4" /> Revenue Analytics
+              </Button>
             </div>
-          </Fade>
-        )}
-      </PageTransition>
-    </div>
+          </SectionCard>
+        </div>
+      )}
+    </PageShell>
   );
 }

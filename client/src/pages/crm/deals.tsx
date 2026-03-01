@@ -1,16 +1,27 @@
 import { useState, useMemo } from "react";
-import { Search, MoreHorizontal, Plus, ArrowUpDown } from "lucide-react";
-import { PageTransition, Fade } from "@/components/ui/animated";
+import { MoreHorizontal, ArrowUpDown } from "lucide-react";
+import { Fade } from "@/components/ui/animated";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { crmDeals, crmContacts, crmActivities, ALL_VERTICALS_IN_CRM, type CrmDeal } from "@/lib/mock-data-crm";
+import {
+  PageShell,
+  PageHeader,
+  IndexToolbar,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+  StatGrid,
+  StatCard,
+  DetailModal,
+  DetailSection,
+} from "@/components/layout";
+import { Target, Calendar, BarChart3 } from "lucide-react";
 
-const BRAND = "#0369A1";
+const BRAND = "#0284C7";
 
 const stageBadge: Record<string, string> = {
   new: "bg-slate-100 text-slate-700",
@@ -31,7 +42,7 @@ const priorityDot: Record<string, string> = {
   high: "bg-red-500", medium: "bg-amber-400", low: "bg-emerald-500",
 };
 
-const REPS = [...new Set(crmDeals.map(d => d.assignedTo))].sort();
+const REPS = Array.from(new Set(crmDeals.map(d => d.assignedTo))).sort();
 
 function formatValue(d: CrmDeal) {
   if (d.currency === "USD") return `$${d.value.toLocaleString()}`;
@@ -93,243 +104,387 @@ export default function CrmDeals() {
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-4 animate-pulse">
-        <div className="h-10 bg-muted rounded w-48" />
-        <div className="grid grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-muted rounded-xl" />)}</div>
-        <div className="space-y-2">{[...Array(8)].map((_, i) => <div key={i} className="h-14 bg-muted rounded-xl" />)}</div>
-      </div>
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-48 animate-pulse" />
+        <StatGrid>
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />
+          ))}
+        </StatGrid>
+        <div className="space-y-2">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-14 bg-muted rounded-xl animate-pulse" />
+          ))}
+        </div>
+      </PageShell>
     );
   }
 
+  const verticalOptions = [
+    { value: "all", label: "All Verticals" },
+    ...ALL_VERTICALS_IN_CRM.map((v) => ({ value: v.id, label: v.name })),
+  ];
+
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">All Deals</h1>
-          <Button size="sm" className="rounded-full gap-1.5 text-white" style={{ backgroundColor: BRAND }} data-testid="btn-add-deal">
-            <Plus className="size-4" /> Add Deal
-          </Button>
-        </div>
+        <PageHeader title="All Deals" />
 
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: "Pipeline Value", value: formatINRShort(totalPipeline), sub: "Active deals only" },
-            { label: "Closing This Month", value: `${closingThisMonth} deals`, sub: "Expected in March 2026" },
-            { label: "Avg Probability", value: `${avgProb}%`, sub: "Across filtered deals" },
-          ].map(s => (
-            <Card key={s.label} className="border-0 shadow-sm">
-              <CardContent className="p-4">
-                <p className="text-2xl font-bold">{s.value}</p>
-                <p className="text-sm font-medium mt-0.5">{s.label}</p>
-                <p className="text-xs text-muted-foreground">{s.sub}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <StatGrid>
+          <StatCard
+            label="Pipeline Value"
+            value={formatINRShort(totalPipeline)}
+            icon={Target}
+            iconBg="bg-sky-50 dark:bg-sky-950"
+            iconColor="text-sky-600"
+            trend="Active deals only"
+          />
+          <StatCard
+            label="Closing This Month"
+            value={`${closingThisMonth} deals`}
+            icon={Calendar}
+            iconBg="bg-amber-50 dark:bg-amber-950"
+            iconColor="text-amber-600"
+            trend="Expected in March 2026"
+          />
+          <StatCard
+            label="Avg Probability"
+            value={`${avgProb}%`}
+            icon={BarChart3}
+            iconBg="bg-blue-50 dark:bg-blue-950"
+            iconColor="text-blue-600"
+            trend="Across filtered deals"
+          />
+        </StatGrid>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {[{ id: "all", name: "All Verticals", color: BRAND }, ...ALL_VERTICALS_IN_CRM].map(v => (
-            <button
-              key={v.id}
-              onClick={() => setVerticalFilter(v.id)}
-              data-testid={`pill-vertical-${v.id}`}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                verticalFilter === v.id ? "text-white border-transparent" : "bg-background border-border text-muted-foreground hover:border-foreground/30"
-              }`}
-              style={verticalFilter === v.id ? { backgroundColor: v.color, borderColor: v.color } : {}}
-            >
-              {v.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input placeholder="Search deals..." className="pl-9 h-9 w-56 rounded-lg" value={search} onChange={e => setSearch(e.target.value)} data-testid="input-search" />
-          </div>
-          <Select value={stageFilter} onValueChange={setStageFilter}>
-            <SelectTrigger className="h-9 w-40 rounded-lg" data-testid="select-stage"><SelectValue placeholder="Stage" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Stages</SelectItem>
-              {Object.entries(stageLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="h-9 w-36 rounded-lg" data-testid="select-priority"><SelectValue placeholder="Priority" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priority</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={sortBy} onValueChange={v => setSortBy(v as typeof sortBy)}>
-            <SelectTrigger className="h-9 w-40 rounded-lg" data-testid="select-sort"><SelectValue placeholder="Sort by" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="value">Sort by Value</SelectItem>
-              <SelectItem value="close">Sort by Close Date</SelectItem>
-              <SelectItem value="probability">Sort by Probability</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <IndexToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search deals..."
+          color={BRAND}
+          filters={verticalOptions}
+          activeFilter={verticalFilter}
+          onFilter={setVerticalFilter}
+          primaryAction={{
+            label: "Add Deal",
+            onClick: () => {},
+          }}
+          extra={
+            <div className="flex items-center gap-2">
+              <Select value={stageFilter} onValueChange={setStageFilter}>
+                <SelectTrigger className="h-9 w-40 bg-muted/30" data-testid="select-stage">
+                  <SelectValue placeholder="Stage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Stages</SelectItem>
+                  {Object.entries(stageLabels).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>
+                      {v}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger className="h-9 w-36 bg-muted/30" data-testid="select-priority">
+                  <SelectValue placeholder="Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Priority</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="h-9 w-40 bg-muted/30" data-testid="select-sort">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="value">Sort by Value</SelectItem>
+                  <SelectItem value="close">Sort by Close Date</SelectItem>
+                  <SelectItem value="probability">Sort by Probability</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
+        />
       </Fade>
 
       <Fade>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="text-left p-4 font-medium">Deal</th>
-                    <th className="text-left p-4 font-medium">Vertical</th>
-                    <th className="text-left p-4 font-medium">Value</th>
-                    <th className="text-left p-4 font-medium">Stage</th>
-                    <th className="text-left p-4 font-medium">Probability</th>
-                    <th className="text-left p-4 font-medium">Close Date</th>
-                    <th className="text-left p-4 font-medium">Assigned To</th>
-                    <th className="text-left p-4 font-medium">Priority</th>
-                    <th className="text-left p-4 font-medium">Last Activity</th>
-                    <th className="p-4" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filtered.map(deal => {
-                    const vert = getVertical(deal.vertical);
-                    return (
-                      <tr
-                        key={deal.id}
-                        className="hover:bg-muted/30 transition-colors cursor-pointer"
-                        onClick={() => setSelectedDeal(deal)}
-                        data-testid={`deal-row-${deal.id}`}
+        <DataTableContainer>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <DataTH>Deal</DataTH>
+                <DataTH>Vertical</DataTH>
+                <DataTH>Value</DataTH>
+                <DataTH>Stage</DataTH>
+                <DataTH>Probability</DataTH>
+                <DataTH>Close Date</DataTH>
+                <DataTH>Assigned To</DataTH>
+                <DataTH>Priority</DataTH>
+                <DataTH>Last Activity</DataTH>
+                <DataTH className="w-10" />
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filtered.map((deal) => {
+                const vert = getVertical(deal.vertical);
+                return (
+                  <DataTR
+                    key={deal.id}
+                    onClick={() => setSelectedDeal(deal)}
+                    data-testid={`deal-row-${deal.id}`}
+                  >
+                    <DataTD>
+                      <p className="text-sm font-medium max-w-[200px] truncate">
+                        {deal.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {deal.companyName} · {deal.contactName}
+                      </p>
+                    </DataTD>
+                    <DataTD>
+                      {vert && (
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full text-white font-medium"
+                          style={{ backgroundColor: vert.color }}
+                        >
+                          {vert.name}
+                        </span>
+                      )}
+                    </DataTD>
+                    <DataTD>
+                      <span className="text-sm font-bold">{formatValue(deal)}</span>
+                    </DataTD>
+                    <DataTD>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          stageBadge[deal.stage]
+                        }`}
                       >
-                        <td className="p-4">
-                          <p className="text-sm font-medium max-w-[200px] truncate">{deal.title}</p>
-                          <p className="text-xs text-muted-foreground">{deal.companyName} · {deal.contactName}</p>
-                        </td>
-                        <td className="p-4">
-                          {vert && (
-                            <span className="text-xs px-2 py-0.5 rounded-full text-white font-medium" style={{ backgroundColor: vert.color }}>
-                              {vert.name}
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <span className="text-sm font-bold">{formatValue(deal)}</span>
-                        </td>
-                        <td className="p-4">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stageBadge[deal.stage]}`}>
-                            {stageLabels[deal.stage]}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 bg-muted rounded-full h-1.5 overflow-hidden">
-                              <div
-                                className={`h-full rounded-full ${deal.probability >= 70 ? "bg-emerald-500" : deal.probability >= 40 ? "bg-amber-400" : "bg-slate-400"}`}
-                                style={{ width: `${deal.probability}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-medium">{deal.probability}%</span>
-                          </div>
-                        </td>
-                        <td className="p-4 text-sm text-muted-foreground whitespace-nowrap">{deal.expectedClose}</td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <img src={getPersonAvatar(deal.assignedTo, 24)} alt={deal.assignedTo} className="size-6 rounded-full" />
-                            <span className="text-sm">{deal.assignedTo}</span>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-1.5">
-                            <div className={`size-2 rounded-full ${priorityDot[deal.priority]}`} />
-                            <span className="text-xs capitalize text-muted-foreground">{deal.priority}</span>
-                          </div>
-                        </td>
-                        <td className="p-4 text-xs text-muted-foreground whitespace-nowrap">{deal.lastActivity}</td>
-                        <td className="p-4">
-                          <Button variant="ghost" size="icon" className="size-7" onClick={e => e.stopPropagation()} data-testid={`btn-more-${deal.id}`}>
-                            <MoreHorizontal className="size-3.5" />
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {filtered.length === 0 && (
-                    <tr>
-                      <td colSpan={10} className="p-12 text-center text-sm text-muted-foreground">No deals match the current filters.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div className="border-t px-4 py-3 flex items-center justify-between text-xs text-muted-foreground">
-              <span>Showing {filtered.length} of {crmDeals.length} deals</span>
-              <span>Total value: <span className="font-semibold text-foreground">{formatINRShort(filtered.reduce((s, d) => s + (d.currency === "INR" ? d.value : d.value * 83), 0))}</span> · Avg probability: <span className="font-semibold text-foreground">{avgProb}%</span></span>
-            </div>
-          </CardContent>
-        </Card>
+                        {stageLabels[deal.stage]}
+                      </span>
+                    </DataTD>
+                    <DataTD>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-muted rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              deal.probability >= 70
+                                ? "bg-emerald-500"
+                                : deal.probability >= 40
+                                ? "bg-amber-400"
+                                : "bg-slate-400"
+                            }`}
+                            style={{ width: `${deal.probability}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-medium">
+                          {deal.probability}%
+                        </span>
+                      </div>
+                    </DataTD>
+                    <DataTD className="text-muted-foreground whitespace-nowrap">
+                      {deal.expectedClose}
+                    </DataTD>
+                    <DataTD>
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={getPersonAvatar(deal.assignedTo, 24)}
+                          alt={deal.assignedTo}
+                          className="size-6 rounded-full"
+                        />
+                        <span className="text-sm">{deal.assignedTo}</span>
+                      </div>
+                    </DataTD>
+                    <DataTD>
+                      <div className="flex items-center gap-1.5">
+                        <div
+                          className={`size-2 rounded-full ${priorityDot[deal.priority]}`}
+                        />
+                        <span className="text-xs capitalize text-muted-foreground">
+                          {deal.priority}
+                        </span>
+                      </div>
+                    </DataTD>
+                    <DataTD className="text-xs text-muted-foreground whitespace-nowrap">
+                      {deal.lastActivity}
+                    </DataTD>
+                    <DataTD>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7"
+                        onClick={(e) => e.stopPropagation()}
+                        data-testid={`btn-more-${deal.id}`}
+                      >
+                        <MoreHorizontal className="size-3.5" />
+                      </Button>
+                    </DataTD>
+                  </DataTR>
+                );
+              })}
+              {filtered.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="p-12 text-center text-sm text-muted-foreground"
+                  >
+                    No deals match the current filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          <div className="border-t px-4 py-3 flex items-center justify-between text-xs text-muted-foreground bg-muted/30">
+            <span>
+              Showing {filtered.length} of {crmDeals.length} deals
+            </span>
+            <span>
+              Total value:{" "}
+              <span className="font-semibold text-foreground">
+                {formatINRShort(
+                  filtered.reduce(
+                    (s, d) => s + (d.currency === "INR" ? d.value : d.value * 83),
+                    0
+                  )
+                )}
+              </span>{" "}
+              · Avg probability:{" "}
+              <span className="font-semibold text-foreground">{avgProb}%</span>
+            </span>
+          </div>
+        </DataTableContainer>
       </Fade>
 
-      <Dialog open={!!selectedDeal} onOpenChange={o => !o && setSelectedDeal(null)}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          {selectedDeal && (() => {
-            const vert = getVertical(selectedDeal.vertical);
-            const contact = getContact(selectedDeal.contactId);
-            const acts = getDealActivities(selectedDeal.id);
-            return (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="leading-snug pr-6">{selectedDeal.title}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-2">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    {vert && <span className="text-xs px-2.5 py-1 rounded-full text-white font-medium" style={{ backgroundColor: vert.color }}>{vert.name}</span>}
-                    <span className="text-xl font-bold">{formatValue(selectedDeal)}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stageBadge[selectedDeal.stage]}`}>{stageLabels[selectedDeal.stage]}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div><p className="text-xs text-muted-foreground">Probability</p><p className="font-medium">{selectedDeal.probability}%</p></div>
-                    <div><p className="text-xs text-muted-foreground">Priority</p><div className="flex items-center gap-1.5"><div className={`size-2 rounded-full ${priorityDot[selectedDeal.priority]}`} /><p className="font-medium capitalize">{selectedDeal.priority}</p></div></div>
-                    <div><p className="text-xs text-muted-foreground">Expected Close</p><p className="font-medium">{selectedDeal.expectedClose}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Assigned To</p><p className="font-medium">{selectedDeal.assignedTo}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Source</p><p className="font-medium capitalize">{selectedDeal.source.replace("-", " ")}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Created</p><p className="font-medium">{selectedDeal.createdDate}</p></div>
-                  </div>
-                  {contact && (
-                    <div className="border rounded-xl p-3">
-                      <p className="text-xs text-muted-foreground font-medium mb-2">Contact</p>
-                      <div className="flex items-center gap-2.5">
-                        <img src={getPersonAvatar(contact.name, 32)} alt={contact.name} className="size-8 rounded-full" />
-                        <div>
-                          <p className="text-sm font-medium">{contact.name}</p>
-                          <p className="text-xs text-muted-foreground">{contact.designation} · {contact.company}</p>
-                          <p className="text-xs text-muted-foreground">{contact.email} · {contact.phone}</p>
-                        </div>
-                      </div>
-                    </div>
+      <DetailModal
+        open={!!selectedDeal}
+        onClose={() => setSelectedDeal(null)}
+        title={selectedDeal?.title || ""}
+        subtitle={selectedDeal ? `${selectedDeal.companyName} · ${selectedDeal.contactName}` : ""}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setSelectedDeal(null)}>
+              Close
+            </Button>
+            <Button style={{ backgroundColor: BRAND }} className="text-white">
+              Edit Deal
+            </Button>
+          </>
+        }
+      >
+        {selectedDeal && (() => {
+          const vert = getVertical(selectedDeal.vertical);
+          const contact = getContact(selectedDeal.contactId);
+          const acts = getDealActivities(selectedDeal.id);
+          return (
+            <>
+              <DetailSection title="Overview">
+                <div className="flex items-center gap-3 flex-wrap mb-4">
+                  {vert && (
+                    <span
+                      className="text-xs px-2.5 py-1 rounded-full text-white font-medium"
+                      style={{ backgroundColor: vert.color }}
+                    >
+                      {vert.name}
+                    </span>
                   )}
-                  {selectedDeal.notes && <div><p className="text-xs text-muted-foreground mb-1">Notes</p><p className="text-sm bg-muted rounded-lg p-3">{selectedDeal.notes}</p></div>}
-                  {acts.length > 0 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Recent Activities</p>
-                      <div className="space-y-2">
-                        {acts.map(a => (
-                          <div key={a.id} className="flex items-start gap-2 text-sm">
-                            <span className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded capitalize shrink-0">{a.type}</span>
-                            <span className="text-muted-foreground">{a.title}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <span className="text-xl font-bold">
+                    {formatValue(selectedDeal)}
+                  </span>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      stageBadge[selectedDeal.stage]
+                    }`}
+                  >
+                    {stageLabels[selectedDeal.stage]}
+                  </span>
                 </div>
-              </>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
-    </PageTransition>
+                <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
+                      Probability
+                    </p>
+                    <p className="font-medium">{selectedDeal.probability}%</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
+                      Priority
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <div
+                        className={`size-2 rounded-full ${
+                          priorityDot[selectedDeal.priority]
+                        }`}
+                      />
+                      <p className="font-medium capitalize">
+                        {selectedDeal.priority}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
+                      Expected Close
+                    </p>
+                    <p className="font-medium">{selectedDeal.expectedClose}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
+                      Assigned To
+                    </p>
+                    <p className="font-medium">{selectedDeal.assignedTo}</p>
+                  </div>
+                </div>
+              </DetailSection>
+
+              <DetailSection title="Contact Info">
+                {contact && (
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={getPersonAvatar(contact.name, 40)}
+                      alt={contact.name}
+                      className="size-10 rounded-full"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">{contact.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {contact.designation} · {contact.company}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {contact.email} · {contact.phone}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </DetailSection>
+
+              {selectedDeal.notes && (
+                <DetailSection title="Notes">
+                  <p className="text-sm bg-muted/50 rounded-lg p-3">
+                    {selectedDeal.notes}
+                  </p>
+                </DetailSection>
+              )}
+
+              {acts.length > 0 && (
+                <DetailSection title="Recent Activities">
+                  <div className="space-y-3">
+                    {acts.map((a) => (
+                      <div key={a.id} className="flex items-start gap-2 text-sm">
+                        <span className="text-xs bg-muted px-1.5 py-0.5 rounded capitalize shrink-0 font-medium">
+                          {a.type}
+                        </span>
+                        <span className="text-muted-foreground">{a.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </DetailSection>
+              )}
+            </>
+          );
+        })()}
+      </DetailModal>
+    </PageShell>
   );
 }

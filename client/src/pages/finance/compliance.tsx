@@ -193,7 +193,7 @@ export default function FinanceCompliance() {
                             variant="outline"
                             size="sm"
                             className="text-xs h-7"
-                            onClick={() => setFiledEntries(prev => new Set([...prev, f.id]))}
+                            onClick={() => setFiledEntries(prev => new Set([...Array.from(prev), f.id]))}
                             data-testid={`btn-mark-filed-${f.id}`}
                           >
                             Mark Filed

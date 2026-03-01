@@ -229,7 +229,7 @@ export default function HubAttendees() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           title="Add Attendee"
-          description="Register a new attendee for an event."
+          onSubmit={() => setDialogOpen(false)}
         >
           <div className="grid gap-4">
             <div className="grid grid-cols-2 gap-3">

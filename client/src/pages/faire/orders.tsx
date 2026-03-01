@@ -1,16 +1,26 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { RefreshCw, CheckCircle, XCircle, Eye } from "lucide-react";
-import { PageTransition, Fade } from "@/components/ui/animated";
-import { Card, CardContent } from "@/components/ui/card";
+import { RefreshCw, CheckCircle, XCircle, Eye, ShoppingCart } from "lucide-react";
+import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { faireOrders, faireStores, type OrderState } from "@/lib/mock-data-faire";
+import {
+  PageShell,
+  PageHeader,
+  StatGrid,
+  StatCard,
+  IndexToolbar,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+  DetailModal,
+} from "@/components/layout";
 
 const BRAND_COLOR = "#1A6B45";
 
@@ -65,160 +75,175 @@ export default function FaireOrders() {
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-6 animate-pulse">
-        <div className="h-10 bg-muted rounded w-80" />
-        <div className="grid grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-muted rounded-xl" />)}</div>
-        <div className="h-80 bg-muted rounded-xl" />
-      </div>
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-80 animate-pulse" />
+        <StatGrid>
+          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />)}
+        </StatGrid>
+        <div className="h-80 bg-muted rounded-xl animate-pulse" />
+      </PageShell>
     );
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold font-heading">Orders</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-lg px-2.5 py-1 text-xs text-blue-700 dark:text-blue-300">
-                Last synced Feb 28, 9:14 AM · 8 new orders
+        <PageHeader
+          title="Orders"
+          subtitle="Manage orders across all your Faire stores"
+          actions={
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-lg px-2.5 py-1 text-xs text-blue-700 dark:text-blue-300">
+                Last synced Feb 28, 9:14 AM
               </div>
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleSync} disabled={syncing} data-testid="btn-sync-orders">
-                <RefreshCw size={12} className={`mr-1.5 ${syncing ? "animate-spin" : ""}`} /> Sync Now
+              <Button size="sm" variant="outline" className="h-9" onClick={handleSync} disabled={syncing} data-testid="btn-sync-orders">
+                <RefreshCw size={14} className={`mr-2 ${syncing ? "animate-spin" : ""}`} /> Sync Now
               </Button>
+              <select 
+                value={selectedStore} 
+                onChange={e => setSelectedStore(e.target.value)} 
+                className="h-9 text-sm border rounded-lg px-3 bg-background" 
+                data-testid="select-store"
+              >
+                <option value="all">All Stores</option>
+                {faireStores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
             </div>
-          </div>
-          <select value={selectedStore} onChange={e => setSelectedStore(e.target.value)} className="h-8 text-xs border rounded-lg px-2" data-testid="select-store">
-            <option value="all">All Stores</option>
-            {faireStores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-        </div>
+          }
+        />
       </Fade>
 
       <Fade>
-        <div className="grid grid-cols-4 gap-3">
+        <StatGrid>
           {[
             { label: "New Orders", value: kpiCounts.NEW, color: "#2563EB", bg: "#EFF6FF" },
             { label: "Unfulfilled", value: kpiCounts.unfulfilled, color: "#D97706", bg: "#FFFBEB" },
             { label: "In Transit", value: kpiCounts.IN_TRANSIT, color: "#7C3AED", bg: "#F5F3FF" },
             { label: "Delivered", value: kpiCounts.DELIVERED, color: "#059669", bg: "#ECFDF5" },
           ].map((k, i) => (
-            <div key={i} className="rounded-xl border p-3" style={{ background: k.bg }} data-testid={`kpi-${i}`}>
-              <p className="text-xl font-bold" style={{ color: k.color }}>{k.value}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{k.label}</p>
-            </div>
+            <StatCard
+              key={i}
+              label={k.label}
+              value={k.value}
+              icon={ShoppingCart}
+              iconBg={k.bg}
+              iconColor={k.color}
+            />
           ))}
-        </div>
+        </StatGrid>
       </Fade>
 
       <Fade>
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="flex gap-1 flex-wrap">
-            {ALL_STATES.map(s => (
-              <button key={s} onClick={() => setStateFilter(s)} className={`px-3 py-1 text-xs rounded-lg border transition-colors ${stateFilter === s ? "text-white border-transparent" : "bg-background hover:bg-muted"}`} style={stateFilter === s ? { background: BRAND_COLOR } : {}} data-testid={`tab-state-${s}`}>
-                {STATE_LABELS[s]}
-              </button>
-            ))}
-          </div>
-          <Input placeholder="Order # or retailer..." value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs h-8 text-sm ml-auto" data-testid="input-search-orders" />
-        </div>
+        <IndexToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Order # or retailer..."
+          color={BRAND_COLOR}
+          filters={ALL_STATES.map(s => ({ value: s, label: STATE_LABELS[s] }))}
+          activeFilter={stateFilter}
+          onFilter={(v) => setStateFilter(v as any)}
+        />
       </Fade>
 
       <Fade>
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Order #</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Store</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Retailer</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Items</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Subtotal</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Total</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Payout</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">State</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Date</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(order => {
-                    const store = faireStores.find(s => s.id === order.storeId);
-                    const cfg = stateConfig[order.state];
-                    return (
-                      <tr key={order.id} className="border-b hover:bg-accent/30 cursor-pointer" onClick={() => setLocation(`/faire/orders/${order.id}`)} data-testid={`order-row-${order.id}`}>
-                        <td className="p-3"><Badge variant="outline" className="text-[9px] font-mono">{order.order_number}</Badge></td>
-                        <td className="p-3"><Badge variant="outline" className="text-[10px]">{store?.name.split(" ")[0]}</Badge></td>
-                        <td className="p-3">
-                          <p className="text-xs font-medium">{order.retailer_name}</p>
-                          <p className="text-[10px] text-muted-foreground">{order.retailer_city}, {order.retailer_state}</p>
-                        </td>
-                        <td className="p-3 text-xs text-center">{order.items.length}</td>
-                        <td className="p-3 text-xs">${order.subtotal}</td>
-                        <td className="p-3 text-xs font-semibold">${order.total}</td>
-                        <td className="p-3 text-xs text-emerald-700 dark:text-emerald-400">${order.payout_amount}</td>
-                        <td className="p-3">
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
-                        </td>
-                        <td className="p-3 text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</td>
-                        <td className="p-3" onClick={e => e.stopPropagation()}>
-                          <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setLocation(`/faire/orders/${order.id}`)} data-testid={`btn-view-order-${order.id}`}><Eye size={12} /></Button>
-                            {order.state === "NEW" && (
-                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-emerald-600" onClick={() => setAcceptId(order.id)} data-testid={`btn-accept-order-${order.id}`}><CheckCircle size={12} /></Button>
-                            )}
-                            {(order.state === "NEW" || order.state === "PRE_TRANSIT") && (
-                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500" onClick={() => setCancelId(order.id)} data-testid={`btn-cancel-order-${order.id}`}><XCircle size={12} /></Button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {filtered.length === 0 && (
-                    <tr><td colSpan={10} className="p-8 text-center text-sm text-muted-foreground">No orders match your filters.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        <DataTableContainer>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <DataTH>Order #</DataTH>
+                <DataTH>Store</DataTH>
+                <DataTH>Retailer</DataTH>
+                <DataTH align="center">Items</DataTH>
+                <DataTH>Total</DataTH>
+                <DataTH>Payout</DataTH>
+                <DataTH>State</DataTH>
+                <DataTH>Date</DataTH>
+                <DataTH align="right">Actions</DataTH>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filtered.map(order => {
+                const store = faireStores.find(s => s.id === order.storeId);
+                const cfg = stateConfig[order.state];
+                return (
+                  <DataTR key={order.id} onClick={() => setLocation(`/faire/orders/${order.id}`)} data-testid={`order-row-${order.id}`}>
+                    <DataTD><Badge variant="outline" className="text-[10px] font-mono">{order.order_number}</Badge></DataTD>
+                    <DataTD><Badge variant="outline" className="text-[10px]">{store?.name.split(" ")[0]}</Badge></DataTD>
+                    <DataTD>
+                      <p className="font-medium">{order.retailer_name}</p>
+                      <p className="text-[10px] text-muted-foreground">{order.retailer_city}, {order.retailer_state}</p>
+                    </DataTD>
+                    <DataTD align="center">{order.items.length}</DataTD>
+                    <DataTD className="font-semibold">${order.total}</DataTD>
+                    <DataTD className="text-emerald-700 dark:text-emerald-400 font-medium">${order.payout_amount}</DataTD>
+                    <DataTD>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
+                    </DataTD>
+                    <DataTD className="text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</DataTD>
+                    <DataTD align="right" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setLocation(`/faire/orders/${order.id}`)} data-testid={`btn-view-order-${order.id}`}><Eye size={14} /></Button>
+                        {order.state === "NEW" && (
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-emerald-600" onClick={() => setAcceptId(order.id)} data-testid={`btn-accept-order-${order.id}`}><CheckCircle size={14} /></Button>
+                        )}
+                        {(order.state === "NEW" || order.state === "PRE_TRANSIT") && (
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500" onClick={() => setCancelId(order.id)} data-testid={`btn-cancel-order-${order.id}`}><XCircle size={14} /></Button>
+                        )}
+                      </div>
+                    </DataTD>
+                  </DataTR>
+                );
+              })}
+              {filtered.length === 0 && (
+                <tr><td colSpan={9} className="p-8 text-center text-sm text-muted-foreground">No orders match your filters.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </DataTableContainer>
       </Fade>
 
-      <Dialog open={!!acceptId} onOpenChange={() => setAcceptId(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Accept Order?</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">Accepting this order will move it to Pre-Transit status. The retailer will be notified.</p>
-          <DialogFooter>
+      <DetailModal
+        open={!!acceptId}
+        onClose={() => setAcceptId(null)}
+        title="Accept Order"
+        subtitle="Move order to Pre-Transit status"
+        footer={
+          <>
             <Button variant="outline" onClick={() => setAcceptId(null)}>Cancel</Button>
             <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Order Accepted", description: "Order moved to Pre-Transit." }); setAcceptId(null); }} data-testid="btn-confirm-accept">Accept Order</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <div className="px-6 py-5">
+          <p className="text-sm text-muted-foreground">Accepting this order will move it to Pre-Transit status. The retailer will be notified automatically.</p>
+        </div>
+      </DetailModal>
 
-      <Dialog open={!!cancelId} onOpenChange={() => setCancelId(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Cancel Order</DialogTitle></DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1.5">
-              <Label>Cancellation Reason</Label>
-              <select value={cancelReason} onChange={e => setCancelReason(e.target.value)} className="w-full h-9 border rounded-lg px-3 text-sm" data-testid="select-cancel-reason">
-                {CANCEL_REASONS.map(r => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Notes (optional)</Label>
-              <Input value={cancelNotes} onChange={e => setCancelNotes(e.target.value)} placeholder="Additional context..." data-testid="input-cancel-notes" />
-            </div>
-          </div>
-          <DialogFooter>
+      <DetailModal
+        open={!!cancelId}
+        onClose={() => setCancelId(null)}
+        title="Cancel Order"
+        subtitle="Select a reason for cancellation"
+        footer={
+          <>
             <Button variant="outline" onClick={() => setCancelId(null)}>Back</Button>
             <Button variant="destructive" onClick={() => { toast({ title: "Order Cancelled", description: `Reason: ${cancelReason.replace(/_/g, " ")}` }); setCancelId(null); setCancelNotes(""); }} data-testid="btn-confirm-cancel">Cancel Order</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </PageTransition>
+          </>
+        }
+      >
+        <div className="px-6 py-5 space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cancellation Reason</Label>
+            <select value={cancelReason} onChange={e => setCancelReason(e.target.value)} className="w-full h-10 border rounded-lg px-3 text-sm bg-background" data-testid="select-cancel-reason">
+              {CANCEL_REASONS.map(r => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes (optional)</Label>
+            <Input value={cancelNotes} onChange={e => setCancelNotes(e.target.value)} placeholder="Additional context..." data-testid="input-cancel-notes" />
+          </div>
+        </div>
+      </DetailModal>
+    </PageShell>
   );
 }

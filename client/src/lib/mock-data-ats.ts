@@ -77,6 +77,7 @@ export interface Evaluation {
   candidateName: string;
   interviewerId: string;
   interviewerName: string;
+  jobTitle?: string;
   criteria: EvaluationCriteria[];
   overallRating: number;
   recommendation: "strong-yes" | "yes" | "maybe" | "no" | "strong-no";

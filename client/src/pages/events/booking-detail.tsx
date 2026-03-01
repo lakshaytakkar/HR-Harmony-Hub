@@ -321,7 +321,6 @@ export default function BookingDetail() {
           open={paymentDialogOpen}
           onOpenChange={setPaymentDialogOpen}
           title="Record Payment"
-          description={`Recording payment for booking ${b.id} — ${b.client_name}`}
           onSubmit={() => {
             setPaymentDialogOpen(false);
             toast({ title: "Payment recorded", description: "Payment added to booking history." });

@@ -21,7 +21,6 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useLocation } from "wouter";
-import { StatsCard } from "@/components/hr/stats-card";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/hr/status-badge";
@@ -38,6 +37,14 @@ import {
 } from "@/lib/mock-data-dev";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { Fade, Stagger, StaggerItem, PageTransition } from "@/components/ui/animated";
+import {
+  PageShell,
+  HeroBanner,
+  StatGrid,
+  StatCard,
+  SectionCard,
+  SectionGrid,
+} from "@/components/layout";
 
 const priorityIcons: Record<string, JSX.Element> = {
   critical: <AlertTriangle className="size-3 text-red-500" />,
@@ -141,312 +148,258 @@ export default function DevDashboard() {
   ];
 
   return (
-    <div className="px-16 py-6 lg:px-24">
-      <PageTransition>
-        <Fade direction="up" delay={0}>
-          <div
-            className="rounded-2xl px-8 py-7 mb-6 relative overflow-hidden"
-            data-testid="section-welcome"
-            style={{ background: "linear-gradient(135deg, #10B981 0%, #0a9064 100%)" }}
-          >
-            <div className="relative z-10">
-              <p className="text-white/75 text-sm font-medium mb-2">👋 {greeting}, Sneha Patel</p>
-              <h1 className="text-3xl font-bold text-white font-heading tracking-tight">Developer Hub</h1>
-              <p className="text-white/70 text-sm mt-1.5 max-w-2xl">Design system, internal tooling & developer resources</p>
-            </div>
-          </div>
-        </Fade>
+    <PageShell>
+      <HeroBanner
+        eyebrow={`${greeting}, Sneha Patel`}
+        headline="Developer Hub"
+        tagline="Design system, internal tooling & developer resources"
+        color="#10B981"
+        colorDark="#0a9064"
+      />
 
-        {loading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-          </div>
-        ) : (
-          <Stagger staggerInterval={0.05} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StaggerItem>
-              <StatsCard
-                title="Active Projects"
-                value={activeProjects}
-                change={`${devProjects.length} total`}
-                changeType="positive"
-                icon={<FolderKanban className="size-5" />}
-                sparkline={{ values: [3, 4, 4, 5, 5, 6, activeProjects], color: "#6366f1" }}
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatsCard
-                title="Open Tasks"
-                value={totalTasks - devTasks.filter((t) => t.status === "done" || t.status === "cancelled").length}
-                change={`${inProgressTasks} in progress`}
-                changeType="warning"
-                icon={<CheckSquare className="size-5" />}
-                sparkline={{ values: [15, 18, 20, 22, 25, 28, totalTasks], color: "#f97316" }}
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatsCard
-                title="Active Credentials"
-                value={activeCredentials}
-                change={expiredCredentials > 0 ? `${expiredCredentials} expired` : "All active"}
-                changeType={expiredCredentials > 0 ? "warning" : "positive"}
-                icon={<Key className="size-5" />}
-                sparkline={{ values: [5, 6, 6, 7, 7, 8, activeCredentials], color: "#10b981" }}
-              />
-            </StaggerItem>
-            <StaggerItem>
-              <StatsCard
-                title="Pinned Links"
-                value={pinnedLinks.length}
-                change={`${importantLinks.length} total links`}
-                changeType="neutral"
-                icon={<Link2 className="size-5" />}
-                sparkline={{ values: [8, 9, 10, 11, 12, 13, importantLinks.length], color: "#8b5cf6" }}
-              />
-            </StaggerItem>
-          </Stagger>
-        )}
+      {loading ? (
+        <StatGrid>
+          <StatsCardSkeleton />
+          <StatsCardSkeleton />
+          <StatsCardSkeleton />
+          <StatsCardSkeleton />
+        </StatGrid>
+      ) : (
+        <StatGrid>
+          <StatCard
+            label="Active Projects"
+            value={activeProjects}
+            trend={`${devProjects.length} total`}
+            icon={FolderKanban}
+            iconBg="rgba(99, 102, 241, 0.1)"
+            iconColor="#6366f1"
+          />
+          <StatCard
+            label="Open Tasks"
+            value={totalTasks - devTasks.filter((t) => t.status === "done" || t.status === "cancelled").length}
+            trend={`${inProgressTasks} in progress`}
+            icon={CheckSquare}
+            iconBg="rgba(249, 115, 22, 0.1)"
+            iconColor="#f97316"
+          />
+          <StatCard
+            label="Active Credentials"
+            value={activeCredentials}
+            trend={expiredCredentials > 0 ? `${expiredCredentials} expired` : "All active"}
+            icon={Key}
+            iconBg="rgba(16, 185, 129, 0.1)"
+            iconColor="#10b981"
+          />
+          <StatCard
+            label="Pinned Links"
+            value={pinnedLinks.length}
+            trend={`${importantLinks.length} total links`}
+            icon={Link2}
+            iconBg="rgba(139, 92, 246, 0.1)"
+            iconColor="#8b5cf6"
+          />
+        </StatGrid>
+      )}
 
-        {loading ? (
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-          </div>
-        ) : (
-          <Stagger staggerInterval={0.05} delay={0.1} className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            {quickLinks.map((link) => (
-              <StaggerItem key={link.title}>
-                <button
-                  onClick={() => navigate(link.url)}
-                  className="w-full text-left rounded-lg border bg-background p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                  data-testid={`card-quicklink-${link.title.toLowerCase().replace(/\s+/g, "-")}`}
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {[...Array(6)].map((_, i) => <StatsCardSkeleton key={i} />)}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" data-testid="quick-links-grid">
+          {quickLinks.map((link) => (
+            <button
+              key={link.title}
+              onClick={() => navigate(link.url)}
+              className="w-full text-left rounded-lg border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              data-testid={`card-quicklink-${link.title.toLowerCase().replace(/\s+/g, "-")}`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div
+                  className="flex size-9 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: `${link.color}15`, color: link.color }}
                 >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div
-                      className="flex size-9 items-center justify-center rounded-lg"
-                      style={{ backgroundColor: `${link.color}15`, color: link.color }}
-                    >
-                      <link.icon className="size-4.5" />
-                    </div>
-                    <h3 className="text-sm font-semibold font-heading">{link.title}</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{link.description}</p>
-                </button>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        )}
-
-        {loading ? (
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="rounded-lg border bg-background p-5">
-              <Skeleton className="h-4 w-1/3 mb-3" />
-              <Skeleton className="h-48 w-full" />
-            </div>
-            <div className="rounded-lg border bg-background p-5">
-              <Skeleton className="h-4 w-1/3 mb-3" />
-              <Skeleton className="h-48 w-full" />
-            </div>
-          </div>
-        ) : (
-          <Fade direction="up" delay={0.2} className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="rounded-lg border bg-background" data-testid="section-my-tasks">
-              <div className="border-b px-5 py-4 flex items-center justify-between gap-2 flex-wrap">
-                <div>
-                  <h3 className="text-base font-semibold font-heading">My Tasks</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{myTasks.length} open tasks assigned to you</p>
+                  <link.icon className="size-4.5" />
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/dev/tasks")} data-testid="link-view-all-tasks">
-                  View All <ArrowRight className="ml-1 size-3.5" />
-                </Button>
+                <h3 className="text-sm font-semibold font-heading">{link.title}</h3>
               </div>
-              <div className="divide-y">
-                {myTasks.map((task) => {
-                  const proj = devProjects.find((p) => p.id === task.projectId);
-                  return (
-                    <div
-                      key={task.id}
-                      className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-muted/30 cursor-pointer"
-                      onClick={() => navigate(`/dev/projects/${task.projectId}`)}
-                      data-testid={`card-my-task-${task.id}`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {priorityIcons[task.priority]}
-                          {typeIcons[task.type]}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant="outline"
-                              className="font-mono text-[10px] shrink-0 px-1"
-                              style={{ borderColor: proj?.color, color: proj?.color }}
-                            >
-                              {task.id}
-                            </Badge>
-                            <p className="text-sm font-medium truncate">{task.title}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <StatusBadge status={formatLabel(task.status)} variant={statusVariant[task.status]} />
-                    </div>
-                  );
-                })}
-                {myTasks.length === 0 && (
-                  <div className="p-5 text-center text-sm text-muted-foreground">All tasks complete!</div>
-                )}
-              </div>
-            </div>
+              <p className="text-xs text-muted-foreground">{link.description}</p>
+            </button>
+          ))}
+        </div>
+      )}
 
-            <div className="rounded-lg border bg-background" data-testid="section-project-progress">
-              <div className="border-b px-5 py-4 flex items-center justify-between gap-2 flex-wrap">
-                <div>
-                  <h3 className="text-base font-semibold font-heading">Project Progress</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Completion across all projects</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/dev/projects")} data-testid="link-view-all-projects">
-                  View All <ArrowRight className="ml-1 size-3.5" />
-                </Button>
-              </div>
-              <div className="p-5 space-y-4">
-                {devProjects.map((proj) => {
-                  const pct = proj.taskCount > 0 ? Math.round((proj.completedTaskCount / proj.taskCount) * 100) : 0;
-                  return (
-                    <div
-                      key={proj.id}
-                      className="cursor-pointer rounded-lg px-3 py-2 transition-colors hover:bg-muted/30"
-                      onClick={() => navigate(`/dev/projects/${proj.id}`)}
-                      data-testid={`card-project-progress-${proj.id}`}
-                    >
-                      <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: proj.color }} />
-                          <span className="text-sm font-medium truncate">{proj.name}</span>
-                          <Badge variant="outline" className="font-mono text-[10px] shrink-0" style={{ borderColor: proj.color, color: proj.color }}>
-                            {proj.key}
-                          </Badge>
-                        </div>
-                        <span className="text-xs text-muted-foreground shrink-0">{proj.completedTaskCount}/{proj.taskCount}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Progress value={pct} className="h-1.5 flex-1" />
-                        <span className="text-xs font-medium text-muted-foreground w-8 text-right">{pct}%</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </Fade>
-        )}
-
-        {loading ? (
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="rounded-lg border bg-background p-5">
-              <Skeleton className="h-4 w-1/3 mb-3" />
-              <Skeleton className="h-48 w-full" />
-            </div>
-            <div className="rounded-lg border bg-background p-5">
-              <Skeleton className="h-4 w-1/3 mb-3" />
-              <Skeleton className="h-48 w-full" />
-            </div>
-          </div>
-        ) : (
-          <Fade direction="up" delay={0.3} className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="rounded-lg border bg-background" data-testid="section-recent-prompts">
-              <div className="border-b px-5 py-4 flex items-center justify-between gap-2 flex-wrap">
-                <div>
-                  <h3 className="text-base font-semibold font-heading">Recent Prompts</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Last used AI prompts</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/dev/prompts")} data-testid="link-view-all-prompts">
-                  View All <ArrowRight className="ml-1 size-3.5" />
-                </Button>
-              </div>
-              <div className="divide-y">
-                {recentPrompts.map((prompt) => (
+      {loading ? (
+        <SectionGrid>
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+        </SectionGrid>
+      ) : (
+        <SectionGrid>
+          <SectionCard
+            title="My Tasks"
+            viewAllLabel="View All"
+            onViewAll={() => navigate("/dev/tasks")}
+            noPadding
+          >
+            <div className="divide-y">
+              {myTasks.map((task) => {
+                const proj = devProjects.find((p) => p.id === task.projectId);
+                return (
                   <div
-                    key={prompt.id}
-                    className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-muted/30"
-                    data-testid={`card-prompt-${prompt.id}`}
+                    key={task.id}
+                    className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-muted/20 cursor-pointer"
+                    onClick={() => navigate(`/dev/projects/${task.projectId}`)}
+                    data-testid={`card-my-task-${task.id}`}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-medium truncate">{prompt.title}</p>
-                        {prompt.isFavorite && <Star className="size-3 text-amber-500 fill-amber-500 shrink-0" />}
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {priorityIcons[task.priority]}
+                        {typeIcons[task.type]}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {prompt.category} &middot; Last used {prompt.lastUsed}
-                      </p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className="font-mono text-[10px] shrink-0 px-1"
+                            style={{ borderColor: proj?.color, color: proj?.color }}
+                          >
+                            {task.id}
+                          </Badge>
+                          <p className="text-sm font-medium truncate">{task.title}</p>
+                        </div>
+                      </div>
                     </div>
-                    <Badge variant="secondary" className="shrink-0">
-                      {prompt.model}
-                    </Badge>
+                    <StatusBadge status={formatLabel(task.status)} variant={statusVariant[task.status]} />
+                  </div>
+                );
+              })}
+              {myTasks.length === 0 && (
+                <div className="p-5 text-center text-sm text-muted-foreground">All tasks complete!</div>
+              )}
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title="Project Progress"
+            viewAllLabel="View All"
+            onViewAll={() => navigate("/dev/projects")}
+          >
+            <div className="space-y-4">
+              {devProjects.map((proj) => {
+                const pct = proj.taskCount > 0 ? Math.round((proj.completedTaskCount / proj.taskCount) * 100) : 0;
+                return (
+                  <div
+                    key={proj.id}
+                    className="cursor-pointer rounded-lg px-3 py-2 transition-colors hover:bg-muted/20"
+                    onClick={() => navigate(`/dev/projects/${proj.id}`)}
+                    data-testid={`card-project-progress-${proj.id}`}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: proj.color }} />
+                        <span className="text-sm font-medium truncate">{proj.name}</span>
+                        <Badge variant="outline" className="font-mono text-[10px] shrink-0" style={{ borderColor: proj.color, color: proj.color }}>
+                          {proj.key}
+                        </Badge>
+                      </div>
+                      <span className="text-xs text-muted-foreground shrink-0">{proj.completedTaskCount}/{proj.taskCount}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Progress value={pct} className="h-1.5 flex-1" />
+                      <span className="text-xs font-medium text-muted-foreground w-8 text-right">{pct}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </SectionCard>
+        </SectionGrid>
+      )}
+
+      {loading ? (
+        <SectionGrid>
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+        </SectionGrid>
+      ) : (
+        <SectionGrid>
+          <SectionCard
+            title="Recent Prompts"
+            viewAllLabel="View All"
+            onViewAll={() => navigate("/dev/prompts")}
+            noPadding
+          >
+            <div className="divide-y">
+              {recentPrompts.map((prompt) => (
+                <div
+                  key={prompt.id}
+                  className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-muted/20"
+                  data-testid={`card-prompt-${prompt.id}`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-medium truncate">{prompt.title}</p>
+                      {prompt.isFavorite && <Star className="size-3 text-amber-500 fill-amber-500 shrink-0" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {prompt.category} &middot; Last used {prompt.lastUsed}
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="shrink-0">
+                    {prompt.model}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title="Credential Status"
+            viewAllLabel="View All"
+            onViewAll={() => navigate("/dev/toolkit")}
+          >
+            <div className="grid grid-cols-3 gap-4 mb-5">
+              <div className="flex flex-col items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/50" data-testid="credential-active-count">
+                <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-2xl font-semibold font-heading text-emerald-700 dark:text-emerald-300">{activeCredentials}</span>
+                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Active</span>
+              </div>
+              <div className="flex flex-col items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/50" data-testid="credential-expired-count">
+                <AlertTriangle className="size-4 text-red-600 dark:text-red-400" />
+                <span className="text-2xl font-semibold font-heading text-red-700 dark:text-red-300">{expiredCredentials}</span>
+                <span className="text-xs font-medium text-red-600 dark:text-red-400">Expired</span>
+              </div>
+              <div className="flex flex-col items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/50" data-testid="credential-pending-count">
+                <Clock className="size-4 text-amber-600 dark:text-amber-400" />
+                <span className="text-2xl font-semibold font-heading text-amber-700 dark:text-amber-300">{pendingCredentials}</span>
+                <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Pending</span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              {appCredentials
+                .filter((c) => c.status !== "active")
+                .slice(0, 4)
+                .map((cred) => (
+                  <div
+                    key={cred.id}
+                    className="flex items-center justify-between gap-3 rounded-md px-3 py-2 transition-colors hover:bg-muted/20"
+                    data-testid={`credential-alert-${cred.id}`}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{cred.appName}</p>
+                      <p className="text-xs text-muted-foreground">{cred.environment} &middot; {cred.apiKeyHint}</p>
+                    </div>
+                    <StatusBadge
+                      status={cred.status === "expired" ? "Expired" : "Pending"}
+                      variant={cred.status === "expired" ? "error" : "warning"}
+                    />
                   </div>
                 ))}
-              </div>
             </div>
-
-            <div className="rounded-lg border bg-background" data-testid="section-credential-status">
-              <div className="border-b px-5 py-4 flex items-center justify-between gap-2 flex-wrap">
-                <div>
-                  <h3 className="text-base font-semibold font-heading">Credential Status</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Apps & API key overview</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/dev/toolkit")} data-testid="link-view-all-credentials">
-                  View All <ArrowRight className="ml-1 size-3.5" />
-                </Button>
-              </div>
-              <div className="p-5">
-                <div className="grid grid-cols-3 gap-4 mb-5">
-                  <div className="flex flex-col items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/50" data-testid="credential-active-count">
-                    <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-2xl font-semibold font-heading text-emerald-700 dark:text-emerald-300">{activeCredentials}</span>
-                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Active</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/50" data-testid="credential-expired-count">
-                    <AlertTriangle className="size-4 text-red-600 dark:text-red-400" />
-                    <span className="text-2xl font-semibold font-heading text-red-700 dark:text-red-300">{expiredCredentials}</span>
-                    <span className="text-xs font-medium text-red-600 dark:text-red-400">Expired</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/50" data-testid="credential-pending-count">
-                    <Clock className="size-4 text-amber-600 dark:text-amber-400" />
-                    <span className="text-2xl font-semibold font-heading text-amber-700 dark:text-amber-300">{pendingCredentials}</span>
-                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Pending</span>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {appCredentials
-                    .filter((c) => c.status !== "active")
-                    .slice(0, 4)
-                    .map((cred) => (
-                      <div
-                        key={cred.id}
-                        className="flex items-center justify-between gap-3 rounded-md px-3 py-2 transition-colors hover:bg-muted/30"
-                        data-testid={`credential-alert-${cred.id}`}
-                      >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{cred.appName}</p>
-                          <p className="text-xs text-muted-foreground">{cred.environment} &middot; {cred.apiKeyHint}</p>
-                        </div>
-                        <StatusBadge
-                          status={cred.status === "expired" ? "Expired" : "Pending"}
-                          variant={cred.status === "expired" ? "error" : "warning"}
-                        />
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          </Fade>
-        )}
-      </PageTransition>
-    </div>
+          </SectionCard>
+        </SectionGrid>
+      )}
+    </PageShell>
   );
 }

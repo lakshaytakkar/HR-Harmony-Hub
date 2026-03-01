@@ -25,7 +25,16 @@ import {
   SharedTaskSubtask 
 } from "@/lib/mock-data-shared";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { PageTransition, Fade } from "@/components/ui/animated";
+import { 
+  PageHeader, 
+  PageShell,
+  PrimaryAction,
+  FilterPill
+} from "@/components/layout";
+import {
+  DetailModal,
+  DetailSection
+} from "@/components/layout/page-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -136,44 +145,45 @@ export default function UniversalTasks() {
   if (!vertical) return null;
 
   return (
-    <PageTransition className="flex flex-col h-full bg-background overflow-hidden">
+    <PageShell className="flex flex-col h-full bg-background overflow-hidden p-0 lg:p-0">
       {/* Header */}
       <div className="px-16 py-4 lg:px-24 border-b shrink-0 flex items-center justify-between bg-card">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">Tasks</h1>
-          <p className="text-sm text-muted-foreground">Manage and track team responsibilities</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center bg-muted p-1 rounded-lg border">
-            <Button 
-              variant={viewMode === "board" ? "secondary" : "ghost"} 
-              size="icon" 
-              className={cn("h-8 w-8", viewMode === "board" && "bg-card shadow-sm")}
-              onClick={() => setViewMode("board")}
-              data-testid="btn-grid-view"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant={viewMode === "list" ? "secondary" : "ghost"} 
-              size="icon" 
-              className={cn("h-8 w-8", viewMode === "list" && "bg-card shadow-sm")}
-              onClick={() => setViewMode("list")}
-              data-testid="btn-list-view"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-          <Button 
-            className="gap-2" 
-            style={{ backgroundColor: vertical.color }}
-            onClick={() => setIsCreateOpen(true)}
-            data-testid="btn-new-task"
-          >
-            <Plus className="h-4 w-4" />
-            Add Task
-          </Button>
-        </div>
+        <PageHeader 
+          title="Tasks" 
+          subtitle="Manage and track team responsibilities" 
+          actions={
+            <div className="flex items-center gap-3">
+              <div className="flex items-center bg-muted p-1 rounded-lg border">
+                <Button 
+                  variant={viewMode === "board" ? "secondary" : "ghost"} 
+                  size="icon" 
+                  className={cn("h-8 w-8", viewMode === "board" && "bg-card shadow-sm")}
+                  onClick={() => setViewMode("board")}
+                  data-testid="btn-grid-view"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant={viewMode === "list" ? "secondary" : "ghost"} 
+                  size="icon" 
+                  className={cn("h-8 w-8", viewMode === "list" && "bg-card shadow-sm")}
+                  onClick={() => setViewMode("list")}
+                  data-testid="btn-list-view"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+              <PrimaryAction 
+                color={vertical.color}
+                icon={Plus}
+                onClick={() => setIsCreateOpen(true)}
+                testId="btn-new-task"
+              >
+                Add Task
+              </PrimaryAction>
+            </div>
+          }
+        />
       </div>
 
       {/* Stats Row — compact inline strip */}
@@ -217,12 +227,24 @@ export default function UniversalTasks() {
             </SelectContent>
           </Select>
         </div>
-        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-auto">
-          <TabsList className="h-9">
-            <TabsTrigger value="all" className="text-xs" data-testid="tab-board">All Tasks</TabsTrigger>
-            <TabsTrigger value="my" className="text-xs" data-testid="tab-my-tasks">My Tasks</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-2">
+          <FilterPill
+            active={activeTab === "all"}
+            color={vertical.color}
+            onClick={() => setActiveTab("all")}
+            testId="tab-board"
+          >
+            All Tasks
+          </FilterPill>
+          <FilterPill
+            active={activeTab === "my"}
+            color={vertical.color}
+            onClick={() => setActiveTab("my")}
+            testId="tab-my-tasks"
+          >
+            My Tasks
+          </FilterPill>
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -361,7 +383,7 @@ export default function UniversalTasks() {
           </div>
         </form>
       </FormDialog>
-    </PageTransition>
+    </PageShell>
   );
 }
 
@@ -419,52 +441,50 @@ function TaskCard({ task, onClick }: { task: SharedTask, onClick: () => void }) 
 
   return (
     <Card 
-      className="cursor-pointer hover-elevate bg-card group border-none shadow-sm"
+      className="cursor-pointer hover-elevate bg-card group border shadow-sm rounded-xl p-4 space-y-2"
       onClick={onClick}
       data-testid={`task-card-${task.id}`}
     >
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <Badge 
-            className={cn(
-              "text-[10px] px-2 py-0.5 border-0 font-medium capitalize",
-              task.priority === "critical" && "bg-red-50 text-red-500",
-              task.priority === "high" && "bg-orange-50 text-orange-500",
-              task.priority === "medium" && "bg-blue-50 text-blue-500",
-              task.priority === "low" && "bg-slate-50 text-slate-500",
-            )}
-          >
-            {task.priority}
-          </Badge>
-          <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="flex items-center justify-between">
+        <Badge 
+          className={cn(
+            "text-[10px] px-2 py-0.5 border-0 font-medium capitalize",
+            task.priority === "critical" && "bg-red-50 text-red-500",
+            task.priority === "high" && "bg-orange-50 text-orange-500",
+            task.priority === "medium" && "bg-blue-50 text-blue-500",
+            task.priority === "low" && "bg-slate-50 text-slate-500",
+          )}
+        >
+          {task.priority}
+        </Badge>
+        <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+      <div className="space-y-1">
+        <h4 className="text-[14px] font-semibold line-clamp-2 leading-tight">{task.title}</h4>
+        <p className="text-[12px] text-muted-foreground line-clamp-2">{task.description}</p>
+      </div>
+      {task.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {task.tags.map(tag => (
+            <span key={tag} className="text-[10px] bg-muted px-2 py-0.5 rounded-full border text-muted-foreground">
+              {tag}
+            </span>
+          ))}
         </div>
-        <div className="space-y-1">
-          <h4 className="text-[14px] font-semibold line-clamp-2 leading-tight">{task.title}</h4>
-          <p className="text-[12px] text-muted-foreground line-clamp-2">{task.description}</p>
+      )}
+      <div className="flex items-center justify-between pt-3 border-t border-border/50">
+        <div className={cn(
+          "flex items-center gap-1.5 text-[12px]",
+          isOverdue ? "text-red-500" : "text-muted-foreground"
+        )}>
+          <Calendar className="h-3.5 w-3.5" />
+          {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
         </div>
-        {task.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {task.tags.map(tag => (
-              <span key={tag} className="text-[10px] bg-muted px-2 py-0.5 rounded-full border text-muted-foreground">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-        <div className="flex items-center justify-between pt-3 border-t border-border/50">
-          <div className={cn(
-            "flex items-center gap-1.5 text-[12px]",
-            isOverdue ? "text-red-500" : "text-muted-foreground"
-          )}>
-            <Calendar className="h-3.5 w-3.5" />
-            {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </div>
-          <Avatar className="h-6 w-6 border shadow-sm">
-            <AvatarImage src={getPersonAvatar(task.assigneeName)} />
-            <AvatarFallback className="text-[10px]">{task.assigneeName.substring(0, 2)}</AvatarFallback>
-          </Avatar>
-        </div>
-      </CardContent>
+        <Avatar className="h-6 w-6 border shadow-sm">
+          <AvatarImage src={getPersonAvatar(task.assigneeName)} />
+          <AvatarFallback className="text-[10px]">{task.assigneeName.substring(0, 2)}</AvatarFallback>
+        </Avatar>
+      </div>
     </Card>
   );
 }
@@ -557,199 +577,139 @@ function TaskDetailDialog({
 }) {
   const [newSubtask, setNewSubtask] = useState("");
   const isOverdue = !task.status.includes("done") && new Date(task.dueDate) < new Date();
-  
   const completedSubtasks = task.subtasks.filter(s => s.completed).length;
 
+  const [location] = useLocation();
+  const vertical = detectVerticalFromUrl(location);
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[900px] p-0 gap-0 rounded-[20px] bg-card border h-[85vh] flex flex-col overflow-hidden">
-        <DialogHeader className="px-6 py-4 border-b flex flex-row items-center justify-between h-[64px] shrink-0 space-y-0">
-          <div className="flex items-center gap-3">
-            <div className="bg-muted rounded-lg p-2">
-              <CheckSquare className="h-5 w-5 text-primary" />
-            </div>
-            <Separator orientation="vertical" className="h-6" />
-            <DialogTitle className="text-sm font-medium text-muted-foreground">Task Detail</DialogTitle>
-          </div>
-          <DialogDescription className="sr-only">Detailed view of task {task.id}</DialogDescription>
-        </DialogHeader>
-
-        <div className="flex flex-1 overflow-hidden">
-          {/* Main Area */}
-          <div className="flex-1 overflow-y-auto p-6 bg-card">
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold tracking-tight">{task.title}</h2>
-                <div className="flex flex-wrap gap-2">
-                  {task.tags.map(tag => (
-                    <Badge key={tag} variant="secondary" className="text-[10px] px-2 py-0.5">{tag}</Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-foreground">Description</h4>
-                <p className={cn("text-sm leading-relaxed", !task.description && "italic text-muted-foreground")}>
-                  {task.description || "No description provided."}
-                </p>
-              </div>
-
-              <Tabs defaultValue="subtasks" className="w-full">
-                <TabsList className="bg-muted p-1 rounded-lg border w-auto">
-                  <TabsTrigger value="subtasks" className="text-xs">Subtasks ({completedSubtasks}/{task.subtasks.length})</TabsTrigger>
-                  <TabsTrigger value="comments" className="text-xs">Comments</TabsTrigger>
-                </TabsList>
-                <TabsContent value="subtasks" className="mt-4 space-y-4">
-                  <div className="space-y-2">
-                    {task.subtasks.map(subtask => (
-                      <div key={subtask.id} className="flex items-center gap-3 group">
-                        <Checkbox 
-                          id={subtask.id} 
-                          checked={subtask.completed} 
-                          onCheckedChange={() => onSubtaskToggle(subtask.id)}
-                          data-testid={`subtask-${subtask.id}`}
-                        />
-                        <Label 
-                          htmlFor={subtask.id} 
-                          className={cn("text-sm cursor-pointer transition-colors", subtask.completed && "line-through text-muted-foreground")}
-                        >
-                          {subtask.title}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2 pt-2">
-                    <PlusCircle className="h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Add a subtask..." 
-                      className="h-8 border-none bg-transparent shadow-none focus-visible:ring-0 p-0 text-sm"
-                      value={newSubtask}
-                      onChange={(e) => setNewSubtask(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && newSubtask.trim()) {
-                          onAddSubtask(newSubtask.trim());
-                          setNewSubtask("");
-                        }
-                      }}
-                    />
-                  </div>
-                </TabsContent>
-                <TabsContent value="comments" className="mt-4 space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={getPersonAvatar("Sneha Patel")} />
-                        <AvatarFallback>SP</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[13px] font-semibold">Sneha Patel</span>
-                          <span className="text-[11px] text-muted-foreground">Yesterday, 4:30 PM</span>
-                        </div>
-                        <div className="bg-muted/50 rounded-xl p-3 text-[14px]">
-                          Can we expedite this task? It's blocking the Q1 report.
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-3 pt-2">
-                    <Textarea placeholder="Write a comment..." className="min-h-[100px] resize-none" />
-                    <Button size="sm" className="w-full">Add Comment</Button>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="w-[280px] border-l p-6 space-y-6 overflow-y-auto shrink-0 bg-muted/10">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wider">Priority</Label>
-                <div>
-                  <Badge 
-                    className={cn(
-                      "text-[11px] px-3 py-1 border-0 font-medium capitalize",
-                      task.priority === "critical" && "bg-red-50 text-red-500",
-                      task.priority === "high" && "bg-orange-50 text-orange-500",
-                      task.priority === "medium" && "bg-blue-50 text-blue-500",
-                      task.priority === "low" && "bg-slate-50 text-slate-500",
-                    )}
-                  >
-                    {task.priority}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wider">Status</Label>
-                <Select value={task.status} onValueChange={onStatusChange}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="backlog">Backlog</SelectItem>
-                    <SelectItem value="todo">To Do</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="review">In Review</SelectItem>
-                    <SelectItem value="done">Done</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wider">Assignee</Label>
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={getPersonAvatar(task.assigneeName)} />
-                    <AvatarFallback>{task.assigneeName.substring(0, 2)}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium">{task.assigneeName}</span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wider">Due Date</Label>
-                <div className={cn("flex items-center gap-2 text-sm", isOverdue ? "text-red-500 font-medium" : "text-foreground")}>
-                  <Calendar className="h-4 w-4" />
-                  {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-4">
-                <Label className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wider">Created</Label>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  {new Date(task.createdDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t px-6 py-4 flex gap-3 shrink-0 bg-card">
-          {task.status === "done" ? (
-            <Button 
-              variant="outline" 
-              className="flex-1" 
-              onClick={() => onStatusChange("todo")}
-            >
-              Reopen Task
-            </Button>
-          ) : (
-            <Button 
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white" 
-              onClick={() => onStatusChange("done")}
-              data-testid="btn-mark-done"
-            >
-              Mark as Done
-            </Button>
-          )}
-          <Button variant="outline" size="icon" className="shrink-0">
-            <MoreHorizontal className="h-4 w-4" />
+    <DetailModal
+      open={isOpen}
+      onClose={() => onOpenChange(false)}
+      title={task.title}
+      subtitle={`Created on ${new Date(task.createdDate).toLocaleDateString()}`}
+      footer={
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+          <Button 
+            className="text-white"
+            style={{ backgroundColor: vertical?.color }} 
+            onClick={() => onOpenChange(false)}
+          >
+            Save Changes
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      }
+    >
+      <DetailSection title="Description">
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {task.description || "No description provided."}
+        </p>
+      </DetailSection>
+
+      <DetailSection title="Progress">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Subtasks</span>
+            <span className="font-medium">{completedSubtasks}/{task.subtasks.length}</span>
+          </div>
+          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all duration-500"
+              style={{ width: `${task.subtasks.length > 0 ? (completedSubtasks / task.subtasks.length) * 100 : 0}%` }}
+            />
+          </div>
+        </div>
+      </DetailSection>
+
+      <DetailSection title="Subtasks">
+        <div className="space-y-2">
+          {task.subtasks.map((subtask) => (
+            <div key={subtask.id} className="flex items-center gap-3 p-1 rounded-lg hover:bg-muted/50 transition-colors group">
+              <Checkbox
+                id={subtask.id}
+                checked={subtask.completed}
+                onCheckedChange={() => onSubtaskToggle(subtask.id)}
+              />
+              <label
+                htmlFor={subtask.id}
+                className={cn(
+                  "text-sm flex-1 cursor-pointer transition-colors",
+                  subtask.completed ? "text-muted-foreground line-through" : "text-foreground"
+                )}
+              >
+                {subtask.title}
+              </label>
+            </div>
+          ))}
+          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-dashed">
+            <PlusCircle className="h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Add a subtask..."
+              value={newSubtask}
+              onChange={(e) => setNewSubtask(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newSubtask.trim()) {
+                  onAddSubtask(newSubtask.trim());
+                  setNewSubtask("");
+                }
+              }}
+              className="h-8 border-none bg-transparent shadow-none focus-visible:ring-0 p-0 text-sm"
+            />
+          </div>
+        </div>
+      </DetailSection>
+
+      <DetailSection title="Details">
+        <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assignee</p>
+            <div className="flex items-center gap-2 mt-1">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={getPersonAvatar(task.assigneeName)} />
+                <AvatarFallback>{task.assigneeName.substring(0, 2)}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">{task.assigneeName}</span>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Priority</p>
+            <Badge 
+              className={cn(
+                "mt-1 text-[10px] px-2 py-0.5 border-0 font-medium capitalize",
+                task.priority === "critical" && "bg-red-50 text-red-500",
+                task.priority === "high" && "bg-orange-50 text-orange-500",
+                task.priority === "medium" && "bg-blue-50 text-blue-500",
+                task.priority === "low" && "bg-slate-50 text-slate-500",
+              )}
+            >
+              {task.priority}
+            </Badge>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</p>
+            <Select value={task.status} onValueChange={onStatusChange}>
+              <SelectTrigger className="h-8 mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="backlog">Backlog</SelectItem>
+                <SelectItem value="todo">To Do</SelectItem>
+                <SelectItem value="in-progress">In Progress</SelectItem>
+                <SelectItem value="review">In Review</SelectItem>
+                <SelectItem value="done">Done</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Due Date</p>
+            <div className={cn("flex items-center gap-1.5 text-sm mt-1", isOverdue ? "text-red-500 font-medium" : "text-foreground")}>
+              <Calendar className="h-3.5 w-3.5" />
+              {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </div>
+          </div>
+        </div>
+      </DetailSection>
+    </DetailModal>
   );
 }

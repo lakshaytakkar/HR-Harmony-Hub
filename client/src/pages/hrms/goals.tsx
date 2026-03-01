@@ -23,7 +23,7 @@ export default function HrmsGoals() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
 
-  const uniqueEmps = [...new Set(goals.map(g => g.employeeName))];
+  const uniqueEmps = Array.from(new Set(goals.map(g => g.employeeName)));
 
   const filtered = goals.filter(g => {
     const matchEmp = empFilter === "all" || g.employeeName === empFilter;
@@ -113,7 +113,7 @@ export default function HrmsGoals() {
         )}
       </Stagger>
 
-      <FormDialog title="Add Goal" description="Create a new goal or OKR for a team member" open={addOpen} onOpenChange={setAddOpen}>
+      <FormDialog title="Add Goal" open={addOpen} onOpenChange={setAddOpen} onSubmit={() => setAddOpen(false)}>
         <div className="space-y-4">
           <div className="space-y-1.5"><label className="text-sm font-medium">Goal Title</label><Input placeholder="e.g. Achieve 90% test coverage" /></div>
           <div className="space-y-1.5"><label className="text-sm font-medium">Employee</label>

@@ -1,6 +1,13 @@
-import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
+import { Stagger, StaggerItem, Fade } from "@/components/ui/animated";
 import { useMemo } from "react";
-import { Package, Truck, RotateCcw, AlertTriangle, TrendingUp, ArrowRight, ShoppingBag } from "lucide-react";
+import { Package, Truck, AlertTriangle, TrendingUp, ArrowRight, ShoppingBag } from "lucide-react";
+import {
+  PageShell,
+  HeroBanner,
+  StatGrid,
+  StatCard,
+  SectionCard,
+} from "@/components/layout";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { omsOrders, omsShipments, omsInventory } from "@/lib/mock-data-oms";
 import { cn } from "@/lib/utils";
@@ -96,62 +103,63 @@ export default function OmsDashboard() {
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-6">
-      <Fade>
-        <div
-          className="rounded-2xl p-8 text-white relative overflow-hidden"
-          style={{ background: `linear-gradient(135deg, #0E7490 0%, ${BRAND} 60%, #06B6D4 100%)` }}
-        >
-          <div className="relative z-10">
-            <p className="text-cyan-200 text-sm font-medium mb-1">Welcome back, Sneha</p>
-            <h1 className="text-3xl font-bold mb-1">Order & Fulfillment</h1>
-            <p className="text-cyan-100 text-sm">B2B · B2C · Dropship · India Operations</p>
-            <div className="flex gap-8 mt-5 pt-4 border-t border-white/20 text-sm">
-              <div>
-                <p className="text-cyan-200 text-xs">Total Orders</p>
-                <p className="font-bold text-lg">{omsOrders.length}</p>
-              </div>
-              <div>
-                <p className="text-cyan-200 text-xs">Total Revenue</p>
-                <p className="font-bold text-lg">₹{(stats.totalRevenue / 100000).toFixed(1)}L</p>
-              </div>
-              <div>
-                <p className="text-cyan-200 text-xs">Avg Order Value</p>
-                <p className="font-bold text-lg">₹{stats.avgOrderValue.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-          <div className="absolute right-8 top-6 opacity-10">
-            <Package className="size-32 text-white" />
-          </div>
-        </div>
-      </Fade>
+    <PageShell>
+      <HeroBanner
+        eyebrow="Welcome back, Sneha"
+        headline="Order & Fulfillment"
+        tagline="B2B · B2C · Dropship · India Operations"
+        color="#0E7490"
+        colorDark={BRAND}
+        metrics={[
+          { label: "Total Orders", value: omsOrders.length },
+          { label: "Total Revenue", value: `₹${(stats.totalRevenue / 100000).toFixed(1)}L` },
+          { label: "Avg Order Value", value: `₹${stats.avgOrderValue.toLocaleString()}` },
+        ]}
+      />
 
       <Stagger>
-        <div className="grid grid-cols-5 gap-4">
-          {[
-            { label: "Active Orders", value: stats.activeOrders, icon: ShoppingBag, color: "text-cyan-600", bg: "bg-cyan-50" },
-            { label: "Pending Dispatch", value: stats.pendingDispatch, icon: Package, color: "text-amber-600", bg: "bg-amber-50" },
-            { label: "In-Transit", value: stats.inTransit, icon: Truck, color: "text-blue-600", bg: "bg-blue-50" },
-            { label: "Low / Critical Stock", value: stats.lowCritical, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
-            { label: "Fulfillment Rate", value: `${stats.fulfillmentRate}%`, icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
-          ].map((s, i) => (
-            <StaggerItem key={i}>
-              <div className="border border-border rounded-xl p-4 bg-background">
-                <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center mb-3", s.bg)}>
-                  <s.icon className={cn("size-4", s.color)} />
-                </div>
-                <p className="text-2xl font-bold">{s.value}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
-              </div>
-            </StaggerItem>
-          ))}
-        </div>
+        <StatGrid>
+          <StaggerItem>
+            <StatCard
+              label="Active Orders"
+              value={stats.activeOrders}
+              icon={ShoppingBag}
+              iconBg="rgba(8, 145, 178, 0.1)"
+              iconColor="#0891B2"
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              label="Pending Dispatch"
+              value={stats.pendingDispatch}
+              icon={Package}
+              iconBg="rgba(217, 119, 6, 0.1)"
+              iconColor="#D97706"
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              label="In-Transit"
+              value={stats.inTransit}
+              icon={Truck}
+              iconBg="rgba(37, 99, 235, 0.1)"
+              iconColor="#2563EB"
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              label="Low / Critical Stock"
+              value={stats.lowCritical}
+              icon={AlertTriangle}
+              iconBg="rgba(220, 38, 38, 0.1)"
+              iconColor="#DC2626"
+            />
+          </StaggerItem>
+        </StatGrid>
       </Stagger>
 
       <Fade>
-        <div className="border border-border rounded-xl p-5 bg-background">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">Order Pipeline</h2>
+        <SectionCard title="Order Pipeline">
           <div className="flex items-center gap-2">
             {PIPELINE_STAGES.map((stage, idx) => (
               <div key={stage.key} className="flex items-center gap-2 flex-1">
@@ -165,16 +173,17 @@ export default function OmsDashboard() {
               </div>
             ))}
           </div>
-        </div>
+        </SectionCard>
       </Fade>
 
-      <div className="grid grid-cols-3 gap-4">
-        <Fade className="col-span-2">
-          <div className="border border-border rounded-xl bg-background overflow-hidden">
-            <div className="p-4 border-b border-border">
-              <h2 className="text-sm font-semibold">Inventory Alerts</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">SKUs requiring immediate reorder</p>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Fade className="lg:col-span-2">
+          <SectionCard
+            title="Inventory Alerts"
+            viewAllLabel="SKUs requiring immediate reorder"
+            onViewAll={() => {}}
+            noPadding
+          >
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/20">
@@ -187,7 +196,7 @@ export default function OmsDashboard() {
               </thead>
               <tbody>
                 {alertInventory.map((inv) => (
-                  <tr key={inv.id} className={cn("border-b border-border/50", inv.status === "critical" ? "bg-red-50" : "bg-amber-50/40")}>
+                  <tr key={inv.id} className={cn("border-b border-border/50 transition-colors", inv.status === "critical" ? "bg-red-50/50 hover:bg-red-50" : "bg-amber-50/20 hover:bg-amber-50/40")}>
                     <td className="py-2 px-4 font-mono text-xs">{inv.sku}</td>
                     <td className="py-2 px-4 text-xs truncate max-w-[160px]">{inv.productName}</td>
                     <td className="py-2 px-4 text-right font-semibold text-xs">{inv.qtyOnHand}</td>
@@ -203,15 +212,12 @@ export default function OmsDashboard() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </SectionCard>
         </Fade>
 
         <Fade>
-          <div className="border border-border rounded-xl bg-background overflow-hidden">
-            <div className="p-4 border-b border-border">
-              <h2 className="text-sm font-semibold">Order Type — Feb 2026</h2>
-            </div>
-            <div className="p-4 space-y-3">
+          <SectionCard title="Order Type — Feb 2026">
+            <div className="space-y-3">
               {orderTypeSummary.map(({ type, count, value }) => {
                 const config = {
                   b2b: { label: "B2B", color: "bg-blue-500", bg: "bg-blue-50 text-blue-700" },
@@ -232,16 +238,17 @@ export default function OmsDashboard() {
                 );
               })}
             </div>
-          </div>
+          </SectionCard>
         </Fade>
       </div>
 
       <Fade>
-        <div className="border border-border rounded-xl bg-background overflow-hidden">
-          <div className="p-4 border-b border-border">
-            <h2 className="text-sm font-semibold">Today's Dispatches</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Last 10 shipments by dispatch date</p>
-          </div>
+        <SectionCard
+          title="Today's Dispatches"
+          viewAllLabel="Last 10 shipments by dispatch date"
+          onViewAll={() => {}}
+          noPadding
+        >
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/20">
@@ -255,7 +262,7 @@ export default function OmsDashboard() {
             </thead>
             <tbody>
               {recentShipments.map((shp) => (
-                <tr key={shp.id} className="border-b border-border/50 hover:bg-muted/10">
+                <tr key={shp.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
                   <td className="py-2.5 px-4 font-mono text-xs text-cyan-700">{shp.awbNumber}</td>
                   <td className="py-2.5 px-4">
                     <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded", courierBadgeColors[shp.courier])}>
@@ -274,8 +281,8 @@ export default function OmsDashboard() {
               ))}
             </tbody>
           </table>
-        </div>
+        </SectionCard>
       </Fade>
-    </PageTransition>
+    </PageShell>
   );
 }

@@ -18,9 +18,17 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { PageTransition, Fade } from "@/components/ui/animated";
+import { 
+  PageHeader, 
+  PageShell,
+  StatGrid,
+  StatCard,
+  SectionGrid,
+  SectionCard
+} from "@/components/layout";
 import { useToast } from "@/hooks/use-toast";
 import { detectVerticalFromUrl } from "@/lib/verticals-config";
 import {
@@ -386,154 +394,197 @@ export default function UniversalReports() {
   if (!vertical) return null;
 
   return (
-    <PageTransition className="flex flex-col gap-6 px-16 py-6 lg:px-24 overflow-y-auto h-full">
-
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold font-heading">Reports</h1>
-          <p className="text-muted-foreground">Daily and weekly reports for {vertical.name}.</p>
-        </div>
-        {templates.length > 0 && (
+    <PageShell className="overflow-y-auto h-full">
+      <PageHeader
+        title="Reports & Logs"
+        subtitle={`Submit and review ${vertical?.name} operational reports and logs.`}
+        actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="gap-2 shrink-0" style={{ backgroundColor: color, color: "#fff" }}
-                data-testid="button-submit-report-dropdown">
-                <Calendar className="size-4" />
-                Submit Report
-                <ChevronDown className="size-4" />
+              <Button style={{ backgroundColor: color }} className="text-white">
+                <Plus className="mr-2 h-4 w-4" />
+                New Report
+                <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60">
-              {templates.map((tmpl) => (
-                <DropdownMenuItem key={tmpl.id} onClick={() => openSubmit(tmpl)}
-                  data-testid={`menu-template-${tmpl.id}`} className="flex flex-col items-start gap-0.5 py-2.5">
-                  <span className="text-sm font-medium">{tmpl.name}</span>
-                  <span className="text-xs text-muted-foreground capitalize">{tmpl.frequency} · {tmpl.scope}</span>
+            <DropdownMenuContent align="end" className="w-56">
+              {templates.map(t => (
+                <DropdownMenuItem key={t.id} onClick={() => openSubmit(t)}>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium text-sm">{t.name}</span>
+                    <span className="text-[10px] text-muted-foreground capitalize">{t.frequency} • {t.scope}</span>
+                  </div>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        }
+      />
+
+      {/* Stats - Pattern D: StatGrid/StatCard */}
+      <StatGrid>
+        <StatCard
+          label="Total Submitted"
+          value={submitted.toString()}
+          icon={FileText}
+          iconBg="rgba(59,130,246,0.1)"
+          iconColor="#3B82F6"
+          trend="+12% vs last month"
+        />
+        <StatCard
+          label="Pending Submission"
+          value={pendingCount.toString()}
+          icon={Clock}
+          iconBg="rgba(245,158,11,0.1)"
+          iconColor="#F59E0B"
+          trend="-2 today"
+        />
+        <StatCard
+          label="Reporting Compliance"
+          value={`${completion}%`}
+          icon={TrendingUp}
+          iconBg="rgba(16,185,129,0.1)"
+          iconColor="#10B981"
+          trend="+2% last 7 days"
+        />
+      </StatGrid>
+
+      <div className="space-y-8">
+        {/* Templates - Pattern E: SectionGrid/SectionCard */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold font-heading">Report Templates</h2>
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search templates..." 
+                className="pl-9 h-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+          <SectionGrid cols={3}>
+            {templates.map(t => {
+              const scope = scopeConfig[t.scope];
+              return (
+                <div key={t.id} className="rounded-xl border bg-card" data-testid={`template-${t.id}`}>
+                  <div className="p-5">
+                    <h3 className="text-sm font-semibold">{t.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{t.description}</p>
+                    <div className="flex items-center gap-2 mt-3">
+                      <Badge variant="secondary" className={cn("text-[10px] capitalize", scope.badge)}>
+                        {t.scope}
+                      </Badge>
+                      <Badge variant="outline" className={cn("text-[10px] capitalize", freqConfig[t.frequency])}>
+                        {t.frequency}
+                      </Badge>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => openSubmit(t)}
+                      variant="outline"
+                      className="w-full mt-4"
+                    >
+                      Use Template
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </SectionGrid>
+        </section>
+
+        {/* History - Grouped by Date */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-bold font-heading">Submission History</h2>
+          <div className="space-y-6">
+            {Array.from(grouped.entries()).map(([period, periodReports]) => {
+              const first = periodReports[0];
+              const header = dateGroupHeader(period, first.periodLabel);
+              return (
+                <div key={period} className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      {header}
+                    </h3>
+                    <div className="h-px flex-1 bg-border/50" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {periodReports.map(s => {
+                      const sc = scopeConfig[s.scope];
+                      const st = statusConfig[s.status];
+                      const isPending = s.status === "pending" || s.status === "late";
+                      
+                      return (
+                        <div 
+                          key={s.id}
+                          className={cn(
+                            "group flex flex-col p-4 rounded-xl border bg-card hover-elevate transition-all cursor-pointer",
+                            isPending && "opacity-60 border-dashed"
+                          )}
+                          onClick={() => {
+                            if (isPending) {
+                              const tmpl = templates.find(t => t.id === s.templateId);
+                              if (tmpl) openSubmit(tmpl, s.id);
+                            } else setViewReport(s);
+                          }}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className={cn("p-2 rounded-lg", sc.iconBg)}>
+                                <sc.icon className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-sm">{s.templateName}</h4>
+                                <p className="text-[11px] text-muted-foreground">{s.submittedBy} • {s.periodLabel}</p>
+                              </div>
+                            </div>
+                            <Badge className={cn("text-[10px] border-none", st.className)}>
+                              {st.label}
+                            </Badge>
+                          </div>
+                          
+                          <div className="mt-auto flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                               <Badge variant="outline" className={cn("text-[10px] capitalize", freqConfig[s.frequency])}>
+                                {s.frequency}
+                              </Badge>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
       </div>
 
-      {/* Search bar */}
-      <div className="flex flex-col gap-4">
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search reports..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            data-testid="input-search-reports"
-          />
-        </div>
-
-        {/* Filter pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {filterLabels.map(({ key, label }) => (
-            <button
-              key={key}
-              className={cn(
-                "rounded-full px-4 py-1.5 text-sm font-medium transition-colors shrink-0 cursor-pointer",
-                filter === key ? "text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
-              )}
-              style={filter === key ? { backgroundColor: color } : {}}
-              onClick={() => setFilter(key)}
-              data-testid={`filter-${key}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Inline stat summary */}
-      {!isLoading && (
-        <Fade>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-emerald-500" />
-              <span className="font-medium text-foreground">{submitted}</span> Submitted
-            </span>
-            <span className="text-border">·</span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="size-3.5 text-amber-500" />
-              <span className="font-medium text-foreground">{pendingCount}</span> Pending
-            </span>
-            {lateCount > 0 && (
-              <>
-                <span className="text-border">·</span>
-                <span className="flex items-center gap-1.5">
-                  <AlertCircle className="size-3.5 text-red-500" />
-                  <span className="font-medium text-foreground">{lateCount}</span> Overdue
-                </span>
-              </>
-            )}
-            <span className="text-border">·</span>
-            <span className="flex items-center gap-1.5">
-              <TrendingUp className="size-3.5 text-blue-500" />
-              <span className="font-medium text-foreground">{completion}%</span> Completion
-            </span>
-          </div>
-        </Fade>
-      )}
-
-      {/* Report list */}
-      {isLoading ? (
-        <div className="flex flex-col gap-2">
-          {[...Array(6)].map((_, i) => <Card key={i} className="animate-pulse h-16 bg-muted" />)}
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed rounded-xl">
-          <div className="size-14 rounded-full bg-muted flex items-center justify-center mb-4 text-muted-foreground">
-            <File className="size-7" />
-          </div>
-          <h3 className="font-semibold">No reports found</h3>
-          <p className="text-sm text-muted-foreground mt-1">Try a different filter or submit a new report.</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {Array.from(grouped.entries()).map(([period, periodReports]) => {
-            const first = periodReports[0];
-            const header = dateGroupHeader(period, first.periodLabel);
-            return (
-              <div key={period} className="flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">{header}</p>
-                  <div className="flex-1 h-px bg-border" />
-                  <span className="text-xs text-muted-foreground shrink-0">{periodReports.length} report{periodReports.length !== 1 ? "s" : ""}</span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {periodReports.map((report) => (
-                    <ReportRow
-                      key={report.id}
-                      report={report}
-                      onView={() => setViewReport(report)}
-                      onSubmitNow={() => {
-                        const tmpl = templates.find((t) => t.id === report.templateId);
-                        if (tmpl) openSubmit(tmpl, report.id);
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      {/* Modals */}
+      {submitDialog.open && submitDialog.template && (
+        <SubmitDialog
+          open={submitDialog.open}
+          template={submitDialog.template}
+          color={color}
+          onClose={() => setSubmitDialog({ open: false, template: null })}
+          onSubmit={handleSubmit}
+        />
       )}
 
       {viewReport && (
-        <ViewDialog open={!!viewReport} report={viewReport}
+        <ViewDialog 
+          open={!!viewReport} 
+          report={viewReport}
           template={templates.find((t) => t.id === viewReport.templateId)}
-          onClose={() => setViewReport(null)} />
+          onClose={() => setViewReport(null)} 
+        />
       )}
-
-      {submitDialog.open && submitDialog.template && (
-        <SubmitDialog open={submitDialog.open} template={submitDialog.template} color={color}
-          onSubmit={handleSubmit} onClose={() => setSubmitDialog({ open: false, template: null })} />
-      )}
-    </PageTransition>
+    </PageShell>
   );
 }

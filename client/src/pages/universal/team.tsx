@@ -30,7 +30,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { Label } from "@/components/ui/label";
-import { PageHeader } from "@/components/layout/page-header";
+import { 
+  PageHeader, 
+  PageShell,
+  DetailModal,
+  DetailSection
+} from "@/components/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UniversalTeam() {
@@ -96,13 +101,20 @@ export default function UniversalTeam() {
   if (!vertical) return null;
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-6">
+    <PageShell>
       <PageHeader
         title="Team Members"
-        description={`Manage and connect with the ${vertical.name} team.`}
-        actionLabel="Invite Member"
-        onAction={() => setIsInviteOpen(true)}
-        actionIcon={<UserPlus className="h-4 w-4 mr-2" />}
+        subtitle={`Manage and connect with the ${vertical.name} team.`}
+        actions={
+          <Button 
+            onClick={() => setIsInviteOpen(true)}
+            style={{ backgroundColor: vertical.color }}
+            className="text-white"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Invite Member
+          </Button>
+        }
       />
 
       {/* Stats Row — compact inline strip */}
@@ -190,11 +202,10 @@ export default function UniversalTeam() {
           filteredMembers.map((member) => (
             <StaggerItem key={member.id}>
               <Card 
-                className="group relative overflow-hidden hover-elevate transition-all border shadow-sm"
+                className="group relative overflow-hidden hover-elevate transition-all border shadow-sm rounded-xl p-5"
                 data-testid={`card-member-${member.id}`}
               >
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center text-center space-y-3">
+                <div className="flex flex-col items-center text-center space-y-3">
                     <div className="relative">
                       <Avatar className="h-20 w-20 border-2 border-background shadow-sm">
                         <AvatarImage src={getPersonAvatar(member.name, 80)} alt={member.name} />
@@ -252,7 +263,6 @@ export default function UniversalTeam() {
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </div>
-                </CardContent>
               </Card>
             </StaggerItem>
           ))
@@ -315,7 +325,7 @@ export default function UniversalTeam() {
           </div>
         </div>
       </FormDialog>
-    </PageTransition>
+    </PageShell>
   );
 }
 

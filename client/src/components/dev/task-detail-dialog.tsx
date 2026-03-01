@@ -96,20 +96,21 @@ export function TaskDetailDialog({ task, open, onOpenChange, onTaskUpdate }: Tas
   const currentTask = localTask?.id === task?.id ? localTask : task;
 
   if (!currentTask) return null;
+  const task_ = currentTask;
 
-  const project = devProjects.find((p) => p.id === currentTask.projectId);
-  const sprint = currentTask.sprintId ? devSprints.find((s) => s.id === currentTask.sprintId) : null;
-  const completedSubtasks = currentTask.subtasks.filter((s) => s.completed).length;
-  const subtaskProgress = currentTask.subtasks.length > 0 ? (completedSubtasks / currentTask.subtasks.length) * 100 : 0;
+  const project = devProjects.find((p) => p.id === task_.projectId);
+  const sprint = task_.sprintId ? devSprints.find((s) => s.id === task_.sprintId) : null;
+  const completedSubtasks = task_.subtasks.filter((s) => s.completed).length;
+  const subtaskProgress = task_.subtasks.length > 0 ? (completedSubtasks / task_.subtasks.length) * 100 : 0;
 
   function updateTask(updates: Partial<DevTask>) {
-    const updated = { ...currentTask, ...updates } as DevTask;
+    const updated = { ...task_, ...updates } as DevTask;
     setLocalTask(updated);
     onTaskUpdate?.(updated);
   }
 
   function toggleSubtask(subtaskId: string) {
-    const updatedSubtasks = currentTask.subtasks.map((s) =>
+    const updatedSubtasks = task_.subtasks.map((s) =>
       s.id === subtaskId ? { ...s, completed: !s.completed } : s
     );
     updateTask({ subtasks: updatedSubtasks });
@@ -122,7 +123,7 @@ export function TaskDetailDialog({ task, open, onOpenChange, onTaskUpdate }: Tas
       title: newSubtask.trim(),
       completed: false,
     };
-    updateTask({ subtasks: [...currentTask.subtasks, newSt] });
+    updateTask({ subtasks: [...task_.subtasks, newSt] });
     setNewSubtask("");
     toast({ title: "Subtask added" });
   }
@@ -135,7 +136,7 @@ export function TaskDetailDialog({ task, open, onOpenChange, onTaskUpdate }: Tas
       content: newComment.trim(),
       date: new Date().toISOString().split("T")[0],
     };
-    updateTask({ comments: [...currentTask.comments, newC] });
+    updateTask({ comments: [...task_.comments, newC] });
     setNewComment("");
     toast({ title: "Comment added" });
   }

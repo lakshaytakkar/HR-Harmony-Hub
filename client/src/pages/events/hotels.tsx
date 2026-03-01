@@ -1,16 +1,24 @@
 import { useState } from "react";
-import { Star, Plus, Mail } from "lucide-react";
+import { Star, Plus, Mail, Users, MapPin } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
-
+import { Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { FormDialog } from "@/components/hr/form-dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { chinaHotels, tourPackages } from "@/lib/mock-data-goyo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  PageShell,
+  PageHeader,
+  StatGrid,
+  StatCard,
+  IndexToolbar,
+  DetailModal,
+  DetailSection,
+} from "@/components/layout";
+
+const BRAND_COLOR = "#E91E63";
 
 const cities = ["All", "Guangzhou", "Hong Kong", "Shanghai", "Yiwu", "Foshan", "Wuxi"];
 const starFilters = ["All", "3", "4", "5"];
@@ -18,8 +26,8 @@ const starFilters = ["All", "3", "4", "5"];
 function StarDisplay({ count }: { count: number }) {
   return (
     <div className="flex items-center gap-0.5">
-      {Array.from({ length: count }).map((_, i) => (
-        <Star key={i} className="size-3 fill-amber-400 text-amber-400" />
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Star key={i} className={`size-3 ${i < count ? "fill-amber-400 text-amber-400" : "text-muted-foreground/20"}`} />
       ))}
     </div>
   );
@@ -30,10 +38,12 @@ export default function EventsHotels() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cityFilter, setCityFilter] = useState("All");
   const [starFilter, setStarFilter] = useState("All");
+  const [search, setSearch] = useState("");
 
   const filtered = chinaHotels.filter((h) => {
     if (cityFilter !== "All" && h.city !== cityFilter) return false;
     if (starFilter !== "All" && h.stars !== parseInt(starFilter)) return false;
+    if (search && !h.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -43,200 +53,173 @@ export default function EventsHotels() {
 
   const getPackageName = (id: string) => {
     const p = tourPackages.find((p) => p.id === id);
-    return p ? p.name.substring(0, 30) + (p.name.length > 30 ? "…" : "") : id;
+    return p ? p.name : id;
   };
 
+  if (loading) {
+    return (
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-64 animate-pulse" />
+        <StatGrid>
+          {[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />)}
+        </StatGrid>
+        <div className="h-80 bg-muted rounded-xl animate-pulse" />
+      </PageShell>
+    );
+  }
+
   return (
-    <div className="px-16 py-6 lg:px-24">
-      <PageTransition>
-        <Fade direction="up" delay={0}>
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold font-heading text-foreground" data-testid="hotels-title">China Hotel Directory</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">{totalHotels} partner hotels · {uniqueCities} cities</p>
-            </div>
+    <PageShell>
+      <Fade>
+        <PageHeader
+          title="Hotel Directory"
+          subtitle={`${totalHotels} partner hotels across ${uniqueCities} cities`}
+          actions={
             <Button
               onClick={() => setDialogOpen(true)}
               className="gap-2 text-white"
-              style={{ backgroundColor: "#E91E63" }}
+              style={{ backgroundColor: BRAND_COLOR }}
               data-testid="button-add-hotel"
             >
               <Plus className="size-4" />
               Add Hotel
             </Button>
-          </div>
-        </Fade>
+          }
+        />
+      </Fade>
 
-        {loading ? (
-          <div className="mb-5 grid grid-cols-3 gap-3">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
-          </div>
-        ) : (
-          <Fade direction="up" delay={0.05} className="mb-5 grid grid-cols-3 gap-3">
-            <div className="rounded-lg border bg-card p-3 text-center" data-testid="stat-hotels">
-              <p className="text-xl font-bold" style={{ color: "#E91E63" }}>{totalHotels}</p>
-              <p className="text-xs text-muted-foreground">Partner Hotels</p>
-            </div>
-            <div className="rounded-lg border bg-card p-3 text-center" data-testid="stat-cities">
-              <p className="text-xl font-bold text-foreground">{uniqueCities}</p>
-              <p className="text-xs text-muted-foreground">Cities Covered</p>
-            </div>
-            <div className="rounded-lg border bg-card p-3 text-center" data-testid="stat-avg-rate">
-              <p className="text-xl font-bold text-foreground">${avgRate}</p>
-              <p className="text-xs text-muted-foreground">Avg Our Rate/Night</p>
-            </div>
-          </Fade>
-        )}
+      <Fade>
+        <StatGrid cols={3}>
+          <StatCard label="Partner Hotels" value={totalHotels} icon={Users} iconBg="rgba(233, 30, 99, 0.1)" iconColor={BRAND_COLOR} />
+          <StatCard label="Cities Covered" value={uniqueCities} icon={MapPin} iconBg="rgba(33, 150, 243, 0.1)" iconColor="#2196F3" />
+          <StatCard label="Avg Our Rate" value={`$${avgRate}`} icon={Star} iconBg="rgba(76, 175, 80, 0.1)" iconColor="#4CAF50" />
+        </StatGrid>
+      </Fade>
 
-        <Fade direction="up" delay={0.08} className="mb-5 flex flex-wrap gap-2">
-          <div className="flex gap-1.5">
-            {cities.map((city) => (
-              <button
-                key={city}
-                onClick={() => setCityFilter(city)}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${cityFilter === city ? "bg-pink-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
-                data-testid={`filter-city-${city}`}
-              >
-                {city}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1.5 ml-4">
-            {starFilters.map((s) => (
-              <button
-                key={s}
-                onClick={() => setStarFilter(s)}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${starFilter === s ? "bg-amber-400 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
-                data-testid={`filter-stars-${s}`}
-              >
-                {s === "All" ? "All Stars" : `${s}★`}
-              </button>
-            ))}
-          </div>
-        </Fade>
-
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="rounded-xl border bg-card p-5">
-                <Skeleton className="h-5 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2 mb-3" />
-                <Skeleton className="h-3 w-full mb-1" />
-                <Skeleton className="h-3 w-4/5" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Stagger staggerInterval={0.05} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((hotel) => (
-              <StaggerItem key={hotel.id}>
-                <div
-                  className="rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                  data-testid={`card-hotel-${hotel.id}`}
+      <Fade>
+        <IndexToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search by hotel name..."
+          color={BRAND_COLOR}
+          filters={cities.map(c => ({ value: c, label: c }))}
+          activeFilter={cityFilter}
+          onFilter={setCityFilter}
+          extra={
+            <div className="flex gap-1 ml-4">
+              {starFilters.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setStarFilter(s)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${starFilter === s ? "text-white" : "bg-muted text-muted-foreground"}`}
+                  style={starFilter === s ? { backgroundColor: "#fbbf24" } : {}}
                 >
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <h3 className="text-sm font-bold leading-tight" data-testid={`text-hotel-name-${hotel.id}`}>{hotel.name}</h3>
-                      <p className="text-xs text-muted-foreground">{hotel.city}, {hotel.country}</p>
-                    </div>
-                    <div className={`size-2.5 rounded-full shrink-0 mt-1 ${hotel.status === "active" ? "bg-green-500" : "bg-red-400"}`} data-testid={`dot-status-${hotel.id}`} />
-                  </div>
+                  {s === "All" ? "All Stars" : `${s}★`}
+                </button>
+              ))}
+            </div>
+          }
+        />
+      </Fade>
 
-                  <div className="flex items-center gap-2 mb-3">
-                    <StarDisplay count={hotel.stars} />
-                    <span className="text-xs text-muted-foreground">{hotel.stars}-star</span>
-                  </div>
-
-                  <div className="rounded-lg bg-muted/50 p-2.5 mb-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-xs text-muted-foreground">Listed rate</span>
-                      <span className="text-xs line-through text-muted-foreground">${hotel.rate_usd_per_night}/night</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs font-medium">Our rate</span>
-                      <span className="text-sm font-bold text-green-600" data-testid={`text-rate-${hotel.id}`}>${hotel.our_rate_usd}/night</span>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <p className="text-xs text-muted-foreground mb-1">Contact</p>
-                    <p className="text-sm font-medium">{hotel.contact_person}</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <a
-                        href={`https://wa.me/${hotel.contact_phone.replace(/\D/g, "")}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        data-testid={`btn-wa-hotel-${hotel.id}`}
-                      >
-                        <Button variant="ghost" size="icon" className="size-7 text-green-600 hover:bg-green-50">
-                          <SiWhatsapp className="size-3.5" />
-                        </Button>
-                      </a>
-                      <a href={`mailto:${hotel.contact_email}`} data-testid={`btn-email-hotel-${hotel.id}`}>
-                        <Button variant="ghost" size="icon" className="size-7">
-                          <Mail className="size-4" />
-                        </Button>
-                      </a>
-                    </div>
-                  </div>
-
-                  {hotel.packages_used_in.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-xs text-muted-foreground mb-1">Used in</p>
-                      <div className="flex flex-wrap gap-1">
-                        {hotel.packages_used_in.map((pkgId) => (
-                          <span key={pkgId} className="rounded bg-pink-50 dark:bg-pink-950/20 text-pink-700 dark:text-pink-400 px-1.5 py-0.5 text-xs">
-                            {getPackageName(pkgId)}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap gap-1">
-                    {hotel.amenities.slice(0, 4).map((a) => (
-                      <span key={a} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{a}</span>
-                    ))}
-                    {hotel.amenities.length > 4 && (
-                      <span className="text-xs text-muted-foreground self-center">+{hotel.amenities.length - 4}</span>
-                    )}
-                  </div>
-
-                  {hotel.notes && (
-                    <p className="mt-3 pt-3 border-t text-xs text-muted-foreground line-clamp-2">{hotel.notes}</p>
-                  )}
+      <Stagger staggerInterval={0.05} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filtered.map((hotel) => (
+          <StaggerItem key={hotel.id}>
+            <div
+              className="rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              data-testid={`card-hotel-${hotel.id}`}
+            >
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold leading-tight" data-testid={`text-hotel-name-${hotel.id}`}>{hotel.name}</h3>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{hotel.city}, {hotel.country}</p>
                 </div>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        )}
+                <div className={`size-2.5 rounded-full shrink-0 mt-1 ${hotel.status === "active" ? "bg-green-500" : "bg-red-400"}`} />
+              </div>
 
-        <FormDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          title="Add Partner Hotel"
-          description="Add a new hotel to the China directory."
-          onSubmit={() => setDialogOpen(false)}
-          submitLabel="Add Hotel"
-        >
+              <div className="flex items-center gap-2 mb-4">
+                <StarDisplay count={hotel.stars} />
+                <span className="text-[10px] font-bold text-muted-foreground">{hotel.stars} STARS</span>
+              </div>
+
+              <div className="rounded-lg bg-muted/30 p-3 mb-4 space-y-2 border border-muted-foreground/5">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Public Rate</span>
+                  <span className="text-xs line-through text-muted-foreground font-medium">${hotel.rate_usd_per_night}/night</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Our Rate</span>
+                  <span className="text-sm font-bold text-green-600" data-testid={`text-rate-${hotel.id}`}>${hotel.our_rate_usd}/night</span>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Direct Contact</p>
+                <p className="text-xs font-bold">{hotel.contact_person}</p>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <a href={`https://wa.me/${hotel.contact_phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
+                    <Button variant="ghost" size="icon" className="size-8 text-green-600">
+                      <SiWhatsapp size={14} />
+                    </Button>
+                  </a>
+                  <a href={`mailto:${hotel.contact_email}`}>
+                    <Button variant="ghost" size="icon" className="size-8">
+                      <Mail className="size-14 text-muted-foreground" />
+                    </Button>
+                  </a>
+                  <a href={`tel:${hotel.contact_phone}`} className="text-[10px] font-bold text-blue-500 hover:underline ml-1">
+                    {hotel.contact_phone}
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {hotel.amenities.slice(0, 4).map((a) => (
+                  <span key={a} className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground border border-muted-foreground/10">{a}</span>
+                ))}
+              </div>
+
+              {hotel.notes && (
+                <p className="mt-4 pt-4 border-t text-[11px] text-muted-foreground font-medium line-clamp-2 italic">"{hotel.notes}"</p>
+              )}
+            </div>
+          </StaggerItem>
+        ))}
+      </Stagger>
+
+      <DetailModal
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title="Add Partner Hotel"
+        subtitle="Expand the directory"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button 
+              style={{ backgroundColor: BRAND_COLOR }} 
+              className="text-white hover:opacity-90"
+              onClick={() => setDialogOpen(false)}
+            >
+              Add Hotel
+            </Button>
+          </>
+        }
+      >
+        <DetailSection title="Basic Details">
           <div className="grid gap-4">
             <div className="grid gap-1.5">
-              <Label htmlFor="h-name">Hotel Name</Label>
-              <Input id="h-name" placeholder="Hotel full name" data-testid="input-hotel-name" />
+              <Label>Hotel Name</Label>
+              <Input placeholder="Hotel full name" />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="grid gap-1.5">
-                <Label htmlFor="h-city">City</Label>
-                <Input id="h-city" placeholder="Guangzhou" data-testid="input-hotel-city" />
+                <Label>City</Label>
+                <Input placeholder="Guangzhou" />
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="h-country">Country</Label>
-                <Input id="h-country" placeholder="China" defaultValue="China" data-testid="input-hotel-country" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="h-stars">Stars</Label>
+                <Label>Stars</Label>
                 <Select>
-                  <SelectTrigger id="h-stars" data-testid="input-hotel-stars">
+                  <SelectTrigger>
                     <SelectValue placeholder="★" />
                   </SelectTrigger>
                   <SelectContent>
@@ -247,37 +230,9 @@ export default function EventsHotels() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="h-listed-rate">Listed Rate (USD/night)</Label>
-                <Input id="h-listed-rate" type="number" placeholder="e.g. 150" data-testid="input-hotel-rate" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="h-our-rate">Our Rate (USD/night)</Label>
-                <Input id="h-our-rate" type="number" placeholder="e.g. 120" data-testid="input-hotel-our-rate" />
-              </div>
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="h-contact">Contact Person</Label>
-              <Input id="h-contact" placeholder="Name (Title)" data-testid="input-hotel-contact" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="h-phone">Phone</Label>
-                <Input id="h-phone" placeholder="+86 ..." data-testid="input-hotel-phone" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="h-email">Email</Label>
-                <Input id="h-email" type="email" placeholder="hotel@email.com" data-testid="input-hotel-email" />
-              </div>
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="h-notes">Notes</Label>
-              <Input id="h-notes" placeholder="Any special notes about this hotel..." data-testid="input-hotel-notes" />
-            </div>
           </div>
-        </FormDialog>
-      </PageTransition>
-    </div>
+        </DetailSection>
+      </DetailModal>
+    </PageShell>
   );
 }

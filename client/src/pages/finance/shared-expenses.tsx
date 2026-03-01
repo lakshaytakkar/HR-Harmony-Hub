@@ -17,7 +17,7 @@ function fmtINR(v: number) {
   return `₹${v}`;
 }
 
-const months = [...new Set(sharedExpenseHistory.map(h => h.month))].sort().reverse();
+const months = Array.from(new Set(sharedExpenseHistory.map(h => h.month))).sort().reverse();
 const currentMonthTotal = sharedExpenseHistory.filter(h => h.month === months[0]).reduce((s, h) => s + h.totalAmount, 0);
 
 const companyCurrentMonth = ALL_FINANCE_COMPANIES.map(co => {

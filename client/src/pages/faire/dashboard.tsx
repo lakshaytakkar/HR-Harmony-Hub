@@ -1,13 +1,19 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Bell, TrendingUp, Package, Users, RefreshCw, AlertTriangle } from "lucide-react";
-import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Stagger, StaggerItem, Fade } from "@/components/ui/animated";
+import {
+  PageShell,
+  HeroBanner,
+  StatGrid,
+  StatCard,
+  SectionCard,
+} from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { faireStores, faireOrders, faireProducts, faireDisputes, type OrderState } from "@/lib/mock-data-faire";
+import { Badge } from "@/components/ui/badge";
 
 const BRAND_COLOR = "#1A6B45";
 
@@ -62,33 +68,25 @@ export default function FaireDashboard() {
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-6">
-      <Fade>
-        <div
-          className="relative rounded-2xl overflow-hidden p-8"
-          style={{ background: `linear-gradient(135deg, ${BRAND_COLOR} 0%, #2D8A60 100%)` }}
-        >
-          <div className="relative z-10">
-            <p className="text-white/70 text-sm font-medium mb-1">👋 Good morning, Ananya</p>
-            <h1 className="text-3xl font-bold text-white font-heading mb-1">Faire Marketplace</h1>
-            <p className="text-white/80 text-sm">Managing 6 brand storefronts · Last synced 14 min ago</p>
-          </div>
-          <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-10">
-            <Package size={120} color="white" />
-          </div>
-          <div className="absolute right-6 top-6">
-            <select
-              value={selectedStore}
-              onChange={e => setSelectedStore(e.target.value)}
-              className="text-xs bg-white/20 text-white border border-white/30 rounded-lg px-3 py-1.5 backdrop-blur-sm"
-              data-testid="select-store"
-            >
-              <option value="all">All Stores</option>
-              {faireStores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-        </div>
-      </Fade>
+    <PageShell>
+      <HeroBanner
+        eyebrow="👋 Good morning, Ananya"
+        headline="Faire Marketplace"
+        tagline="Managing 6 brand storefronts · Last synced 14 min ago"
+        color={BRAND_COLOR}
+        colorDark="#2D8A60"
+        actions={
+          <select
+            value={selectedStore}
+            onChange={e => setSelectedStore(e.target.value)}
+            className="text-xs bg-white/20 text-white border border-white/30 rounded-lg px-3 py-1.5 backdrop-blur-sm outline-none"
+            data-testid="select-store"
+          >
+            <option value="all" className="text-foreground">All Stores</option>
+            {faireStores.map(s => <option key={s.id} value={s.id} className="text-foreground">{s.name}</option>)}
+          </select>
+        }
+      />
 
       {(pendingFulfillment > 0 || openDisputes > 0) && (
         <Fade>
@@ -118,57 +116,70 @@ export default function FaireDashboard() {
       )}
 
       <Stagger>
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { label: "Total Revenue MTD", value: `$${(totalRevenueMTD / 1000).toFixed(0)}K`, icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
-            { label: "New Orders Today", value: newOrdersToday, icon: Package, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30" },
-            { label: "Pending Fulfillment", value: pendingFulfillment, icon: Bell, color: pendingFulfillment > 0 ? "text-amber-600" : "text-teal-600", bg: pendingFulfillment > 0 ? "bg-amber-50 dark:bg-amber-950/30" : "bg-teal-50 dark:bg-teal-950/30" },
-            { label: "Active Retailers", value: activeRetailers, icon: Users, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/30" },
-          ].map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <StaggerItem key={i}>
-                <Card data-testid={`kpi-card-${i}`}>
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className={`size-10 rounded-xl ${s.bg} flex items-center justify-center shrink-0`}>
-                      <Icon size={18} className={s.color} />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{s.value}</p>
-                      <p className="text-xs text-muted-foreground">{s.label}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </StaggerItem>
-            );
-          })}
-        </div>
+        <StatGrid>
+          <StaggerItem>
+            <StatCard
+              label="Total Revenue MTD"
+              value={`$${(totalRevenueMTD / 1000).toFixed(0)}K`}
+              icon={TrendingUp}
+              iconBg="rgba(5, 150, 105, 0.1)"
+              iconColor="#059669"
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              label="New Orders Today"
+              value={newOrdersToday}
+              icon={Package}
+              iconBg="rgba(37, 99, 235, 0.1)"
+              iconColor="#2563EB"
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              label="Pending Fulfillment"
+              value={pendingFulfillment}
+              icon={Bell}
+              iconBg={pendingFulfillment > 0 ? "rgba(217, 119, 6, 0.1)" : "rgba(13, 148, 136, 0.1)"}
+              iconColor={pendingFulfillment > 0 ? "#D97706" : "#0D9488"}
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              label="Active Retailers"
+              value={activeRetailers}
+              icon={Users}
+              iconBg="rgba(124, 58, 237, 0.1)"
+              iconColor="#7C3AED"
+            />
+          </StaggerItem>
+        </StatGrid>
       </Stagger>
 
       <Fade>
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-semibold">Store Health</p>
-          <Button size="sm" variant="outline" onClick={handleSync} data-testid="btn-sync">
-            <RefreshCw size={13} className="mr-1.5" /> Sync Now
-          </Button>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-1">
-          {faireStores.map(store => (
-            <div
-              key={store.id}
-              className="min-w-[160px] shrink-0 rounded-xl border bg-card p-3 cursor-pointer hover:shadow-sm transition-shadow"
-              onClick={() => setLocation("/faire/stores")}
-              data-testid={`store-mini-card-${store.id}`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`size-2 rounded-full ${store.status === "connected" ? "bg-emerald-500" : store.status === "error" ? "bg-red-500" : "bg-gray-400"}`} />
-                <p className="text-xs font-semibold truncate">{store.name}</p>
+        <SectionCard
+          title="Store Health"
+          viewAllLabel="Sync Now"
+          onViewAll={handleSync}
+        >
+          <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+            {faireStores.map(store => (
+              <div
+                key={store.id}
+                className="min-w-[160px] shrink-0 rounded-xl border bg-card p-3 cursor-pointer hover:bg-muted/20 transition-colors"
+                onClick={() => setLocation("/faire/stores")}
+                data-testid={`store-mini-card-${store.id}`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`size-2 rounded-full ${store.status === "connected" ? "bg-emerald-500" : store.status === "error" ? "bg-red-500" : "bg-gray-400"}`} />
+                  <p className="text-xs font-semibold truncate">{store.name}</p>
+                </div>
+                <p className="text-base font-bold">{store.todayOrders} <span className="text-[10px] text-muted-foreground font-normal">orders today</span></p>
+                <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">${(store.monthlyRevenue / 1000).toFixed(0)}K <span className="text-muted-foreground font-normal">MTD</span></p>
               </div>
-              <p className="text-base font-bold">{store.todayOrders} <span className="text-[10px] text-muted-foreground font-normal">orders today</span></p>
-              <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">${(store.monthlyRevenue / 1000).toFixed(0)}K <span className="text-muted-foreground font-normal">MTD</span></p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </SectionCard>
       </Fade>
 
       <Fade>
@@ -186,20 +197,17 @@ export default function FaireDashboard() {
         </div>
       </Fade>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Fade>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Recent Orders</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
+          <SectionCard title="Recent Orders" noPadding>
+            <div className="space-y-1 p-2">
               {recentOrders.map(order => {
                 const store = faireStores.find(s => s.id === order.storeId);
                 const cfg = stateConfig[order.state];
                 return (
                   <div
                     key={order.id}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/20 cursor-pointer transition-colors"
                     onClick={() => setLocation(`/faire/orders/${order.id}`)}
                     data-testid={`recent-order-${order.id}`}
                   >
@@ -214,21 +222,17 @@ export default function FaireDashboard() {
                   </div>
                 );
               })}
-            </CardContent>
-          </Card>
+            </div>
+          </SectionCard>
         </Fade>
 
         <Fade>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Top Products This Month</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <SectionCard title="Top Products This Month" noPadding>
+            <div className="space-y-1 p-2">
               {topProducts.map((product, i) => {
                 const store = faireStores.find(s => s.id === product.storeId);
-                const totalUnits = product.variants.reduce((s, v) => s + (v.available_quantity > 0 ? v.available_quantity : 0), 0);
                 return (
-                  <div key={product.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors" onClick={() => setLocation(`/faire/products/${product.id}`)} data-testid={`top-product-${product.id}`}>
+                  <div key={product.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/20 cursor-pointer transition-colors" onClick={() => setLocation(`/faire/products/${product.id}`)} data-testid={`top-product-${product.id}`}>
                     <div className="size-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: BRAND_COLOR }}>{i + 1}</div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate">{product.name}</p>
@@ -244,10 +248,10 @@ export default function FaireDashboard() {
                   </div>
                 );
               })}
-            </CardContent>
-          </Card>
+            </div>
+          </SectionCard>
         </Fade>
       </div>
-    </PageTransition>
+    </PageShell>
   );
 }

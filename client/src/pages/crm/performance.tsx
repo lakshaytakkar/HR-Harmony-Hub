@@ -1,14 +1,25 @@
 import { useState } from "react";
 import { TrendingUp, TrendingDown, Target, Zap, Clock, Award, DollarSign, Activity } from "lucide-react";
-import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
+import { Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
-import { teamPerformance, crmDeals, crmActivities, ALL_VERTICALS_IN_CRM } from "@/lib/mock-data-crm";
+import { teamPerformance, crmDeals, ALL_VERTICALS_IN_CRM } from "@/lib/mock-data-crm";
+import {
+  PageShell,
+  PageHeader,
+  IndexToolbar,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+  StatGrid,
+  StatCard,
+} from "@/components/layout";
 
-const BRAND = "#0369A1";
+const BRAND = "#0284C7";
 
 function formatINR(v: number) {
   if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
@@ -126,22 +137,33 @@ export default function CrmPerformance() {
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-6 animate-pulse">
-        <div className="h-10 bg-muted rounded w-48" />
-        <div className="grid grid-cols-4 gap-4">{[...Array(8)].map((_, i) => <div key={i} className="h-24 bg-muted rounded-xl" />)}</div>
-        <div className="h-80 bg-muted rounded-xl" />
-      </div>
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-48 animate-pulse" />
+        <StatGrid>
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />
+          ))}
+        </StatGrid>
+        <div className="h-80 bg-muted rounded-xl animate-pulse" />
+      </PageShell>
     );
   }
 
+  const verticalOptions = [
+    { value: "all", label: "All Verticals" },
+    ...ALL_VERTICALS_IN_CRM.map((v) => ({ value: v.id, label: v.name })),
+  ];
+
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-6">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">Team Performance</h1>
-          <div className="flex items-center gap-3">
+        <PageHeader
+          title="Team Performance"
+          actions={
             <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="h-9 w-44 rounded-lg" data-testid="select-period"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 w-44 bg-muted/30" data-testid="select-period">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="this-month">This Month</SelectItem>
                 <SelectItem value="last-month">Last Month</SelectItem>
@@ -149,175 +171,219 @@ export default function CrmPerformance() {
                 <SelectItem value="last-quarter">Last Quarter</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-        </div>
+          }
+        />
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {[{ id: "all", name: "All Verticals", color: BRAND }, ...ALL_VERTICALS_IN_CRM].map(v => (
-            <button
-              key={v.id}
-              onClick={() => setVerticalFilter(v.id)}
-              data-testid={`pill-vertical-${v.id}`}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                verticalFilter === v.id ? "text-white border-transparent" : "bg-background border-border text-muted-foreground hover:border-foreground/30"
-              }`}
-              style={verticalFilter === v.id ? { backgroundColor: v.color, borderColor: v.color } : {}}
-            >
-              {v.name}
-            </button>
-          ))}
-        </div>
+        <IndexToolbar
+          search=""
+          onSearch={() => {}}
+          color={BRAND}
+          filters={verticalOptions}
+          activeFilter={verticalFilter}
+          onFilter={setVerticalFilter}
+        />
       </Fade>
 
-      <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {kpiCards.map(kpi => (
-          <StaggerItem key={kpi.label}>
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-4">
-                <div className={`w-9 h-9 rounded-lg ${kpi.bg} flex items-center justify-center mb-3`}>
-                  <kpi.icon className={`size-5 ${kpi.color}`} />
-                </div>
-                <p className="text-2xl font-bold">{kpi.value}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{kpi.label}</p>
-                <div className={`flex items-center gap-1 mt-1 text-xs font-medium ${kpi.up ? "text-emerald-600" : "text-red-500"}`}>
-                  {kpi.up ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
-                  {kpi.trend} vs last period
-                </div>
-              </CardContent>
-            </Card>
-          </StaggerItem>
+      <StatGrid>
+        {kpiCards.map((kpi) => (
+          <StatCard
+            key={kpi.label}
+            label={kpi.label}
+            value={kpi.value}
+            icon={kpi.icon}
+            iconBg={kpi.bg}
+            iconColor={kpi.color}
+            trend={`${kpi.trend} vs last period`}
+          />
         ))}
-      </Stagger>
+      </StatGrid>
 
       <Fade>
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">Sales Leaderboard</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="text-left p-4 font-medium">Rank</th>
-                    <th className="text-left p-4 font-medium">Rep</th>
-                    <th className="text-left p-4 font-medium">Vertical</th>
-                    <th className="text-left p-4 font-medium">Leads</th>
-                    <th className="text-left p-4 font-medium">Converted</th>
-                    <th className="text-left p-4 font-medium">Deals Won</th>
-                    <th className="text-left p-4 font-medium">Revenue</th>
-                    <th className="text-left p-4 font-medium">Win Rate</th>
-                    <th className="text-left p-4 font-medium">vs Target</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filtered.map(rep => {
-                    const vert = getVertical(rep.vertical);
-                    const pct = Math.min(Math.round((rep.achieved / rep.target) * 100), 100);
-                    const winColor = rep.winRate >= 60 ? "text-emerald-600" : rep.winRate >= 30 ? "text-amber-600" : "text-red-500";
-                    const isExpanded = expandedRep === rep.id;
-                    return (
-                      <>
-                        <tr
-                          key={rep.id}
-                          className="hover:bg-muted/30 transition-colors cursor-pointer"
-                          onClick={() => setExpandedRep(isExpanded ? null : rep.id)}
-                          data-testid={`rep-row-${rep.id}`}
+        <DataTableContainer>
+          <div className="px-5 py-3.5 border-b bg-card">
+            <h3 className="text-sm font-semibold">Sales Leaderboard</h3>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <DataTH>Rank</DataTH>
+                <DataTH>Rep</DataTH>
+                <DataTH>Vertical</DataTH>
+                <DataTH>Leads</DataTH>
+                <DataTH>Converted</DataTH>
+                <DataTH>Deals Won</DataTH>
+                <DataTH>Revenue</DataTH>
+                <DataTH>Win Rate</DataTH>
+                <DataTH>vs Target</DataTH>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filtered.map((rep) => {
+                const vert = getVertical(rep.vertical);
+                const pct = Math.min(
+                  Math.round((rep.achieved / rep.target) * 100),
+                  100
+                );
+                const winColor =
+                  rep.winRate >= 60
+                    ? "text-emerald-600"
+                    : rep.winRate >= 30
+                    ? "text-amber-600"
+                    : "text-red-500";
+                const isExpanded = expandedRep === rep.id;
+                return (
+                  <>
+                    <DataTR
+                      key={rep.id}
+                      onClick={() => setExpandedRep(isExpanded ? null : rep.id)}
+                      data-testid={`rep-row-${rep.id}`}
+                    >
+                      <DataTD>
+                        <span
+                          className={`text-lg font-bold ${
+                            rep.rank <= 3 ? "" : "text-muted-foreground text-sm"
+                          }`}
                         >
-                          <td className="p-4">
-                            <span className={`text-lg font-bold ${rep.rank <= 3 ? "" : "text-muted-foreground text-sm"}`}>
-                              {rankMedal(rep.rank)}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2.5">
-                              <img src={getPersonAvatar(rep.name, 32)} alt={rep.name} className="size-8 rounded-full" />
-                              <div>
-                                <p className="text-sm font-medium">{rep.name}</p>
-                                <p className="text-xs text-muted-foreground">{rep.role}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            {vert && (
-                              <span className="text-xs px-2 py-0.5 rounded-full text-white font-medium" style={{ backgroundColor: vert.color }}>
-                                {vert.name}
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-4 text-sm">{rep.leadsAssigned}</td>
-                          <td className="p-4 text-sm">{rep.leadsConverted}</td>
-                          <td className="p-4 text-sm font-medium">{rep.dealsWon}</td>
-                          <td className="p-4 text-sm font-bold">{formatINR(rep.revenue)}</td>
-                          <td className="p-4">
-                            <span className={`text-sm font-bold ${winColor}`}>{rep.winRate}%</span>
-                          </td>
-                          <td className="p-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">{pct}%</span>
-                              </div>
-                              <div className="w-24 bg-muted rounded-full h-1.5 overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full ${pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-400" : "bg-red-400"}`}
-                                  style={{ width: `${pct}%` }}
-                                />
-                              </div>
-                              <p className="text-xs text-muted-foreground">{formatINR(rep.achieved)} / {formatINR(rep.target)}</p>
-                            </div>
-                          </td>
-                        </tr>
-                        {isExpanded && (
-                          <tr key={`${rep.id}-exp`}>
-                            <td colSpan={9} className="bg-muted/30 px-8 py-4">
-                              <div className="grid grid-cols-3 gap-6">
-                                <div>
-                                  <p className="text-xs font-medium text-muted-foreground mb-2">Activity Breakdown</p>
-                                  <div className="space-y-1.5 text-sm">
-                                    <div className="flex justify-between"><span>Activities Done</span><span className="font-medium">{rep.activitiesCompleted}</span></div>
-                                    <div className="flex justify-between"><span>Avg Response</span><span className="font-medium">{rep.responseTime}h</span></div>
-                                    <div className="flex justify-between"><span>Deals Lost</span><span className="font-medium text-red-500">{rep.dealsLost}</span></div>
-                                  </div>
-                                </div>
-                                <div>
-                                  <p className="text-xs font-medium text-muted-foreground mb-2">Notable Events</p>
-                                  <div className="space-y-1.5">
-                                    {rep.auditEvents.map((e, i) => (
-                                      <p key={i} className="text-xs text-muted-foreground">· {e}</p>
-                                    ))}
-                                  </div>
-                                </div>
-                                <div>
-                                  <p className="text-xs font-medium text-muted-foreground mb-2">Monthly Trend</p>
-                                  <div className="flex items-end gap-1 h-14">
-                                    {[40, 55, 35, 70, 60, 80, pct].map((h, i) => (
-                                      <div key={i} className="flex-1 rounded-sm bg-blue-200 dark:bg-blue-800" style={{ height: `${h}%` }} />
-                                    ))}
-                                  </div>
-                                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                                    <span>Aug</span><span>Feb</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
+                          {rankMedal(rep.rank)}
+                        </span>
+                      </DataTD>
+                      <DataTD>
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={getPersonAvatar(rep.name, 32)}
+                            alt={rep.name}
+                            className="size-8 rounded-full"
+                          />
+                          <div>
+                            <p className="text-sm font-medium">{rep.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {rep.role}
+                            </p>
+                          </div>
+                        </div>
+                      </DataTD>
+                      <DataTD>
+                        {vert && (
+                          <span
+                            className="text-xs px-2 py-0.5 rounded-full text-white font-medium"
+                            style={{ backgroundColor: vert.color }}
+                          >
+                            {vert.name}
+                          </span>
                         )}
-                      </>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                      </DataTD>
+                      <DataTD>{rep.leadsAssigned}</DataTD>
+                      <DataTD>{rep.leadsConverted}</DataTD>
+                      <DataTD className="font-medium">{rep.dealsWon}</DataTD>
+                      <DataTD className="font-bold">{formatINR(rep.revenue)}</DataTD>
+                      <DataTD>
+                        <span className={`font-bold ${winColor}`}>
+                          {rep.winRate}%
+                        </span>
+                      </DataTD>
+                      <DataTD>
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">{pct}%</span>
+                          </div>
+                          <div className="w-24 bg-muted rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                pct >= 80
+                                  ? "bg-emerald-500"
+                                  : pct >= 50
+                                  ? "bg-amber-400"
+                                  : "bg-red-400"
+                              }`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {formatINR(rep.achieved)} / {formatINR(rep.target)}
+                          </p>
+                        </div>
+                      </DataTD>
+                    </DataTR>
+                    {isExpanded && (
+                      <tr key={`${rep.id}-exp`}>
+                        <td colSpan={9} className="bg-muted/30 px-8 py-4 text-sm">
+                          <div className="grid grid-cols-3 gap-6">
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-2">
+                                Activity Breakdown
+                              </p>
+                              <div className="space-y-1.5">
+                                <div className="flex justify-between">
+                                  <span>Activities Done</span>
+                                  <span className="font-medium">
+                                    {rep.activitiesCompleted}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Avg Response</span>
+                                  <span className="font-medium">
+                                    {rep.responseTime}h
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Deals Lost</span>
+                                  <span className="font-medium text-red-500">
+                                    {rep.dealsLost}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-2">
+                                Notable Events
+                              </p>
+                              <div className="space-y-1.5">
+                                {rep.auditEvents.map((e, i) => (
+                                  <p
+                                    key={i}
+                                    className="text-xs text-muted-foreground"
+                                  >
+                                    · {e}
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-2">
+                                Monthly Trend
+                              </p>
+                              <div className="flex items-end gap-1 h-14">
+                                {[40, 55, 35, 70, 60, 80, pct].map((h, i) => (
+                                  <div
+                                    key={i}
+                                    className="flex-1 rounded-sm bg-blue-200 dark:bg-blue-800"
+                                    style={{ height: `${h}%` }}
+                                  />
+                                ))}
+                              </div>
+                              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                                <span>Aug</span>
+                                <span>Feb</span>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              })}
+            </tbody>
+          </table>
+        </DataTableContainer>
       </Fade>
 
       <Fade>
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 px-5 py-3.5 border-b">
             <CardTitle className="text-sm font-semibold">Audit Trail — Recent Significant Events</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5">
             <div className="space-y-3">
               {auditFeed.map((entry, i) => {
                 const dotColor = entry.type === "win" ? "bg-emerald-500" : entry.type === "loss" ? "bg-red-400" : "bg-blue-400";
@@ -340,6 +406,6 @@ export default function CrmPerformance() {
           </CardContent>
         </Card>
       </Fade>
-    </PageTransition>
+    </PageShell>
   );
 }

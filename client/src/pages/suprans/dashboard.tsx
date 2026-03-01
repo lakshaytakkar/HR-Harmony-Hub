@@ -1,19 +1,24 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { PageTransition, Stagger, StaggerItem } from "@/components/ui/animated";
-import { Badge } from "@/components/ui/badge";
 import {
   Users, UserPlus, CheckCircle2, TrendingUp,
   ArrowRight, Globe, Instagram, Linkedin, MessageCircle,
-  Phone, Mail, MapPin, BarChart3,
+  Phone, MapPin, BarChart3,
 } from "lucide-react";
 import {
-  supransLeads, supransServices, VERTICAL_SERVICE_MAP,
-  type SupransLead,
+  supransLeads,
 } from "@/lib/mock-data-suprans";
-import { formatDistanceToNow } from "date-fns";
+import {
+  PageShell,
+  HeroBanner,
+  StatGrid,
+  StatCard,
+  SectionCard,
+  SectionGrid,
+} from "@/components/layout";
 
 const BRAND = "#3730A3";
+const BRAND_DARK = "#4F46E5";
 
 const SOURCE_ICONS: Record<string, typeof Globe> = {
   website: Globe,
@@ -70,45 +75,56 @@ export default function SupransDashboard() {
   const [, setLocation] = useLocation();
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold font-heading">Suprans Command Center</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">Lead intelligence and routing for all business verticals</p>
-      </div>
+    <PageShell>
+      <HeroBanner
+        eyebrow="Lead Intelligence Hub"
+        headline="Suprans Command Center"
+        tagline={`${supransLeads.length} total leads received across all verticals.`}
+        color={BRAND}
+        colorDark={BRAND_DARK}
+        metrics={[
+          { label: "New Today", value: newToday },
+          { label: "Assigned", value: assignedLeads.length },
+          { label: "Converted", value: convertedLeads.length },
+        ]}
+      />
 
-      <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Total Leads", value: supransLeads.length, icon: Users, color: "bg-indigo-50", iconColor: "text-indigo-600" },
-          { label: "New Today", value: newToday, icon: UserPlus, color: "bg-sky-50", iconColor: "text-sky-600" },
-          { label: "Assigned", value: assignedLeads.length, icon: CheckCircle2, color: "bg-emerald-50", iconColor: "text-emerald-600" },
-          { label: "Conversion Rate", value: `${conversionRate}%`, icon: TrendingUp, color: "bg-amber-50", iconColor: "text-amber-600" },
-        ].map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <StaggerItem key={stat.label}>
-              <div className="rounded-xl border bg-card p-4 space-y-3">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${stat.color}`}>
-                  <Icon className={`w-4 h-4 ${stat.iconColor}`} />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                </div>
-              </div>
-            </StaggerItem>
-          );
-        })}
-      </Stagger>
+      <StatGrid>
+        <StatCard
+          label="Total Leads"
+          value={supransLeads.length}
+          icon={Users}
+          iconBg="hsl(var(--indigo-500) / 0.1)"
+          iconColor="#6366f1"
+        />
+        <StatCard
+          label="New Today"
+          value={newToday}
+          icon={UserPlus}
+          iconBg="hsl(var(--sky-500) / 0.1)"
+          iconColor="#0ea5e9"
+        />
+        <StatCard
+          label="Assigned"
+          value={assignedLeads.length}
+          icon={CheckCircle2}
+          iconBg="hsl(var(--emerald-500) / 0.1)"
+          iconColor="#10b981"
+        />
+        <StatCard
+          label="Conversion Rate"
+          value={`${conversionRate}%`}
+          icon={TrendingUp}
+          iconBg="hsl(var(--amber-500) / 0.1)"
+          iconColor="#f59e0b"
+        />
+      </StatGrid>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-xl border bg-card">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold text-sm">Vertical Breakdown</h2>
-            <p className="text-xs text-muted-foreground">Lead distribution across business verticals</p>
-          </div>
-          <div className="divide-y">
+      <SectionGrid>
+        <SectionCard title="Vertical Breakdown">
+          <div className="divide-y -mx-5 -mb-5">
             {verticalBreakdown.map((v) => (
-              <div key={v.id} className="p-4 flex items-center justify-between">
+              <div key={v.id} className="px-5 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: v.color }} />
                   <span className="text-sm font-medium">{v.name}</span>
@@ -121,41 +137,32 @@ export default function SupransDashboard() {
               </div>
             ))}
           </div>
-        </div>
+        </SectionCard>
 
-        <div className="rounded-xl border bg-card">
-          <div className="p-4 border-b flex items-center justify-between">
-            <div>
-              <h2 className="font-semibold text-sm">Recent Leads</h2>
-              <p className="text-xs text-muted-foreground">Last 8 leads received</p>
-            </div>
-            <button
-              onClick={() => setLocation("/suprans/inbound")}
-              className="text-xs flex items-center gap-1 font-medium"
-              style={{ color: BRAND }}
-              data-testid="link-view-all-inbound"
-            >
-              View all <ArrowRight className="w-3 h-3" />
-            </button>
-          </div>
+        <SectionCard
+          title="Recent Leads"
+          viewAllLabel="View all"
+          onViewAll={() => setLocation("/suprans/inbound")}
+          noPadding
+        >
           <div className="divide-y">
             {recentLeads.map((lead) => {
               const SrcIcon = SOURCE_ICONS[lead.source] || Globe;
               return (
-                <div key={lead.id} className="p-3 flex items-center justify-between gap-3" data-testid={`row-lead-${lead.id}`}>
+                <div key={lead.id} className="p-4 flex items-center justify-between gap-3 hover:bg-muted/20 transition-colors" data-testid={`row-lead-${lead.id}`}>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{lead.name}</p>
                     <p className="text-xs text-muted-foreground">{SERVICE_LABELS[lead.service]}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <SrcIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[lead.status]}`}>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[lead.status]}`}>
                       {lead.status}
                     </span>
                     {(lead.status === "new" || lead.status === "validated") && (
                       <button
                         onClick={() => setLocation(lead.status === "new" ? "/suprans/inbound" : "/suprans/enrichment")}
-                        className="text-xs px-2 py-0.5 rounded text-white font-medium"
+                        className="text-[10px] px-2 py-0.5 rounded text-white font-medium hover:opacity-90"
                         style={{ backgroundColor: BRAND }}
                         data-testid={`button-quick-assign-${lead.id}`}
                       >
@@ -167,8 +174,8 @@ export default function SupransDashboard() {
               );
             })}
           </div>
-        </div>
-      </div>
-    </PageTransition>
+        </SectionCard>
+      </SectionGrid>
+    </PageShell>
   );
 }

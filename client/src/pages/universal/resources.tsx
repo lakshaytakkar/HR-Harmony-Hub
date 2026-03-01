@@ -20,7 +20,19 @@ import {
   Loader2
 } from "lucide-react";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { PageTransition, Fade } from "@/components/ui/animated";
+import { Fade } from "@/components/ui/animated";
+import { 
+  PageHeader, 
+  PageShell,
+  IndexToolbar,
+  FilterPill,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+  DetailModal,
+  DetailSection
+} from "@/components/layout";
 import { detectVerticalFromUrl } from "@/lib/verticals-config";
 import { sharedResources, type SharedResource } from "@/lib/mock-data-shared";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,7 +70,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { DataTable, type Column } from "@/components/hr/data-table";
 
 const resourceSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -176,89 +187,35 @@ export default function UniversalResources() {
     });
   };
 
-  const listColumns: Column<SharedResource>[] = [
-    {
-      key: "title",
-      header: "Name",
-      render: (r) => {
-        const Icon = getFileIcon(r.type);
-        return (
-          <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", getIconColors(r.type))}>
-              <Icon className="size-4" />
-            </div>
-            <div>
-              <div className="font-medium">{r.title}</div>
-              <div className="text-xs text-muted-foreground line-clamp-1">{r.description}</div>
-            </div>
-          </div>
-        );
-      }
-    },
-    { key: "category", header: "Category" },
-    { 
-      key: "type", 
-      header: "Type",
-      render: (r) => (
-        <Badge variant="outline" className="capitalize text-[10px] font-medium">
-          {r.type}
-        </Badge>
-      )
-    },
-    { key: "addedBy", header: "Added By" },
-    { key: "addedDate", header: "Date" },
-    {
-      key: "actions",
-      header: "",
-      render: (r) => (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedResource(r);
-            setPreviewOpen(true);
-          }}
-          data-testid={`btn-open-${r.id}`}
-        >
-          <ExternalLink className="size-4" />
-        </Button>
-      )
-    }
-  ];
-
   if (!vertical) return null;
 
   return (
-    <PageTransition className="flex flex-col gap-6 px-16 py-6 lg:px-24 overflow-y-auto h-full">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold font-heading">Resources</h1>
-          <p className="text-muted-foreground">Manage and access shared assets and documents.</p>
-        </div>
-        <Button 
-          onClick={() => setAddOpen(true)} 
-          className="gap-2"
-          style={{ backgroundColor: vertical.color }}
-          data-testid="btn-add-resource"
-        >
-          <Plus className="size-4" />
-          Add Resource
-        </Button>
-      </div>
+    <PageShell className="overflow-y-auto h-full">
+      <PageHeader
+        title="Resources"
+        subtitle="Manage and access shared assets and documents."
+        actions={
+          <Button 
+            onClick={() => setAddOpen(true)} 
+            className="gap-2 text-white"
+            style={{ backgroundColor: vertical.color }}
+            data-testid="btn-add-resource"
+          >
+            <Plus className="size-4" />
+            Add Resource
+          </Button>
+        }
+      />
 
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search resources..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              data-testid="input-search"
-            />
-          </div>
+      <IndexToolbar
+        search={searchQuery}
+        onSearch={setSearchQuery}
+        color={vertical.color}
+        placeholder="Search resources..."
+        filters={categories.map(cat => ({ value: cat, label: cat }))}
+        activeFilter={categoryFilter}
+        onFilter={setCategoryFilter}
+        extra={
           <div className="flex items-center bg-muted p-1 rounded-lg border">
             <Button
               variant={viewMode === "grid" ? "secondary" : "ghost"}
@@ -279,27 +236,8 @@ export default function UniversalResources() {
               <List className="size-4" />
             </Button>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              className={cn(
-                "rounded-full px-4 py-1.5 text-sm font-medium transition-colors shrink-0 cursor-pointer",
-                categoryFilter === cat
-                  ? "text-white"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              )}
-              style={categoryFilter === cat ? { backgroundColor: vertical.color } : {}}
-              onClick={() => setCategoryFilter(cat)}
-              data-testid={cat === "All" ? "pill-all" : `pill-${cat}`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
+        }
+      />
 
       {pinnedResources.length > 0 && categoryFilter === "All" && !searchQuery && (
         <Fade className="bg-muted/50 rounded-xl border p-4">
@@ -357,69 +295,109 @@ export default function UniversalResources() {
                 return (
                   <Card 
                     key={res.id} 
-                    className="hover-elevate transition-all cursor-pointer group overflow-hidden"
+                    className="hover-elevate transition-all cursor-pointer group overflow-hidden rounded-xl border bg-card p-5"
                     onClick={() => {
                       setSelectedResource(res);
                       setPreviewOpen(true);
                     }}
                     data-testid={`card-resource-${res.id}`}
                   >
-                    <CardContent className="p-5 flex flex-col h-full relative">
-                      {res.isPinned && (
-                        <div className="absolute top-3 right-3">
-                          <Star className="size-4 text-amber-500 fill-amber-500" />
-                        </div>
+                    {res.isPinned && (
+                      <div className="absolute top-3 right-3">
+                        <Star className="size-4 text-amber-500 fill-amber-500" />
+                      </div>
+                    )}
+                    <div className={cn("size-12 rounded-lg flex items-center justify-center mb-4", getIconColors(res.type))}>
+                      <Icon className="size-6" />
+                    </div>
+                    <h3 className="text-sm font-semibold mb-1 truncate pr-6">{res.title}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-4 flex-1">
+                      {res.description}
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {res.tags.slice(0, 3).map(tag => (
+                        <Badge key={tag} variant="secondary" className="text-[10px] font-medium px-2 py-0">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {res.tags.length > 3 && (
+                        <span className="text-[10px] text-muted-foreground">+{res.tags.length - 3} more</span>
                       )}
-                      <div className={cn("size-12 rounded-lg flex items-center justify-center mb-4", getIconColors(res.type))}>
-                        <Icon className="size-6" />
-                      </div>
-                      <h3 className="text-sm font-semibold mb-1 truncate pr-6">{res.title}</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-4 flex-1">
-                        {res.description}
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {res.tags.slice(0, 3).map(tag => (
-                          <Badge key={tag} variant="secondary" className="text-[10px] font-medium px-2 py-0">
-                            {tag}
-                          </Badge>
-                        ))}
-                        {res.tags.length > 3 && (
-                          <span className="text-[10px] text-muted-foreground">+{res.tags.length - 3} more</span>
-                        )}
-                      </div>
+                    </div>
 
-                      <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                        <div className="flex flex-col">
-                          <span className="text-[11px] font-medium">{res.addedBy}</span>
-                          <span className="text-[11px] text-muted-foreground">{res.addedDate}</span>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="size-8 no-default-hover-elevate"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(res.url, '_blank');
-                          }}
-                        >
-                          <ExternalLink className="size-4" />
-                        </Button>
+                    <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-medium">{res.addedBy}</span>
+                        <span className="text-[11px] text-muted-foreground">{res.addedDate}</span>
                       </div>
-                    </CardContent>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="size-8 no-default-hover-elevate"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(res.url, '_blank');
+                        }}
+                      >
+                        <ExternalLink className="size-4" />
+                      </Button>
+                    </div>
                   </Card>
                 );
               })}
             </div>
           ) : (
-            <DataTable 
-              data={filteredResources} 
-              columns={listColumns} 
-              onRowClick={(r) => {
-                setSelectedResource(r);
-                setPreviewOpen(true);
-              }}
-            />
+            <DataTableContainer>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <DataTH>Name</DataTH>
+                    <DataTH>Category</DataTH>
+                    <DataTH>Type</DataTH>
+                    <DataTH>Added By</DataTH>
+                    <DataTH>Date</DataTH>
+                    <DataTH align="right"></DataTH>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filteredResources.map(r => {
+                    const Icon = getFileIcon(r.type);
+                    return (
+                      <DataTR key={r.id} onClick={() => {
+                        setSelectedResource(r);
+                        setPreviewOpen(true);
+                      }}>
+                        <DataTD>
+                          <div className="flex items-center gap-3">
+                            <div className={cn("p-2 rounded-lg", getIconColors(r.type))}>
+                              <Icon className="size-4" />
+                            </div>
+                            <div>
+                              <div className="font-medium">{r.title}</div>
+                              <div className="text-xs text-muted-foreground line-clamp-1">{r.description}</div>
+                            </div>
+                          </div>
+                        </DataTD>
+                        <DataTD>{r.category}</DataTD>
+                        <DataTD>
+                          <Badge variant="outline" className="capitalize text-[10px] font-medium">
+                            {r.type}
+                          </Badge>
+                        </DataTD>
+                        <DataTD>{r.addedBy}</DataTD>
+                        <DataTD>{r.addedDate}</DataTD>
+                        <DataTD align="right">
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </DataTD>
+                      </DataTR>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </DataTableContainer>
           )}
 
           {filteredResources.length === 0 && (
@@ -435,170 +413,107 @@ export default function UniversalResources() {
       )}
 
       {/* Resource Preview Dialog */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-[1000px] h-[85vh] p-0 gap-0 overflow-hidden flex flex-row">
-          <DialogTitle className="sr-only">Resource Preview</DialogTitle>
-          <DialogDescription className="sr-only">Preview and download resource</DialogDescription>
-          {selectedResource && (() => {
-            const Icon = getFileIcon(selectedResource.type);
-            const getPreviewSrc = () => {
-              const t = selectedResource.type.toLowerCase();
-              if (t === "link") return selectedResource.url;
-              return `https://docs.google.com/viewer?url=${encodeURIComponent(selectedResource.url)}&embedded=true`;
-            };
+      <DetailModal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title={selectedResource?.title || ""}
+        subtitle={selectedResource?.category}
+        footer={
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => selectedResource && window.open(selectedResource.url, '_blank')}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Open in New Tab
+            </Button>
+            <Button 
+              style={{ backgroundColor: vertical.color }}
+              className="text-white"
+              onClick={() => setPreviewOpen(false)}
+            >
+              Close
+            </Button>
+          </div>
+        }
+      >
+        {selectedResource && (() => {
+          const Icon = getFileIcon(selectedResource.type);
+          const getPreviewSrc = () => {
+            const t = selectedResource.type.toLowerCase();
+            if (t === "link") return selectedResource.url;
+            return `https://docs.google.com/viewer?url=${encodeURIComponent(selectedResource.url)}&embedded=true`;
+          };
 
-            return (
-              <>
-                {/* Left: Preview panel */}
-                <div className="flex-1 flex flex-col bg-muted overflow-hidden">
-                  {/* Header bar */}
-                  <div className="h-12 px-4 bg-card border-b flex items-center gap-3 shrink-0">
-                    <div className={cn("size-6 rounded flex items-center justify-center shrink-0", getIconColors(selectedResource.type))}>
-                      <Icon className="size-3.5" />
+          return (
+            <>
+              <DetailSection title="Preview">
+                <div className="aspect-video bg-muted rounded-lg overflow-hidden relative border">
+                  {!iframeLoaded && !iframeError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-muted z-10">
+                      <Loader2 className="size-8 animate-spin text-muted-foreground" />
                     </div>
-                    <span className="text-sm font-semibold truncate flex-1">{selectedResource.title}</span>
-                    <Badge variant="secondary" className="capitalize text-[10px] shrink-0">{selectedResource.type}</Badge>
-                    <DialogClose asChild>
-                      <Button variant="ghost" size="icon" className="size-7 shrink-0">
-                        <Check className="size-4 hidden" />
-                        <span className="text-muted-foreground text-lg leading-none">&times;</span>
-                      </Button>
-                    </DialogClose>
+                  )}
+                  {iframeError ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
+                      <Icon className="size-12" />
+                      <p className="text-sm">Preview unavailable</p>
+                    </div>
+                  ) : selectedResource.type.toLowerCase() === "image" ? (
+                    <img
+                      src={selectedResource.url}
+                      alt={selectedResource.title}
+                      className="w-full h-full object-contain"
+                      onLoad={() => setIframeLoaded(true)}
+                      onError={() => setIframeError(true)}
+                    />
+                  ) : (
+                    <iframe
+                      src={getPreviewSrc()}
+                      className="w-full h-full border-0"
+                      onLoad={() => setIframeLoaded(true)}
+                      onError={() => setIframeError(true)}
+                    />
+                  )}
+                </div>
+              </DetailSection>
+
+              <DetailSection title="Details">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Added By</p>
+                    <p className="font-medium">{selectedResource.addedBy}</p>
                   </div>
-
-                  {/* Preview area */}
-                  <div className="flex-1 overflow-hidden relative">
-                    {/* Loading spinner */}
-                    {!iframeLoaded && !iframeError && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-muted z-10">
-                        <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                          <Loader2 className="size-8 animate-spin" />
-                          <span className="text-sm">Loading preview…</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Fallback */}
-                    {iframeError && (
-                      <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
-                        <div className={cn("size-20 rounded-2xl flex items-center justify-center", getIconColors(selectedResource.type))}>
-                          <Icon className="size-10" />
-                        </div>
-                        <div className="text-center">
-                          <p className="font-semibold text-foreground">Preview unavailable</p>
-                          <p className="text-sm mt-1">Use "Open in New Tab" to view this file</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Image preview */}
-                    {selectedResource.type.toLowerCase() === "image" && !iframeError && (
-                      <img
-                        src={selectedResource.url}
-                        alt={selectedResource.title}
-                        className="w-full h-full object-contain p-6"
-                        onLoad={() => setIframeLoaded(true)}
-                        onError={() => setIframeError(true)}
-                      />
-                    )}
-
-                    {/* iframe preview (pdf, doc, ppt, excel, link, template) */}
-                    {selectedResource.type.toLowerCase() !== "image" && !iframeError && (
-                      <iframe
-                        key={selectedResource.id}
-                        src={getPreviewSrc()}
-                        className="w-full h-full border-0"
-                        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                        onLoad={() => setIframeLoaded(true)}
-                        onError={() => setIframeError(true)}
-                        title={selectedResource.title}
-                      />
-                    )}
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Date</p>
+                    <p className="font-medium">{selectedResource.addedDate}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</p>
+                    <Badge variant="secondary" className="capitalize">{selectedResource.type}</Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Version</p>
+                    <p className="font-medium">{selectedResource.version}</p>
                   </div>
                 </div>
+              </DetailSection>
 
-                {/* Right: Sidebar */}
-                <div className="w-72 border-l bg-card flex flex-col overflow-y-auto shrink-0">
-                  {/* Icon + title + badges */}
-                  <div className="p-5 flex flex-col items-center text-center border-b">
-                    <div className={cn("size-16 rounded-xl flex items-center justify-center", getIconColors(selectedResource.type))}>
-                      <Icon className="size-8" />
-                    </div>
-                    <p className="text-base font-semibold mt-3 px-2 leading-snug">{selectedResource.title}</p>
-                    <div className="flex justify-center gap-2 mt-2 flex-wrap">
-                      <Badge variant="secondary" className="capitalize text-xs">{selectedResource.type}</Badge>
-                      <Badge variant="outline" className="text-xs">{selectedResource.category}</Badge>
-                    </div>
-                  </div>
+              <DetailSection title="Description">
+                <p className="text-sm text-muted-foreground">{selectedResource.description}</p>
+              </DetailSection>
 
-                  {/* Metadata */}
-                  <div className="p-5 space-y-3 border-b">
-                    {[
-                      { label: "Added By",   value: selectedResource.addedBy },
-                      { label: "Date Added", value: selectedResource.addedDate },
-                      { label: "File Size",  value: selectedResource.fileSize || "N/A" },
-                      { label: "Version",    value: selectedResource.version },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="flex justify-between items-start gap-2">
-                        <span className="text-[11px] uppercase font-medium text-muted-foreground tracking-wide shrink-0">{label}</span>
-                        <span className="text-sm font-medium text-right">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Description */}
-                  <div className="p-5 border-b">
-                    <p className="text-[11px] uppercase font-medium text-muted-foreground tracking-wide mb-2">Description</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{selectedResource.description}</p>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="p-5 border-b">
-                    <p className="text-[11px] uppercase font-medium text-muted-foreground tracking-wide mb-2">Tags</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedResource.tags.map(tag => (
-                        <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="p-5 space-y-2 mt-auto">
-                    <a
-                      href={selectedResource.url}
-                      download={selectedResource.title}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="block"
-                    >
-                      <Button className="w-full gap-2" style={{ backgroundColor: vertical.color }}>
-                        <Download className="size-4" />
-                        Download
-                      </Button>
-                    </a>
-                    <Button
-                      variant="outline"
-                      className="w-full gap-2"
-                      onClick={() => window.open(selectedResource.url, '_blank')}
-                    >
-                      <ExternalLink className="size-4" />
-                      Open in New Tab
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full gap-2"
-                      onClick={() => handleCopyLink(selectedResource.url)}
-                    >
-                      {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                      {copied ? "Copied!" : "Copy Link"}
-                    </Button>
-                  </div>
+              <DetailSection title="Tags">
+                <div className="flex flex-wrap gap-2">
+                  {selectedResource.tags.map(tag => (
+                    <Badge key={tag} variant="outline">{tag}</Badge>
+                  ))}
                 </div>
-              </>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
+              </DetailSection>
+            </>
+          );
+        })()}
+      </DetailModal>
 
       {/* Add Resource Dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
@@ -754,6 +669,6 @@ export default function UniversalResources() {
           </Form>
         </DialogContent>
       </Dialog>
-    </PageTransition>
+    </PageShell>
   );
 }

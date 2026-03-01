@@ -365,7 +365,7 @@ export const crmContacts: CrmContact[] = [
     tags: ["compliance", "legal"],
     lastActivity: "2026-02-27",
     addedDate: "2026-02-15",
-    status: "qualified",
+    status: "prospect",
     nurtureScore: 78,
     nextAction: "Send contract draft",
     expectedValue: 560000,

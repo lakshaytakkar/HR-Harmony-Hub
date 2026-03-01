@@ -2,14 +2,20 @@ import { useLocation } from "wouter";
 import { Package, Users, IndianRupee, TrendingUp, AlertTriangle, ChevronRight } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 
-import { StatsCard } from "@/components/hr/stats-card";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import {
+  PageShell,
+  HeroBanner,
+  StatGrid,
+  StatCard,
+  SectionCard,
+} from "@/components/layout";
 import { tourPackages, leads, bookings } from "@/lib/mock-data-goyo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { Fade, Stagger, StaggerItem, PageTransition } from "@/components/ui/animated";
+import { Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(val);
@@ -55,91 +61,89 @@ export default function GoyoToursDashboard() {
   });
 
   return (
-    <div className="px-16 py-6 lg:px-24">
-      <PageTransition>
-        <Fade direction="up" delay={0}>
-          <div
-            className="rounded-2xl px-8 py-7 mb-6 relative overflow-hidden"
-            data-testid="section-welcome"
-            style={{ background: "linear-gradient(135deg, #E91E63 0%, #c21553 100%)" }}
-          >
-            <div className="relative z-10">
-              <p className="text-white/75 text-sm font-medium mb-2">👋 {greeting}, Priya Kapoor</p>
-              <h1 className="text-3xl font-bold text-white font-heading tracking-tight">GoyoTours</h1>
-              <p className="text-white/70 text-sm mt-1.5 max-w-2xl">China B2B Delegations — 7 active packages · Apr–May 2026 season · {totalBookings} bookings so far</p>
-            </div>
-          </div>
-        </Fade>
+    <PageShell>
+      <HeroBanner
+        eyebrow={`👋 ${greeting}, Priya Kapoor`}
+        headline="GoyoTours"
+        tagline={`China B2B Delegations — 7 active packages · Apr–May 2026 season · ${totalBookings} bookings so far`}
+        color="#E91E63"
+        colorDark="#c21553"
+      />
 
-        {loading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-            <StatsCardSkeleton /><StatsCardSkeleton /><StatsCardSkeleton /><StatsCardSkeleton />
-          </div>
-        ) : (
-          <Stagger staggerInterval={0.05} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+      {loading ? (
+        <StatGrid>
+          <StatsCardSkeleton />
+          <StatsCardSkeleton />
+          <StatsCardSkeleton />
+          <StatsCardSkeleton />
+        </StatGrid>
+      ) : (
+        <Stagger staggerInterval={0.05}>
+          <StatGrid>
             <StaggerItem>
-              <StatsCard
-                title="Revenue Collected"
+              <StatCard
+                label="Revenue Collected"
                 value={formatCurrency(totalRevenueCollected)}
-                change="Total advances received"
-                changeType="positive"
-                icon={<IndianRupee className="size-5" />}
-                sparkline={{ values: [30000, 90000, 120000, 150000, 210000, 270000, totalRevenueCollected / 1000], color: "#E91E63" }}
+                trend="Total advances received"
+                icon={IndianRupee}
+                iconBg="rgba(233, 30, 99, 0.1)"
+                iconColor="#E91E63"
               />
             </StaggerItem>
             <StaggerItem>
-              <StatsCard
-                title="Total Bookings"
+              <StatCard
+                label="Total Bookings"
                 value={totalBookings}
-                change={`${bookings.filter((b) => b.payment_status === "full").length} fully paid`}
-                changeType="positive"
-                icon={<Package className="size-5" />}
-                sparkline={{ values: [1, 2, 4, 5, 7, 9, totalBookings], color: "#8B5CF6" }}
+                trend={`${bookings.filter((b) => b.payment_status === "full").length} fully paid`}
+                icon={Package}
+                iconBg="rgba(139, 92, 246, 0.1)"
+                iconColor="#8B5CF6"
               />
             </StaggerItem>
             <StaggerItem>
-              <StatsCard
-                title="Active Leads"
+              <StatCard
+                label="Active Leads"
                 value={activeLeads}
-                change={`${leads.length} total in pipeline`}
-                changeType="neutral"
-                icon={<Users className="size-5" />}
-                sparkline={{ values: [2, 4, 6, 8, 6, 5, activeLeads], color: "#F59E0B" }}
+                trend={`${leads.length} total in pipeline`}
+                icon={Users}
+                iconBg="rgba(245, 158, 11, 0.1)"
+                iconColor="#F59E0B"
               />
             </StaggerItem>
             <StaggerItem>
-              <StatsCard
-                title="Seats Available"
+              <StatCard
+                label="Seats Available"
                 value={totalSeatsAvailable}
-                change="Across all 7 packages"
-                changeType="neutral"
-                icon={<TrendingUp className="size-5" />}
+                trend="Across all 7 packages"
+                icon={TrendingUp}
+                iconBg="rgba(16, 185, 129, 0.1)"
+                iconColor="#10B981"
               />
             </StaggerItem>
-          </Stagger>
-        )}
+          </StatGrid>
+        </Stagger>
+      )}
 
-        {loading ? (
-          <div className="mb-6">
-            <Skeleton className="h-5 w-40 mb-3" />
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="min-w-[220px] rounded-xl border bg-card p-4">
-                  <Skeleton className="h-4 w-3/4 mb-2" />
-                  <Skeleton className="h-3 w-1/2 mb-3" />
-                  <Skeleton className="h-2 w-full rounded-full" />
-                </div>
-              ))}
-            </div>
+      {loading ? (
+        <div className="mb-6">
+          <Skeleton className="h-5 w-40 mb-3" />
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="min-w-[220px] rounded-xl border bg-card p-4">
+                <Skeleton className="h-4 w-3/4 mb-2" />
+                <Skeleton className="h-3 w-1/2 mb-3" />
+                <Skeleton className="h-2 w-full rounded-full" />
+              </div>
+            ))}
           </div>
-        ) : (
-          <Fade direction="up" delay={0.15} className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-semibold font-heading" data-testid="text-packages-title">Tour Packages</h3>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/events/packages")} className="gap-1 text-xs" data-testid="link-all-packages">
-                View all <ChevronRight className="size-3.5" />
-              </Button>
-            </div>
+        </div>
+      ) : (
+        <Fade direction="up" delay={0.15}>
+          <SectionCard
+            title="Tour Packages"
+            viewAllLabel="View all"
+            onViewAll={() => navigate("/events/packages")}
+          >
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
               {tourPackages.map((pkg) => {
                 const sold = pkg.max_pax - pkg.seats_available;
@@ -177,150 +181,148 @@ export default function GoyoToursDashboard() {
                 );
               })}
             </div>
-          </Fade>
-        )}
+          </SectionCard>
+        </Fade>
+      )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
-          {loading ? (
-            <>
-              <div className="col-span-2 rounded-xl border bg-card p-5">
-                <Skeleton className="h-5 w-36 mb-4" />
-                {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full mb-2" />)}
-              </div>
-              <div className="rounded-xl border bg-card p-5">
-                <Skeleton className="h-5 w-36 mb-4" />
-                <Skeleton className="h-20 w-full mb-2" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            </>
-          ) : (
-            <>
-              <Fade direction="up" delay={0.2} className="col-span-2">
-                <div className="rounded-xl border border-border bg-card p-5 h-full">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-semibold font-heading" data-testid="text-recent-bookings-title">Recent Bookings</h3>
-                    <Button variant="ghost" size="sm" onClick={() => navigate("/events/bookings")} className="gap-1 text-xs" data-testid="link-all-bookings">
-                      All bookings <ChevronRight className="size-3.5" />
-                    </Button>
-                  </div>
-                  <div className="divide-y">
-                    {recentBookings.map((bkg) => {
-                      const ps = paymentStatusConfig[bkg.payment_status];
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {loading ? (
+          <>
+            <div className="col-span-2 rounded-xl border bg-card p-5">
+              <Skeleton className="h-5 w-36 mb-4" />
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full mb-2" />)}
+            </div>
+            <div className="rounded-xl border bg-card p-5">
+              <Skeleton className="h-5 w-36 mb-4" />
+              <Skeleton className="h-20 w-full mb-2" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          </>
+        ) : (
+          <>
+            <Fade direction="up" delay={0.2} className="col-span-2">
+              <SectionCard
+                title="Recent Bookings"
+                viewAllLabel="All bookings"
+                onViewAll={() => navigate("/events/bookings")}
+                noPadding
+              >
+                <div className="divide-y">
+                  {recentBookings.map((bkg) => {
+                    const ps = paymentStatusConfig[bkg.payment_status];
+                    return (
+                      <div
+                        key={bkg.id}
+                        className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-muted/20 cursor-pointer"
+                        onClick={() => navigate(`/events/bookings/${bkg.id}`)}
+                        data-testid={`row-booking-${bkg.id}`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate" data-testid={`text-bkg-client-${bkg.id}`}>{bkg.client_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{bkg.package_name}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{bkg.passengers} pax</span>
+                        <StatusBadge status={ps.label} variant={ps.variant} />
+                        <a
+                          href={`https://wa.me/${bkg.client_phone.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          data-testid={`btn-whatsapp-${bkg.id}`}
+                        >
+                          <Button variant="ghost" size="icon" className="size-7 text-green-600 hover:text-green-700 hover:bg-green-50">
+                            <SiWhatsapp className="size-3.5" />
+                          </Button>
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              </SectionCard>
+            </Fade>
+
+            <Fade direction="up" delay={0.25}>
+              <div className="flex flex-col gap-4">
+                <SectionCard title="Lead Pipeline">
+                  <div className="flex flex-col gap-2">
+                    {leadStages.map((stage) => {
+                      const count = leads.filter((l) => l.status === stage.key).length;
                       return (
                         <div
-                          key={bkg.id}
-                          className="flex items-center gap-4 py-3 transition-colors hover:bg-muted/30 cursor-pointer"
-                          onClick={() => navigate(`/events/bookings/${bkg.id}`)}
-                          data-testid={`row-booking-${bkg.id}`}
+                          key={stage.key}
+                          className="flex items-center justify-between cursor-pointer"
+                          onClick={() => navigate("/events/leads")}
+                          data-testid={`row-stage-${stage.key}`}
                         >
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate" data-testid={`text-bkg-client-${bkg.id}`}>{bkg.client_name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{bkg.package_name}</p>
-                          </div>
-                          <span className="text-xs text-muted-foreground whitespace-nowrap">{bkg.passengers} pax</span>
-                          <StatusBadge status={ps.label} variant={ps.variant} />
-                          <a
-                            href={`https://wa.me/${bkg.client_phone.replace(/\D/g, "")}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            data-testid={`btn-whatsapp-${bkg.id}`}
-                          >
-                            <Button variant="ghost" size="icon" className="size-7 text-green-600 hover:text-green-700 hover:bg-green-50">
-                              <SiWhatsapp className="size-3.5" />
-                            </Button>
-                          </a>
+                          <span className="text-sm text-muted-foreground">{stage.label}</span>
+                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${stage.color}`} data-testid={`count-stage-${stage.key}`}>
+                            {count}
+                          </span>
                         </div>
                       );
                     })}
                   </div>
-                </div>
-              </Fade>
+                </SectionCard>
 
-              <Fade direction="up" delay={0.25}>
-                <div className="rounded-xl border border-border bg-card p-5 h-full flex flex-col gap-4">
-                  <div>
-                    <h3 className="text-base font-semibold font-heading mb-3" data-testid="text-pipeline-title">Lead Pipeline</h3>
-                    <div className="flex flex-col gap-2">
-                      {leadStages.map((stage) => {
-                        const count = leads.filter((l) => l.status === stage.key).length;
-                        return (
-                          <div
-                            key={stage.key}
-                            className="flex items-center justify-between cursor-pointer"
-                            onClick={() => navigate("/events/leads")}
-                            data-testid={`row-stage-${stage.key}`}
-                          >
-                            <span className="text-sm text-muted-foreground">{stage.label}</span>
-                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${stage.color}`} data-testid={`count-stage-${stage.key}`}>
-                              {count}
-                            </span>
-                          </div>
-                        );
-                      })}
+                <SectionCard title="Payment Summary">
+                  <div className="flex flex-col gap-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total Owed</span>
+                      <span className="font-medium" data-testid="stat-total-owed">{formatCurrency(totalOwed)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Collected</span>
+                      <span className="font-medium text-green-600" data-testid="stat-collected">{formatCurrency(totalRevenueCollected)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Balance Due</span>
+                      <span className="font-medium text-amber-600" data-testid="stat-balance">{formatCurrency(balancePending)}</span>
                     </div>
                   </div>
-                  <div className="pt-4 border-t">
-                    <h3 className="text-sm font-semibold font-heading mb-3" data-testid="text-payment-title">Payment Summary</h3>
-                    <div className="flex flex-col gap-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total Owed</span>
-                        <span className="font-medium" data-testid="stat-total-owed">{formatCurrency(totalOwed)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Collected</span>
-                        <span className="font-medium text-green-600" data-testid="stat-collected">{formatCurrency(totalRevenueCollected)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Balance Due</span>
-                        <span className="font-medium text-amber-600" data-testid="stat-balance">{formatCurrency(balancePending)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Fade>
-            </>
-          )}
-        </div>
-
-        {!loading && (overdueFollowUps.length > 0 || visaUrgent.length > 0) && (
-          <Fade direction="up" delay={0.3}>
-            <div className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-5" data-testid="section-urgent">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="size-4 text-amber-600" />
-                <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-300 font-heading">Urgent Actions Required</h3>
+                </SectionCard>
               </div>
-              <div className="flex flex-col gap-2">
-                {overdueFollowUps.map((lead) => (
-                  <div
-                    key={lead.id}
-                    className="flex items-center justify-between text-sm rounded-lg bg-white dark:bg-amber-950/30 px-3 py-2 cursor-pointer"
-                    onClick={() => navigate("/events/leads")}
-                    data-testid={`urgent-lead-${lead.id}`}
-                  >
-                    <span className="font-medium text-foreground">Follow-up overdue: <span className="text-amber-700 dark:text-amber-400">{lead.name}</span></span>
-                    <span className="text-xs text-muted-foreground">Due {lead.follow_up_date}</span>
-                  </div>
-                ))}
-                {visaUrgent.map((bkg) => {
-                  const days = Math.ceil((new Date(bkg.travel_date).getTime() - Date.now()) / 86400000);
-                  return (
-                    <div
-                      key={bkg.id}
-                      className="flex items-center justify-between text-sm rounded-lg bg-white dark:bg-amber-950/30 px-3 py-2 cursor-pointer"
-                      onClick={() => navigate(`/events/bookings/${bkg.id}`)}
-                      data-testid={`urgent-visa-${bkg.id}`}
-                    >
-                      <span className="font-medium text-foreground">Visa pending: <span className="text-red-600 dark:text-red-400">{bkg.client_name}</span></span>
-                      <span className="text-xs text-muted-foreground">Travel in {days} days</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </Fade>
+            </Fade>
+          </>
         )}
-      </PageTransition>
-    </div>
+      </div>
+
+      {!loading && (overdueFollowUps.length > 0 || visaUrgent.length > 0) && (
+        <Fade direction="up" delay={0.3}>
+          <div className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-5" data-testid="section-urgent">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="size-4 text-amber-600" />
+              <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-300 font-heading">Urgent Actions Required</h3>
+            </div>
+            <div className="flex flex-col gap-2">
+              {overdueFollowUps.map((lead) => (
+                <div
+                  key={lead.id}
+                  className="flex items-center justify-between text-sm rounded-lg bg-white dark:bg-amber-950/30 px-3 py-2 cursor-pointer"
+                  onClick={() => navigate("/events/leads")}
+                  data-testid={`urgent-lead-${lead.id}`}
+                >
+                  <span className="font-medium text-foreground">Follow-up overdue: <span className="text-amber-700 dark:text-amber-400">{lead.name}</span></span>
+                  <span className="text-xs text-muted-foreground">Due {lead.follow_up_date}</span>
+                </div>
+              ))}
+              {visaUrgent.map((bkg) => {
+                const days = Math.ceil((new Date(bkg.travel_date).getTime() - Date.now()) / 86400000);
+                return (
+                  <div
+                    key={bkg.id}
+                    className="flex items-center justify-between text-sm rounded-lg bg-white dark:bg-amber-950/30 px-3 py-2 cursor-pointer"
+                    onClick={() => navigate(`/events/bookings/${bkg.id}`)}
+                    data-testid={`urgent-visa-${bkg.id}`}
+                  >
+                    <span className="font-medium text-foreground">Visa pending: <span className="text-red-600 dark:text-red-400">{bkg.client_name}</span></span>
+                    <span className="text-xs text-muted-foreground">Travel in {days} days</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </Fade>
+      )}
+    </PageShell>
   );
 }

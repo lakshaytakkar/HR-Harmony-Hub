@@ -1,14 +1,19 @@
 import { useState } from "react";
-import { Plus, MoreHorizontal, MessageSquare, DollarSign, Calendar } from "lucide-react";
-import { PageTransition, Fade } from "@/components/ui/animated";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Plus, MoreHorizontal, DollarSign, Calendar } from "lucide-react";
+import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { faireRetailerLeads, type RetailerLead, type RetailerLeadStage } from "@/lib/mock-data-faire";
+import { faireRetailerLeads, type RetailerLeadStage } from "@/lib/mock-data-faire";
+import {
+  PageShell,
+  PageHeader,
+  IndexToolbar,
+  DetailModal,
+} from "@/components/layout";
 
 const BRAND_COLOR = "#1A6B45";
 
@@ -17,11 +22,12 @@ const stages: RetailerLeadStage[] = ["Prospect", "Outreach", "Demo Scheduled", "
 export default function FairePipeline() {
   const isLoading = useSimulatedLoading(600);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-6 animate-pulse">
-        <div className="h-10 bg-muted rounded w-64" />
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-64 animate-pulse" />
         <div className="grid grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="space-y-4">
@@ -31,33 +37,45 @@ export default function FairePipeline() {
             </div>
           ))}
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-6 overflow-hidden flex flex-col h-full">
+    <PageShell className="overflow-hidden flex flex-col h-full">
       <Fade>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold font-heading">Retailer Pipeline</h1>
-            <p className="text-muted-foreground text-sm mt-0.5">Manage the acquisition funnel for new retail partners</p>
-          </div>
-          <Button 
-            style={{ backgroundColor: BRAND_COLOR }} 
-            className="text-white hover-elevate" 
-            data-testid="button-add-pipeline-lead"
-            onClick={() => setIsAddDialogOpen(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add Lead
-          </Button>
-        </div>
+        <PageHeader
+          title="Retailer Pipeline"
+          subtitle="Manage the acquisition funnel for new retail partners"
+          actions={
+            <Button 
+              style={{ backgroundColor: BRAND_COLOR }} 
+              className="text-white hover-elevate" 
+              data-testid="button-add-pipeline-lead"
+              onClick={() => setIsAddDialogOpen(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Lead
+            </Button>
+          }
+        />
+      </Fade>
+
+      <Fade>
+        <IndexToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Filter by retailer name..."
+          color={BRAND_COLOR}
+        />
       </Fade>
 
       <Fade className="flex-1 overflow-x-auto pb-4">
         <div className="flex gap-4 min-w-[1200px] h-full">
           {stages.map((stage) => {
-            const stageLeads = faireRetailerLeads.filter(l => l.stage === stage);
+            const stageLeads = faireRetailerLeads.filter(l => 
+              l.stage === stage && 
+              (search === "" || l.name.toLowerCase().includes(search.toLowerCase()))
+            );
             const stageTotalValue = stageLeads.reduce((acc, curr) => acc + curr.dealValue, 0);
 
             return (
@@ -110,31 +128,33 @@ export default function FairePipeline() {
         </div>
       </Fade>
 
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Retailer Lead</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right text-xs">Retailer</Label>
-              <Input id="name" placeholder="Store Name" className="col-span-3 h-8 text-sm" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="type" className="text-right text-xs">Store Type</Label>
-              <Input id="type" placeholder="Boutique, Gift Shop, etc." className="col-span-3 h-8 text-sm" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="value" className="text-right text-xs">Deal Value</Label>
-              <Input id="value" type="number" placeholder="5000" className="col-span-3 h-8 text-sm" />
-            </div>
+      <DetailModal
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        title="Add New Retailer Lead"
+        subtitle="Create a prospective partner entry"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+            <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => setIsAddDialogOpen(false)} data-testid="btn-create-lead">Create Lead</Button>
+          </>
+        }
+      >
+        <div className="px-6 py-5 space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Retailer</Label>
+            <Input placeholder="Store Name" />
           </div>
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-            <Button size="sm" style={{ backgroundColor: BRAND_COLOR }} className="text-white" onClick={() => setIsAddDialogOpen(false)}>Create Lead</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </PageTransition>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Store Type</Label>
+            <Input placeholder="Boutique, Gift Shop, etc." />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Deal Value</Label>
+            <Input type="number" placeholder="5000" />
+          </div>
+        </div>
+      </DetailModal>
+    </PageShell>
   );
 }

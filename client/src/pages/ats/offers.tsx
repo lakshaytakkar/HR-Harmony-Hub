@@ -1,15 +1,27 @@
 import { useState } from "react";
 import { FileSignature, Send, CheckCircle2, XCircle } from "lucide-react";
-import { PageTransition, Fade } from "@/components/ui/animated";
-import { Card, CardContent } from "@/components/ui/card";
+import { Fade } from "@/components/ui/animated";
+import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { FormDialog } from "@/components/hr/form-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { offers, candidates, jobOpenings, type Offer } from "@/lib/mock-data-ats";
+import {
+  PageShell,
+  PageHeader,
+  StatGrid,
+  StatCard,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+  IndexToolbar,
+  PrimaryAction,
+  DetailModal,
+  DetailSection,
+} from "@/components/layout";
 
 const statusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -24,6 +36,7 @@ export default function AtsOffers() {
   const [offerData, setOfferData] = useState(offers);
   const [preview, setPreview] = useState<Offer | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const sent = offerData.filter(o => o.status === "sent").length;
   const accepted = offerData.filter(o => o.status === "accepted").length;
@@ -34,101 +47,149 @@ export default function AtsOffers() {
   const handleMarkDeclined = (id: string) => setOfferData(prev => prev.map(o => o.id === id ? { ...o, status: "declined" as const } : o));
   const handleSend = (id: string) => setOfferData(prev => prev.map(o => o.id === id ? { ...o, status: "sent" as const } : o));
 
+  const filtered = offerData.filter(o => {
+    const matchSearch = o.candidateName.toLowerCase().includes(search.toLowerCase()) || o.jobTitle.toLowerCase().includes(search.toLowerCase());
+    return matchSearch;
+  });
+
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-4 animate-pulse">
+      <PageShell className="animate-pulse">
         <div className="h-10 bg-muted rounded w-48" />
-        <div className="grid grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-muted rounded-xl" />)}</div>
+        <StatGrid>
+          <div className="h-20 bg-muted rounded-xl" />
+          <div className="h-20 bg-muted rounded-xl" />
+          <div className="h-20 bg-muted rounded-xl" />
+          <div className="h-20 bg-muted rounded-xl" />
+        </StatGrid>
         <div className="h-72 bg-muted rounded-xl" />
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Offers</h1>
-            <p className="text-sm text-muted-foreground">Manage offer letters and candidate responses</p>
-          </div>
-          <Button onClick={() => setCreateOpen(true)} className="bg-violet-600 hover:bg-violet-700" data-testid="create-offer-btn">
-            <FileSignature className="size-4 mr-2" /> Create Offer
-          </Button>
-        </div>
+        <PageHeader
+          title="Offers"
+          subtitle="Manage offer letters and candidate responses"
+          actions={
+            <PrimaryAction
+              color="#7c3aed"
+              icon={FileSignature}
+              onClick={() => setCreateOpen(true)}
+              testId="create-offer-btn"
+            >
+              Create Offer
+            </PrimaryAction>
+          }
+        />
       </Fade>
 
       <Fade>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: "Offers Sent", value: sent + accepted + declined, color: "text-violet-600" },
-            { label: "Accepted", value: accepted, color: "text-emerald-600" },
-            { label: "Declined", value: declined, color: "text-red-600" },
-            { label: "Awaiting Response", value: awaiting, color: "text-sky-600" },
-          ].map(s => (
-            <Card key={s.label} className="border-0 shadow-sm"><CardContent className="p-4"><p className={`text-2xl font-bold ${s.color}`}>{s.value}</p><p className="text-xs text-muted-foreground mt-0.5">{s.label}</p></CardContent></Card>
-          ))}
-        </div>
+        <StatGrid>
+          <StatCard
+            label="Offers Sent"
+            value={sent + accepted + declined}
+            icon={FileSignature}
+            iconBg="rgba(124, 58, 237, 0.1)"
+            iconColor="#7c3aed"
+          />
+          <StatCard
+            label="Accepted"
+            value={accepted}
+            icon={FileSignature}
+            iconBg="rgba(16, 185, 129, 0.1)"
+            iconColor="#10b981"
+          />
+          <StatCard
+            label="Declined"
+            value={declined}
+            icon={FileSignature}
+            iconBg="rgba(239, 68, 68, 0.1)"
+            iconColor="#ef4444"
+          />
+          <StatCard
+            label="Awaiting Response"
+            value={awaiting}
+            icon={FileSignature}
+            iconBg="rgba(14, 165, 233, 0.1)"
+            iconColor="#0ea5e9"
+          />
+        </StatGrid>
       </Fade>
 
       <Fade>
-        <Card className="border-0 shadow-sm overflow-hidden">
-          <CardContent className="p-0">
-            <table className="w-full">
-              <thead className="border-b bg-muted/30">
-                <tr>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Candidate</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Job Title</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Offered Salary</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Joining Date</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Expiry</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Status</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {offerData.map(offer => (
-                  <tr key={offer.id} className="hover:bg-muted/20" data-testid={`offer-row-${offer.id}`}>
-                    <td className="px-4 py-3 text-sm font-medium">{offer.candidateName}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{offer.jobTitle}</td>
-                    <td className="px-4 py-3 text-sm font-semibold">₹{offer.offeredSalary.toLocaleString("en-IN")}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{offer.joiningDate}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{offer.expiryDate}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[offer.status]}`}>{offer.status}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setPreview(offer)} data-testid={`preview-offer-${offer.id}`}>Preview</Button>
-                        {offer.status === "draft" && (
-                          <button onClick={() => handleSend(offer.id)} className="p-1.5 rounded hover:bg-sky-100 text-sky-600 transition-colors" title="Send Offer" data-testid={`send-offer-${offer.id}`}>
-                            <Send className="size-3.5" />
+        <IndexToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search offers..."
+          color="#7c3aed"
+        />
+      </Fade>
+
+      <Fade>
+        <DataTableContainer>
+          <table className="w-full text-sm">
+            <thead className="border-b bg-muted/30">
+              <tr>
+                <DataTH>Candidate</DataTH>
+                <DataTH>Job Title</DataTH>
+                <DataTH>Offered Salary</DataTH>
+                <DataTH>Joining Date</DataTH>
+                <DataTH>Expiry</DataTH>
+                <DataTH>Status</DataTH>
+                <DataTH align="right">Actions</DataTH>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filtered.map(offer => (
+                <DataTR key={offer.id} data-testid={`offer-row-${offer.id}`}>
+                  <DataTD className="font-medium">{offer.candidateName}</DataTD>
+                  <DataTD className="text-muted-foreground">{offer.jobTitle}</DataTD>
+                  <DataTD className="font-semibold">₹{offer.offeredSalary.toLocaleString("en-IN")}</DataTD>
+                  <DataTD className="text-muted-foreground">{offer.joiningDate}</DataTD>
+                  <DataTD className="text-muted-foreground">{offer.expiryDate}</DataTD>
+                  <DataTD>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[offer.status]}`}>{offer.status}</span>
+                  </DataTD>
+                  <DataTD align="right">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setPreview(offer)} data-testid={`preview-offer-${offer.id}`}>Preview</Button>
+                      {offer.status === "draft" && (
+                        <button onClick={() => handleSend(offer.id)} className="p-1.5 rounded hover:bg-sky-100 text-sky-600 transition-colors" title="Send Offer" data-testid={`send-offer-${offer.id}`}>
+                          <Send className="size-3.5" />
+                        </button>
+                      )}
+                      {offer.status === "sent" && (
+                        <>
+                          <button onClick={() => handleMarkAccepted(offer.id)} className="p-1.5 rounded hover:bg-emerald-100 text-emerald-600 transition-colors" title="Mark Accepted" data-testid={`accept-offer-${offer.id}`}>
+                            <CheckCircle2 className="size-3.5" />
                           </button>
-                        )}
-                        {offer.status === "sent" && (
-                          <>
-                            <button onClick={() => handleMarkAccepted(offer.id)} className="p-1.5 rounded hover:bg-emerald-100 text-emerald-600 transition-colors" title="Mark Accepted" data-testid={`accept-offer-${offer.id}`}>
-                              <CheckCircle2 className="size-3.5" />
-                            </button>
-                            <button onClick={() => handleMarkDeclined(offer.id)} className="p-1.5 rounded hover:bg-red-100 text-red-600 transition-colors" title="Mark Declined" data-testid={`decline-offer-${offer.id}`}>
-                              <XCircle className="size-3.5" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {offerData.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">No offers created yet</td></tr>}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+                          <button onClick={() => handleMarkDeclined(offer.id)} className="p-1.5 rounded hover:bg-red-100 text-red-600 transition-colors" title="Mark Declined" data-testid={`decline-offer-${offer.id}`}>
+                            <XCircle className="size-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </DataTD>
+                </DataTR>
+              ))}
+              {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">No offers created yet</td></tr>}
+            </tbody>
+          </table>
+        </DataTableContainer>
       </Fade>
 
-      <Dialog open={!!preview} onOpenChange={() => setPreview(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Offer Letter Preview</DialogTitle></DialogHeader>
+      <DetailModal
+        open={!!preview}
+        onClose={() => setPreview(null)}
+        title="Offer Letter Preview"
+        footer={
+          <Button variant="outline" onClick={() => setPreview(null)} data-testid="close-preview">Close</Button>
+        }
+      >
+        <DetailSection title="Official Offer Letter">
           {preview && (
             <div className="border rounded-xl p-6 space-y-4 text-sm font-serif">
               <div className="text-center space-y-1">
@@ -150,29 +211,38 @@ export default function AtsOffers() {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </DetailSection>
+      </DetailModal>
 
-      <FormDialog title="Create Offer" description="Prepare an offer letter for a candidate" open={createOpen} onOpenChange={setCreateOpen}>
-        <div className="space-y-4">
-          <div className="space-y-1.5"><label className="text-sm font-medium">Candidate</label>
-            <Select><SelectTrigger><SelectValue placeholder="Select candidate" /></SelectTrigger>
-              <SelectContent>{candidates.slice(0, 10).map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-            </Select>
+      <DetailModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Create Offer"
+        subtitle="Prepare an offer letter for a candidate"
+        footer={
+          <PrimaryAction color="#7c3aed" onClick={() => setCreateOpen(false)} data-testid="submit-offer">Create Offer</PrimaryAction>
+        }
+      >
+        <DetailSection title="Offer Details">
+          <div className="space-y-4">
+            <div className="space-y-1.5"><label className="text-sm font-medium">Candidate</label>
+              <Select><SelectTrigger><SelectValue placeholder="Select candidate" /></SelectTrigger>
+                <SelectContent>{candidates.slice(0, 10).map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Job Opening</label>
+              <Select><SelectTrigger><SelectValue placeholder="Select job" /></SelectTrigger>
+                <SelectContent>{jobOpenings.map(j => <SelectItem key={j.id} value={j.id}>{j.title}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Offered Salary (₹ annual)</label><Input type="number" placeholder="e.g. 1800000" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5"><label className="text-sm font-medium">Joining Date</label><Input type="date" /></div>
+              <div className="space-y-1.5"><label className="text-sm font-medium">Offer Expiry</label><Input type="date" /></div>
+            </div>
           </div>
-          <div className="space-y-1.5"><label className="text-sm font-medium">Job Opening</label>
-            <Select><SelectTrigger><SelectValue placeholder="Select job" /></SelectTrigger>
-              <SelectContent>{jobOpenings.map(j => <SelectItem key={j.id} value={j.id}>{j.title}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5"><label className="text-sm font-medium">Offered Salary (₹ annual)</label><Input type="number" placeholder="e.g. 1800000" /></div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5"><label className="text-sm font-medium">Joining Date</label><Input type="date" /></div>
-            <div className="space-y-1.5"><label className="text-sm font-medium">Offer Expiry</label><Input type="date" /></div>
-          </div>
-        </div>
-        <Button className="w-full mt-4 bg-violet-600 hover:bg-violet-700" data-testid="submit-offer">Create Offer</Button>
-      </FormDialog>
-    </PageTransition>
+        </DetailSection>
+      </DetailModal>
+    </PageShell>
   );
 }

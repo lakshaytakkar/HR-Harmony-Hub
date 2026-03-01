@@ -1,13 +1,26 @@
 import { useState } from "react";
 import { Award, Star } from "lucide-react";
-import { PageTransition, Fade } from "@/components/ui/animated";
-import { Card, CardContent } from "@/components/ui/card";
+import { Fade } from "@/components/ui/animated";
+import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { performanceReviews } from "@/lib/mock-data-hrms";
+import {
+  PageShell,
+  PageHeader,
+  StatGrid,
+  StatCard,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+  IndexToolbar,
+  PrimaryAction,
+  DetailModal,
+  DetailSection,
+} from "@/components/layout";
 
 const statusColors: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700",
@@ -18,7 +31,7 @@ const statusColors: Record<string, string> = {
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
-      {[1,2,3,4,5].map(s => (
+      {[1, 2, 3, 4, 5].map(s => (
         <Star key={s} className={`size-3.5 ${s <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
       ))}
       <span className="text-xs text-muted-foreground ml-1">{rating}</span>
@@ -31,111 +44,162 @@ export default function HrmsPerformance() {
   const [cycleFilter, setCycleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [cycleDialog, setCycleDialog] = useState(false);
+  const [search, setSearch] = useState("");
 
   const pending = performanceReviews.filter(r => r.status === "pending").length;
   const submitted = performanceReviews.filter(r => r.status === "submitted").length;
   const acknowledged = performanceReviews.filter(r => r.status === "acknowledged").length;
   const avgRating = (performanceReviews.filter(r => r.rating > 0).reduce((s, r) => s + r.rating, 0) / performanceReviews.filter(r => r.rating > 0).length).toFixed(1);
 
-  const cycles = [...new Set(performanceReviews.map(r => r.reviewCycle))];
+  const cycles = Array.from(new Set(performanceReviews.map(r => r.reviewCycle)));
 
   const filtered = performanceReviews.filter(r => {
     const matchCycle = cycleFilter === "all" || r.reviewCycle === cycleFilter;
     const matchStatus = statusFilter === "all" || r.status === statusFilter;
-    return matchCycle && matchStatus;
+    const matchSearch = r.employeeName.toLowerCase().includes(search.toLowerCase());
+    return matchCycle && matchStatus && matchSearch;
   });
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-4 animate-pulse">
+      <PageShell className="animate-pulse">
         <div className="h-10 bg-muted rounded w-48" />
-        <div className="grid grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-muted rounded-xl" />)}</div>
+        <StatGrid>
+          <div className="h-20 bg-muted rounded-xl" />
+          <div className="h-20 bg-muted rounded-xl" />
+          <div className="h-20 bg-muted rounded-xl" />
+          <div className="h-20 bg-muted rounded-xl" />
+        </StatGrid>
         <div className="h-72 bg-muted rounded-xl" />
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Performance Reviews</h1>
-            <p className="text-sm text-muted-foreground">Track and manage employee performance evaluations</p>
-          </div>
-          <Button onClick={() => setCycleDialog(true)} className="bg-sky-600 hover:bg-sky-700" data-testid="start-review-btn">
-            <Award className="size-4 mr-2" /> Start Review Cycle
-          </Button>
-        </div>
+        <PageHeader
+          title="Performance Reviews"
+          subtitle="Track and manage employee performance evaluations"
+          actions={
+            <PrimaryAction
+              color="#0284c7"
+              icon={Award}
+              onClick={() => setCycleDialog(true)}
+              testId="start-review-btn"
+            >
+              Start Review Cycle
+            </PrimaryAction>
+          }
+        />
       </Fade>
 
       <Fade>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="border-0 shadow-sm"><CardContent className="p-4"><p className="text-2xl font-bold text-amber-600">{pending}</p><p className="text-xs text-muted-foreground mt-0.5">Pending Reviews</p></CardContent></Card>
-          <Card className="border-0 shadow-sm"><CardContent className="p-4"><p className="text-2xl font-bold text-sky-600">{submitted}</p><p className="text-xs text-muted-foreground mt-0.5">Submitted</p></CardContent></Card>
-          <Card className="border-0 shadow-sm"><CardContent className="p-4"><p className="text-2xl font-bold text-emerald-600">{acknowledged}</p><p className="text-xs text-muted-foreground mt-0.5">Acknowledged</p></CardContent></Card>
-          <Card className="border-0 shadow-sm"><CardContent className="p-4"><p className="text-2xl font-bold text-violet-600">{avgRating}</p><p className="text-xs text-muted-foreground mt-0.5">Avg Rating</p></CardContent></Card>
-        </div>
+        <StatGrid>
+          <StatCard
+            label="Pending Reviews"
+            value={pending}
+            icon={Award}
+            iconBg="rgba(245, 158, 11, 0.1)"
+            iconColor="#f59e0b"
+          />
+          <StatCard
+            label="Submitted"
+            value={submitted}
+            icon={Award}
+            iconBg="rgba(14, 165, 233, 0.1)"
+            iconColor="#0ea5e9"
+          />
+          <StatCard
+            label="Acknowledged"
+            value={acknowledged}
+            icon={Award}
+            iconBg="rgba(16, 185, 129, 0.1)"
+            iconColor="#10b981"
+          />
+          <StatCard
+            label="Avg Rating"
+            value={avgRating}
+            icon={Award}
+            iconBg="rgba(139, 92, 246, 0.1)"
+            iconColor="#8b5cf6"
+          />
+        </StatGrid>
       </Fade>
 
       <Fade>
-        <div className="flex gap-3">
-          <Select value={cycleFilter} onValueChange={setCycleFilter}>
-            <SelectTrigger className="w-36" data-testid="cycle-filter"><SelectValue placeholder="All Cycles" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Cycles</SelectItem>
-              {cycles.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36" data-testid="status-filter"><SelectValue placeholder="All Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="submitted">Submitted</SelectItem>
-              <SelectItem value="acknowledged">Acknowledged</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <IndexToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search employee..."
+          color="#0284c7"
+          extra={
+            <div className="flex gap-2">
+              <Select value={cycleFilter} onValueChange={setCycleFilter}>
+                <SelectTrigger className="w-36" data-testid="cycle-filter"><SelectValue placeholder="All Cycles" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Cycles</SelectItem>
+                  {cycles.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-36" data-testid="status-filter"><SelectValue placeholder="All Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="submitted">Submitted</SelectItem>
+                  <SelectItem value="acknowledged">Acknowledged</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
+        />
       </Fade>
 
       <Fade>
-        <Card className="border-0 shadow-sm overflow-hidden">
-          <CardContent className="p-0">
-            <table className="w-full">
-              <thead className="border-b bg-muted/30">
-                <tr>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Employee</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Review Cycle</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Rating</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Reviewer</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Status</th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Completed</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {filtered.map((r) => (
-                  <tr key={r.id} className="hover:bg-muted/20" data-testid={`review-row-${r.id}`}>
-                    <td className="px-4 py-3 text-sm font-medium">{r.employeeName}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{r.reviewCycle}</td>
-                    <td className="px-4 py-3">{r.rating > 0 ? <StarRating rating={r.rating} /> : <span className="text-xs text-muted-foreground">—</span>}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{r.reviewer}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[r.status]}`}>{r.status}</span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{r.completedDate || "—"}</td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">No reviews found</td></tr>}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+        <DataTableContainer>
+          <table className="w-full text-sm">
+            <thead className="border-b bg-muted/30">
+              <tr>
+                <DataTH>Employee</DataTH>
+                <DataTH>Review Cycle</DataTH>
+                <DataTH>Rating</DataTH>
+                <DataTH>Reviewer</DataTH>
+                <DataTH>Status</DataTH>
+                <DataTH>Completed</DataTH>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filtered.map((r) => (
+                <DataTR key={r.id} data-testid={`review-row-${r.id}`}>
+                  <DataTD className="font-medium">{r.employeeName}</DataTD>
+                  <DataTD className="text-muted-foreground">{r.reviewCycle}</DataTD>
+                  <DataTD>{r.rating > 0 ? <StarRating rating={r.rating} /> : <span className="text-xs text-muted-foreground">—</span>}</DataTD>
+                  <DataTD className="text-muted-foreground">{r.reviewer}</DataTD>
+                  <DataTD>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[r.status]}`}>{r.status}</span>
+                  </DataTD>
+                  <DataTD className="text-muted-foreground">{r.completedDate || "—"}</DataTD>
+                </DataTR>
+              ))}
+              {filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">No reviews found</td></tr>}
+            </tbody>
+          </table>
+        </DataTableContainer>
       </Fade>
 
-      <Dialog open={cycleDialog} onOpenChange={setCycleDialog}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Start New Review Cycle</DialogTitle></DialogHeader>
+      <DetailModal
+        open={cycleDialog}
+        onClose={() => setCycleDialog(false)}
+        title="Start New Review Cycle"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setCycleDialog(false)}>Cancel</Button>
+            <PrimaryAction color="#0284c7" onClick={() => setCycleDialog(false)} data-testid="confirm-cycle">Create Cycle</PrimaryAction>
+          </>
+        }
+      >
+        <DetailSection title="Cycle Details">
           <div className="space-y-4">
             <div className="space-y-1.5"><label className="text-sm font-medium">Cycle Name</label><Input placeholder="e.g. Q1 2026" /></div>
             <div className="grid grid-cols-2 gap-4">
@@ -155,12 +219,8 @@ export default function HrmsPerformance() {
               </Select>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCycleDialog(false)}>Cancel</Button>
-            <Button className="bg-sky-600 hover:bg-sky-700" onClick={() => setCycleDialog(false)} data-testid="confirm-cycle">Create Cycle</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </PageTransition>
+        </DetailSection>
+      </DetailModal>
+    </PageShell>
   );
 }

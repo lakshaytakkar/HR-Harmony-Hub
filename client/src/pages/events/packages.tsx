@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Star, Plus, ChevronRight } from "lucide-react";
-
+import { Star, Plus, ChevronRight, MapPin } from "lucide-react";
+import { Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { tourPackages, type PackageStatus } from "@/lib/mock-data-goyo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
+import {
+  PageShell,
+  PageHeader,
+  IndexToolbar,
+} from "@/components/layout";
+
+const BRAND_COLOR = "#E91E63";
 
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(val);
@@ -38,186 +42,171 @@ function StarRating({ stars }: { stars: number }) {
   );
 }
 
-const statusFilters: { key: string; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "active", label: "Active" },
-  { key: "upcoming", label: "Upcoming" },
-  { key: "sold_out", label: "Sold Out" },
-];
-
 export default function EventsPackages() {
   const [, navigate] = useLocation();
   const loading = useSimulatedLoading(650);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
 
-  const filtered = tourPackages.filter((p) => statusFilter === "all" || p.status === statusFilter);
+  const filtered = tourPackages.filter((p) => {
+    const matchesStatus = statusFilter === "all" || p.status === statusFilter;
+    const matchesSearch = search === "" || p.name.toLowerCase().includes(search.toLowerCase()) || p.destination.toLowerCase().includes(search.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
   const totalSeats = tourPackages.reduce((s, p) => s + p.seats_available, 0);
   const activeCount = tourPackages.filter((p) => p.status === "active").length;
 
+  if (loading) {
+    return (
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-64 animate-pulse" />
+        <div className="h-12 bg-muted rounded animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-64 bg-muted rounded-2xl animate-pulse" />
+          ))}
+        </div>
+      </PageShell>
+    );
+  }
+
   return (
-    <div className="px-16 py-6 lg:px-24">
-      <PageTransition>
-        <Fade direction="up" delay={0}>
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground font-heading" data-testid="packages-title">Tour Packages</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">{tourPackages.length} packages · {activeCount} active · {totalSeats} seats remaining</p>
-            </div>
+    <PageShell>
+      <Fade>
+        <PageHeader
+          title="Tour Packages"
+          subtitle={`${tourPackages.length} packages · ${activeCount} active · ${totalSeats} seats remaining`}
+          actions={
             <Button
               className="gap-2 text-white"
-              style={{ backgroundColor: "#E91E63" }}
+              style={{ backgroundColor: BRAND_COLOR }}
               data-testid="button-add-package"
             >
               <Plus className="size-4" />
               Add Package
             </Button>
-          </div>
-        </Fade>
+          }
+        />
+      </Fade>
 
-        <Fade direction="up" delay={0.05} className="mb-6">
-          <div className="flex gap-2">
-            {statusFilters.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setStatusFilter(f.key)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  statusFilter === f.key
-                    ? "bg-pink-500 text-white"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-                data-testid={`filter-${f.key}`}
+      <Fade>
+        <IndexToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search packages or destinations..."
+          color={BRAND_COLOR}
+          filters={[
+            { value: "all", label: "All Packages" },
+            { value: "active", label: "Active" },
+            { value: "upcoming", label: "Upcoming" },
+            { value: "sold_out", label: "Sold Out" },
+          ]}
+          activeFilter={statusFilter}
+          onFilter={setStatusFilter}
+        />
+      </Fade>
+
+      <Stagger staggerInterval={0.06} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {filtered.map((pkg) => {
+          const sold = pkg.max_pax - pkg.seats_available;
+          const pct = Math.round((sold / pkg.max_pax) * 100);
+          const destKey = Object.keys(destinationGradients).find((k) => pkg.destination.includes(k)) || "default";
+          const gradient = destinationGradients[destKey];
+          const sc = statusConfig[pkg.status];
+
+          return (
+            <StaggerItem key={pkg.id}>
+              <div
+                className="rounded-2xl border border-border bg-card overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                data-testid={`card-package-${pkg.id}`}
               >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </Fade>
-
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="rounded-2xl border bg-card overflow-hidden">
-                <Skeleton className="h-28 w-full" />
-                <div className="p-5 flex flex-col gap-3">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-6 w-1/3" />
-                  <Skeleton className="h-2 w-full rounded-full" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Stagger staggerInterval={0.06} className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {filtered.map((pkg) => {
-              const sold = pkg.max_pax - pkg.seats_available;
-              const pct = Math.round((sold / pkg.max_pax) * 100);
-              const destKey = Object.keys(destinationGradients).find((k) => pkg.destination.includes(k)) || "default";
-              const gradient = destinationGradients[destKey];
-              const sc = statusConfig[pkg.status];
-
-              return (
-                <StaggerItem key={pkg.id}>
-                  <div
-                    className="rounded-2xl border border-border bg-card overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                    data-testid={`card-package-${pkg.id}`}
-                  >
-                    <div className={`relative bg-gradient-to-br ${gradient} px-6 py-5`}>
-                      <p className="text-white/80 text-xs font-medium mb-1">{pkg.category}</p>
-                      <p className="text-white font-bold text-lg leading-tight">{pkg.destination}</p>
-                      <p className="text-white/70 text-xs mt-1">{pkg.duration_days}D/{pkg.duration_nights}N</p>
-                      {pkg.discount_percent && (
-                        <div className="absolute top-4 right-4 rounded-full bg-amber-400 text-amber-900 px-2.5 py-1 text-xs font-bold">
-                          {pkg.discount_percent}% OFF
-                        </div>
-                      )}
+                <div className={`relative bg-gradient-to-br ${gradient} px-6 py-5`}>
+                  <p className="text-white/80 text-xs font-medium mb-1 uppercase tracking-wider">{pkg.category}</p>
+                  <p className="text-white font-bold text-lg leading-tight flex items-center gap-2">
+                    <MapPin size={16} />
+                    {pkg.destination}
+                  </p>
+                  <p className="text-white/70 text-xs mt-1 font-medium">{pkg.duration_days}D/{pkg.duration_nights}N</p>
+                  {pkg.discount_percent && (
+                    <div className="absolute top-4 right-4 rounded-full bg-amber-400 text-amber-900 px-2.5 py-1 text-[10px] font-bold shadow-sm">
+                      {pkg.discount_percent}% OFF
                     </div>
+                  )}
+                </div>
 
-                    <div className="p-5">
-                      <div className="flex items-start justify-between gap-2 mb-3">
-                        <h3 className="text-sm font-bold leading-tight" data-testid={`text-pkg-name-${pkg.id}`}>{pkg.name}</h3>
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap shrink-0 ${sc.color}`}>
-                          {sc.label}
-                        </span>
-                      </div>
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <h3 className="text-sm font-bold leading-tight" data-testid={`text-pkg-name-${pkg.id}`}>{pkg.name}</h3>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-tight whitespace-nowrap shrink-0 ${sc.color}`}>
+                      {sc.label}
+                    </span>
+                  </div>
 
-                      <div className="flex items-center gap-3 mb-3">
-                        <StarRating stars={pkg.hotel_stars} />
-                        <span className="text-xs text-muted-foreground">{pkg.hotel_name}</span>
-                      </div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <StarRating stars={pkg.hotel_stars} />
+                    <span className="text-xs text-muted-foreground font-medium">{pkg.hotel_name}</span>
+                  </div>
 
-                      {pkg.start_date && (
-                        <p className="text-xs text-muted-foreground mb-3">
-                          {new Date(pkg.start_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                          {pkg.end_date && ` — ${new Date(pkg.end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`}
-                        </p>
-                      )}
+                  {pkg.start_date && (
+                    <p className="text-[11px] font-medium text-muted-foreground mb-3 bg-muted/50 rounded-md px-2 py-1 inline-block">
+                      {new Date(pkg.start_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      {pkg.end_date && ` — ${new Date(pkg.end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`}
+                    </p>
+                  )}
 
-                      <div className="mb-1">
-                        {pkg.original_price_inr && (
-                          <p className="text-xs text-muted-foreground line-through">{formatCurrency(pkg.original_price_inr)}</p>
-                        )}
-                        <div className="flex items-baseline gap-2">
-                          <p className="text-xl font-bold text-pink-600" data-testid={`text-price-${pkg.id}`}>
-                            {formatCurrency(pkg.price_inr)}
-                          </p>
-                          <span className="text-xs text-muted-foreground">{pkg.price_note}</span>
-                        </div>
-                        <p className="text-xs text-green-600 font-medium mt-0.5">Book with {formatCurrency(pkg.advance_amount)} advance</p>
-                      </div>
+                  <div className="mb-2">
+                    {pkg.original_price_inr && (
+                      <p className="text-[10px] text-muted-foreground line-through font-medium">{formatCurrency(pkg.original_price_inr)}</p>
+                    )}
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold text-pink-600" data-testid={`text-price-${pkg.id}`}>
+                        {formatCurrency(pkg.price_inr)}
+                      </p>
+                      <span className="text-[10px] text-muted-foreground font-medium">{pkg.price_note}</span>
+                    </div>
+                    <p className="text-[11px] text-green-600 font-bold mt-1 uppercase tracking-tight">Book with {formatCurrency(pkg.advance_amount)} advance</p>
+                  </div>
 
-                      <div className="my-3">
-                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                          <span>{sold}/{pkg.max_pax} booked</span>
-                          <span data-testid={`text-seats-${pkg.id}`}>{pkg.seats_available} seats left</span>
-                        </div>
-                        <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-pink-500 transition-all duration-500"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {pkg.highlights.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-4">
-                          {pkg.highlights.slice(0, 4).map((h) => (
-                            <span key={h} className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">{h}</span>
-                          ))}
-                          {pkg.highlights.length > 4 && (
-                            <span className="text-xs text-muted-foreground self-center">+{pkg.highlights.length - 4} more</span>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="flex gap-2 pt-3 border-t border-border">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 gap-1.5 text-xs"
-                          onClick={() => navigate(`/events/packages/${pkg.id}`)}
-                          data-testid={`btn-view-${pkg.id}`}
-                        >
-                          View Details <ChevronRight className="size-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="flex-1 text-xs text-white"
-                          style={{ backgroundColor: "#E91E63" }}
-                          onClick={() => navigate("/events/bookings")}
-                          data-testid={`btn-book-${pkg.id}`}
-                        >
-                          New Booking
-                        </Button>
-                      </div>
+                  <div className="my-4">
+                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5 uppercase tracking-wider">
+                      <span>{sold}/{pkg.max_pax} booked</span>
+                      <span data-testid={`text-seats-${pkg.id}`}>{pkg.seats_available} seats left</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-pink-500 transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
                   </div>
-                </StaggerItem>
-              );
-            })}
-          </Stagger>
-        )}
-      </PageTransition>
-    </div>
+
+                  <div className="flex gap-2 pt-4 border-t border-border">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 gap-1.5 text-xs font-bold"
+                      onClick={() => navigate(`/events/packages/${pkg.id}`)}
+                      data-testid={`btn-view-${pkg.id}`}
+                    >
+                      View Details <ChevronRight className="size-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1 text-xs text-white font-bold"
+                      style={{ backgroundColor: BRAND_COLOR }}
+                      onClick={() => navigate("/events/bookings")}
+                      data-testid={`btn-book-${pkg.id}`}
+                    >
+                      New Booking
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </StaggerItem>
+          );
+        })}
+      </Stagger>
+    </PageShell>
   );
 }

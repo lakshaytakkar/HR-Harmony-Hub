@@ -1,15 +1,25 @@
 import { useState } from "react";
-import { Download } from "lucide-react";
-import { PageTransition, Fade } from "@/components/ui/animated";
-import { Card, CardContent } from "@/components/ui/card";
+import { Download, Package2 } from "lucide-react";
+import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { faireProducts, faireStores } from "@/lib/mock-data-faire";
+import {
+  PageShell,
+  PageHeader,
+  StatGrid,
+  StatCard,
+  IndexToolbar,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+  DetailModal,
+} from "@/components/layout";
 
 const BRAND_COLOR = "#1A6B45";
 
@@ -45,131 +55,168 @@ export default function FaireInventory() {
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-6 animate-pulse">
-        <div className="h-10 bg-muted rounded w-64" />
-        <div className="grid grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-muted rounded-xl" />)}</div>
-        <div className="h-80 bg-muted rounded-xl" />
-      </div>
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-64 animate-pulse" />
+        <StatGrid>
+          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />)}
+        </StatGrid>
+        <div className="h-80 bg-muted rounded-xl animate-pulse" />
+      </PageShell>
     );
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold font-heading">Inventory</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Track stock levels across all stores and variants</p>
-          </div>
-          <Button size="sm" variant="outline" onClick={() => toast({ title: "Exporting inventory CSV..." })} data-testid="btn-export">
-            <Download size={13} className="mr-1.5" /> Export
-          </Button>
-        </div>
+        <PageHeader
+          title="Inventory"
+          subtitle="Track stock levels across all stores and variants"
+          actions={
+            <div className="flex items-center gap-2">
+              <select 
+                value={selectedStore} 
+                onChange={e => setSelectedStore(e.target.value)} 
+                className="h-9 text-sm border rounded-lg px-3 bg-background font-medium" 
+                data-testid="select-store"
+              >
+                <option value="all">All Stores</option>
+                {faireStores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <Button variant="outline" className="h-9" onClick={() => toast({ title: "Exporting inventory CSV..." })} data-testid="btn-export">
+                <Download size={14} className="mr-2" /> Export CSV
+              </Button>
+            </div>
+          }
+        />
       </Fade>
 
       <Fade>
-        <div className="grid grid-cols-4 gap-3">
+        <StatGrid>
           {[
-            { label: "Total SKUs", value: totalSKUs, color: "#1A6B45", bg: "#ECFDF5" },
+            { label: "Total SKUs", value: totalSKUs, color: BRAND_COLOR, bg: "rgba(26, 107, 69, 0.1)" },
             { label: "Out of Stock", value: outOfStock, color: "#DC2626", bg: "#FEF2F2" },
             { label: "Low Stock (<5)", value: lowStock, color: "#D97706", bg: "#FFFBEB" },
             { label: "Backordered", value: backordered, color: "#7C3AED", bg: "#F5F3FF" },
           ].map((s, i) => (
-            <div key={i} className="rounded-xl border p-3" style={{ background: s.bg }} data-testid={`inv-stat-${i}`}>
-              <p className="text-xl font-bold" style={{ color: s.color }}>{s.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
-            </div>
+            <StatCard
+              key={i}
+              label={s.label}
+              value={s.value}
+              icon={Package2}
+              iconBg={s.bg}
+              iconColor={s.color}
+            />
           ))}
-        </div>
+        </StatGrid>
       </Fade>
 
       <Fade>
-        <div className="flex gap-2">
-          <Input placeholder="Search product or SKU..." value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs h-8 text-sm" data-testid="input-search" />
-          <select value={selectedStore} onChange={e => setSelectedStore(e.target.value)} className="h-8 text-xs border rounded-lg px-2" data-testid="select-store">
-            <option value="all">All Stores</option>
-            {faireStores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-        </div>
+        <IndexToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search product or SKU..."
+          color={BRAND_COLOR}
+        />
       </Fade>
 
       <Fade>
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Product</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Store</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">SKU</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Options</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Available Qty</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Backordered Until</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allVariants.map(v => {
-                    const isOut = v.available_quantity === 0;
-                    const isLow = v.available_quantity > 0 && v.available_quantity < 5;
-                    return (
-                      <tr key={v.id} className={`border-b hover:bg-accent/20 ${isOut ? "bg-red-50/50 dark:bg-red-950/10" : isLow ? "bg-amber-50/50 dark:bg-amber-950/10" : ""}`} data-testid={`inv-row-${v.id}`}>
-                        <td className="p-3 text-xs font-medium">{v.product.name}</td>
-                        <td className="p-3"><Badge variant="outline" className="text-[10px]">{v.store?.name.split(" ")[0]}</Badge></td>
-                        <td className="p-3 text-xs font-mono text-muted-foreground">{v.sku}</td>
-                        <td className="p-3">
-                          {Object.entries(v.options).map(([k, val]) => (
-                            <span key={k} className="text-[10px] bg-muted rounded px-1.5 py-0.5 mr-1">{val}</span>
-                          ))}
-                        </td>
-                        <td className="p-3">
-                          <span className={`text-sm font-bold ${isOut ? "text-red-600" : isLow ? "text-amber-600" : "text-foreground"}`}>
-                            {v.available_quantity}
-                          </span>
-                          {isOut && <span className="ml-1 text-[9px] text-red-500 font-medium">OUT</span>}
-                          {isLow && <span className="ml-1 text-[9px] text-amber-500 font-medium">LOW</span>}
-                        </td>
-                        <td className="p-3 text-xs">
-                          {v.backordered_until ? new Date(v.backordered_until).toLocaleDateString() : <span className="text-muted-foreground">—</span>}
-                        </td>
-                        <td className="p-3">
-                          <div className="flex gap-1">
-                            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setQtyVariantId(v.id); setEditQty(String(v.available_quantity)); }} data-testid={`btn-update-qty-${v.id}`}>Update Qty</Button>
-                            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setBackorderVariantId(v.id); setBackorderDate(v.backordered_until ?? ""); }} data-testid={`btn-backorder-${v.id}`}>Backorder</Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        <DataTableContainer>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <DataTH>Product</DataTH>
+                <DataTH>Store</DataTH>
+                <DataTH>SKU</DataTH>
+                <DataTH>Options</DataTH>
+                <DataTH>Available Qty</DataTH>
+                <DataTH>Backordered Until</DataTH>
+                <DataTH align="right">Actions</DataTH>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {allVariants.map(v => {
+                const isOut = v.available_quantity === 0;
+                const isLow = v.available_quantity > 0 && v.available_quantity < 5;
+                return (
+                  <DataTR key={v.id} className={isOut ? "bg-red-50/30 dark:bg-red-950/5" : isLow ? "bg-amber-50/30 dark:bg-amber-950/5" : ""} data-testid={`inv-row-${v.id}`}>
+                    <DataTD className="font-semibold text-xs">{v.product.name}</DataTD>
+                    <DataTD><Badge variant="outline" className="text-[10px] font-medium">{v.store?.name.split(" ")[0]}</Badge></DataTD>
+                    <DataTD className="font-mono text-[10px] text-muted-foreground">{v.sku}</DataTD>
+                    <DataTD>
+                      <div className="flex flex-wrap gap-1">
+                        {Object.entries(v.options).map(([k, val]) => (
+                          <span key={k} className="text-[10px] bg-muted/80 rounded px-1.5 py-0.5 font-medium border border-muted-foreground/10">{val}</span>
+                        ))}
+                      </div>
+                    </DataTD>
+                    <DataTD>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-sm font-bold ${isOut ? "text-red-600" : isLow ? "text-amber-600" : "text-foreground"}`}>
+                          {v.available_quantity}
+                        </span>
+                        {isOut && <span className="text-[9px] px-1 bg-red-100 text-red-600 rounded font-bold uppercase tracking-tighter">OUT</span>}
+                        {isLow && <span className="text-[9px] px-1 bg-amber-100 text-amber-600 rounded font-bold uppercase tracking-tighter">LOW</span>}
+                      </div>
+                    </DataTD>
+                    <DataTD className="text-muted-foreground font-medium">
+                      {v.backordered_until ? new Date(v.backordered_until).toLocaleDateString() : "—"}
+                    </DataTD>
+                    <DataTD align="right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button size="sm" variant="outline" className="h-8 text-xs font-semibold" onClick={() => { setQtyVariantId(v.id); setEditQty(String(v.available_quantity)); }} data-testid={`btn-update-qty-${v.id}`}>Update Qty</Button>
+                        <Button size="sm" variant="outline" className="h-8 text-xs font-semibold" onClick={() => { setBackorderVariantId(v.id); setBackorderDate(v.backordered_until ?? ""); }} data-testid={`btn-backorder-${v.id}`}>Backorder</Button>
+                      </div>
+                    </DataTD>
+                  </DataTR>
+                );
+              })}
+              {allVariants.length === 0 && (
+                <tr><td colSpan={7} className="p-8 text-center text-sm text-muted-foreground font-medium">No inventory variants match your search.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </DataTableContainer>
       </Fade>
 
-      <Dialog open={!!qtyVariantId} onOpenChange={() => setQtyVariantId(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Update Stock — {qtyVariant?.sku}</DialogTitle></DialogHeader>
-          <div className="space-y-1.5 py-2"><Label>New Available Quantity</Label><Input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} data-testid="input-qty" /></div>
-          <DialogFooter>
+      <DetailModal
+        open={!!qtyVariantId}
+        onClose={() => setQtyVariantId(null)}
+        title={`Update Stock — ${qtyVariant?.sku}`}
+        subtitle="Manual inventory adjustment"
+        footer={
+          <>
             <Button variant="outline" onClick={() => setQtyVariantId(null)}>Cancel</Button>
-            <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Stock Updated", description: `${qtyVariant?.sku}: ${editQty} units` }); setQtyVariantId(null); }} data-testid="btn-save-qty">Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Stock Updated", description: `${qtyVariant?.sku}: ${editQty} units` }); setQtyVariantId(null); }} data-testid="btn-save-qty">Save Changes</Button>
+          </>
+        }
+      >
+        <div className="px-6 py-5 space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">New Available Quantity</Label>
+            <Input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} data-testid="input-qty" />
+          </div>
+        </div>
+      </DetailModal>
 
-      <Dialog open={!!backorderVariantId} onOpenChange={() => setBackorderVariantId(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Set Backorder Date — {backorderVariant?.sku}</DialogTitle></DialogHeader>
-          <div className="space-y-1.5 py-2"><Label>Available Again Date</Label><Input type="date" value={backorderDate} onChange={e => setBackorderDate(e.target.value)} data-testid="input-backorder-date" /></div>
-          <DialogFooter>
+      <DetailModal
+        open={!!backorderVariantId}
+        onClose={() => setBackorderVariantId(null)}
+        title={`Set Backorder Date — ${backorderVariant?.sku}`}
+        subtitle="Manage stock availability dates"
+        footer={
+          <>
             <Button variant="outline" onClick={() => setBackorderVariantId(null)}>Cancel</Button>
-            <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Backorder Date Set", description: backorderDate }); setBackorderVariantId(null); }} data-testid="btn-save-backorder">Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </PageTransition>
+            <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Backorder Date Set", description: backorderDate }); setBackorderVariantId(null); }} data-testid="btn-save-backorder">Save Date</Button>
+          </>
+        }
+      >
+        <div className="px-6 py-5 space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Available Again Date</Label>
+            <Input type="date" value={backorderDate} onChange={e => setBackorderDate(e.target.value)} data-testid="input-backorder-date" />
+          </div>
+        </div>
+      </DetailModal>
+    </PageShell>
   );
 }

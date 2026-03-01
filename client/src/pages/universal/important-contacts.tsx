@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Phone, Mail, Copy, Plus, Globe, Share2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { SiWhatsapp } from "react-icons/si";
 import { useLocation } from "wouter";
 
@@ -11,7 +12,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
+import { 
+  PageHeader, 
+  PageShell,
+  IndexToolbar,
+  SectionGrid,
+  SectionCard
+} from "@/components/layout";
 import { useToast } from "@/hooks/use-toast";
 import { detectVerticalFromUrl } from "@/lib/verticals-config";
 import { importantContacts, type ImportantContact, type ContactCategory, type ContactPriority } from "@/lib/mock-data-contacts";
@@ -179,6 +186,7 @@ function CardSkeleton() {
 
 export default function ImportantContacts() {
   const [location] = useLocation();
+  const { toast } = useToast();
   const loading = useSimulatedLoading(650);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -221,210 +229,143 @@ export default function ImportantContacts() {
   const uniqueCategories = Array.from(new Set(allForVertical.map((c) => c.category)));
 
   return (
-    <div className="px-16 py-6 lg:px-24">
-      <PageTransition>
-        <Fade direction="up" delay={0}>
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground font-heading" data-testid="contacts-title">Important Contacts</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {vertical ? `${vertical.name} directory` : "All contacts"} — {allForVertical.length} contacts
-              </p>
-            </div>
-            <Button
-              onClick={() => setDialogOpen(true)}
-              className="gap-2 text-white"
-              style={{ backgroundColor: accentColor }}
-              data-testid="button-add-contact"
-            >
-              <Plus className="size-4" />
-              Add Contact
-            </Button>
-          </div>
-        </Fade>
+    <PageShell className="overflow-y-auto h-full">
+      <PageHeader
+        title="Important Contacts"
+        subtitle={`Key contacts and partners for ${vertical?.name} operations.`}
+        actions={
+          <Button 
+            onClick={() => setDialogOpen(true)}
+            style={{ backgroundColor: accentColor }}
+            className="text-white font-semibold"
+            data-testid="button-add-contact"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Contact
+          </Button>
+        }
+      />
 
-        {loading ? (
-          <div className="mb-6 grid grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="rounded-lg border bg-card p-3">
-                <Skeleton className="h-7 w-12 mb-1" />
-                <Skeleton className="h-3 w-20" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Fade direction="up" delay={0.05} className="mb-6">
-            <div className="grid grid-cols-4 gap-3">
-              <div className="rounded-lg border border-border bg-card p-3 text-center" data-testid="stat-total">
-                <p className="text-xl font-bold text-foreground">{allForVertical.length}</p>
-                <p className="text-xs text-muted-foreground">Total Contacts</p>
-              </div>
-              <div className="rounded-lg border border-border bg-card p-3 text-center" data-testid="stat-high-priority">
-                <p className="text-xl font-bold text-red-500">{highPriority}</p>
-                <p className="text-xs text-muted-foreground">High Priority</p>
-              </div>
-              <div className="rounded-lg border border-border bg-card p-3 text-center" data-testid="stat-shared">
-                <p className="text-xl font-bold text-blue-500">{sharedCount}</p>
-                <p className="text-xs text-muted-foreground">Shared Contacts</p>
-              </div>
-              <div className="rounded-lg border border-border bg-card p-3 text-center" data-testid="stat-categories">
-                <p className="text-xl font-bold" style={{ color: accentColor }}>{categoriesCount}</p>
-                <p className="text-xs text-muted-foreground">Categories</p>
-              </div>
-            </div>
-          </Fade>
-        )}
+      <IndexToolbar
+        search={search}
+        onSearch={setSearch}
+        color={accentColor}
+        placeholder="Search contacts..."
+        filters={uniqueCategories.map(c => ({ value: c, label: categoryConfig[c as ContactCategory]?.label || c }))}
+        activeFilter={categoryFilter}
+        onFilter={(val) => setCategoryFilter(val as any)}
+      />
 
-        <Fade direction="up" delay={0.08} className="mb-5 flex flex-wrap items-center gap-3">
-          <Input
-            placeholder="Search contacts, organizations, tags..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-72"
-            data-testid="input-search"
-          />
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-44" data-testid="filter-category">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {uniqueCategories.map((cat) => (
-                <SelectItem key={cat} value={cat}>{categoryConfig[cat]?.label || cat}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-36" data-testid="filter-priority">
-              <SelectValue placeholder="All Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priority</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
-          {(categoryFilter !== "all" || priorityFilter !== "all" || search) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => { setCategoryFilter("all"); setPriorityFilter("all"); setSearch(""); }}
-              data-testid="button-clear-filters"
-            >
-              Clear filters
-            </Button>
-          )}
-        </Fade>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-48 animate-pulse bg-muted rounded-xl border" />
+          ))}
+        </div>
+      ) : (
+        <SectionGrid cols={3}>
+          {filtered.map((contact) => (
+            <ContactCard key={contact.id} contact={contact} />
+          ))}
+        </SectionGrid>
+      )}
 
-        {loading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 9 }).map((_, i) => <CardSkeleton key={i} />)}
+      {filtered.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed rounded-xl">
+          <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4 text-muted-foreground">
+            <Phone className="h-8 w-8" />
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="py-16 text-center" data-testid="empty-state">
-            <Phone className="size-10 mx-auto mb-3 text-muted-foreground/40" />
-            <p className="text-sm font-medium text-muted-foreground">No contacts found</p>
-            <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters or add a new contact</p>
-          </div>
-        ) : (
-          <Stagger staggerInterval={0.04} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((contact) => (
-              <StaggerItem key={contact.id}>
-                <ContactCard contact={contact} />
-              </StaggerItem>
-            ))}
-          </Stagger>
-        )}
+          <h3 className="text-lg font-semibold">No contacts found</h3>
+          <p className="text-sm text-muted-foreground">Try adjusting your search or filters.</p>
+        </div>
+      )}
 
-        <FormDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          title="Add Important Contact"
-          description="Add a key contact to your directory."
-          onSubmit={() => setDialogOpen(false)}
-          submitLabel="Add Contact"
-        >
-          <div className="grid gap-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="c-name">Full Name</Label>
-                <Input id="c-name" placeholder="e.g. Jason Huang" data-testid="input-name" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="c-title">Title / Role</Label>
-                <Input id="c-title" placeholder="e.g. Director" data-testid="input-title" />
-              </div>
+      <FormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        title="Add Important Contact"
+        onSubmit={() => setDialogOpen(false)}
+        submitLabel="Add Contact"
+      >
+        <div className="grid gap-4 pt-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="c-name">Full Name</Label>
+              <Input id="c-name" placeholder="e.g. Jason Huang" data-testid="input-name" />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="c-org">Organization</Label>
-              <Input id="c-org" placeholder="Company or department name" data-testid="input-org" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="c-category">Category</Label>
-                <Select>
-                  <SelectTrigger id="c-category" data-testid="input-category">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(categoryConfig).map(([key, cfg]) => (
-                      <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="c-priority">Priority</Label>
-                <Select>
-                  <SelectTrigger id="c-priority" data-testid="input-priority">
-                    <SelectValue placeholder="Select priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="c-phone">Phone</Label>
-                <Input id="c-phone" placeholder="+91 98xxx xxxxx" data-testid="input-phone" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="c-whatsapp">WhatsApp Number</Label>
-                <Input id="c-whatsapp" placeholder="Country code + number (no +)" data-testid="input-whatsapp" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="c-email">Email</Label>
-                <Input id="c-email" type="email" placeholder="contact@domain.com" data-testid="input-email" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="c-website">Website</Label>
-                <Input id="c-website" placeholder="www.example.com" data-testid="input-website" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="c-city">City</Label>
-                <Input id="c-city" placeholder="City" data-testid="input-city" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="c-country">Country</Label>
-                <Input id="c-country" placeholder="Country" data-testid="input-country" />
-              </div>
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="c-notes">Notes</Label>
-              <Input id="c-notes" placeholder="Key notes about this contact..." data-testid="input-notes" />
+              <Label htmlFor="c-title">Title / Role</Label>
+              <Input id="c-title" placeholder="e.g. Director" data-testid="input-title" />
             </div>
           </div>
-        </FormDialog>
-      </PageTransition>
-    </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="c-org">Organization</Label>
+            <Input id="c-org" placeholder="Company or department name" data-testid="input-org" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="c-category">Category</Label>
+              <Select>
+                <SelectTrigger id="c-category" data-testid="input-category">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(categoryConfig).map(([key, cfg]) => (
+                    <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="c-priority">Priority</Label>
+              <Select>
+                <SelectTrigger id="c-priority" data-testid="input-priority">
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="c-phone">Phone</Label>
+              <Input id="c-phone" placeholder="+91 98xxx xxxxx" data-testid="input-phone" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="c-whatsapp">WhatsApp Number</Label>
+              <Input id="c-whatsapp" placeholder="Country code + number (no +)" data-testid="input-whatsapp" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="c-email">Email</Label>
+              <Input id="c-email" type="email" placeholder="contact@domain.com" data-testid="input-email" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="c-website">Website</Label>
+              <Input id="c-website" placeholder="www.example.com" data-testid="input-website" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="c-city">City</Label>
+              <Input id="c-city" placeholder="City" data-testid="input-city" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="c-country">Country</Label>
+              <Input id="c-country" placeholder="Country" data-testid="input-country" />
+            </div>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="c-notes">Notes</Label>
+            <Input id="c-notes" placeholder="Key notes about this contact..." data-testid="input-notes" />
+          </div>
+        </div>
+      </FormDialog>
+    </PageShell>
   );
 }
