@@ -52,7 +52,7 @@ export function VerticalSwitcher() {
         data-testid="vertical-switcher-menu"
       >
         <div className="flex">
-          <div className="w-64 p-2">
+          <div className="w-60 p-2">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2 pt-1.5 pb-2">
               Business Products
             </p>
@@ -82,12 +82,12 @@ export function VerticalSwitcher() {
             </div>
           </div>
 
-          <div className="w-56 bg-muted/40 border-l border-border p-2">
+          <div className="w-60 bg-muted/40 border-l border-border p-2">
             <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2 pt-1.5 pb-2">
               <Building2 className="size-3" />
               Departments
             </p>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {departments.map((v) => {
                 const isActive = currentVertical.id === v.id;
                 const LogoComponent = v.logo;
@@ -96,15 +96,15 @@ export function VerticalSwitcher() {
                     key={v.id}
                     onClick={() => handleSwitch(v.id)}
                     className={cn(
-                      "w-full flex items-center gap-2.5 px-2 py-2.5 rounded-lg text-left transition-colors hover:bg-accent",
+                      "w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-left transition-colors hover:bg-accent",
                       isActive && "bg-accent"
                     )}
                     data-testid={`vertical-option-${v.id}`}
                   >
-                    <LogoComponent size={36} />
+                    <LogoComponent size={32} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate leading-tight">{v.shortName}</p>
-                      <p className="text-[11px] text-muted-foreground truncate">{v.description}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{v.tagline}</p>
                     </div>
                     {isActive && <Check className="size-3.5 text-primary shrink-0" />}
                   </button>
