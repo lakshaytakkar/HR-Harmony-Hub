@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Copy } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { PageTransition, Fade } from "@/components/ui/animated";
-import { Card, CardContent } from "@/components/ui/card";
+import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import {
+  PageShell, PageHeader, DataTableContainer, DataTH, DataTD, DataTR,
+} from "@/components/layout";
+
+const BRAND_COLOR = "#1A6B45";
 
 type OrderState = "NEW" | "PROCESSING" | "PRE_TRANSIT" | "IN_TRANSIT" | "DELIVERED" | "BACKORDERED" | "CANCELED";
 
@@ -66,103 +70,125 @@ export default function FaireShipments() {
       return true;
     });
 
+  const totalPages = Math.max(1, Math.ceil(enriched.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedShipments = enriched.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   const copyTracking = (code: string) => {
     navigator.clipboard.writeText(code).then(() => toast({ title: "Copied", description: code }));
   };
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-6 animate-pulse">
-        <div className="h-10 bg-muted rounded w-64" />
-        <div className="h-80 bg-muted rounded-xl" />
-      </div>
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-64 animate-pulse" />
+        <div className="h-80 bg-muted rounded-xl animate-pulse" />
+      </PageShell>
     );
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold font-heading">Shipments</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">All in-transit and recent shipments</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <select value={selectedStore} onChange={e => setSelectedStore(e.target.value)} className="h-8 text-xs border rounded-lg px-2" data-testid="select-store">
-              <option value="all">All Stores</option>
-              {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-            <div className="flex gap-1">
-              {(["all", "PRE_TRANSIT", "IN_TRANSIT", "DELIVERED"] as const).map(s => (
-                <button key={s} onClick={() => setStateFilter(s)} className={`px-3 py-1 text-xs rounded-lg border transition-colors ${stateFilter === s ? "text-white border-transparent" : "bg-background hover:bg-muted"}`} style={stateFilter === s ? { background: "#1A6B45" } : {}} data-testid={`filter-state-${s}`}>
-                  {s === "all" ? "All" : s === "PRE_TRANSIT" ? "Pre-Transit" : s === "IN_TRANSIT" ? "In Transit" : "Delivered"}
-                </button>
-              ))}
+        <PageHeader
+          title="Shipments"
+          subtitle="All in-transit and recent shipments"
+          actions={
+            <div className="flex items-center gap-2">
+              <select value={selectedStore} onChange={e => { setSelectedStore(e.target.value); setCurrentPage(1); }} className="h-8 text-xs border rounded-lg px-2" data-testid="select-store">
+                <option value="all">All Stores</option>
+                {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <div className="flex gap-1">
+                {(["all", "PRE_TRANSIT", "IN_TRANSIT", "DELIVERED"] as const).map(s => (
+                  <button key={s} onClick={() => { setStateFilter(s); setCurrentPage(1); }} className={`px-3 py-1 text-xs rounded-lg border transition-colors ${stateFilter === s ? "text-white border-transparent" : "bg-background hover:bg-muted"}`} style={stateFilter === s ? { background: "#1A6B45" } : {}} data-testid={`filter-state-${s}`}>
+                    {s === "all" ? "All" : s === "PRE_TRANSIT" ? "Pre-Transit" : s === "IN_TRANSIT" ? "In Transit" : "Delivered"}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
+          }
+        />
       </Fade>
 
       <Fade>
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Shipment ID</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Order ID</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Store</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Retailer</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Carrier</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Tracking Code</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Shipped</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Shipping Cost</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Type</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Order State</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {enriched.map(ship => {
-                    const orderState = ship.order?.state ?? "IN_TRANSIT";
-                    const cfg = orderStateConfig[orderState] ?? { label: orderState, color: "#6B7280", bg: "#F9FAFB" };
-                    return (
-                      <tr key={ship.id} className="border-b hover:bg-accent/30" data-testid={`shipment-row-${ship.id}`}>
-                        <td className="p-3 text-xs font-mono text-muted-foreground">{ship.id}</td>
-                        <td className="p-3">
-                          <Badge variant="outline" className="text-[9px] font-mono">{ship.order?.display_id}</Badge>
-                        </td>
-                        <td className="p-3">
-                          <Badge variant="outline" className="text-[10px]">{ship.store?.name?.split(" ")[0] ?? "—"}</Badge>
-                        </td>
-                        <td className="p-3 text-xs">{ship.retailerId ?? "—"}</td>
-                        <td className="p-3 text-xs font-medium">{ship.carrier}</td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-1">
-                            <span className="text-[10px] font-mono bg-muted rounded px-1.5 py-0.5 max-w-[120px] truncate">{ship.tracking_code}</span>
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyTracking(ship.tracking_code)} data-testid={`btn-copy-tracking-${ship.id}`}><Copy size={10} /></Button>
-                          </div>
-                        </td>
-                        <td className="p-3 text-xs">{ship.shipped_at ? new Date(ship.shipped_at).toLocaleDateString() : "—"}</td>
-                        <td className="p-3 text-xs font-medium">{ship.maker_cost_cents != null ? `$${(ship.maker_cost_cents / 100).toFixed(2)}` : "—"}</td>
-                        <td className="p-3">
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">{shipTypeLabels[ship.shipping_type] ?? ship.shipping_type ?? "—"}</span>
-                        </td>
-                        <td className="p-3">
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {enriched.length === 0 && (
-                    <tr><td colSpan={10} className="p-8 text-center text-sm text-muted-foreground">No shipments match your filters.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        <DataTableContainer>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <DataTH>Shipment ID</DataTH>
+                <DataTH>Order ID</DataTH>
+                <DataTH>Store</DataTH>
+                <DataTH>Retailer</DataTH>
+                <DataTH>Carrier</DataTH>
+                <DataTH>Tracking Code</DataTH>
+                <DataTH>Shipped</DataTH>
+                <DataTH>Shipping Cost</DataTH>
+                <DataTH>Type</DataTH>
+                <DataTH>Order State</DataTH>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {paginatedShipments.map(ship => {
+                const orderState = ship.order?.state ?? "IN_TRANSIT";
+                const cfg = orderStateConfig[orderState] ?? { label: orderState, color: "#6B7280", bg: "#F9FAFB" };
+                return (
+                  <DataTR key={ship.id} data-testid={`shipment-row-${ship.id}`}>
+                    <DataTD className="text-xs font-mono text-muted-foreground">{ship.id}</DataTD>
+                    <DataTD>
+                      <Badge variant="outline" className="text-[9px] font-mono">{ship.order?.display_id}</Badge>
+                    </DataTD>
+                    <DataTD>
+                      <Badge variant="outline" className="text-[10px]">{ship.store?.name?.split(" ")[0] ?? "—"}</Badge>
+                    </DataTD>
+                    <DataTD className="text-xs">{ship.retailerId ?? "—"}</DataTD>
+                    <DataTD className="text-xs font-medium">{ship.carrier}</DataTD>
+                    <DataTD>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] font-mono bg-muted rounded px-1.5 py-0.5 max-w-[120px] truncate">{ship.tracking_code}</span>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyTracking(ship.tracking_code)} data-testid={`btn-copy-tracking-${ship.id}`}><Copy size={10} /></Button>
+                      </div>
+                    </DataTD>
+                    <DataTD className="text-xs">{ship.shipped_at ? new Date(ship.shipped_at).toLocaleDateString() : "—"}</DataTD>
+                    <DataTD className="text-xs font-medium">{ship.maker_cost_cents != null ? `$${(ship.maker_cost_cents / 100).toFixed(2)}` : "—"}</DataTD>
+                    <DataTD>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">{shipTypeLabels[ship.shipping_type] ?? ship.shipping_type ?? "—"}</span>
+                    </DataTD>
+                    <DataTD>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
+                    </DataTD>
+                  </DataTR>
+                );
+              })}
+              {enriched.length === 0 && (
+                <tr><td colSpan={10} className="p-8 text-center text-sm text-muted-foreground">No shipments match your filters.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </DataTableContainer>
       </Fade>
-    </PageTransition>
+
+      {enriched.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, enriched.length)} of {enriched.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="outline" className="h-8" disabled={safePage <= 1} onClick={() => setCurrentPage(p => p - 1)} data-testid="btn-prev-page">Previous</Button>
+            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+              let page: number;
+              if (totalPages <= 7) page = i + 1;
+              else if (safePage <= 4) page = i + 1;
+              else if (safePage >= totalPages - 3) page = totalPages - 6 + i;
+              else page = safePage - 3 + i;
+              return (
+                <Button key={page} size="sm" variant={page === safePage ? "default" : "outline"} className="h-8 w-8 p-0" style={page === safePage ? { background: BRAND_COLOR } : {}} onClick={() => setCurrentPage(page)} data-testid={`btn-page-${page}`}>{page}</Button>
+              );
+            })}
+            <Button size="sm" variant="outline" className="h-8" disabled={safePage >= totalPages} onClick={() => setCurrentPage(p => p + 1)} data-testid="btn-next-page">Next</Button>
+          </div>
+        </div>
+      )}
+    </PageShell>
   );
 }

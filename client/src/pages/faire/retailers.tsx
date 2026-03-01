@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
 import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   PageShell,
   PageHeader,
@@ -58,59 +59,22 @@ export default function FaireRetailers() {
     },
   });
 
-  const { data: ordersData, isLoading: ordersLoading } = useQuery<{ orders: any[] }>({
-    queryKey: ["/api/faire/orders"],
-    queryFn: async () => {
-      const res = await fetch("/api/faire/orders", { headers: { "Cache-Control": "no-cache" } });
-      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
-      return res.json();
-    },
-  });
-
-  const isLoading = storesLoading || retailersLoading || ordersLoading;
+  const isLoading = storesLoading || retailersLoading;
   const stores = storesData?.stores ?? [];
   const rawRetailers = retailersData?.retailers ?? [];
-  const orders = ordersData?.orders ?? [];
 
-  const enrichedRetailers = useMemo<EnrichedRetailer[]>(() => {
-    const now = Date.now();
-    const ordersByRetailer = new Map<string, any[]>();
-    for (const order of orders) {
-      const rid = order.retailer_id;
-      if (!rid) continue;
-      if (!ordersByRetailer.has(rid)) ordersByRetailer.set(rid, []);
-      ordersByRetailer.get(rid)!.push(order);
-    }
-
-    return rawRetailers.map((r: any) => {
-      const rOrders = ordersByRetailer.get(r.id) ?? [];
-      const totalOrders = rOrders.length;
-      const totalSpent = rOrders.reduce((sum: number, o: any) => {
-        const orderTotal = (o.items ?? []).reduce((s: number, item: any) => s + (item.price_cents ?? 0) * (item.quantity ?? 1), 0);
-        return sum + orderTotal;
-      }, 0);
-      const lastOrderDate = rOrders.length > 0
-        ? rOrders.reduce((latest: string, o: any) => (o.created_at > latest ? o.created_at : latest), rOrders[0].created_at)
-        : null;
-      const isActive = lastOrderDate ? (now - new Date(lastOrderDate).getTime()) < NINETY_DAYS_MS : false;
-      const storeIdSet = new Set<string>();
-      for (const o of rOrders) {
-        if (o._storeId) storeIdSet.add(o._storeId);
-      }
-      return {
-        id: r.id,
-        name: r.name ?? "Unknown Retailer",
-        city: r.city,
-        state: r.state,
-        country: r.country,
-        total_orders: totalOrders,
-        total_spent: Math.round(totalSpent / 100),
-        last_ordered: lastOrderDate,
-        status: isActive ? "active" : "inactive",
-        storeIds: Array.from(storeIdSet),
-      } as EnrichedRetailer;
-    });
-  }, [rawRetailers, orders]);
+  const enrichedRetailers: EnrichedRetailer[] = rawRetailers.map((r: any) => ({
+    id: r.id,
+    name: r.name ?? r.company_name ?? "Unknown Retailer",
+    city: r.city,
+    state: r.state,
+    country: r.country,
+    total_orders: r.total_orders ?? 0,
+    total_spent: Math.round((r.total_spent_cents ?? 0) / 100),
+    last_ordered: r.last_order_at ?? null,
+    status: r.last_order_at && (Date.now() - new Date(r.last_order_at).getTime()) < NINETY_DAYS_MS ? "active" as const : "inactive" as const,
+    storeIds: r.store_ids ?? [],
+  }));
 
   const filtered = enrichedRetailers.filter(r => {
     if (selectedStore !== "all" && !r.storeIds.includes(selectedStore)) return false;
@@ -121,6 +85,10 @@ export default function FaireRetailers() {
     }
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedRetailers = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const totalRetailers = enrichedRetailers.length;
   const activeRetailers = enrichedRetailers.filter(r => r.status === "active").length;
@@ -151,7 +119,7 @@ export default function FaireRetailers() {
           actions={
             <select 
               value={selectedStore} 
-              onChange={e => setSelectedStore(e.target.value)} 
+              onChange={e => { setSelectedStore(e.target.value); setCurrentPage(1); }} 
               className="h-9 text-sm border rounded-lg px-3 bg-background font-medium" 
               data-testid="select-store"
             >
@@ -185,7 +153,7 @@ export default function FaireRetailers() {
       <Fade>
         <IndexToolbar
           search={search}
-          onSearch={setSearch}
+          onSearch={(v) => { setSearch(v); setCurrentPage(1); }}
           placeholder="Search retailer or store..."
           color={BRAND_COLOR}
           filters={[
@@ -194,7 +162,7 @@ export default function FaireRetailers() {
             { value: "inactive", label: "Inactive" },
           ]}
           activeFilter={statusFilter}
-          onFilter={(v) => setStatusFilter(v as any)}
+          onFilter={(v) => { setStatusFilter(v as any); setCurrentPage(1); }}
         />
       </Fade>
 
@@ -213,7 +181,7 @@ export default function FaireRetailers() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filtered.map(retailer => (
+              {paginatedRetailers.map(retailer => (
                 <DataTR key={retailer.id} onClick={() => setLocation(`/faire/retailers/${retailer.id}`)} data-testid={`retailer-row-${retailer.id}`}>
                   <DataTD>
                     <p className="font-semibold text-sm">{retailer.name}</p>
@@ -246,6 +214,41 @@ export default function FaireRetailers() {
           </table>
         </DataTableContainer>
       </Fade>
+
+      {filtered.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="outline" className="h-8" disabled={safePage <= 1} onClick={() => setCurrentPage(p => p - 1)} data-testid="btn-prev-page">
+              Previous
+            </Button>
+            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+              let page: number;
+              if (totalPages <= 7) page = i + 1;
+              else if (safePage <= 4) page = i + 1;
+              else if (safePage >= totalPages - 3) page = totalPages - 6 + i;
+              else page = safePage - 3 + i;
+              return (
+                <Button
+                  key={page} size="sm"
+                  variant={page === safePage ? "default" : "outline"}
+                  className="h-8 w-8 p-0"
+                  style={page === safePage ? { background: BRAND_COLOR } : {}}
+                  onClick={() => setCurrentPage(page)}
+                  data-testid={`btn-page-${page}`}
+                >
+                  {page}
+                </Button>
+              );
+            })}
+            <Button size="sm" variant="outline" className="h-8" disabled={safePage >= totalPages} onClick={() => setCurrentPage(p => p + 1)} data-testid="btn-next-page">
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </PageShell>
   );
 }

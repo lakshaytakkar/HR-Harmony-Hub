@@ -150,6 +150,114 @@ export async function upsertRetailer(faireRetailerId: string, rawData: unknown):
   if (error) console.error("[supabase] upsertRetailer error:", error.message);
 }
 
+interface OrderForRetailer {
+  retailer_id?: string;
+  _storeId?: string;
+  created_at?: string;
+  address?: {
+    name?: string;
+    company_name?: string;
+    city?: string;
+    state?: string;
+    state_code?: string;
+    country?: string;
+    country_code?: string;
+    postal_code?: string;
+    phone_number?: string;
+  };
+  items?: { price_cents?: number; quantity?: number }[];
+}
+
+export async function extractAndUpsertRetailersFromOrders(
+  orders: unknown[]
+): Promise<number> {
+  const retailerMap = new Map<string, {
+    id: string;
+    name: string;
+    company_name: string;
+    city: string;
+    state: string;
+    state_code: string;
+    country: string;
+    country_code: string;
+    postal_code: string;
+    phone_number: string;
+    total_orders: number;
+    total_spent_cents: number;
+    first_order_at: string | null;
+    last_order_at: string | null;
+    store_ids: Set<string>;
+  }>();
+
+  for (const rawOrder of orders) {
+    const order = rawOrder as OrderForRetailer;
+    const rid = order.retailer_id;
+    if (!rid) continue;
+
+    if (!retailerMap.has(rid)) {
+      const addr = order.address ?? {};
+      retailerMap.set(rid, {
+        id: rid,
+        name: addr.company_name || addr.name || rid,
+        company_name: addr.company_name || "",
+        city: addr.city || "",
+        state: addr.state || "",
+        state_code: addr.state_code || "",
+        country: addr.country || "",
+        country_code: addr.country_code || "",
+        postal_code: addr.postal_code || "",
+        phone_number: addr.phone_number || "",
+        total_orders: 0,
+        total_spent_cents: 0,
+        first_order_at: null,
+        last_order_at: null,
+        store_ids: new Set(),
+      });
+    }
+
+    const r = retailerMap.get(rid)!;
+    r.total_orders++;
+
+    const orderTotal = (order.items ?? []).reduce(
+      (sum, item) => sum + (item.price_cents ?? 0) * (item.quantity ?? 1), 0
+    );
+    r.total_spent_cents += orderTotal;
+
+    if (order.created_at) {
+      if (!r.first_order_at || order.created_at < r.first_order_at) r.first_order_at = order.created_at;
+      if (!r.last_order_at || order.created_at > r.last_order_at) r.last_order_at = order.created_at;
+    }
+
+    if (order._storeId) r.store_ids.add(order._storeId);
+  }
+
+  let upserted = 0;
+  for (const [rid, r] of retailerMap) {
+    const rawData = {
+      id: rid,
+      name: r.name,
+      company_name: r.company_name,
+      city: r.city,
+      state: r.state,
+      state_code: r.state_code,
+      country: r.country,
+      country_code: r.country_code,
+      postal_code: r.postal_code,
+      phone_number: r.phone_number,
+      total_orders: r.total_orders,
+      total_spent_cents: r.total_spent_cents,
+      first_order_at: r.first_order_at,
+      last_order_at: r.last_order_at,
+      store_ids: [...r.store_ids],
+    };
+    await upsertRetailer(rid, rawData);
+    upserted++;
+  }
+
+  console.log(`[supabase] extractAndUpsertRetailersFromOrders: upserted ${upserted} retailers from ${orders.length} orders`);
+  return upserted;
+}
+
 export async function getAllRetailers(): Promise<unknown[]> {
   const { data, error } = await supabase.rpc("faire_get_all_retailers");
   if (error) {

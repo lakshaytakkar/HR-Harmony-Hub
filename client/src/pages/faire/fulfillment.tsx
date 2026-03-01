@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Printer, Truck } from "lucide-react";
-import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
+import { Stagger, StaggerItem, Fade } from "@/components/ui/animated";
+import { PageShell, PageHeader } from "@/components/layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,31 +62,33 @@ export default function FaireFulfillment() {
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-6 animate-pulse">
-        <div className="h-10 bg-muted rounded w-64" />
-        <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-muted rounded-xl" />)}</div>
-      </div>
+      <PageShell>
+        <div className="animate-pulse space-y-6">
+          <div className="h-10 bg-muted rounded w-64" />
+          <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-muted rounded-xl" />)}</div>
+        </div>
+      </PageShell>
     );
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold font-heading">Fulfillment Queue</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Orders ready to pack and ship — sorted oldest first</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <select value={selectedStore} onChange={e => setSelectedStore(e.target.value)} className="h-8 text-xs border rounded-lg px-2" data-testid="select-store">
-              <option value="all">All Stores</option>
-              {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-            <Button size="sm" variant="outline" onClick={() => toast({ title: "Packing Slips", description: "Printing all packing slips..." })} data-testid="btn-print-all">
-              <Printer size={13} className="mr-1.5" /> Print All Packing Slips
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          title="Fulfillment Queue"
+          subtitle="Orders ready to pack and ship — sorted oldest first"
+          actions={
+            <div className="flex items-center gap-2">
+              <select value={selectedStore} onChange={e => setSelectedStore(e.target.value)} className="h-8 text-xs border rounded-lg px-2" data-testid="select-store">
+                <option value="all">All Stores</option>
+                {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <Button size="sm" variant="outline" onClick={() => toast({ title: "Packing Slips", description: "Printing all packing slips..." })} data-testid="btn-print-all">
+                <Printer size={13} className="mr-1.5" /> Print All Packing Slips
+              </Button>
+            </div>
+          }
+        />
       </Fade>
 
       <Fade>
@@ -193,6 +196,6 @@ export default function FaireFulfillment() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </PageTransition>
+    </PageShell>
   );
 }

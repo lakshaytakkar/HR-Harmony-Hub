@@ -15,6 +15,7 @@ import {
   upsertRetailer,
   getAllRetailers,
   getRetailer,
+  extractAndUpsertRetailersFromOrders,
 } from "./supabase";
 import { fetchAllOrders, fetchAllProducts, fetchBrandProfile, fetchRetailerProfile, updateVariantInventory } from "./faire-api";
 
@@ -156,26 +157,8 @@ export async function registerRoutes(
       const products = await fetchAllProducts(creds);
       const productsSynced = await syncProducts(storeId, products);
 
-      const retailerIds = new Set<string>();
-      for (const order of orders) {
-        const rid = (order as Record<string, unknown>).retailer_id as string | undefined;
-        if (rid) retailerIds.add(rid);
-      }
-      let retailersSynced = 0;
-      for (const rid of retailerIds) {
-        try {
-          const existing = await getRetailer(rid);
-          if (!existing) {
-            const profile = await fetchRetailerProfile(creds, rid);
-            if (profile) {
-              await upsertRetailer(rid, profile);
-              retailersSynced++;
-            }
-          }
-        } catch {
-          // skip individual retailer errors
-        }
-      }
+      const allStoreOrders = await getStoreOrders(storeId, { limit: 5000 });
+      const retailersSynced = await extractAndUpsertRetailersFromOrders(allStoreOrders);
 
       return res.json({
         success: true,
@@ -192,32 +175,24 @@ export async function registerRoutes(
 
   app.post("/api/faire/stores/:storeId/sync-retailers", async (req, res) => {
     const { storeId } = req.params;
-    const creds = await getStoreCredentials(storeId);
-    if (!creds) return res.status(404).json({ success: false, error: "Store not found" });
-
     try {
       const orders = await getStoreOrders(storeId, { limit: 5000 });
-      const retailerIds = new Set<string>();
-      for (const order of orders) {
-        const rid = (order as Record<string, unknown>).retailer_id as string | undefined;
-        if (rid) retailerIds.add(rid);
-      }
-
-      let synced = 0;
-      for (const rid of retailerIds) {
-        const existing = await getRetailer(rid);
-        if (!existing) {
-          const profile = await fetchRetailerProfile(creds, rid);
-          if (profile) {
-            await upsertRetailer(rid, profile);
-            synced++;
-          }
-        }
-      }
-      return res.json({ success: true, retailers_synced: synced, total_unique: retailerIds.size });
+      const synced = await extractAndUpsertRetailersFromOrders(orders);
+      return res.json({ success: true, retailers_synced: synced, total_unique: synced });
     } catch (err) {
       console.error(`[sync-retailers] error:`, err);
       return res.status(502).json({ success: false, error: "Retailer sync failed" });
+    }
+  });
+
+  app.post("/api/faire/populate-retailers", async (_req, res) => {
+    try {
+      const allOrders = await getAllOrders();
+      const synced = await extractAndUpsertRetailersFromOrders(allOrders);
+      return res.json({ success: true, retailers_synced: synced });
+    } catch (err) {
+      console.error(`[populate-retailers] error:`, err);
+      return res.status(502).json({ success: false, error: "Populate retailers failed" });
     }
   });
 

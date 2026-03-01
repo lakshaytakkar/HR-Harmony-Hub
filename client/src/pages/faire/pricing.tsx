@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { PageTransition, Fade } from "@/components/ui/animated";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import {
+  PageShell, PageHeader, DataTableContainer, DataTH, DataTD, DataTR,
+} from "@/components/layout";
 
 const BRAND_COLOR = "#1A6B45";
 
@@ -75,34 +77,38 @@ export default function FairePricing() {
     return true;
   });
 
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   const toggleRow = (id: string) => setSelectedRows(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   const filteredPrepacks = selectedStore === "all" ? mockPrepacks : mockPrepacks.filter(pp => pp.storeId === selectedStore);
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-6 animate-pulse">
-        <div className="h-10 bg-muted rounded w-64" />
-        <div className="h-80 bg-muted rounded-xl" />
-      </div>
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-64 animate-pulse" />
+        <div className="h-80 bg-muted rounded-xl animate-pulse" />
+      </PageShell>
     );
   }
 
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold font-heading">Pricing & Prepacks</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Manage wholesale and retail prices across all stores</p>
-          </div>
-          <div className="flex gap-2">
-            <select value={selectedStore} onChange={e => setSelectedStore(e.target.value)} className="h-8 text-xs border rounded-lg px-2" data-testid="select-store">
-              <option value="all">All Stores</option>
-              {stores.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-            <Input placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs h-8 text-sm" data-testid="input-search" />
-          </div>
-        </div>
+        <PageHeader
+          title="Pricing & Prepacks"
+          subtitle="Manage wholesale and retail prices across all stores"
+          actions={
+            <div className="flex gap-2">
+              <select value={selectedStore} onChange={e => { setSelectedStore(e.target.value); setCurrentPage(1); }} className="h-8 text-xs border rounded-lg px-2" data-testid="select-store">
+                <option value="all">All Stores</option>
+                {stores.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <Input placeholder="Search products..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className="max-w-xs h-8 text-sm" data-testid="input-search" />
+            </div>
+          }
+        />
       </Fade>
 
       {selectedRows.length > 0 && (
@@ -117,88 +123,111 @@ export default function FairePricing() {
       )}
 
       <Fade>
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 w-8"><input type="checkbox" className="rounded" onChange={e => setSelectedRows(e.target.checked ? rows.map((r: any) => r.id) : [])} /></th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Product</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Store</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">SKU</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Wholesale</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Retail</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Margin %</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">MOQ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r: any) => {
-                    const wholesaleCents = r.wholesale_price_cents ?? 0;
-                    const retailCents = r.retail_price_cents ?? 0;
-                    const margin = retailCents > 0 ? Math.round(((retailCents - wholesaleCents) / retailCents) * 100) : 0;
-                    const mc = marginColor(margin);
-                    return (
-                      <tr key={r.id} className="border-b hover:bg-accent/20" data-testid={`pricing-row-${r.id}`}>
-                        <td className="p-3">
-                          <input type="checkbox" checked={selectedRows.includes(r.id)} onChange={() => toggleRow(r.id)} className="rounded" data-testid={`check-${r.id}`} />
-                        </td>
-                        <td className="p-3">
-                          <p className="text-xs font-medium">{r.productName}</p>
-                          <p className="text-[10px] text-muted-foreground">{(r.options ?? []).map((o: any) => o.value).join(" / ")}</p>
-                        </td>
-                        <td className="p-3"><Badge variant="outline" className="text-[10px]">{r.store?.name?.split(" ")[0] ?? "—"}</Badge></td>
-                        <td className="p-3 text-xs font-mono text-muted-foreground">{r.sku}</td>
-                        <td className="p-3 text-xs font-semibold">${(wholesaleCents / 100).toFixed(2)}</td>
-                        <td className="p-3 text-xs">${(retailCents / 100).toFixed(2)}</td>
-                        <td className="p-3">
-                          <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: mc.bg, color: mc.text }}>{margin}%</span>
-                        </td>
-                        <td className="p-3 text-xs">{r.moq}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        <DataTableContainer>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <DataTH className="w-8"><input type="checkbox" className="rounded" onChange={e => setSelectedRows(e.target.checked ? rows.map((r: any) => r.id) : [])} /></DataTH>
+                <DataTH>Product</DataTH>
+                <DataTH>Store</DataTH>
+                <DataTH>SKU</DataTH>
+                <DataTH>Wholesale</DataTH>
+                <DataTH>Retail</DataTH>
+                <DataTH>Margin %</DataTH>
+                <DataTH>MOQ</DataTH>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {paginatedRows.map((r: any) => {
+                const wholesaleCents = r.wholesale_price_cents ?? 0;
+                const retailCents = r.retail_price_cents ?? 0;
+                const margin = retailCents > 0 ? Math.round(((retailCents - wholesaleCents) / retailCents) * 100) : 0;
+                const mc = marginColor(margin);
+                return (
+                  <DataTR key={r.id} data-testid={`pricing-row-${r.id}`}>
+                    <DataTD>
+                      <input type="checkbox" checked={selectedRows.includes(r.id)} onChange={() => toggleRow(r.id)} className="rounded" data-testid={`check-${r.id}`} />
+                    </DataTD>
+                    <DataTD>
+                      <p className="text-xs font-medium">{r.productName}</p>
+                      <p className="text-[10px] text-muted-foreground">{(r.options ?? []).map((o: any) => o.value).join(" / ")}</p>
+                    </DataTD>
+                    <DataTD><Badge variant="outline" className="text-[10px]">{r.store?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
+                    <DataTD className="text-xs font-mono text-muted-foreground">{r.sku}</DataTD>
+                    <DataTD className="text-xs font-semibold">${(wholesaleCents / 100).toFixed(2)}</DataTD>
+                    <DataTD className="text-xs">${(retailCents / 100).toFixed(2)}</DataTD>
+                    <DataTD>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: mc.bg, color: mc.text }}>{margin}%</span>
+                    </DataTD>
+                    <DataTD className="text-xs">{r.moq}</DataTD>
+                  </DataTR>
+                );
+              })}
+            </tbody>
+          </table>
+        </DataTableContainer>
       </Fade>
 
+      {rows.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, rows.length)} of {rows.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="outline" className="h-8" disabled={safePage <= 1} onClick={() => setCurrentPage(p => p - 1)} data-testid="btn-prev-page">Previous</Button>
+            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+              let page: number;
+              if (totalPages <= 7) page = i + 1;
+              else if (safePage <= 4) page = i + 1;
+              else if (safePage >= totalPages - 3) page = totalPages - 6 + i;
+              else page = safePage - 3 + i;
+              return (
+                <Button
+                  key={page} size="sm"
+                  variant={page === safePage ? "default" : "outline"}
+                  className="h-8 w-8 p-0"
+                  style={page === safePage ? { background: BRAND_COLOR } : {}}
+                  onClick={() => setCurrentPage(page)}
+                  data-testid={`btn-page-${page}`}
+                >
+                  {page}
+                </Button>
+              );
+            })}
+            <Button size="sm" variant="outline" className="h-8" disabled={safePage >= totalPages} onClick={() => setCurrentPage(p => p + 1)} data-testid="btn-next-page">Next</Button>
+          </div>
+        </div>
+      )}
+
       <Fade>
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm">Prepacks</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => setAddPrepackOpen(true)} data-testid="btn-add-prepack"><Plus size={13} className="mr-1.5" /> Add Prepack</Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2 font-medium text-muted-foreground text-xs">Prepack Name</th>
-                  <th className="text-left p-2 font-medium text-muted-foreground text-xs">Products</th>
-                  <th className="text-left p-2 font-medium text-muted-foreground text-xs">Units</th>
-                  <th className="text-left p-2 font-medium text-muted-foreground text-xs">Wholesale</th>
-                  <th className="text-left p-2 font-medium text-muted-foreground text-xs">Store</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPrepacks.map(pp => (
-                  <tr key={pp.id} className="border-b hover:bg-accent/20" data-testid={`prepack-row-${pp.id}`}>
-                    <td className="p-2 text-xs font-medium">{pp.name}</td>
-                    <td className="p-2 text-xs text-muted-foreground">{pp.products.join(", ")}</td>
-                    <td className="p-2 text-xs">{pp.units}</td>
-                    <td className="p-2 text-xs font-semibold">${(pp.wholesale_price_cents / 100).toFixed(2)}</td>
-                    <td className="p-2"><Badge variant="outline" className="text-[10px]">{stores.find((s: any) => s.id === pp.storeId)?.name?.split(" ")[0] ?? "—"}</Badge></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-semibold">Prepacks</h2>
+          <Button size="sm" variant="outline" onClick={() => setAddPrepackOpen(true)} data-testid="btn-add-prepack"><Plus size={13} className="mr-1.5" /> Add Prepack</Button>
+        </div>
+        <DataTableContainer>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <DataTH>Prepack Name</DataTH>
+                <DataTH>Products</DataTH>
+                <DataTH>Units</DataTH>
+                <DataTH>Wholesale</DataTH>
+                <DataTH>Store</DataTH>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filteredPrepacks.map(pp => (
+                <DataTR key={pp.id} data-testid={`prepack-row-${pp.id}`}>
+                  <DataTD className="text-xs font-medium">{pp.name}</DataTD>
+                  <DataTD className="text-xs text-muted-foreground">{pp.products.join(", ")}</DataTD>
+                  <DataTD className="text-xs">{pp.units}</DataTD>
+                  <DataTD className="text-xs font-semibold">${(pp.wholesale_price_cents / 100).toFixed(2)}</DataTD>
+                  <DataTD><Badge variant="outline" className="text-[10px]">{stores.find((s: any) => s.id === pp.storeId)?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
+                </DataTR>
+              ))}
+            </tbody>
+          </table>
+        </DataTableContainer>
       </Fade>
 
       <Dialog open={bulkOpen} onOpenChange={() => setBulkOpen(false)}>
@@ -234,6 +263,6 @@ export default function FairePricing() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </PageTransition>
+    </PageShell>
   );
 }

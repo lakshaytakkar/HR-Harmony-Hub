@@ -78,10 +78,10 @@ Complete end-to-end order operations pipeline with 5 new pages:
 - **order-detail.tsx** — full order data; Accept/Cancel/Add Shipment call real Faire API; quotation/fulfiller/ledger panels from mock-data-faire-ops
 - **product-detail.tsx** — full product data with image gallery; category from `taxonomy_type.name`; reviews fallback
 - **inventory.tsx** — slim products; variant-level inventory with store filter
-- **pricing.tsx** — slim products; variant pricing; prepacks kept as local mock (not a Faire API concept)
-- **fulfillment.tsx** — orders filtered to NEW/PROCESSING states; ship dialog with `_storeId`
-- **shipments.tsx** — shipments extracted from `order.shipments[]`; enriched with store/retailer info
-- **retailers.tsx** — retailers from `/api/faire/retailers`; stats computed from orders (total orders, revenue, last order)
+- **pricing.tsx** — slim products; variant pricing with DataTH/DataTD/DataTR + pagination; prepacks table also normalized; prepacks kept as local mock
+- **fulfillment.tsx** — orders filtered to NEW/PROCESSING states; ship dialog with `_storeId`; uses PageShell + PageHeader
+- **shipments.tsx** — shipments extracted from `order.shipments[]`; enriched with store/retailer info; DataTH/DataTD/DataTR + pagination
+- **retailers.tsx** — retailers from `/api/faire/retailers` with pre-computed stats (total_orders, total_spent_cents, last_order_at, store_ids); no orders query needed; paginated
 - **retailer-detail.tsx** — single retailer + order history; computed stats
 - **analytics.tsx** — revenue trends, order state breakdowns, geo data, top products from real data
 - **stores.tsx** — store list + counts + sync
