@@ -44,23 +44,37 @@ Complete end-to-end order operations pipeline with 5 new pages:
 - **Bank Transactions** `/faire/bank-transactions` — Reconciliation table; 3 stat cards; unreconciled rows amber-highlighted; Map to Order dialog; Add Transaction dialog
 
 **Real Faire API integration (server/routes.ts):**
-- `GET /api/faire/stores` — lists all active stores (id + name only, credentials never leave server)
+- `GET /api/faire/stores` — lists all active stores (id + name + last_synced_at, credentials never leave server)
+- `GET /api/faire/orders` — all orders across all stores from Supabase cache
+- `GET /api/faire/stores/:storeId/orders?state=` — filtered orders for one store
+- `GET /api/faire/stores/:storeId/products` — products for one store
+- `GET /api/faire/stores/:storeId/counts` — order/product counts for dashboard
+- `POST /api/faire/stores/:storeId/sync` — full sync: fetches brand profile + all orders + all products from Faire API v2 → upserts into Supabase; returns `{orders_synced, products_synced}`
 - `POST /api/faire/orders/:id/accept` → `POST faire.com/external-api/v2/orders/:id/processing`
 - `POST /api/faire/orders/:id/cancel` → `POST faire.com/external-api/v2/orders/:id/cancel`
 - `POST /api/faire/orders/:id/shipments` → `POST faire.com/external-api/v2/orders/:id/shipments`
 - Routes now accept `storeId` (UUID) instead of raw token — credentials fetched server-side from Supabase
-- Mock mode when no `storeId` provided
+
+**Faire API Client (server/faire-api.ts):**
+- `fetchAllOrders(creds)` — cursor-paginated, 50/page, returns all order objects
+- `fetchAllProducts(creds)` — cursor-paginated, 50/page, returns all product objects
+- `fetchBrandProfile(creds)` — fetches brand profile for the store
+- Auth: `X-FAIRE-OAUTH-ACCESS-TOKEN` + `X-FAIRE-APP-CREDENTIALS` headers
 
 **Supabase Integration (server/supabase.ts):**
 - Project: `ngvrnwjisntjmqrtnume` (teamsync), region: ap-southeast-1
 - `faire` schema with 6 tables: `stores`, `products`, `orders`, `order_items`, `shipments`
 - 6 active stores: Toyarina, Holiday Farm, Super Santa, Buddha Ayurveda, Buddha Yoga, Gullee Gadgets
 - Credentials stored in `faire.stores` (app_credentials + oauth_access_token per store)
-- Server queries via public RPC functions (`faire_list_stores`, `faire_get_store_credentials`) with SECURITY DEFINER
+- Server queries via public RPC functions with SECURITY DEFINER (PostgREST does not expose `faire` schema)
+- RPC functions: `faire_list_stores`, `faire_get_store_credentials`, `faire_sync_orders`, `faire_sync_products`, `faire_get_store_orders`, `faire_get_all_orders`, `faire_get_store_products`, `faire_get_store_counts`, `faire_update_store_profile`
+- Orders/products returned from Supabase include `_storeId` (internal UUID) injected server-side
 - Env vars: `SUPABASE_URL` (shared), `SUPABASE_SERVICE_ROLE_KEY` (secret), `SUPABASE_ANON_KEY` (secret)
 
-**Updated existing pages:**
-- **orders.tsx** — Added "Quote" column with linked quotation status badges; "Request Quote" inline button for NEW/PROCESSING orders; Accept/Cancel buttons now call real API routes
+**Updated frontend pages (real data via TanStack Query — no more mock imports):**
+- **stores.tsx** — `useQuery(['/api/faire/stores'])` for store list; per-store counts from `/api/faire/stores/:id/counts`; Sync Now calls `POST /api/faire/stores/:id/sync` via useMutation; shows last_synced_at
+- **orders.tsx** — stores from `/api/faire/stores`; orders from `/api/faire/orders` (all) or `/api/faire/stores/:id/orders` (filtered); sync triggers POST sync; Accept/Cancel use `order._storeId`
+- **products.tsx** — stores from `/api/faire/stores`; products from `/api/faire/stores/:id/products` when store selected; empty state prompts store selection + sync
 - **order-detail.tsx** — Accept/Cancel/Add Shipment all call real Faire API; Quotation sidebar panel shows linked quote with fulfiller+margin; Financials sidebar panel shows linked ledger entry
 
 **Mock data (client/src/lib/mock-data-faire-ops.ts):**

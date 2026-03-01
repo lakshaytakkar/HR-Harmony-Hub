@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw, CheckCircle, XCircle, Eye, ShoppingCart, Zap, FileText, Plus } from "lucide-react";
 import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
@@ -7,9 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
-import { faireOrders, faireStores, faireRetailers, type OrderState } from "@/lib/mock-data-faire";
+import { apiRequest } from "@/lib/queryClient";
 import {
   faireQuotations, faireFulfillers, type FaireQuotation,
 } from "@/lib/mock-data-faire-ops";
@@ -22,6 +22,23 @@ import {
 } from "@/components/ui/select";
 
 const BRAND_COLOR = "#1A6B45";
+
+type OrderState = "NEW" | "PROCESSING" | "PRE_TRANSIT" | "IN_TRANSIT" | "DELIVERED" | "PENDING_RETAILER_CONFIRMATION" | "BACKORDERED" | "CANCELED";
+
+interface FaireStore { id: string; name: string; active: boolean; last_synced_at: string | null }
+interface OrderItem { id: string; variant_id: string; product_id: string; product_name: string; quantity: number; price_cents: number }
+interface FaireOrder {
+  id: string;
+  display_id: string;
+  state: OrderState;
+  created_at: string;
+  retailer_id: string;
+  source: string;
+  is_free_shipping: boolean;
+  items: OrderItem[];
+  payout_costs: { commission_bps: number };
+  _storeId: string;
+}
 
 const stateConfig: Record<OrderState, { label: string; color: string; bg: string }> = {
   NEW: { label: "New", color: "#2563EB", bg: "#EFF6FF" },
@@ -72,10 +89,15 @@ const QUOT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: str
   SENT_ELSEWHERE: { label: "Sent Elsewhere", color: "#64748B", bg: "#F1F5F9" },
 };
 
+function buildOrdersQueryKey(selectedStore: string, stateFilter: string) {
+  if (selectedStore === "all") return ["/api/faire/orders"];
+  return ["/api/faire/stores", selectedStore, "orders"];
+}
+
 export default function FaireOrders() {
   const [, setLocation] = useLocation();
-  const isLoading = useSimulatedLoading(650);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedStore, setSelectedStore] = useState("all");
   const [stateFilter, setStateFilter] = useState<OrderState | "all">("all");
   const [search, setSearch] = useState("");
@@ -93,47 +115,82 @@ export default function FaireOrders() {
   const [quoteNotes, setQuoteNotes] = useState("");
   const [quotations, setQuotations] = useState(faireQuotations);
 
-  const filtered = faireOrders.filter(o => {
-    if (selectedStore !== "all" && o.storeId !== selectedStore) return false;
-    if (stateFilter !== "all" && o.state !== stateFilter) return false;
+  const { data: storesData } = useQuery<{ stores: FaireStore[] }>({
+    queryKey: ["/api/faire/stores"],
+  });
+  const stores = storesData?.stores ?? [];
+
+  const ordersUrl = selectedStore === "all"
+    ? `/api/faire/orders${stateFilter !== "all" ? `?state=${stateFilter}` : ""}`
+    : `/api/faire/stores/${selectedStore}/orders${stateFilter !== "all" ? `?state=${stateFilter}` : ""}`;
+
+  const { data: ordersData, isLoading: ordersLoading } = useQuery<{ orders: FaireOrder[] }>({
+    queryKey: selectedStore === "all"
+      ? ["/api/faire/orders", stateFilter]
+      : ["/api/faire/stores", selectedStore, "orders", stateFilter],
+    queryFn: () => fetch(ordersUrl).then(r => r.json()),
+  });
+
+  const allOrders = ordersData?.orders ?? [];
+
+  const filtered = allOrders.filter(o => {
     if (search) {
-      const retailer = faireRetailers.find(r => r.id === o.retailer_id);
-      const retailerName = retailer?.store_name ?? "";
-      if (!o.display_id.toLowerCase().includes(search.toLowerCase()) && !retailerName.toLowerCase().includes(search.toLowerCase())) return false;
+      const sid = (o.display_id ?? "").toLowerCase();
+      const rid = (o.retailer_id ?? "").toLowerCase();
+      const q = search.toLowerCase();
+      if (!sid.includes(q) && !rid.includes(q)) return false;
     }
     return true;
   });
 
   const kpiCounts = {
-    NEW: faireOrders.filter(o => o.state === "NEW").length,
-    PROCESSING: faireOrders.filter(o => o.state === "PROCESSING").length,
-    IN_TRANSIT: faireOrders.filter(o => o.state === "IN_TRANSIT").length,
-    DELIVERED: faireOrders.filter(o => o.state === "DELIVERED").length,
+    NEW: allOrders.filter(o => o.state === "NEW").length,
+    PROCESSING: allOrders.filter(o => o.state === "PROCESSING").length,
+    IN_TRANSIT: allOrders.filter(o => o.state === "IN_TRANSIT").length,
+    DELIVERED: allOrders.filter(o => o.state === "DELIVERED").length,
   };
 
   const handleSync = async () => {
+    if (selectedStore === "all") {
+      toast({ title: "Select a store", description: "Please select a specific store to sync.", variant: "destructive" });
+      return;
+    }
     setSyncing(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setSyncing(false);
-    toast({ title: "Sync Complete", description: "Fetched latest orders from Faire API." });
+    try {
+      const res = await apiRequest("POST", `/api/faire/stores/${selectedStore}/sync`);
+      const data = await res.json() as { success: boolean; orders_synced: number; products_synced: number; error?: string };
+      if (data.success) {
+        queryClient.invalidateQueries({ queryKey: ["/api/faire/stores", selectedStore, "orders"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/faire/orders"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/faire/stores"] });
+        toast({ title: "Sync Complete", description: `${data.orders_synced} orders · ${data.products_synced} products synced` });
+      } else {
+        toast({ title: "Sync Failed", description: data.error ?? "Unknown error", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Network error", description: "Could not reach server", variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
   };
 
   async function handleAccept() {
     if (!acceptId) return;
-    const order = faireOrders.find(o => o.id === acceptId);
-    const store = faireStores.find(s => s.id === order?.storeId);
+    const order = allOrders.find(o => o.id === acceptId);
     setAcceptLoading(true);
     try {
       const res = await fetch(`/api/faire/orders/${acceptId}/accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brandToken: store?.brandToken }),
+        body: JSON.stringify({ storeId: order?._storeId }),
       });
       const data = await res.json() as { success: boolean; state?: string; mock?: boolean; error?: string };
       if (data.success) {
+        queryClient.invalidateQueries({ queryKey: ["/api/faire/orders"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/faire/stores", order?._storeId, "orders"] });
         toast({
           title: "Order Accepted",
-          description: `Moved to Processing${data.mock ? " (mock mode — configure Faire API key to push live)" : ""}`,
+          description: `Moved to Processing${data.mock ? " (no store selected — mock mode)" : ""}`,
         });
       } else {
         toast({ title: "Faire API Error", description: data.error ?? "Unknown error", variant: "destructive" });
@@ -148,17 +205,18 @@ export default function FaireOrders() {
 
   async function handleCancel() {
     if (!cancelId) return;
-    const order = faireOrders.find(o => o.id === cancelId);
-    const store = faireStores.find(s => s.id === order?.storeId);
+    const order = allOrders.find(o => o.id === cancelId);
     setCancelLoading(true);
     try {
       const res = await fetch(`/api/faire/orders/${cancelId}/cancel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brandToken: store?.brandToken, reason: cancelReason }),
+        body: JSON.stringify({ storeId: order?._storeId, reason: cancelReason }),
       });
       const data = await res.json() as { success: boolean; state?: string; mock?: boolean; error?: string };
       if (data.success) {
+        queryClient.invalidateQueries({ queryKey: ["/api/faire/orders"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/faire/stores", order?._storeId, "orders"] });
         toast({
           title: "Order Canceled",
           description: `Reason: ${CANCEL_LABELS[cancelReason]}${data.mock ? " (mock)" : ""}`,
@@ -180,12 +238,12 @@ export default function FaireOrders() {
       toast({ title: "Select an order and fulfiller", variant: "destructive" });
       return;
     }
-    const order = faireOrders.find(o => o.id === quoteOrderId)!;
+    const order = allOrders.find(o => o.id === quoteOrderId)!;
     const id = `q_new_${Date.now()}`;
     const newQ: FaireQuotation = {
-      id, order_id: quoteOrderId, store_id: order.storeId, fulfiller_id: quoteFulfillerId,
+      id, order_id: quoteOrderId, store_id: order._storeId, fulfiller_id: quoteFulfillerId,
       status: "DRAFT",
-      items: order.items.map((oi, idx) => ({
+      items: (order.items ?? []).map((oi, idx) => ({
         id: `qi_new_${idx}`, quotation_id: id, order_item_id: oi.id,
         variant_id: oi.variant_id, product_id: oi.product_id,
         product_name: oi.product_name, variant_options: [], image_url: "",
@@ -203,7 +261,9 @@ export default function FaireOrders() {
     setLocation(`/faire/quotations/${id}`);
   }
 
-  if (isLoading) {
+  const storeName = (storeId: string) => stores.find(s => s.id === storeId)?.name ?? storeId;
+
+  if (ordersLoading) {
     return (
       <PageShell>
         <div className="h-10 bg-muted rounded w-80 animate-pulse" />
@@ -223,11 +283,8 @@ export default function FaireOrders() {
           subtitle="Manage orders across all your Faire stores"
           actions={
             <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-lg px-2.5 py-1 text-xs text-blue-700 dark:text-blue-300">
-                Last synced Feb 28, 9:14 AM
-              </div>
               <Button size="sm" variant="outline" className="h-9" onClick={handleSync} disabled={syncing} data-testid="btn-sync-orders">
-                <RefreshCw size={14} className={`mr-2 ${syncing ? "animate-spin" : ""}`} /> Sync Now
+                <RefreshCw size={14} className={`mr-2 ${syncing ? "animate-spin" : ""}`} /> Sync
               </Button>
               <select
                 value={selectedStore}
@@ -236,7 +293,7 @@ export default function FaireOrders() {
                 data-testid="select-store"
               >
                 <option value="all">All Stores</option>
-                {faireStores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
           }
@@ -251,14 +308,7 @@ export default function FaireOrders() {
             { label: "In Transit", value: kpiCounts.IN_TRANSIT, color: "#D97706", bg: "#FFFBEB" },
             { label: "Delivered", value: kpiCounts.DELIVERED, color: "#059669", bg: "#ECFDF5" },
           ].map((k, i) => (
-            <StatCard
-              key={i}
-              label={k.label}
-              value={k.value}
-              icon={ShoppingCart}
-              iconBg={k.bg}
-              iconColor={k.color}
-            />
+            <StatCard key={i} label={k.label} value={k.value} icon={ShoppingCart} iconBg={k.bg} iconColor={k.color} />
           ))}
         </StatGrid>
       </Fade>
@@ -295,11 +345,10 @@ export default function FaireOrders() {
             </thead>
             <tbody className="divide-y">
               {filtered.map(order => {
-                const store = faireStores.find(s => s.id === order.storeId);
-                const retailer = faireRetailers.find(r => r.id === order.retailer_id);
-                const cfg = stateConfig[order.state];
-                const itemsTotal = order.items.reduce((sum, i) => sum + i.price_cents * i.quantity, 0);
-                const commPct = (order.payout_costs.commission_bps / 100).toFixed(0);
+                const cfg = stateConfig[order.state] ?? stateConfig.CANCELED;
+                const items = order.items ?? [];
+                const itemsTotal = items.reduce((sum, i) => sum + (i.price_cents ?? 0) * (i.quantity ?? 1), 0);
+                const commPct = ((order.payout_costs?.commission_bps ?? 0) / 100).toFixed(0);
                 const linkedQuote = quotations.find(q => q.order_id === order.id);
                 const qsc = linkedQuote ? QUOT_STATUS_CONFIG[linkedQuote.status] : null;
                 const canRequestQuote = !linkedQuote && (order.state === "NEW" || order.state === "PROCESSING");
@@ -307,19 +356,24 @@ export default function FaireOrders() {
                   <DataTR key={order.id} onClick={() => setLocation(`/faire/orders/${order.id}`)} data-testid={`order-row-${order.id}`}>
                     <DataTD>
                       <div className="flex items-center gap-1.5">
-                        <Badge variant="outline" className="text-[10px] font-mono">{order.display_id}</Badge>
+                        <Badge variant="outline" className="text-[10px] font-mono">{order.display_id ?? order.id.slice(-8)}</Badge>
                         {order.is_free_shipping && <span title="Free shipping"><Zap size={11} className="text-emerald-500" /></span>}
                       </div>
                     </DataTD>
-                    <DataTD><Badge variant="outline" className="text-[10px]">{store?.name.split(" ")[0]}</Badge></DataTD>
                     <DataTD>
-                      <p className="font-medium">{retailer?.store_name ?? order.retailer_id}</p>
-                      <p className="text-[10px] text-muted-foreground">{retailer?.city}, {retailer?.state}</p>
+                      <Badge variant="outline" className="text-[10px]">
+                        {storeName(order._storeId).split(" ")[0]}
+                      </Badge>
                     </DataTD>
                     <DataTD>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">{SOURCE_LABELS[order.source]}</span>
+                      <p className="font-medium text-xs truncate max-w-[120px]">{order.retailer_id}</p>
                     </DataTD>
-                    <DataTD align="center">{order.items.length}</DataTD>
+                    <DataTD>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+                        {SOURCE_LABELS[order.source] ?? order.source}
+                      </span>
+                    </DataTD>
+                    <DataTD align="center">{items.length}</DataTD>
                     <DataTD className="font-semibold">${(itemsTotal / 100).toFixed(2)}</DataTD>
                     <DataTD className="text-muted-foreground font-medium">{commPct}%</DataTD>
                     <DataTD onClick={e => e.stopPropagation()}>
@@ -345,7 +399,9 @@ export default function FaireOrders() {
                       )}
                     </DataTD>
                     <DataTD>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>
+                        {cfg.label}
+                      </span>
                     </DataTD>
                     <DataTD className="text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</DataTD>
                     <DataTD align="right" onClick={e => e.stopPropagation()}>
@@ -363,7 +419,13 @@ export default function FaireOrders() {
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={11} className="p-8 text-center text-sm text-muted-foreground">No orders match your filters.</td></tr>
+                <tr>
+                  <td colSpan={11} className="p-8 text-center text-sm text-muted-foreground">
+                    {allOrders.length === 0
+                      ? "No orders synced yet. Use Sync to fetch orders from Faire."
+                      : "No orders match your filters."}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -392,10 +454,7 @@ export default function FaireOrders() {
         }
       >
         <div className="px-6 py-5">
-          <p className="text-sm text-muted-foreground">
-            Accepting this order calls the Faire External API to move it to Processing. The retailer will be notified.
-          </p>
-          <p className="text-xs text-slate-400 mt-2">If no Faire API key is configured, this will run in mock mode.</p>
+          <p className="text-sm text-muted-foreground">Accepting this order calls the Faire External API to move it to Processing. The retailer will be notified.</p>
         </div>
       </DetailModal>
 
