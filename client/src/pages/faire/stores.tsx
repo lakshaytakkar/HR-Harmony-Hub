@@ -1,14 +1,46 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { RefreshCw, CheckCircle2, AlertTriangle, Package, ShoppingCart, Clock } from "lucide-react";
-import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
-import { Card, CardContent } from "@/components/ui/card";
+import { RefreshCw, CheckCircle2, AlertTriangle, Package, ShoppingCart, Clock, ExternalLink } from "lucide-react";
+import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import {
+  PageShell,
+  PageHeader,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
+} from "@/components/layout";
+
+import buddhaAyurvedaLogo from "@/assets/store-logos/buddha-ayurveda.png";
+import buddhaYogaLogo from "@/assets/store-logos/buddha-yoga.png";
+import gulleeGadgetsLogo from "@/assets/store-logos/gullee-gadgets.png";
+import holidayFarmLogo from "@/assets/store-logos/holiday-farm.png";
+import superSantaLogo from "@/assets/store-logos/super-santa.png";
+import toyarinaLogo from "@/assets/store-logos/toyarina.png";
 
 const BRAND_COLOR = "#1A6B45";
+
+const STORE_LOGOS: Record<string, string> = {
+  "Buddha Ayurveda": buddhaAyurvedaLogo,
+  "Buddha Yoga": buddhaYogaLogo,
+  "Gullee Gadgets": gulleeGadgetsLogo,
+  "Holiday Farm": holidayFarmLogo,
+  "Super Santa": superSantaLogo,
+  "Toyarina": toyarinaLogo,
+};
+
+const STORE_CATEGORIES: Record<string, string> = {
+  "Buddha Ayurveda": "Ayurvedic & Wellness Products",
+  "Buddha Yoga": "Yoga & Meditation Supplies",
+  "Gullee Gadgets": "Electronics & Tech Gadgets",
+  "Holiday Farm": "Seasonal & Holiday Decor",
+  "Super Santa": "Holiday Toys & Gifts",
+  "Toyarina": "Children's Toys & Plush",
+};
 
 interface FaireStore {
   id: string;
@@ -40,22 +72,28 @@ function getLastSyncLabel(ts: string | null): string {
   return `${Math.round(diff / 1440)}d ago`;
 }
 
-function StoreCounts({ storeId }: { storeId: string }) {
+function StoreCountsBadges({ storeId }: { storeId: string }) {
   const { data } = useQuery<StoreCounts>({
     queryKey: ["/api/faire/stores", storeId, "counts"],
   });
   return (
-    <div className="grid grid-cols-3 gap-2 mb-4">
-      {[
-        { label: "Orders", value: data?.total_orders ?? "—", icon: ShoppingCart },
-        { label: "Products", value: data?.total_products ?? "—", icon: Package },
-        { label: "New", value: data?.new_orders ?? "—", icon: AlertTriangle },
-      ].map((m, i) => (
-        <div key={i} className="bg-muted/40 rounded-lg p-2 text-center">
-          <p className="text-sm font-bold">{m.value}</p>
-          <p className="text-[9px] text-muted-foreground">{m.label}</p>
-        </div>
-      ))}
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 text-xs">
+        <ShoppingCart size={12} className="text-muted-foreground" />
+        <span className="font-semibold">{data?.total_orders ?? "—"}</span>
+        <span className="text-muted-foreground">orders</span>
+      </div>
+      <div className="flex items-center gap-1.5 text-xs">
+        <Package size={12} className="text-muted-foreground" />
+        <span className="font-semibold">{data?.total_products ?? "—"}</span>
+        <span className="text-muted-foreground">products</span>
+      </div>
+      {(data?.new_orders ?? 0) > 0 && (
+        <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">
+          <AlertTriangle size={10} className="mr-1" />
+          {data!.new_orders} new
+        </Badge>
+      )}
     </div>
   );
 }
@@ -81,6 +119,7 @@ export default function FaireStores() {
       queryClient.invalidateQueries({ queryKey: ["/api/faire/stores", storeId, "counts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/faire/stores", storeId, "orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/faire/stores", storeId, "products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/faire/products?slim"] });
       setSyncingId(null);
       if (data.success) {
         toast({
@@ -104,75 +143,143 @@ export default function FaireStores() {
 
   if (isLoading) {
     return (
-      <div className="px-16 py-6 lg:px-24 space-y-6 animate-pulse">
-        <div className="h-10 bg-muted rounded w-64" />
-        <div className="h-16 bg-muted rounded-xl" />
-        <div className="grid grid-cols-2 gap-5">
-          {[...Array(6)].map((_, i) => <div key={i} className="h-48 bg-muted rounded-xl" />)}
+      <PageShell>
+        <div className="h-10 bg-muted rounded w-64 animate-pulse" />
+        <div className="space-y-3">
+          {[...Array(6)].map((_, i) => <div key={i} className="h-20 bg-muted rounded-xl animate-pulse" />)}
         </div>
-      </div>
+      </PageShell>
     );
   }
 
+  const activeCount = stores.filter(s => s.active).length;
+  const syncedCount = stores.filter(s => s.last_synced_at).length;
+
   return (
-    <PageTransition className="px-16 py-6 lg:px-24 space-y-6">
+    <PageShell>
       <Fade>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold font-heading">Store Management</h1>
-            <p className="text-muted-foreground text-sm mt-0.5">{stores.length} Faire brand accounts</p>
-          </div>
-        </div>
+        <PageHeader
+          title="Faire Stores"
+          subtitle={`${stores.length} brand accounts · ${activeCount} connected · ${syncedCount} synced`}
+          actions={
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-9"
+                onClick={() => {
+                  stores.filter(s => s.active).forEach(s => handleSync(s));
+                }}
+                disabled={!!syncingId}
+                data-testid="btn-sync-all"
+              >
+                <RefreshCw size={14} className={`mr-2 ${syncingId ? "animate-spin" : ""}`} />
+                Sync All
+              </Button>
+            </div>
+          }
+        />
       </Fade>
 
-      <Stagger>
-        <div className="grid grid-cols-2 gap-5">
-          {stores.map(store => {
-            const isSyncing = syncingId === store.id;
-            return (
-              <StaggerItem key={store.id}>
-                <Card data-testid={`store-card-${store.id}`}>
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-base">{store.name}</h3>
+      <Fade>
+        <DataTableContainer>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <DataTH>Store</DataTH>
+                <DataTH>Category</DataTH>
+                <DataTH>Stats</DataTH>
+                <DataTH>Status</DataTH>
+                <DataTH>Last Synced</DataTH>
+                <DataTH align="right">Actions</DataTH>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {stores.map(store => {
+                const isSyncing = syncingId === store.id;
+                const logo = STORE_LOGOS[store.name];
+                const category = STORE_CATEGORIES[store.name] ?? "General Merchandise";
+                return (
+                  <DataTR key={store.id} data-testid={`store-row-${store.id}`}>
+                    <DataTD>
+                      <div className="flex items-center gap-3">
+                        {logo ? (
+                          <img
+                            src={logo}
+                            alt={store.name}
+                            className="size-12 rounded-xl object-cover shrink-0 shadow-sm border border-muted"
+                            data-testid={`img-store-${store.id}`}
+                          />
+                        ) : (
+                          <div
+                            className="size-12 rounded-xl flex items-center justify-center text-white text-lg font-bold shrink-0 shadow-sm"
+                            style={{ background: BRAND_COLOR }}
+                          >
+                            {store.name.charAt(0)}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-sm" data-testid={`text-store-name-${store.id}`}>{store.name}</p>
+                          <p className="text-[11px] text-muted-foreground font-mono">{store.id.slice(0, 8)}</p>
+                        </div>
                       </div>
-                      <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${store.active ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 text-emerald-600" : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 text-gray-500"}`}>
+                    </DataTD>
+                    <DataTD>
+                      <span className="text-xs text-muted-foreground">{category}</span>
+                    </DataTD>
+                    <DataTD>
+                      <StoreCountsBadges storeId={store.id} />
+                    </DataTD>
+                    <DataTD>
+                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${store.active ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 text-emerald-600" : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 text-gray-500"}`}>
                         {store.active ? <CheckCircle2 size={11} /> : <AlertTriangle size={11} />}
                         {store.active ? "Connected" : "Inactive"}
                       </div>
-                    </div>
-
-                    <StoreCounts storeId={store.id} />
-
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    </DataTD>
+                    <DataTD>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Clock size={11} />
-                        Last synced: {getLastSyncLabel(store.last_synced_at)}
+                        {getLastSyncLabel(store.last_synced_at)}
                       </div>
-                      <Badge variant="outline" className="text-[10px]">
-                        {store.active ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => handleSync(store)}
-                      disabled={isSyncing}
-                      data-testid={`btn-sync-${store.id}`}
-                    >
-                      <RefreshCw size={13} className={`mr-1.5 ${isSyncing ? "animate-spin" : ""}`} />
-                      {isSyncing ? "Syncing..." : "Sync Now"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </StaggerItem>
-            );
-          })}
-        </div>
-      </Stagger>
-    </PageTransition>
+                    </DataTD>
+                    <DataTD align="right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs"
+                          onClick={() => handleSync(store)}
+                          disabled={isSyncing || !store.active}
+                          data-testid={`btn-sync-${store.id}`}
+                        >
+                          <RefreshCw size={12} className={`mr-1.5 ${isSyncing ? "animate-spin" : ""}`} />
+                          {isSyncing ? "Syncing..." : "Sync"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => window.open("https://www.faire.com/brand-portal", "_blank")}
+                          data-testid={`btn-open-faire-${store.id}`}
+                        >
+                          <ExternalLink size={14} />
+                        </Button>
+                      </div>
+                    </DataTD>
+                  </DataTR>
+                );
+              })}
+              {stores.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-sm text-muted-foreground font-medium">
+                    No stores configured. Add a Faire brand account to get started.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </DataTableContainer>
+      </Fade>
+    </PageShell>
   );
 }
