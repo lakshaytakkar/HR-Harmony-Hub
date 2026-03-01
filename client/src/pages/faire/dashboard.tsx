@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { formatINRFromDollars, DualFromDollars } from "@/lib/faire-currency";
 
 type OrderState = "NEW" | "PROCESSING" | "PRE_TRANSIT" | "IN_TRANSIT" | "DELIVERED" | "PENDING_RETAILER_CONFIRMATION" | "BACKORDERED" | "CANCELED";
 
@@ -173,6 +174,7 @@ export default function FaireDashboard() {
             <StatCard
               label="Total Revenue"
               value={`$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+              trend={formatINRFromDollars(totalRevenue)}
               icon={DollarSign}
               iconBg="rgba(5, 150, 105, 0.1)"
               iconColor="#059669"
@@ -298,7 +300,7 @@ export default function FaireDashboard() {
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-sm font-semibold">${orderTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                        <p className="text-sm font-semibold"><DualFromDollars dollars={orderTotal} /></p>
                         <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
                       </div>
                     </button>

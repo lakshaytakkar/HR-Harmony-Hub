@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { formatUSD, formatINR, DualCurrency, DualCurrencyInline } from "@/lib/faire-currency";
 import {
   faireBankTransactions, type FaireBankTransaction, type BankTransactionType,
 } from "@/lib/mock-data-faire-ops";
@@ -21,7 +22,6 @@ import {
 
 const BRAND_COLOR = "#1A6B45";
 
-function cents(n: number) { return `$${(n / 100).toFixed(2)}`; }
 
 type TabFilter = "all" | "CREDIT" | "DEBIT" | "unreconciled";
 
@@ -133,8 +133,8 @@ export default function FaireBankTransactions() {
 
       <Fade>
         <StatGrid cols={3}>
-          <StatCard label="Total Credits" value={isLoading ? "—" : cents(totalCredits)} icon={CreditCard} iconBg="#ECFDF5" iconColor="#059669" />
-          <StatCard label="Total Debits" value={isLoading ? "—" : cents(totalDebits)} icon={CreditCard} iconBg="#FEF2F2" iconColor="#DC2626" />
+          <StatCard label="Total Credits" value={isLoading ? "—" : formatUSD(totalCredits)} trend={isLoading ? undefined : formatINR(totalCredits)} icon={CreditCard} iconBg="#ECFDF5" iconColor="#059669" />
+          <StatCard label="Total Debits" value={isLoading ? "—" : formatUSD(totalDebits)} trend={isLoading ? undefined : formatINR(totalDebits)} icon={CreditCard} iconBg="#FEF2F2" iconColor="#DC2626" />
           <StatCard label="Unreconciled" value={isLoading ? "—" : String(unreconciledCount)} icon={CreditCard} iconBg="#FFFBEB" iconColor="#D97706" />
         </StatGrid>
 
@@ -197,7 +197,7 @@ export default function FaireBankTransactions() {
                   </DataTD>
                   <DataTD>
                     <span className="font-semibold" style={{ color: t.type === "CREDIT" ? "#059669" : "#DC2626" }}>
-                      {t.type === "CREDIT" ? "+" : "−"}{cents(t.amount_cents)}
+                      {t.type === "CREDIT" ? "+" : "−"}<DualCurrency cents={t.amount_cents} />
                     </span>
                   </DataTD>
                   <DataTD>
@@ -272,7 +272,7 @@ export default function FaireBankTransactions() {
           <div className="p-3 rounded-lg bg-slate-50 text-sm">
             <div className="font-medium">{mapModal?.description}</div>
             <div className="text-slate-500 mt-1">
-              {mapModal?.type} · {mapModal && cents(mapModal.amount_cents)} · {mapModal?.date}
+              {mapModal?.type} · {mapModal && <DualCurrencyInline cents={mapModal.amount_cents} />} · {mapModal?.date}
             </div>
           </div>
           <div>
@@ -300,7 +300,7 @@ export default function FaireBankTransactions() {
                     <span className="font-mono font-bold">#{o.display_id}</span>
                     <span className="text-slate-500 ml-2">{o.state}</span>
                     <span className="text-slate-400 ml-2">
-                      {cents(o.items.reduce((s: number, i: any) => s + i.price_cents * i.quantity, 0))}
+                      <DualCurrencyInline cents={o.items.reduce((s: number, i: any) => s + i.price_cents * i.quantity, 0)} />
                     </span>
                   </div>
                 </label>

@@ -16,6 +16,7 @@ import {
   PageShell, PageHeader, StatGrid, StatCard, IndexToolbar, DataTableContainer,
   DataTH, DataTD, DataTR, DetailModal,
 } from "@/components/layout";
+import { DualCurrency } from "@/lib/faire-currency";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -374,7 +375,7 @@ export default function FaireOrders() {
                       {SOURCE_LABELS[order.source] ?? order.source}
                     </DataTD>
                     <DataTD align="center">{items.length}</DataTD>
-                    <DataTD className="font-semibold">${(itemsTotal / 100).toFixed(2)}</DataTD>
+                    <DataTD className="font-semibold"><DualCurrency cents={itemsTotal} /></DataTD>
                     <DataTD className="text-muted-foreground">{commPct}%</DataTD>
                     <DataTD onClick={e => e.stopPropagation()}>
                       {linkedQuote && qsc ? (

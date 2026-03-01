@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   PageShell, PageHeader, DataTableContainer, DataTH, DataTD, DataTR,
 } from "@/components/layout";
+import { DualCurrency } from "@/lib/faire-currency";
 
 const BRAND_COLOR = "#1A6B45";
 
@@ -150,7 +151,7 @@ export default function FaireShipments() {
                       </div>
                     </DataTD>
                     <DataTD className="text-xs">{ship.shipped_at ? new Date(ship.shipped_at).toLocaleDateString() : "—"}</DataTD>
-                    <DataTD className="text-xs font-medium">{ship.maker_cost_cents != null ? `$${(ship.maker_cost_cents / 100).toFixed(2)}` : "—"}</DataTD>
+                    <DataTD className="text-xs font-medium">{ship.maker_cost_cents != null ? <DualCurrency cents={ship.maker_cost_cents} /> : "—"}</DataTD>
                     <DataTD>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">{shipTypeLabels[ship.shipping_type] ?? ship.shipping_type ?? "—"}</span>
                     </DataTD>

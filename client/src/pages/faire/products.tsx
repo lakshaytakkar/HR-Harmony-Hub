@@ -6,6 +6,7 @@ import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { DualCurrency, formatUSD, formatINR } from "@/lib/faire-currency";
 import { apiRequest } from "@/lib/queryClient";
 import {
   PageShell,
@@ -341,10 +342,24 @@ export default function FaireProducts() {
                       <DataTD><Badge variant="outline" className="text-[10px]">{storeName(product._storeId).split(" ")[0]}</Badge></DataTD>
                       <DataTD align="center" className="font-medium">{variants.length}</DataTD>
                       <DataTD className="text-foreground/80 font-medium">
-                        {wMin === 0 ? "—" : wMin === wMax ? `$${(wMin / 100).toFixed(2)}` : `$${(wMin / 100).toFixed(0)}–$${(wMax / 100).toFixed(0)}`}
+                        {wMin === 0 ? "—" : wMin === wMax ? (
+                          <DualCurrency cents={wMin} />
+                        ) : (
+                          <span>
+                            {`$${(wMin / 100).toFixed(0)}–$${(wMax / 100).toFixed(0)}`}
+                            <span className="block text-[10px] text-muted-foreground/70 font-normal">{formatINR(wMin)}–{formatINR(wMax)}</span>
+                          </span>
+                        )}
                       </DataTD>
                       <DataTD className="text-foreground/80 font-medium">
-                        {rMin === 0 ? "—" : rMin === rMax ? `$${(rMin / 100).toFixed(2)}` : `$${(rMin / 100).toFixed(0)}–$${(rMax / 100).toFixed(0)}`}
+                        {rMin === 0 ? "—" : rMin === rMax ? (
+                          <DualCurrency cents={rMin} />
+                        ) : (
+                          <span>
+                            {`$${(rMin / 100).toFixed(0)}–$${(rMax / 100).toFixed(0)}`}
+                            <span className="block text-[10px] text-muted-foreground/70 font-normal">{formatINR(rMin)}–{formatINR(rMax)}</span>
+                          </span>
+                        )}
                       </DataTD>
                       <DataTD>
                         <div className="text-xs">

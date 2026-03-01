@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { DualCurrency } from "@/lib/faire-currency";
 import {
   PageShell,
   PageHeader,
@@ -171,7 +172,7 @@ export default function FaireInventory() {
                         ))}
                       </div>
                     </DataTD>
-                    <DataTD className="font-medium">${((v.wholesale_price_cents ?? 0) / 100).toFixed(2)}</DataTD>
+                    <DataTD className="font-medium"><DualCurrency cents={v.wholesale_price_cents ?? 0} /></DataTD>
                     <DataTD>
                       <div className="flex items-center gap-1.5">
                         <span className={`text-sm font-bold ${isOut ? "text-red-600" : isLow ? "text-amber-600" : "text-foreground"}`}>

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { formatUSD, DualCurrencyInline } from "@/lib/faire-currency";
 import {
   faireFulfillers, faireQuotations, type FaireQuotation, type FaireQuotationItem,
 } from "@/lib/mock-data-faire-ops";
@@ -14,7 +15,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-function cents(n: number) { return `$${(n / 100).toFixed(2)}`; }
 
 interface QuoteForm {
   itemCosts: Record<string, string>;

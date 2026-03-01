@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { formatUSD, DualCurrency, DualCurrencyInline } from "@/lib/faire-currency";
 import {
   faireQuotations, faireFulfillers, type FaireQuotation, type QuotationStatus,
 } from "@/lib/mock-data-faire-ops";
@@ -32,7 +33,6 @@ const STATUS_CONFIG: Record<QuotationStatus, { label: string; color: string; bg:
 
 const STATUS_STEPS: QuotationStatus[] = ["DRAFT", "SENT", "QUOTE_RECEIVED"];
 
-function cents(n: number) { return `$${(n / 100).toFixed(2)}`; }
 
 function StepTimeline({ status }: { status: QuotationStatus }) {
   const steps = ["DRAFT", "SENT", "QUOTE_RECEIVED"];
@@ -246,7 +246,7 @@ export default function FaireQuotationDetail() {
                         <div className="text-xs">
                           <div className="font-medium text-slate-700">{oi.product_name}</div>
                           <div className="text-slate-400">{oi.variant_name}</div>
-                          <div className="text-slate-500">Qty: {oi.quantity} × {cents(oi.price_cents)}</div>
+                          <div className="text-slate-500">Qty: {oi.quantity} × <DualCurrencyInline cents={oi.price_cents} /></div>
                         </div>
                       </div>
                     );
@@ -256,15 +256,15 @@ export default function FaireQuotationDetail() {
                 <div className="mt-4 pt-3 border-t text-xs space-y-1">
                   <div className="flex justify-between text-slate-500">
                     <span>Gross Order</span>
-                    <span className="font-medium text-slate-700">{cents(grossOrderValue)}</span>
+                    <span className="font-medium text-slate-700"><DualCurrency cents={grossOrderValue} /></span>
                   </div>
                   <div className="flex justify-between text-slate-500">
                     <span>Commission ({((commission / grossOrderValue) * 100).toFixed(1)}%)</span>
-                    <span className="font-medium text-red-500">−{cents(commission)}</span>
+                    <span className="font-medium text-red-500">−<DualCurrency cents={commission} /></span>
                   </div>
                   <div className="flex justify-between border-t pt-1 font-semibold text-slate-700">
                     <span>Net Payout</span>
-                    <span style={{ color: BRAND_COLOR }}>{cents(fairePayout)}</span>
+                    <span style={{ color: BRAND_COLOR }}><DualCurrency cents={fairePayout} /></span>
                   </div>
                 </div>
               </>
@@ -332,17 +332,17 @@ export default function FaireQuotationDetail() {
                     </td>
                     <td className="py-2 text-right">{item.ordered_quantity}</td>
                     <td className="py-2 text-right">
-                      {item.fulfiller_unit_cost_cents > 0 ? cents(item.fulfiller_unit_cost_cents) : "—"}
+                      {item.fulfiller_unit_cost_cents > 0 ? <DualCurrency cents={item.fulfiller_unit_cost_cents} /> : "—"}
                     </td>
                     <td className="py-2 text-right font-medium">
-                      {item.fulfiller_unit_cost_cents > 0 ? cents(item.fulfiller_unit_cost_cents * item.ordered_quantity) : "—"}
+                      {item.fulfiller_unit_cost_cents > 0 ? <DualCurrency cents={item.fulfiller_unit_cost_cents * item.ordered_quantity} /> : "—"}
                     </td>
                   </tr>
                 ))}
                 <tr className="text-slate-500">
                   <td colSpan={3} className="py-1.5 text-right">Shipping</td>
                   <td className="py-1.5 text-right">
-                    {quotation.fulfiller_shipping_cost_cents > 0 ? cents(quotation.fulfiller_shipping_cost_cents) : "—"}
+                    {quotation.fulfiller_shipping_cost_cents > 0 ? <DualCurrency cents={quotation.fulfiller_shipping_cost_cents} /> : "—"}
                   </td>
                 </tr>
                 {quotation.lead_days > 0 && (
@@ -354,7 +354,7 @@ export default function FaireQuotationDetail() {
                 <tr className="font-semibold border-t">
                   <td colSpan={3} className="py-1.5 text-right">Total</td>
                   <td className="py-1.5 text-right" style={{ color: BRAND_COLOR }}>
-                    {fulfillerTotal > 0 ? cents(fulfillerTotal) : "—"}
+                    {fulfillerTotal > 0 ? <DualCurrency cents={fulfillerTotal} /> : "—"}
                   </td>
                 </tr>
               </tbody>
@@ -391,17 +391,17 @@ export default function FaireQuotationDetail() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-slate-500">Faire Net Payout</span>
-                <span className="font-medium" style={{ color: BRAND_COLOR }}>{cents(fairePayout)}</span>
+                <span className="font-medium" style={{ color: BRAND_COLOR }}><DualCurrency cents={fairePayout} /></span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Fulfiller Total</span>
-                <span className="font-medium text-slate-700">{fulfillerTotal > 0 ? cents(fulfillerTotal) : "—"}</span>
+                <span className="font-medium text-slate-700">{fulfillerTotal > 0 ? <DualCurrency cents={fulfillerTotal} /> : "—"}</span>
               </div>
               <div className="border-t pt-2 mt-2 flex justify-between">
                 <span className="font-semibold text-slate-700">Net Margin</span>
                 <div className="text-right">
                   <div className="font-bold text-lg" style={{ color: marginColor }}>
-                    {fulfillerTotal > 0 ? cents(netMargin) : "—"}
+                    {fulfillerTotal > 0 ? <DualCurrency cents={netMargin} /> : "—"}
                   </div>
                   {fulfillerTotal > 0 && (
                     <div className="text-xs font-medium" style={{ color: marginColor }}>{marginPct}%</div>

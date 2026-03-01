@@ -5,6 +5,7 @@ import { PageTransition, Fade } from "@/components/ui/animated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DualCurrency, formatINRFromDollars } from "@/lib/faire-currency";
 
 const BRAND_COLOR = "#1A6B45";
 
@@ -162,7 +163,7 @@ export default function FaireRetailerDetail() {
                             <td className="p-3"><Badge variant="outline" className="text-[9px] font-mono">{order.display_id}</Badge></td>
                             <td className="p-3"><Badge variant="outline" className="text-[10px]">{store?.name?.split(" ")[0] ?? "Store"}</Badge></td>
                             <td className="p-3 text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</td>
-                            <td className="p-3 text-xs font-semibold">${(itemsTotal / 100).toFixed(2)}</td>
+                            <td className="p-3 text-xs font-semibold"><DualCurrency cents={itemsTotal} /></td>
                             <td className="p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span></td>
                           </tr>
                         );
@@ -182,14 +183,17 @@ export default function FaireRetailerDetail() {
               <CardContent className="space-y-3">
                 {[
                   { label: "Total Orders", value: totalOrders },
-                  { label: "Total Spent", value: `$${totalSpentDollars.toLocaleString()}` },
-                  { label: "Avg Order Value", value: `$${avgOrderValue}` },
+                  { label: "Total Spent", value: `$${totalSpentDollars.toLocaleString()}`, sub: formatINRFromDollars(totalSpentDollars) },
+                  { label: "Avg Order Value", value: `$${avgOrderValue}`, sub: formatINRFromDollars(avgOrderValue) },
                   { label: "First Order", value: firstOrder ? new Date(firstOrder.created_at).toLocaleDateString() : "\u2014" },
                   { label: "Last Order", value: lastOrder ? new Date(lastOrder.created_at).toLocaleDateString() : "\u2014" },
                 ].map((stat, i) => (
                   <div key={i} className="flex items-center justify-between gap-2">
                     <span className="text-xs text-muted-foreground">{stat.label}</span>
-                    <span className="text-sm font-semibold" data-testid={`text-stat-${stat.label.toLowerCase().replace(/\s+/g, "-")}`}>{stat.value}</span>
+                    <span className="text-sm font-semibold" data-testid={`text-stat-${stat.label.toLowerCase().replace(/\s+/g, "-")}`}>
+                      {stat.value}
+                      {"sub" in stat && stat.sub && <span className="block text-[10px] text-muted-foreground/70 font-normal text-right">{stat.sub}</span>}
+                    </span>
                   </div>
                 ))}
               </CardContent>

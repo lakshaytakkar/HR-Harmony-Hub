@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { DualCurrency } from "@/lib/faire-currency";
 import {
   PageShell, PageHeader, DataTableContainer, DataTH, DataTD, DataTR,
 } from "@/components/layout";
@@ -154,8 +155,8 @@ export default function FairePricing() {
                     </DataTD>
                     <DataTD><Badge variant="outline" className="text-[10px]">{r.store?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
                     <DataTD className="text-xs font-mono text-muted-foreground">{r.sku}</DataTD>
-                    <DataTD className="text-xs font-semibold">${(wholesaleCents / 100).toFixed(2)}</DataTD>
-                    <DataTD className="text-xs">${(retailCents / 100).toFixed(2)}</DataTD>
+                    <DataTD className="text-xs font-semibold"><DualCurrency cents={wholesaleCents} /></DataTD>
+                    <DataTD className="text-xs"><DualCurrency cents={retailCents} /></DataTD>
                     <DataTD>
                       <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: mc.bg, color: mc.text }}>{margin}%</span>
                     </DataTD>
@@ -221,7 +222,7 @@ export default function FairePricing() {
                   <DataTD className="text-xs font-medium">{pp.name}</DataTD>
                   <DataTD className="text-xs text-muted-foreground">{pp.products.join(", ")}</DataTD>
                   <DataTD className="text-xs">{pp.units}</DataTD>
-                  <DataTD className="text-xs font-semibold">${(pp.wholesale_price_cents / 100).toFixed(2)}</DataTD>
+                  <DataTD className="text-xs font-semibold"><DualCurrency cents={pp.wholesale_price_cents} /></DataTD>
                   <DataTD><Badge variant="outline" className="text-[10px]">{stores.find((s: any) => s.id === pp.storeId)?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
                 </DataTR>
               ))}

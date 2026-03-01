@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { formatUSD, formatINR, DualCurrency, DualCurrencyInline } from "@/lib/faire-currency";
 import {
   faireLedgerEntries, faireBankTransactions, type FaireLedgerEntry, type LedgerPaymentStatus,
 } from "@/lib/mock-data-faire-ops";
@@ -30,7 +31,6 @@ const STATUS_LABELS: Record<string, string> = {
   all: "All", PENDING: "Pending", PARTIALLY_PAID: "Partially Paid", CLEARED: "Cleared",
 };
 
-function cents(n: number) { return `$${(n / 100).toFixed(2)}`; }
 
 export default function FaireLedger() {
   const [, setLocation] = useLocation();
@@ -108,9 +108,9 @@ export default function FaireLedger() {
 
       <Fade>
         <StatGrid cols={4}>
-          <StatCard label="Faire Receivable" value={isLoading ? "—" : cents(totalReceivable)} icon={BookOpen} iconBg="#F0FDF4" iconColor={BRAND_COLOR} />
-          <StatCard label="Fulfiller Payable" value={isLoading ? "—" : cents(totalPayable)} icon={BookOpen} iconBg="#FEF2F2" iconColor="#DC2626" />
-          <StatCard label="Net Profit (Cleared)" value={isLoading ? "—" : cents(netProfit)} icon={BookOpen} iconBg="#ECFDF5" iconColor="#059669" />
+          <StatCard label="Faire Receivable" value={isLoading ? "—" : formatUSD(totalReceivable)} trend={isLoading ? undefined : formatINR(totalReceivable)} icon={BookOpen} iconBg="#F0FDF4" iconColor={BRAND_COLOR} />
+          <StatCard label="Fulfiller Payable" value={isLoading ? "—" : formatUSD(totalPayable)} trend={isLoading ? undefined : formatINR(totalPayable)} icon={BookOpen} iconBg="#FEF2F2" iconColor="#DC2626" />
+          <StatCard label="Net Profit (Cleared)" value={isLoading ? "—" : formatUSD(netProfit)} trend={isLoading ? undefined : formatINR(netProfit)} icon={BookOpen} iconBg="#ECFDF5" iconColor="#059669" />
           <StatCard label="Pending Reconciliation" value={isLoading ? "—" : String(pendingRecon)} icon={BookOpen} iconBg="#FFFBEB" iconColor="#D97706" />
         </StatGrid>
 
@@ -166,12 +166,12 @@ export default function FaireLedger() {
                       ) : e.order_id}
                     </DataTD>
                     <DataTD className="text-xs text-slate-600">{store?.name ?? e.store_id}</DataTD>
-                    <DataTD className="font-medium">{cents(e.faire_payout_cents)}</DataTD>
-                    <DataTD className="text-xs text-slate-500">{cents(e.commission_cents)}</DataTD>
-                    <DataTD>{cents(e.fulfiller_cost_cents)}</DataTD>
-                    <DataTD className="text-xs text-slate-500">{cents(e.shipping_cost_cents)}</DataTD>
+                    <DataTD className="font-medium"><DualCurrency cents={e.faire_payout_cents} /></DataTD>
+                    <DataTD className="text-xs text-slate-500"><DualCurrency cents={e.commission_cents} /></DataTD>
+                    <DataTD><DualCurrency cents={e.fulfiller_cost_cents} /></DataTD>
+                    <DataTD className="text-xs text-slate-500"><DualCurrency cents={e.shipping_cost_cents} /></DataTD>
                     <DataTD>
-                      <div className="font-semibold" style={{ color: marginColor }}>{cents(e.net_margin_cents)}</div>
+                      <div className="font-semibold" style={{ color: marginColor }}><DualCurrency cents={e.net_margin_cents} /></div>
                       <div className="text-xs" style={{ color: marginColor }}>{marginPct}%</div>
                     </DataTD>
                     <DataTD>
@@ -251,7 +251,7 @@ export default function FaireLedger() {
                     />
                     <div className="text-sm flex-1">
                       <div className="font-medium">{t.description}</div>
-                      <div className="text-xs text-slate-500">{t.reference} · {t.date} · ${(t.amount_cents / 100).toFixed(2)}</div>
+                      <div className="text-xs text-slate-500">{t.reference} · {t.date} · <DualCurrencyInline cents={t.amount_cents} /></div>
                     </div>
                   </label>
                 ))}

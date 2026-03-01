@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { PageTransition, Fade } from "@/components/ui/animated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatINR, formatINRFromDollars, DualFromDollars } from "@/lib/faire-currency";
 
 const BRAND_COLOR = "#1A6B45";
 
@@ -173,15 +174,16 @@ export default function FaireAnalytics() {
       <Fade>
         <div className="grid grid-cols-6 gap-3">
           {[
-            { label: "Total Revenue", value: `$${totalRevenue >= 1000 ? `${(totalRevenue / 1000).toFixed(0)}K` : totalRevenue.toFixed(0)}` },
-            { label: "Total Orders", value: totalOrders },
-            { label: "Avg Order Value", value: `$${(avgOrderValueCents / 100).toFixed(0)}` },
-            { label: "Unique Retailers", value: uniqueRetailers },
-            { label: "Units Sold", value: unitsSold },
-            { label: "Cancel Rate", value: `${cancelRate}%` },
+            { label: "Total Revenue", value: `$${totalRevenue >= 1000 ? `${(totalRevenue / 1000).toFixed(0)}K` : totalRevenue.toFixed(0)}`, sub: formatINRFromDollars(totalRevenue) },
+            { label: "Total Orders", value: totalOrders, sub: null },
+            { label: "Avg Order Value", value: `$${(avgOrderValueCents / 100).toFixed(0)}`, sub: formatINR(avgOrderValueCents) },
+            { label: "Unique Retailers", value: uniqueRetailers, sub: null },
+            { label: "Units Sold", value: unitsSold, sub: null },
+            { label: "Cancel Rate", value: `${cancelRate}%`, sub: null },
           ].map((k, i) => (
             <div key={i} className="rounded-xl border bg-card p-3" data-testid={`analytics-kpi-${i}`}>
               <p className="text-lg font-bold">{k.value}</p>
+              {k.sub && <p className="text-[10px] text-muted-foreground/70">{k.sub}</p>}
               <p className="text-[10px] text-muted-foreground mt-0.5">{k.label}</p>
             </div>
           ))}
@@ -199,7 +201,7 @@ export default function FaireAnalytics() {
                   <div key={store.id} data-testid={`bar-store-${store.id}`}>
                     <div className="flex items-center justify-between gap-1 mb-1">
                       <p className="text-xs font-medium truncate">{store.name}</p>
-                      <p className="text-xs font-bold">${store.revenue >= 1000 ? `${(store.revenue / 1000).toFixed(0)}K` : store.revenue.toFixed(0)}</p>
+                      <p className="text-xs font-bold"><DualFromDollars dollars={store.revenue} /></p>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div className="h-full rounded-full transition-all" style={{ width: `${barWidth}%`, background: BRAND_COLOR }} />
@@ -280,7 +282,7 @@ export default function FaireAnalytics() {
                       <td className="p-2.5 text-xs font-semibold">{row.state}</td>
                       <td className="p-2.5 text-xs">{row.retailers}</td>
                       <td className="p-2.5 text-xs">{row.orders}</td>
-                      <td className="p-2.5 text-xs font-semibold">${row.revenue.toLocaleString()}</td>
+                      <td className="p-2.5 text-xs font-semibold"><DualFromDollars dollars={row.revenue} /></td>
                     </tr>
                   ))}
                   {geoData.length === 0 && (
@@ -310,7 +312,7 @@ export default function FaireAnalytics() {
                         <div className="w-full rounded-t-md transition-all" style={{ height: `${barH}%`, background: BRAND_COLOR, opacity: i === monthlyData.length - 1 ? 1 : 0.7 }} />
                       </div>
                       <div className="text-center">
-                        <p className="text-[9px] font-bold">${month.revenue >= 1000 ? `${(month.revenue / 1000).toFixed(0)}K` : month.revenue.toFixed(0)}</p>
+                        <p className="text-[9px] font-bold"><DualFromDollars dollars={month.revenue} /></p>
                         {pct !== null && (
                           <div className={`flex items-center gap-0.5 text-[9px] font-medium ${pct >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                             {pct >= 0 ? <TrendingUp size={8} /> : <TrendingDown size={8} />}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
+import { formatINRFromDollars, DualFromDollars } from "@/lib/faire-currency";
 import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -135,7 +136,7 @@ export default function FaireRetailers() {
           {[
             { label: "Total Retailers", value: totalRetailers, color: BRAND_COLOR, bg: "rgba(26, 107, 69, 0.1)" },
             { label: "Active (90d)", value: activeRetailers, color: "#2563EB", bg: "#EFF6FF" },
-            { label: "Avg Order Value", value: `$${avgOrderValue}`, color: "#7C3AED", bg: "#F5F3FF" },
+            { label: "Avg Order Value", value: `$${avgOrderValue}`, color: "#7C3AED", bg: "#F5F3FF", trend: formatINRFromDollars(avgOrderValue) },
             { label: "Repeat Rate", value: `${repeatRate}%`, color: "#D97706", bg: "#FFFBEB" },
           ].map((s, i) => (
             <StatCard
@@ -145,6 +146,7 @@ export default function FaireRetailers() {
               icon={Users}
               iconBg={s.bg}
               iconColor={s.color}
+              {...(s.trend ? { trend: s.trend } : {})}
             />
           ))}
         </StatGrid>
@@ -200,7 +202,7 @@ export default function FaireRetailers() {
                     </div>
                   </DataTD>
                   <DataTD align="center" className="font-bold">{retailer.total_orders}</DataTD>
-                  <DataTD className="font-bold text-foreground/80">${retailer.total_spent.toLocaleString()}</DataTD>
+                  <DataTD className="font-bold text-foreground/80"><DualFromDollars dollars={retailer.total_spent} /></DataTD>
                   <DataTD className="text-muted-foreground font-medium">{retailer.last_ordered ? new Date(retailer.last_ordered).toLocaleDateString() : "—"}</DataTD>
                   <DataTD>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${retailer.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>{retailer.status}</span>

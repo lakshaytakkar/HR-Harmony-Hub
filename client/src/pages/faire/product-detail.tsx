@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { DualCurrency } from "@/lib/faire-currency";
 
 const BRAND_COLOR = "#1A6B45";
 
@@ -227,8 +228,8 @@ export default function FaireProductDetail() {
                           <Badge key={o.name} variant="outline" className="text-[9px] mr-1">{o.name}: {o.value}</Badge>
                         ))}
                       </td>
-                      <td className="p-3 text-xs font-medium">${(variant.wholesale_price_cents / 100).toFixed(2)}</td>
-                      <td className="p-3 text-xs">${(variant.retail_price_cents / 100).toFixed(2)}</td>
+                      <td className="p-3 text-xs font-medium"><DualCurrency cents={variant.wholesale_price_cents} /></td>
+                      <td className="p-3 text-xs"><DualCurrency cents={variant.retail_price_cents} /></td>
                       <td className="p-3">
                         <span className={`text-xs font-semibold ${isOut ? "text-red-600" : isLow ? "text-amber-600" : ""}`}>{variant.available_quantity}</span>
                         {variant.backordered_until && <p className="text-[9px] text-muted-foreground">Until {new Date(variant.backordered_until).toLocaleDateString()}</p>}

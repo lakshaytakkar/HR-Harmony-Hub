@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { DualCurrencyInline } from "@/lib/faire-currency";
 
 const BRAND_COLOR = "#1A6B45";
 const CARRIERS = ["UPS", "FedEx", "USPS", "DHL"];
@@ -137,7 +138,7 @@ export default function FaireFulfillment() {
                     <p className="text-xs text-muted-foreground">{order.address?.city}{order.address?.state ? `, ${order.address.state}` : ""}</p>
                     <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
                       <span>{(order.items ?? []).length} {(order.items ?? []).length === 1 ? "item" : "items"}</span>
-                      <span className="font-semibold text-foreground">${(itemsTotal / 100).toFixed(2)}</span>
+                      <span className="font-semibold text-foreground"><DualCurrencyInline cents={itemsTotal} /></span>
                       <span>Ordered {getAge(order.created_at)}</span>
                     </div>
                     <div className="mt-2 space-y-1">

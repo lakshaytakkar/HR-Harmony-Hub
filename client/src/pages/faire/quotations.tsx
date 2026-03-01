@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { formatUSD, formatINR, DualCurrency } from "@/lib/faire-currency";
 import {
   faireQuotations, faireFulfillers, type FaireQuotation, type QuotationStatus,
 } from "@/lib/mock-data-faire-ops";
@@ -38,7 +39,6 @@ const STATUS_LABELS: Record<string, string> = {
   ACCEPTED: "Accepted", CHALLENGED: "Challenged", SENT_ELSEWHERE: "Sent Elsewhere",
 };
 
-function cents(n: number) { return `$${(n / 100).toFixed(2)}`; }
 
 function quotationFulfillerTotal(q: FaireQuotation): number {
   return q.items.reduce((s, i) => s + i.fulfiller_unit_cost_cents * i.ordered_quantity, 0) + q.fulfiller_shipping_cost_cents;
@@ -219,8 +219,8 @@ export default function FaireQuotations() {
                       ) : "—"}
                     </DataTD>
                     <DataTD>{q.items.length}</DataTD>
-                    <DataTD>{q.status === "DRAFT" || q.status === "SENT" ? "—" : cents(ftotal)}</DataTD>
-                    <DataTD>{cents(fpayout)}</DataTD>
+                    <DataTD>{q.status === "DRAFT" || q.status === "SENT" ? "—" : <DualCurrency cents={ftotal} />}</DataTD>
+                    <DataTD><DualCurrency cents={fpayout} /></DataTD>
                     <DataTD>
                       {mp !== null && q.status !== "DRAFT" && q.status !== "SENT" ? (
                         <span className="font-semibold" style={{ color: marginColor }}>{mp}%</span>

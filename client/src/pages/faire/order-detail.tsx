@@ -18,6 +18,7 @@ import {
   PageShell, SectionCard, DetailModal, DetailSection,
   DataTableContainer, DataTH, DataTD,
 } from "@/components/layout";
+import { DualCurrency, DualCurrencyInline, formatUSD, formatINR } from "@/lib/faire-currency";
 
 type OrderState = "NEW" | "PROCESSING" | "PRE_TRANSIT" | "IN_TRANSIT" | "DELIVERED" | "PENDING_RETAILER_CONFIRMATION" | "BACKORDERED" | "CANCELED";
 
@@ -70,8 +71,6 @@ const SOURCE_LABELS: Record<string, string> = {
   FAIRE_DIRECT: "Faire Direct",
   TRADESHOW: "Tradeshow",
 };
-
-function cents(n: number) { return `$${(n / 100).toFixed(2)}`; }
 
 function InfoRow({ label, value, children }: { label: string; value?: string | number; children?: React.ReactNode }) {
   return (
@@ -346,7 +345,6 @@ export default function FaireOrderDetail() {
                   <tbody className="divide-y">
                     {(order.items ?? []).map((item: any) => {
                       const isBackordered = item.state === "BACKORDERED";
-                      const lineTotal = (item.price_cents * item.quantity / 100).toFixed(2);
                       return (
                         <tr key={item.id} className={isBackordered ? "bg-amber-50/50 dark:bg-amber-950/10" : ""} data-testid={`item-row-${item.id}`}>
                           <DataTD>
@@ -363,8 +361,8 @@ export default function FaireOrderDetail() {
                           </DataTD>
                           <DataTD className="text-muted-foreground font-mono">{item.sku}</DataTD>
                           <DataTD align="center">{item.quantity}</DataTD>
-                          <DataTD>{cents(item.price_cents)}</DataTD>
-                          <DataTD className="font-semibold">${lineTotal}</DataTD>
+                          <DataTD><DualCurrency cents={item.price_cents} /></DataTD>
+                          <DataTD className="font-semibold"><DualCurrency cents={item.price_cents * item.quantity} /></DataTD>
                           <DataTD>
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${isBackordered ? "bg-amber-100 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>
                               {item.state}
@@ -382,12 +380,18 @@ export default function FaireOrderDetail() {
           <Fade>
             <SectionCard title="Payout Breakdown">
               <div className="space-y-2">
-                <InfoRow label="Items Total" value={cents(itemsTotal)} />
-                <InfoRow label={`Commission${order.payout_costs?.commission_bps ? ` (${(order.payout_costs.commission_bps / 100).toFixed(0)}%)` : ""}`} value={commissionAmt > 0 ? `-${cents(commissionAmt)}` : "—"} />
-                <InfoRow label="Platform Fee" value={(order.payout_costs?.payout_fee_cents ?? 0) > 0 ? `-${cents(order.payout_costs.payout_fee_cents)}` : "—"} />
+                <InfoRow label="Items Total">
+                  <DualCurrencyInline cents={itemsTotal} className="text-sm font-medium" />
+                </InfoRow>
+                <InfoRow label={`Commission${order.payout_costs?.commission_bps ? ` (${(order.payout_costs.commission_bps / 100).toFixed(0)}%)` : ""}`}>
+                  {commissionAmt > 0 ? <span className="text-sm font-medium">-{formatUSD(commissionAmt)} <span className="text-[10px] text-muted-foreground/70 font-normal">(-{formatINR(commissionAmt)})</span></span> : <span className="text-sm font-medium">—</span>}
+                </InfoRow>
+                <InfoRow label="Platform Fee">
+                  {(order.payout_costs?.payout_fee_cents ?? 0) > 0 ? <span className="text-sm font-medium">-{formatUSD(order.payout_costs.payout_fee_cents)} <span className="text-[10px] text-muted-foreground/70 font-normal">(-{formatINR(order.payout_costs.payout_fee_cents)})</span></span> : <span className="text-sm font-medium">—</span>}
+                </InfoRow>
                 <div className="border-t pt-2 flex items-center justify-between">
                   <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Estimated Payout</span>
-                  <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{cents(payout)}</span>
+                  <DualCurrencyInline cents={payout} className="text-lg font-bold text-emerald-700 dark:text-emerald-400" />
                 </div>
                 {order.is_free_shipping && order.free_shipping_reason && (
                   <p className="text-xs text-muted-foreground pt-1">Free shipping: {order.free_shipping_reason.replace(/_/g, " ")}</p>
@@ -461,7 +465,7 @@ export default function FaireOrderDetail() {
                         <p className="text-xs text-muted-foreground">Total Orders</p>
                       </div>
                       <div className="bg-muted/40 rounded-lg p-3 text-center">
-                        <p className="text-lg font-bold">${(totalSpent / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                        <p className="text-lg font-bold"><DualCurrency cents={totalSpent} /></p>
                         <p className="text-xs text-muted-foreground">Total Spent</p>
                       </div>
                     </div>
@@ -487,7 +491,9 @@ export default function FaireOrderDetail() {
                   </InfoRow>
                   {linkedQuote.status !== "DRAFT" && linkedQuote.status !== "SENT" && (
                     <>
-                      <InfoRow label="Fulfiller Total" value={cents(linkedQuote.items.reduce((s, i) => s + i.fulfiller_unit_cost_cents * i.ordered_quantity, 0) + linkedQuote.fulfiller_shipping_cost_cents)} />
+                      <InfoRow label="Fulfiller Total">
+                        <DualCurrencyInline cents={linkedQuote.items.reduce((s, i) => s + i.fulfiller_unit_cost_cents * i.ordered_quantity, 0) + linkedQuote.fulfiller_shipping_cost_cents} className="text-sm font-medium" />
+                      </InfoRow>
                       <InfoRow label="Est. Margin">
                         <span className="text-sm font-semibold text-emerald-600">
                           {(() => {
@@ -519,14 +525,14 @@ export default function FaireOrderDetail() {
               {linkedLedger ? (
                 <div className="space-y-2">
                   <InfoRow label="Faire Payout">
-                    <span className="text-sm font-semibold text-emerald-600">{cents(linkedLedger.faire_payout_cents)}</span>
+                    <DualCurrencyInline cents={linkedLedger.faire_payout_cents} className="text-sm font-semibold text-emerald-600" />
                   </InfoRow>
-                  <InfoRow label="Fulfiller Cost" value={cents(linkedLedger.fulfiller_cost_cents + linkedLedger.shipping_cost_cents)} />
+                  <InfoRow label="Fulfiller Cost">
+                    <DualCurrencyInline cents={linkedLedger.fulfiller_cost_cents + linkedLedger.shipping_cost_cents} className="text-sm font-medium" />
+                  </InfoRow>
                   <div className="border-t pt-2">
                     <InfoRow label="Net Margin">
-                      <span className="text-sm font-bold" style={{ color: linkedLedger.net_margin_cents > 0 ? "#059669" : "#DC2626" }}>
-                        {cents(linkedLedger.net_margin_cents)}
-                      </span>
+                      <DualCurrencyInline cents={linkedLedger.net_margin_cents} className={`text-sm font-bold`} />
                     </InfoRow>
                   </div>
                   <InfoRow label="Payment">
@@ -594,7 +600,7 @@ export default function FaireOrderDetail() {
                       <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground ml-6">
                         <span>{ship.shipped_at ? new Date(ship.shipped_at).toLocaleDateString() : "—"}</span>
                         <span>·</span>
-                        <span className="font-medium text-foreground">{ship.maker_cost_cents != null ? cents(ship.maker_cost_cents) : "—"}</span>
+                        <span className="font-medium text-foreground">{ship.maker_cost_cents != null ? <DualCurrencyInline cents={ship.maker_cost_cents} /> : "—"}</span>
                         <span>·</span>
                         <span>{ship.shipping_type === "SHIP_ON_YOUR_OWN" ? "Own Label" : "Faire Label"}</span>
                       </div>
