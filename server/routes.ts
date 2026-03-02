@@ -27,10 +27,12 @@ import {
   uploadTransactionProof,
   getTransactionProofUrl,
 } from "./supabase";
-import { fetchAllOrders, fetchAllProducts, fetchBrandProfile, fetchRetailerProfile, updateVariantInventory } from "./faire-api";
+import { fetchAllOrders, fetchAllProducts, fetchBrandProfile, fetchProduct, fetchRetailerProfile, updateVariantInventory } from "./faire-api";
 
 const productCache: { data: unknown[] | null; ts: number } = { data: null, ts: 0 };
 const PRODUCT_CACHE_TTL = 5 * 60 * 1000;
+
+const productImageCache: Map<string, string | null> = new Map();
 
 const storeSummaryCache: { data: unknown | null; ts: number } = { data: null, ts: 0 };
 const SUMMARY_CACHE_TTL = 5 * 60 * 1000;
@@ -201,6 +203,67 @@ export async function registerRoutes(
       return res.json({ products });
     } catch {
       return res.status(500).json({ error: "Failed to fetch all products" });
+    }
+  });
+
+  app.post("/api/faire/product-thumbs", async (req, res) => {
+    try {
+      const { productIds, storeId } = req.body as { productIds: string[]; storeId: string };
+      if (!productIds?.length || !storeId) return res.json({ thumbs: {} });
+
+      const thumbs: Record<string, string | null> = {};
+      const uncached: string[] = [];
+
+      for (const pid of productIds) {
+        if (productImageCache.has(pid)) {
+          thumbs[pid] = productImageCache.get(pid) ?? null;
+        } else {
+          let products = productCache.data;
+          if (!products) {
+            products = await getAllProducts();
+            productCache.data = products;
+            productCache.ts = Date.now();
+          }
+          const local = products.find((p: any) => p.id === pid);
+          if (local) {
+            const images = ((local as any).images as { url: string }[]) ?? [];
+            const url = images[0]?.url ?? null;
+            thumbs[pid] = url;
+            productImageCache.set(pid, url);
+          } else {
+            uncached.push(pid);
+          }
+        }
+      }
+
+      if (uncached.length > 0) {
+        const creds = await getStoreCredentials(storeId);
+        if (creds) {
+          for (const pid of uncached) {
+            try {
+              const product = await fetchProduct(creds, pid) as Record<string, unknown> | null;
+              if (product) {
+                const images = (product.images as { url: string }[]) ?? [];
+                const url = images[0]?.url ?? null;
+                thumbs[pid] = url;
+                productImageCache.set(pid, url);
+              } else {
+                thumbs[pid] = null;
+                productImageCache.set(pid, null);
+              }
+            } catch {
+              thumbs[pid] = null;
+              productImageCache.set(pid, null);
+            }
+            await new Promise(r => setTimeout(r, 350));
+          }
+        }
+      }
+
+      return res.json({ thumbs });
+    } catch (e: any) {
+      console.error("[product-thumbs]", e.message);
+      return res.json({ thumbs: {} });
     }
   });
 

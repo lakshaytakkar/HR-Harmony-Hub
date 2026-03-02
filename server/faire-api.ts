@@ -118,6 +118,24 @@ async function fairePatch(
   return { ok: res.ok, status: res.status, data };
 }
 
+export async function fetchProduct(
+  creds: FaireStoreCreds,
+  productId: string
+): Promise<unknown | null> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const result = await faireGet(`/products/${productId}`, creds);
+    if (result.ok) return result.data;
+    if (result.status === 404) return null;
+    if (result.status === 429) {
+      await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+      continue;
+    }
+    console.error(`[faire-api] fetchProduct ${productId} error ${result.status}`);
+    return null;
+  }
+  return null;
+}
+
 export async function updateVariantInventory(
   creds: FaireStoreCreds,
   productId: string,

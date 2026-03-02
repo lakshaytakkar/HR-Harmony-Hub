@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -104,27 +104,32 @@ export default function FaireOrderDetail() {
     },
   });
 
-  const { data: productsData } = useQuery<{ products: any[] }>({
-    queryKey: ['/api/faire/products?slim'],
-    queryFn: async () => {
-      const res = await fetch("/api/faire/products?slim", { headers: { "Cache-Control": "no-cache" } });
-      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
-      return res.json();
-    },
-  });
-
   const isLoading = ordersLoading || storesLoading;
   const orders = ordersData?.orders ?? [];
   const stores = storesData?.stores ?? [];
-  const allProducts = productsData?.products ?? [];
-
-  const productThumbMap: Record<string, string> = {};
-  for (const p of allProducts) {
-    if (p.id && p.thumb_url) productThumbMap[p.id] = p.thumb_url;
-  }
 
   const order = orders.find((o: any) => o.id === params?.id) ?? orders[0];
   const store = order ? stores.find((s: any) => s.id === order._storeId) : undefined;
+
+  const [productThumbMap, setProductThumbMap] = useState<Record<string, string | null>>({});
+
+  useEffect(() => {
+    if (!order?.items?.length || !order._storeId) return;
+    const productIds = [...new Set(order.items.map((i: any) => i.product_id).filter(Boolean))] as string[];
+    if (productIds.length === 0) return;
+    const alreadyResolved = productIds.every(pid => pid in productThumbMap);
+    if (alreadyResolved) return;
+    fetch("/api/faire/product-thumbs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productIds, storeId: order._storeId }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.thumbs) setProductThumbMap(prev => ({ ...prev, ...data.thumbs }));
+      })
+      .catch(() => {});
+  }, [order?.id, order?._storeId]);
 
   const linkedQuote = order ? faireQuotations.find(q => q.order_id === order.id) : undefined;
   const linkedFulfiller = linkedQuote ? faireFulfillers.find(f => f.id === linkedQuote.fulfiller_id) : null;
