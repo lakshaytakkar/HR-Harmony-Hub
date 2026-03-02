@@ -41,7 +41,7 @@ Complete end-to-end order operations pipeline with 5 new pages:
 - **Quotation Detail** `/faire/quotations/:id` — 3-column layout: order context (with product images) / quotation (status timeline, fulfiller card, line items, costs) / decision panel (margin health bar, action buttons); status transitions (DRAFT→SENT→QUOTE_RECEIVED→ACCEPTED/CHALLENGED/SENT_ELSEWHERE); Challenge + Send Elsewhere dialogs
 - **Partner Portal** `/faire/partner-portal` — Fulfiller-facing quote submission UI; fulfiller selector; SENT quotations as cards with product image grids; inline quote submission form; updates quotation to QUOTE_RECEIVED
 - **Financial Ledger** `/faire/ledger` — Per-order financials; 4 stat cards; filter tabs; full table with Faire payout vs fulfiller cost vs net margin; Mark as Cleared dialog linking bank transactions
-- **Bank Transactions** `/faire/bank-transactions` — Reconciliation table; 3 stat cards; unreconciled rows amber-highlighted; Map to Order dialog; Add Transaction dialog; filter tabs renamed to "Faire Payouts" (CREDIT) and "Paid to Suppliers" (DEBIT); paperclip icon per row opens attachment modal (upload proof files to Supabase Storage via POST /api/faire/transactions/:id/attachments); attachment count badge on icon
+- **Bank Transactions** `/faire/bank-transactions` — Full bank portal with 3 tabs: Faire Payouts (Supabase-backed, 4 stat cards including Personal Txns, filter tabs: All/Faire Payouts/Paid to Suppliers/Unreconciled/Personal, per-row Business/Personal toggle badge fires PATCH, Map Order modal writes faire_order_id to Supabase, Edit modal for tags + category + notes, Attachments modal), Mercury (Supabase-backed, entity filter All/Neom/Cloudnest, 2 entity cards, Edit modal), Wise (live API unchanged). All mock data removed; data sourced from `bank_transactions` Supabase table.
 - **Vendors** `/faire/vendors` — Full CRUD vendor directory; Add/Edit modal with name, contact, email, WhatsApp, notes, default flag; default vendor KPI card; WhatsApp clickable links; vendor assignment badge; registered under Quotations nav section
 - **Seller Applications** `/faire/applications` — Index with 6 stat cards (Total/Drafting/Applied/Pending Docs/Approved/Rejected), search + status filter, datatable; includes SOP modal (8-step process guide) and Video Tutorial modal. New Application modal creates drafts. Status badge color-coded per stage.
 - **Application Detail** `/faire/applications/:id` — 2-column layout: left (7 info cards: Brand Identity, Email & Contact, Domain & Website, Marketplace Strategy, Product Listings, Legal Documents, Application Submission — all inline-editable via click-to-edit PATCH); right sidebar (Follow-up Timeline with type icons + add/delete, Quick Links with type icons + add/delete, Record Info). Action bar: status transitions (Mark Applied → Docs Requested / Mark Rejected / Mark Approved → Promote modal). Full Edit modal for batch editing all fields.
@@ -99,7 +99,28 @@ Complete end-to-end order operations pipeline with 5 new pages:
 - **retailer-detail.tsx** — single retailer + order history; computed stats; enrichment card displayed when data exists (contact, WhatsApp button from phone, address, website/instagram links); "Enrich/Edit Enrichment" CTA button in header; empty dashed state when not yet enriched; data persisted to Supabase `retailer_enrichments` table
 - **analytics.tsx** — revenue trends, order state breakdowns, geo data, top products from real data
 - **stores.tsx** — store list with per-store summary stats (revenue, order count, product count, retailer count, order pipeline badges); merged `?summary` endpoint with 5min server-side cache; DualCurrency INR subtext on revenue; Sync All + per-store sync + Orders nav
-- **quotations.tsx, quotation-detail.tsx, partner-portal.tsx, ledger.tsx, bank-transactions.tsx** — orders/stores from real API; operational mock data from mock-data-faire-ops retained
+- **quotations.tsx, quotation-detail.tsx, partner-portal.tsx, ledger.tsx** — orders/stores from real API; operational mock data from mock-data-faire-ops retained
+- **bank-transactions.tsx** — fully rewritten; no mock data; all data from Supabase `bank_transactions` table (Faire + Mercury) or live Wise API
+
+**Bank Transactions (Supabase `bank_transactions` table):**
+- Schema: `id (UUID PK), source (faire_payout|mercury|wise), entity (neom|cloudnest|NULL), bank_name, date (DATE), description, amount (DECIMAL 15,4 native currency), currency (default USD), amount_usd (DECIMAL 15,4 normalized), type (credit|debit), category, is_business (BOOL default true), tags (TEXT[] default {}), reference, faire_order_id, reconciled (BOOL default false), notes, external_id, created_at, updated_at`
+- Indexes: source, entity, date DESC
+- RPC: `bank_update_transaction(p_id, p_is_business, p_category, p_notes, p_reconciled, p_tags, p_faire_order_id)` — UPDATEs and RETURNs the row
+- FX rates for USD normalization: GBP=1.27, AUD=0.65, CAD=0.74, CNY=0.14, INR=0.012, USD=1.0
+- Seeded data: 10 Mercury USD txns (Neom: ac004, Cloudnest: ac005) + 14 Faire payout txns
+- API routes: `GET /api/bank-transactions?source=&entity=&type=&search=&page=&limit=&is_business=` → `{transactions, total}`, `POST /api/bank-transactions` → `{transaction}`, `PATCH /api/bank-transactions/:id` → `{transaction}`
+
+**Ledger Parties (Supabase `ledger_parties` + `ledger_party_transactions` tables):**
+- `ledger_parties`: `id, name, type, contact_name, email, phone, country, currency, credit_limit, credit_days, tags[], notes, is_active, created_at, updated_at`
+- `ledger_party_transactions`: `id, party_id (FK), type, direction (payable|receivable), date, due_date, amount, currency, amount_usd, reference, description, faire_order_id, bank_transaction_id, status (pending|paid|partial|overdue), paid_amount, payment_date, notes, created_at, updated_at`
+- RPC: `get_party_balance(p_party_id)` — returns net balance (receivables − payables)
+- Seeded: 10 parties (ShipFast, GlobalPack, QuickFillEU, AsiaDirect, Faire, Shopify, Stripe, Meta Ads, Wyoming SOS, Suprans) with transaction histories
+- API routes: `GET /api/ledger-parties`, `GET /api/ledger-parties/:id`, `POST /api/ledger-parties`, `PATCH /api/ledger-parties/:id`, `GET /api/ledger-parties/:id/transactions`, `POST /api/ledger-parties/:id/transactions`, `PATCH /api/ledger-party-transactions/:id`, `GET /api/ledger-parties/:id/balance`
+
+**Modal Architecture (global fix applied Mar 2026):**
+- `dialog.tsx` `DialogContent` no longer renders built-in `<DialogPrimitive.Close>` X button — all modals manage their own close
+- All faire page modals (fulfillment, pricing, product-detail, bank-transactions) use `DetailModal` from `@/components/layout`
+- `DetailModal` renders its own X in the header; `footer` prop accepts any ReactNode for action buttons
 
 **Retailer Enrichment (Supabase `retailer_enrichments` table):**
 - Table: `retailer_id (PK), contact_name, contact_email, contact_phone, store_address, business_type, store_type, website, instagram, notes, enriched_by, enriched_at, updated_at`

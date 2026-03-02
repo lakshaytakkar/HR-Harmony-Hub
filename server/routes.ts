@@ -36,6 +36,16 @@ import {
   deleteApplicationLink,
   getRetailerEnrichment,
   upsertRetailerEnrichment,
+  getBankTransactions,
+  updateBankTransaction,
+  addBankTransaction,
+  listLedgerParties,
+  getLedgerParty,
+  upsertLedgerParty,
+  getLedgerPartyTransactions,
+  addLedgerPartyTransaction,
+  updateLedgerPartyTransaction,
+  getPartyBalance,
 } from "./supabase";
 import { fetchAllOrders, fetchAllProducts, fetchBrandProfile, fetchProduct, fetchRetailerProfile, updateVariantInventory } from "./faire-api";
 import { getWiseSummary, getWiseTransfers, getWiseProfiles } from "./wise";
@@ -738,6 +748,131 @@ export async function registerRoutes(
       return res.json({ profile, balances, lastSynced: new Date().toISOString() });
     } catch {
       return res.status(500).json({ error: "Failed to sync Wise data" });
+    }
+  });
+
+  app.get("/api/bank-transactions", async (req, res) => {
+    try {
+      const { source, entity, type, search, page, limit, is_business } = req.query as Record<string, string>;
+      const result = await getBankTransactions({
+        source: source || undefined,
+        entity: entity || undefined,
+        type: type || undefined,
+        search: search || undefined,
+        page: page ? parseInt(page) : undefined,
+        limit: limit ? parseInt(limit) : undefined,
+        is_business: is_business !== undefined ? is_business === "true" : undefined,
+      });
+      return res.json(result);
+    } catch {
+      return res.status(500).json({ error: "Failed to fetch bank transactions" });
+    }
+  });
+
+  app.post("/api/bank-transactions", async (req, res) => {
+    try {
+      const tx = req.body;
+      const result = await addBankTransaction(tx);
+      if (!result) return res.status(500).json({ error: "Failed to add transaction" });
+      return res.json({ transaction: result });
+    } catch {
+      return res.status(500).json({ error: "Failed to add transaction" });
+    }
+  });
+
+  app.patch("/api/bank-transactions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const patch = req.body as {
+        is_business?: boolean;
+        category?: string;
+        notes?: string;
+        reconciled?: boolean;
+        tags?: string[];
+        faire_order_id?: string | null;
+      };
+      const result = await updateBankTransaction(id, patch);
+      if (!result) return res.status(500).json({ error: "Failed to update transaction" });
+      return res.json({ transaction: result });
+    } catch {
+      return res.status(500).json({ error: "Failed to update transaction" });
+    }
+  });
+
+  app.get("/api/ledger-parties", async (_req, res) => {
+    try {
+      const parties = await listLedgerParties();
+      return res.json({ parties });
+    } catch {
+      return res.status(500).json({ error: "Failed to fetch ledger parties" });
+    }
+  });
+
+  app.get("/api/ledger-parties/:id", async (req, res) => {
+    try {
+      const party = await getLedgerParty(req.params.id);
+      if (!party) return res.status(404).json({ error: "Party not found" });
+      return res.json({ party });
+    } catch {
+      return res.status(500).json({ error: "Failed to fetch party" });
+    }
+  });
+
+  app.post("/api/ledger-parties", async (req, res) => {
+    try {
+      const result = await upsertLedgerParty(req.body);
+      if (!result) return res.status(500).json({ error: "Failed to save party" });
+      return res.json({ party: result });
+    } catch {
+      return res.status(500).json({ error: "Failed to save party" });
+    }
+  });
+
+  app.patch("/api/ledger-parties/:id", async (req, res) => {
+    try {
+      const result = await upsertLedgerParty({ ...req.body, id: req.params.id });
+      if (!result) return res.status(500).json({ error: "Failed to update party" });
+      return res.json({ party: result });
+    } catch {
+      return res.status(500).json({ error: "Failed to update party" });
+    }
+  });
+
+  app.get("/api/ledger-parties/:id/transactions", async (req, res) => {
+    try {
+      const txns = await getLedgerPartyTransactions(req.params.id);
+      return res.json({ transactions: txns });
+    } catch {
+      return res.status(500).json({ error: "Failed to fetch party transactions" });
+    }
+  });
+
+  app.post("/api/ledger-parties/:id/transactions", async (req, res) => {
+    try {
+      const result = await addLedgerPartyTransaction({ ...req.body, party_id: req.params.id });
+      if (!result) return res.status(500).json({ error: "Failed to add transaction" });
+      return res.json({ transaction: result });
+    } catch {
+      return res.status(500).json({ error: "Failed to add transaction" });
+    }
+  });
+
+  app.patch("/api/ledger-party-transactions/:id", async (req, res) => {
+    try {
+      const result = await updateLedgerPartyTransaction(req.params.id, req.body);
+      if (!result) return res.status(500).json({ error: "Failed to update transaction" });
+      return res.json({ transaction: result });
+    } catch {
+      return res.status(500).json({ error: "Failed to update transaction" });
+    }
+  });
+
+  app.get("/api/ledger-parties/:id/balance", async (req, res) => {
+    try {
+      const balance = await getPartyBalance(req.params.id);
+      return res.json({ balance });
+    } catch {
+      return res.status(500).json({ error: "Failed to fetch balance" });
     }
   });
 

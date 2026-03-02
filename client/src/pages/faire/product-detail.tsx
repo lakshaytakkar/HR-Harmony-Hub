@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { DetailModal } from "@/components/layout";
 import { useToast } from "@/hooks/use-toast";
 import { DualCurrency } from "@/lib/faire-currency";
 
@@ -272,70 +272,90 @@ export default function FaireProductDetail() {
         </Fade>
       )}
 
-      <Dialog open={priceOpen} onOpenChange={() => setPriceOpen(false)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Edit Price — {selectedVariant?.sku}</DialogTitle></DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1.5"><Label>Wholesale Price ($)</Label><Input type="number" value={editWholesale} onChange={e => setEditWholesale(e.target.value)} data-testid="input-wholesale" /></div>
-            <div className="space-y-1.5"><Label>Retail Price ($)</Label><Input type="number" value={editRetail} onChange={e => setEditRetail(e.target.value)} data-testid="input-retail" /></div>
-          </div>
-          <DialogFooter>
+      <DetailModal
+        open={priceOpen}
+        onClose={() => setPriceOpen(false)}
+        title={`Edit Price — ${selectedVariant?.sku ?? ""}`}
+        subtitle="Update wholesale and retail pricing for this variant"
+        footer={
+          <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => setPriceOpen(false)}>Cancel</Button>
             <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Price Updated", description: `Wholesale: $${editWholesale} · Retail: $${editRetail}` }); setPriceOpen(false); }} data-testid="btn-save-price">Save Price</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      >
+        <div className="space-y-4 px-6 py-5">
+          <div className="space-y-1.5"><Label>Wholesale Price ($)</Label><Input type="number" value={editWholesale} onChange={e => setEditWholesale(e.target.value)} data-testid="input-wholesale" /></div>
+          <div className="space-y-1.5"><Label>Retail Price ($)</Label><Input type="number" value={editRetail} onChange={e => setEditRetail(e.target.value)} data-testid="input-retail" /></div>
+        </div>
+      </DetailModal>
 
-      <Dialog open={stockOpen} onOpenChange={() => setStockOpen(false)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Update Stock — {selectedVariant?.sku}</DialogTitle></DialogHeader>
-          <div className="space-y-1.5 py-2"><Label>New Available Quantity</Label><Input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} data-testid="input-qty" /></div>
-          <DialogFooter>
+      <DetailModal
+        open={stockOpen}
+        onClose={() => setStockOpen(false)}
+        title={`Update Stock — ${selectedVariant?.sku ?? ""}`}
+        subtitle="Set the new available inventory quantity for this variant"
+        footer={
+          <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => setStockOpen(false)}>Cancel</Button>
             <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Stock Updated", description: `New quantity: ${editQty}` }); setStockOpen(false); }} data-testid="btn-save-stock">Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={editOpen} onOpenChange={() => setEditOpen(false)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Edit Product</DialogTitle></DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1.5"><Label>Product Name</Label><Input defaultValue={product.name} data-testid="input-product-name" /></div>
-            <div className="space-y-1.5"><Label>Description</Label><textarea className="w-full h-20 border rounded-lg px-3 py-2 text-sm resize-none" defaultValue={product.description} data-testid="input-description" /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5"><Label>Lifecycle State</Label>
-                <select className="w-full h-9 border rounded-lg px-3 text-sm" defaultValue={product.lifecycle_state} data-testid="select-lifecycle">
-                  <option value="PUBLISHED">Published</option>
-                  <option value="DRAFT">Draft</option>
-                  <option value="UNPUBLISHED">Unpublished</option>
-                </select>
-              </div>
-              <div className="space-y-1.5"><Label>Sale State</Label>
-                <select className="w-full h-9 border rounded-lg px-3 text-sm" defaultValue={product.sale_state} data-testid="select-sale-state">
-                  <option value="FOR_SALE">For Sale</option>
-                  <option value="SALES_PAUSED">Sales Paused</option>
-                </select>
-              </div>
-            </div>
           </div>
-          <DialogFooter>
+        }
+      >
+        <div className="px-6 py-5">
+          <div className="space-y-1.5"><Label>New Available Quantity</Label><Input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} data-testid="input-qty" /></div>
+        </div>
+      </DetailModal>
+
+      <DetailModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title="Edit Product"
+        subtitle="Update product details, lifecycle state, and sale settings"
+        footer={
+          <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
             <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Product Updated" }); setEditOpen(false); }} data-testid="btn-save-product">Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      >
+        <div className="space-y-4 px-6 py-5">
+          <div className="space-y-1.5"><Label>Product Name</Label><Input defaultValue={product.name} data-testid="input-product-name" /></div>
+          <div className="space-y-1.5"><Label>Description</Label><textarea className="w-full h-20 border rounded-lg px-3 py-2 text-sm resize-none bg-background" defaultValue={product.description} data-testid="input-description" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5"><Label>Lifecycle State</Label>
+              <select className="w-full h-9 border rounded-lg px-3 text-sm bg-background" defaultValue={product.lifecycle_state} data-testid="select-lifecycle">
+                <option value="PUBLISHED">Published</option>
+                <option value="DRAFT">Draft</option>
+                <option value="UNPUBLISHED">Unpublished</option>
+              </select>
+            </div>
+            <div className="space-y-1.5"><Label>Sale State</Label>
+              <select className="w-full h-9 border rounded-lg px-3 text-sm bg-background" defaultValue={product.sale_state} data-testid="select-sale-state">
+                <option value="FOR_SALE">For Sale</option>
+                <option value="SALES_PAUSED">Sales Paused</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </DetailModal>
 
-      <Dialog open={deleteOpen} onOpenChange={() => setDeleteOpen(false)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Delete Product?</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">This will permanently remove "{product.name}" from your Faire store. This cannot be undone.</p>
-          <DialogFooter>
+      <DetailModal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title="Delete Product?"
+        subtitle={`This will permanently remove "${product.name}" from your Faire store`}
+        footer={
+          <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={() => { toast({ title: "Product Deleted" }); setDeleteOpen(false); setLocation("/faire/products"); }} data-testid="btn-confirm-delete">Delete</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <Button variant="destructive" onClick={() => { toast({ title: "Product Deleted" }); setDeleteOpen(false); setLocation("/faire/products"); }} data-testid="btn-confirm-delete">Delete Product</Button>
+          </div>
+        }
+      >
+        <div className="px-6 py-5">
+          <p className="text-sm text-muted-foreground">This action cannot be undone. All product data, variants, and pricing will be permanently removed from your Faire store.</p>
+        </div>
+      </DetailModal>
     </PageTransition>
   );
 }

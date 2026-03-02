@@ -676,3 +676,227 @@ export async function upsertRetailerEnrichment(params: {
   const rows = data as RetailerEnrichment[];
   return rows?.[0] ?? null;
 }
+
+// ── Bank Transactions ──────────────────────────────────────────────────────────
+
+export interface BankTxRow {
+  id: string;
+  source: string;
+  entity: string | null;
+  bank_name: string;
+  date: string;
+  description: string;
+  amount: number;
+  currency: string;
+  amount_usd: number | null;
+  type: string;
+  category: string | null;
+  is_business: boolean;
+  tags: string[];
+  reference: string | null;
+  faire_order_id: string | null;
+  reconciled: boolean;
+  notes: string | null;
+  external_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getBankTransactions(filters: {
+  source?: string;
+  entity?: string;
+  type?: string;
+  search?: string;
+  is_business?: boolean;
+  page?: number;
+  limit?: number;
+} = {}): Promise<{ transactions: BankTxRow[]; total: number }> {
+  const page = filters.page ?? 1;
+  const limit = filters.limit ?? 100;
+  const offset = (page - 1) * limit;
+
+  let q = supabase.from("bank_transactions").select("*", { count: "exact" });
+  if (filters.source) q = q.eq("source", filters.source);
+  if (filters.entity) q = q.eq("entity", filters.entity);
+  if (filters.type) q = q.eq("type", filters.type);
+  if (filters.is_business !== undefined) q = q.eq("is_business", filters.is_business);
+  if (filters.search) q = q.ilike("description", `%${filters.search}%`);
+  q = q.order("date", { ascending: false }).range(offset, offset + limit - 1);
+
+  const { data, error, count } = await q;
+  if (error) {
+    console.error("[supabase] getBankTransactions error:", error.message);
+    return { transactions: [], total: 0 };
+  }
+  return { transactions: (data ?? []) as BankTxRow[], total: count ?? 0 };
+}
+
+export async function updateBankTransaction(id: string, patch: {
+  is_business?: boolean;
+  category?: string;
+  notes?: string;
+  reconciled?: boolean;
+  tags?: string[];
+  faire_order_id?: string | null;
+}): Promise<BankTxRow | null> {
+  const { data, error } = await supabase.rpc("bank_update_transaction", {
+    p_id: id,
+    p_is_business: patch.is_business ?? null,
+    p_category: patch.category ?? null,
+    p_notes: patch.notes ?? null,
+    p_reconciled: patch.reconciled ?? null,
+    p_tags: patch.tags ?? null,
+    p_faire_order_id: patch.faire_order_id !== undefined ? patch.faire_order_id : null,
+  });
+  if (error) {
+    console.error("[supabase] updateBankTransaction error:", error.message);
+    return null;
+  }
+  const rows = data as BankTxRow[];
+  return rows?.[0] ?? null;
+}
+
+export async function addBankTransaction(tx: {
+  source: string;
+  entity?: string;
+  bank_name: string;
+  date: string;
+  description: string;
+  amount: number;
+  currency: string;
+  amount_usd?: number;
+  type: string;
+  category?: string;
+  is_business?: boolean;
+  tags?: string[];
+  reference?: string;
+  faire_order_id?: string;
+  reconciled?: boolean;
+  notes?: string;
+}): Promise<BankTxRow | null> {
+  const { data, error } = await supabase
+    .from("bank_transactions")
+    .insert([{ ...tx, is_business: tx.is_business ?? true, tags: tx.tags ?? [], reconciled: tx.reconciled ?? false }])
+    .select()
+    .single();
+  if (error) {
+    console.error("[supabase] addBankTransaction error:", error.message);
+    return null;
+  }
+  return data as BankTxRow;
+}
+
+// ── Ledger Parties ─────────────────────────────────────────────────────────────
+
+export interface LedgerParty {
+  id: string;
+  name: string;
+  type: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  country: string | null;
+  currency: string;
+  credit_limit: number | null;
+  credit_days: number | null;
+  tags: string[];
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LedgerPartyTx {
+  id: string;
+  party_id: string;
+  type: string;
+  direction: string;
+  date: string;
+  due_date: string | null;
+  amount: number;
+  currency: string;
+  amount_usd: number | null;
+  reference: string | null;
+  description: string;
+  faire_order_id: string | null;
+  bank_transaction_id: string | null;
+  status: string;
+  paid_amount: number;
+  payment_date: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function listLedgerParties(): Promise<LedgerParty[]> {
+  const { data, error } = await supabase
+    .from("ledger_parties")
+    .select("*")
+    .eq("is_active", true)
+    .order("name");
+  if (error) { console.error("[supabase] listLedgerParties error:", error.message); return []; }
+  return (data ?? []) as LedgerParty[];
+}
+
+export async function getLedgerParty(id: string): Promise<LedgerParty | null> {
+  const { data, error } = await supabase
+    .from("ledger_parties")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) { console.error("[supabase] getLedgerParty error:", error.message); return null; }
+  return data as LedgerParty;
+}
+
+export async function upsertLedgerParty(party: Partial<LedgerParty> & { name: string; type: string }): Promise<LedgerParty | null> {
+  const { data, error } = party.id
+    ? await supabase.from("ledger_parties").update({ ...party, updated_at: new Date().toISOString() }).eq("id", party.id).select().single()
+    : await supabase.from("ledger_parties").insert([{ ...party, currency: party.currency ?? "USD", is_active: true }]).select().single();
+  if (error) { console.error("[supabase] upsertLedgerParty error:", error.message); return null; }
+  return data as LedgerParty;
+}
+
+export async function getLedgerPartyTransactions(partyId: string): Promise<LedgerPartyTx[]> {
+  const { data, error } = await supabase
+    .from("ledger_party_transactions")
+    .select("*")
+    .eq("party_id", partyId)
+    .order("date", { ascending: false });
+  if (error) { console.error("[supabase] getLedgerPartyTransactions error:", error.message); return []; }
+  return (data ?? []) as LedgerPartyTx[];
+}
+
+export async function addLedgerPartyTransaction(tx: Partial<LedgerPartyTx> & {
+  party_id: string;
+  type: string;
+  direction: string;
+  date: string;
+  amount: number;
+  currency: string;
+  description: string;
+}): Promise<LedgerPartyTx | null> {
+  const { data, error } = await supabase
+    .from("ledger_party_transactions")
+    .insert([{ ...tx, status: tx.status ?? "pending", paid_amount: tx.paid_amount ?? 0, amount_usd: tx.amount_usd ?? tx.amount }])
+    .select()
+    .single();
+  if (error) { console.error("[supabase] addLedgerPartyTransaction error:", error.message); return null; }
+  return data as LedgerPartyTx;
+}
+
+export async function updateLedgerPartyTransaction(id: string, patch: Partial<LedgerPartyTx>): Promise<LedgerPartyTx | null> {
+  const { data, error } = await supabase
+    .from("ledger_party_transactions")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) { console.error("[supabase] updateLedgerPartyTransaction error:", error.message); return null; }
+  return data as LedgerPartyTx;
+}
+
+export async function getPartyBalance(partyId: string): Promise<number> {
+  const { data, error } = await supabase.rpc("get_party_balance", { p_party_id: partyId });
+  if (error) { console.error("[supabase] getPartyBalance error:", error.message); return 0; }
+  return Number(data ?? 0);
+}

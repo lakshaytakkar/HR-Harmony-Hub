@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { DualCurrencyInline } from "@/lib/faire-currency";
+import { DetailModal } from "@/components/layout";
 
 const BRAND_COLOR = "#1A6B45";
 const CARRIERS = ["UPS", "FedEx", "USPS", "DHL"];
@@ -166,37 +166,41 @@ export default function FaireFulfillment() {
         </div>
       </Stagger>
 
-      <Dialog open={!!shipOrderId} onOpenChange={() => setShipOrderId(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Record Shipment</DialogTitle></DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1.5">
-              <Label>Carrier</Label>
-              <select value={carrier} onChange={e => setCarrier(e.target.value)} className="w-full h-9 border rounded-lg px-3 text-sm" data-testid="select-carrier">
-                {CARRIERS.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Tracking Code</Label>
-              <Input value={tracking} onChange={e => setTracking(e.target.value)} placeholder="Enter tracking code..." data-testid="input-tracking" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Shipping Cost ($)</Label>
-              <Input type="number" value={makerCostDollars} onChange={e => setMakerCostDollars(e.target.value)} placeholder="e.g. 18.50" data-testid="input-maker-cost" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Shipping Type</Label>
-              <select value={shipType} onChange={e => setShipType(e.target.value)} className="w-full h-9 border rounded-lg px-3 text-sm" data-testid="select-ship-type">
-                {SHIP_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
+      <DetailModal
+        open={!!shipOrderId}
+        onClose={() => setShipOrderId(null)}
+        title="Record Shipment"
+        subtitle="Log carrier, tracking, and shipping cost for this order"
+        footer={
+          <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => setShipOrderId(null)}>Cancel</Button>
             <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Shipment Recorded", description: `${carrier} — ${tracking || "No tracking"}. Order moved to In-Transit.` }); setShipOrderId(null); }} data-testid="btn-confirm-ship">Record Shipment</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      >
+        <div className="space-y-4 px-6 py-5">
+          <div className="space-y-1.5">
+            <Label>Carrier</Label>
+            <select value={carrier} onChange={e => setCarrier(e.target.value)} className="w-full h-9 border rounded-lg px-3 text-sm bg-background" data-testid="select-carrier">
+              {CARRIERS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Tracking Code</Label>
+            <Input value={tracking} onChange={e => setTracking(e.target.value)} placeholder="Enter tracking code..." data-testid="input-tracking" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Shipping Cost ($)</Label>
+            <Input type="number" value={makerCostDollars} onChange={e => setMakerCostDollars(e.target.value)} placeholder="e.g. 18.50" data-testid="input-maker-cost" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Shipping Type</Label>
+            <select value={shipType} onChange={e => setShipType(e.target.value)} className="w-full h-9 border rounded-lg px-3 text-sm bg-background" data-testid="select-ship-type">
+              {SHIP_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+        </div>
+      </DetailModal>
     </PageShell>
   );
 }

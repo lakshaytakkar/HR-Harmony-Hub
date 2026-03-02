@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { DetailModal } from "@/components/layout";
 import { useToast } from "@/hooks/use-toast";
 import { DualCurrency } from "@/lib/faire-currency";
 import {
@@ -244,19 +244,23 @@ export default function FairePricing() {
         </DataTableContainer>
       </Fade>
 
-      <Dialog open={addPrepackOpen} onOpenChange={() => setAddPrepackOpen(false)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Add Prepack</DialogTitle></DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1.5"><Label>Prepack Name</Label><Input value={prepackName} onChange={e => setPrepackName(e.target.value)} placeholder="e.g. Wellness Starter Kit" data-testid="input-prepack-name" /></div>
-            <div className="space-y-1.5"><Label>Wholesale Price ($)</Label><Input type="number" value={prepackPrice} onChange={e => setPrepackPrice(e.target.value)} placeholder="e.g. 75.00" data-testid="input-prepack-price" /></div>
-          </div>
-          <DialogFooter>
+      <DetailModal
+        open={addPrepackOpen}
+        onClose={() => setAddPrepackOpen(false)}
+        title="Add Prepack"
+        subtitle="Create a new product bundle for wholesale orders"
+        footer={
+          <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => setAddPrepackOpen(false)}>Cancel</Button>
             <Button style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" onClick={() => { toast({ title: "Prepack Created", description: prepackName }); setAddPrepackOpen(false); setPrepackName(""); setPrepackPrice(""); }} data-testid="btn-save-prepack">Create Prepack</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      >
+        <div className="space-y-4 px-6 py-5">
+          <div className="space-y-1.5"><Label>Prepack Name</Label><Input value={prepackName} onChange={e => setPrepackName(e.target.value)} placeholder="e.g. Wellness Starter Kit" data-testid="input-prepack-name" /></div>
+          <div className="space-y-1.5"><Label>Wholesale Price ($)</Label><Input type="number" value={prepackPrice} onChange={e => setPrepackPrice(e.target.value)} placeholder="e.g. 75.00" data-testid="input-prepack-price" /></div>
+        </div>
+      </DetailModal>
     </PageShell>
   );
 }
