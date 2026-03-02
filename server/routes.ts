@@ -36,6 +36,7 @@ import {
   deleteApplicationLink,
 } from "./supabase";
 import { fetchAllOrders, fetchAllProducts, fetchBrandProfile, fetchProduct, fetchRetailerProfile, updateVariantInventory } from "./faire-api";
+import { getWiseSummary, getWiseTransfers, getWiseProfiles } from "./wise";
 
 const productCache: { data: unknown[] | null; ts: number } = { data: null, ts: 0 };
 const PRODUCT_CACHE_TTL = 5 * 60 * 1000;
@@ -673,6 +674,36 @@ export async function registerRoutes(
   app.delete("/api/faire/applications/:id/links/:lid", async (req, res) => {
     await deleteApplicationLink(req.params.lid);
     return res.json({ success: true });
+  });
+
+  app.get("/api/wise/summary", async (_req, res) => {
+    try {
+      const { profile, balances } = await getWiseSummary();
+      return res.json({ profile, balances, lastSynced: new Date().toISOString() });
+    } catch {
+      return res.status(500).json({ error: "Failed to fetch Wise summary" });
+    }
+  });
+
+  app.get("/api/wise/transfers", async (_req, res) => {
+    try {
+      const profiles = await getWiseProfiles();
+      if (profiles.length === 0) return res.json({ transfers: [] });
+      const profile = profiles.find((p) => p.type === "BUSINESS") ?? profiles[0];
+      const transfers = await getWiseTransfers(profile.id);
+      return res.json({ transfers });
+    } catch {
+      return res.status(500).json({ error: "Failed to fetch Wise transfers" });
+    }
+  });
+
+  app.get("/api/wise/sync", async (_req, res) => {
+    try {
+      const { profile, balances } = await getWiseSummary();
+      return res.json({ profile, balances, lastSynced: new Date().toISOString() });
+    } catch {
+      return res.status(500).json({ error: "Failed to sync Wise data" });
+    }
   });
 
   return httpServer;

@@ -58,6 +58,15 @@ Complete end-to-end order operations pipeline with 5 new pages:
 - `POST /api/faire/orders/:id/shipments` → `POST faire.com/external-api/v2/orders/:id/shipments`
 - Routes now accept `storeId` (UUID) instead of raw token — credentials fetched server-side from Supabase
 
+**Wise API Client (server/wise.ts):**
+- Read-only personal token — `Authorization: Bearer {WISE_API_KEY}` (stored as secret `WISE_API_KEY`)
+- `getWiseProfiles()` → `GET https://api.wise.com/v2/profiles` — returns all profiles
+- `getWiseBalances(profileId)` → `GET https://api.wise.com/v4/profiles/{id}/balances?types=STANDARD` — multi-currency balances
+- `getWiseTransfers(profileId, limit)` → `GET https://api.wise.com/v1/profiles/{id}/transfers` — recent transfers
+- `getWiseSummary()` — picks first business profile, returns `{ profile, balances }`
+- Routes: `GET /api/wise/summary`, `GET /api/wise/transfers`, `GET /api/wise/sync`
+- All functions handle API errors gracefully (console.error + return empty data, never crash server)
+
 **Faire API Client (server/faire-api.ts):**
 - `fetchAllOrders(creds)` — cursor-paginated, 50/page, returns all order objects
 - `fetchAllProducts(creds)` — cursor-paginated, 50/page, returns all product objects
@@ -80,7 +89,7 @@ Complete end-to-end order operations pipeline with 5 new pages:
 - **products.tsx** — slim endpoint `/api/faire/products?slim` (~1.9MB); all 3022 products across 4 stores; SKU column; product thumbnail images from CDN; store/lifecycle/sale-state filters; search by name or SKU; pagination 50/page; bulk inventory update; Vendor column with "Assign" button per row → opens modal to select vendor + exclusive toggle; uses /api/faire/products/:id/vendors
 - **order-detail.tsx** — full order data; Accept/Cancel/Add Shipment call real Faire API; quotation/fulfiller/ledger panels from mock-data-faire-ops; WhatsApp + Email share buttons in header; 40×40 product thumbnails in items table (cross-referenced from /api/faire/products?slim)
 - **analytics.tsx** — WhatsApp + Email share buttons in page header that generate summary text with KPIs
-- **bank-transactions.tsx** — filter tabs renamed to "Faire Payouts"/"Paid to Suppliers"; paperclip button per row opens attachment upload modal backed by Supabase Storage
+- **bank-transactions.tsx** — 3-tab bank switcher: Faire Payouts (reconciliation table, filter tabs, Map to Order, attachment upload), Mercury (mock data from mock-data-finance, 2 entity cards for Neom + Cloudnest, full USD transactions table), Wise (live API via /api/wise/*, multi-currency balance cards, transfers table, Sync Now button)
 - **product-detail.tsx** — full product data with image gallery; category from `taxonomy_type.name`; reviews fallback
 - **inventory.tsx** — slim products; variant-level inventory with store filter
 - **pricing.tsx** — slim products; variant pricing with DataTH/DataTD/DataTR + pagination; prepacks table also normalized; prepacks kept as local mock
