@@ -78,7 +78,7 @@ export async function getWiseBalances(profileId: number): Promise<WiseBalance[]>
 export async function getWiseTransfers(profileId: number, limit = 50): Promise<WiseTransfer[]> {
   try {
     const res = await fetch(
-      `${WISE_BASE}/v1/profiles/${profileId}/transfers?limit=${limit}`,
+      `${WISE_BASE}/v1/transfers?profile=${profileId}&limit=${limit}`,
       { headers: wiseHeaders() }
     );
     if (!res.ok) {

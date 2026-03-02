@@ -1,16 +1,22 @@
+import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Mail } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Mail, Phone, Globe, Instagram, MapPin, Briefcase, User, Pencil, MessageCircle } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageTransition, Fade } from "@/components/ui/animated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { DualCurrency, formatINRFromDollars } from "@/lib/faire-currency";
 import {
   DataTableContainer,
   DataTH,
   DataTD,
   DataTR,
+  DetailModal,
 } from "@/components/layout";
 
 const BRAND_COLOR = "#1A6B45";
@@ -28,13 +34,50 @@ const stateConfig: Record<OrderState, { label: string; color: string; bg: string
   CANCELED: { label: "Canceled", color: "#6B7280", bg: "#F9FAFB" },
 };
 
+interface Enrichment {
+  retailer_id: string;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  store_address: string | null;
+  business_type: string | null;
+  store_type: string | null;
+  website: string | null;
+  instagram: string | null;
+  notes: string | null;
+  enriched_by: string | null;
+  enriched_at: string | null;
+  updated_at: string | null;
+}
+
+function whatsappUrl(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  return `https://wa.me/${digits}`;
+}
+
 export default function FaireRetailerDetail() {
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/faire/retailers/:id");
   const retailerId = params?.id;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const [enrichModal, setEnrichModal] = useState(false);
+  const [formData, setFormData] = useState({
+    contact_name: "",
+    contact_email: "",
+    contact_phone: "",
+    store_address: "",
+    business_type: "",
+    store_type: "",
+    website: "",
+    instagram: "",
+    notes: "",
+    enriched_by: "",
+  });
 
   const { data: retailerData, isLoading: retailerLoading } = useQuery<{ id: string; name: string; city?: string; state?: string; country?: string }>({
-    queryKey: ['/api/faire/retailers', retailerId],
+    queryKey: ["/api/faire/retailers", retailerId],
     queryFn: async () => {
       const res = await fetch(`/api/faire/retailers/${retailerId}`, { headers: { "Cache-Control": "no-cache" } });
       if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
@@ -44,7 +87,7 @@ export default function FaireRetailerDetail() {
   });
 
   const { data: ordersData, isLoading: ordersLoading } = useQuery<{ orders: any[] }>({
-    queryKey: ['/api/faire/orders'],
+    queryKey: ["/api/faire/orders"],
     queryFn: async () => {
       const res = await fetch("/api/faire/orders", { headers: { "Cache-Control": "no-cache" } });
       if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
@@ -53,13 +96,60 @@ export default function FaireRetailerDetail() {
   });
 
   const { data: storesData } = useQuery<{ stores: { id: string; name: string; active: boolean; last_synced_at: string }[] }>({
-    queryKey: ['/api/faire/stores'],
+    queryKey: ["/api/faire/stores"],
     queryFn: async () => {
       const res = await fetch("/api/faire/stores", { headers: { "Cache-Control": "no-cache" } });
       if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
       return res.json();
     },
   });
+
+  const { data: enrichmentData } = useQuery<{ enrichment: Enrichment | null }>({
+    queryKey: ["/api/faire/retailers", retailerId, "enrichment"],
+    queryFn: async () => {
+      const res = await fetch(`/api/faire/retailers/${retailerId}/enrichment`);
+      if (!res.ok) return { enrichment: null };
+      return res.json();
+    },
+    enabled: !!retailerId,
+  });
+
+  const enrichMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const res = await fetch(`/api/faire/retailers/${retailerId}/enrichment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/faire/retailers", retailerId, "enrichment"] });
+      toast({ title: "Enrichment saved", description: "Retailer details updated successfully." });
+      setEnrichModal(false);
+    },
+    onError: () => {
+      toast({ title: "Save failed", variant: "destructive" });
+    },
+  });
+
+  function openEnrichModal() {
+    const e = enrichmentData?.enrichment;
+    setFormData({
+      contact_name: e?.contact_name ?? "",
+      contact_email: e?.contact_email ?? "",
+      contact_phone: e?.contact_phone ?? "",
+      store_address: e?.store_address ?? "",
+      business_type: e?.business_type ?? "",
+      store_type: e?.store_type ?? "",
+      website: e?.website ?? "",
+      instagram: e?.instagram ?? "",
+      notes: e?.notes ?? "",
+      enriched_by: e?.enriched_by ?? "",
+    });
+    setEnrichModal(true);
+  }
 
   const isLoading = retailerLoading || ordersLoading;
 
@@ -76,6 +166,7 @@ export default function FaireRetailerDetail() {
   const retailer = retailerData;
   const allOrders = ordersData?.orders ?? [];
   const stores = storesData?.stores ?? [];
+  const enrichment = enrichmentData?.enrichment ?? null;
 
   const retailerOrders = allOrders.filter((o: any) => o.retailer_id === retailerId);
 
@@ -102,6 +193,11 @@ export default function FaireRetailerDetail() {
   const retailerCountry = retailer?.country ?? "";
   const locationParts = [retailerCity, retailerState, retailerCountry].filter(Boolean).join(", ");
 
+  const hasEnrichment = !!enrichment && (
+    !!enrichment.contact_name || !!enrichment.contact_email || !!enrichment.contact_phone ||
+    !!enrichment.store_address || !!enrichment.website || !!enrichment.instagram
+  );
+
   return (
     <PageTransition className="px-16 py-6 lg:px-24 space-y-5">
       <Fade>
@@ -113,14 +209,42 @@ export default function FaireRetailerDetail() {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-bold font-heading" data-testid="text-retailer-name">{retailerName}</h1>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${isActive ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"}`} data-testid="text-retailer-status">{isActive ? "active" : "inactive"}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${isActive ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"}`} data-testid="text-retailer-status">
+                  {isActive ? "active" : "inactive"}
+                </span>
+                {hasEnrichment && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: `${BRAND_COLOR}15`, color: BRAND_COLOR }}>
+                    Enriched
+                  </span>
+                )}
               </div>
               {locationParts && <p className="text-xs text-muted-foreground mt-0.5" data-testid="text-retailer-location">{locationParts}</p>}
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <Button size="sm" variant="outline" onClick={() => setLocation("/faire/retailers")} data-testid="btn-back-alt">
-              <Mail size={13} className="mr-1.5" /> Contact
+            {enrichment?.contact_email && (
+              <Button size="sm" variant="outline" asChild>
+                <a href={`mailto:${enrichment.contact_email}`} data-testid="btn-email">
+                  <Mail size={13} className="mr-1.5" /> Email
+                </a>
+              </Button>
+            )}
+            {enrichment?.contact_phone && (
+              <Button size="sm" variant="outline" asChild>
+                <a href={whatsappUrl(enrichment.contact_phone)} target="_blank" rel="noopener noreferrer" data-testid="btn-whatsapp">
+                  <MessageCircle size={13} className="mr-1.5" /> WhatsApp
+                </a>
+              </Button>
+            )}
+            <Button
+              size="sm"
+              onClick={openEnrichModal}
+              style={{ background: BRAND_COLOR }}
+              className="text-white hover:opacity-90"
+              data-testid="btn-enrich"
+            >
+              <Pencil size={13} className="mr-1.5" />
+              {hasEnrichment ? "Edit Enrichment" : "Enrich"}
             </Button>
           </div>
         </div>
@@ -141,6 +265,164 @@ export default function FaireRetailerDetail() {
               </CardContent>
             </Card>
           </Fade>
+
+          {hasEnrichment && (
+            <Fade>
+              <Card>
+                <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm">Contact & Business Details</CardTitle>
+                  <button
+                    onClick={openEnrichModal}
+                    className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+                    data-testid="btn-edit-enrichment-inline"
+                  >
+                    <Pencil size={11} /> Edit
+                  </button>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                    {enrichment?.contact_name && (
+                      <div className="flex items-start gap-2">
+                        <User size={14} className="text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Contact Person</p>
+                          <p className="text-sm font-medium" data-testid="text-contact-name">{enrichment.contact_name}</p>
+                        </div>
+                      </div>
+                    )}
+                    {enrichment?.contact_email && (
+                      <div className="flex items-start gap-2">
+                        <Mail size={14} className="text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Email</p>
+                          <a href={`mailto:${enrichment.contact_email}`} className="text-sm font-medium hover:underline" data-testid="text-contact-email">{enrichment.contact_email}</a>
+                        </div>
+                      </div>
+                    )}
+                    {enrichment?.contact_phone && (
+                      <div className="flex items-start gap-2">
+                        <Phone size={14} className="text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Phone</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium" data-testid="text-contact-phone">{enrichment.contact_phone}</span>
+                            <a
+                              href={whatsappUrl(enrichment.contact_phone)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] px-1.5 py-0.5 rounded font-medium text-white"
+                              style={{ background: "#25D366" }}
+                              data-testid="link-whatsapp"
+                            >
+                              WhatsApp
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {enrichment?.store_address && (
+                      <div className="flex items-start gap-2">
+                        <MapPin size={14} className="text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Store Address</p>
+                          <p className="text-sm whitespace-pre-line" data-testid="text-store-address">{enrichment.store_address}</p>
+                        </div>
+                      </div>
+                    )}
+                    {enrichment?.business_type && (
+                      <div className="flex items-start gap-2">
+                        <Briefcase size={14} className="text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Business Type</p>
+                          <p className="text-sm" data-testid="text-business-type">{enrichment.business_type}</p>
+                        </div>
+                      </div>
+                    )}
+                    {enrichment?.store_type && (
+                      <div className="flex items-start gap-2">
+                        <Briefcase size={14} className="text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Store Type</p>
+                          <p className="text-sm" data-testid="text-store-type">{enrichment.store_type}</p>
+                        </div>
+                      </div>
+                    )}
+                    {enrichment?.website && (
+                      <div className="flex items-start gap-2">
+                        <Globe size={14} className="text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Website</p>
+                          <a
+                            href={enrichment.website.startsWith("http") ? enrichment.website : `https://${enrichment.website}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium hover:underline"
+                            style={{ color: BRAND_COLOR }}
+                            data-testid="link-website"
+                          >
+                            {enrichment.website}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    {enrichment?.instagram && (
+                      <div className="flex items-start gap-2">
+                        <Instagram size={14} className="text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Instagram</p>
+                          <a
+                            href={`https://instagram.com/${enrichment.instagram.replace(/^@/, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium hover:underline"
+                            data-testid="link-instagram"
+                          >
+                            {enrichment.instagram.startsWith("@") ? enrichment.instagram : `@${enrichment.instagram}`}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    {enrichment?.notes && (
+                      <div className="col-span-2 flex items-start gap-2">
+                        <div className="w-3.5 shrink-0" />
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Notes</p>
+                          <p className="text-sm text-muted-foreground whitespace-pre-line" data-testid="text-notes">{enrichment.notes}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {enrichment?.enriched_by && (
+                    <p className="text-[10px] text-muted-foreground mt-3 pt-3 border-t">
+                      Enriched by <span className="font-medium">{enrichment.enriched_by}</span>
+                      {enrichment.updated_at && ` · ${new Date(enrichment.updated_at).toLocaleDateString()}`}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </Fade>
+          )}
+
+          {!hasEnrichment && (
+            <Fade>
+              <div
+                className="rounded-xl border-2 border-dashed p-6 flex flex-col items-center justify-center gap-3 text-center cursor-pointer hover:border-primary/40 transition-colors"
+                onClick={openEnrichModal}
+                data-testid="enrich-empty-state"
+              >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${BRAND_COLOR}15` }}>
+                  <User size={18} style={{ color: BRAND_COLOR }} />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">No contact details yet</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Click to add contact person, phone, address, and social links</p>
+                </div>
+                <Button size="sm" style={{ background: BRAND_COLOR }} className="text-white hover:opacity-90" data-testid="btn-enrich-empty">
+                  <Pencil size={12} className="mr-1.5" /> Enrich Retailer
+                </Button>
+              </div>
+            </Fade>
+          )}
 
           <Fade>
             <Card>
@@ -224,6 +506,129 @@ export default function FaireRetailerDetail() {
           </Fade>
         </div>
       </div>
+
+      <DetailModal
+        open={enrichModal}
+        onClose={() => setEnrichModal(false)}
+        title={hasEnrichment ? "Edit Retailer Enrichment" : "Enrich Retailer"}
+        subtitle={`Add or update contact details for ${retailerName}`}
+        footer={
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setEnrichModal(false)}>Cancel</Button>
+            <Button
+              onClick={() => enrichMutation.mutate(formData)}
+              disabled={enrichMutation.isPending}
+              style={{ background: BRAND_COLOR }}
+              className="text-white hover:opacity-90"
+              data-testid="btn-save-enrichment"
+            >
+              {enrichMutation.isPending ? "Saving…" : "Save Details"}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Contact Person Name</Label>
+              <Input
+                value={formData.contact_name}
+                onChange={e => setFormData(p => ({ ...p, contact_name: e.target.value }))}
+                placeholder="e.g. Theresa Moore"
+                data-testid="input-contact-name"
+              />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={formData.contact_email}
+                onChange={e => setFormData(p => ({ ...p, contact_email: e.target.value }))}
+                placeholder="e.g. theresa@store.com"
+                data-testid="input-contact-email"
+              />
+            </div>
+          </div>
+          <div>
+            <Label>Phone (for WhatsApp)</Label>
+            <Input
+              value={formData.contact_phone}
+              onChange={e => setFormData(p => ({ ...p, contact_phone: e.target.value }))}
+              placeholder="e.g. +1 361-813-1347"
+              data-testid="input-contact-phone"
+            />
+          </div>
+          <div>
+            <Label>Store Address</Label>
+            <Textarea
+              value={formData.store_address}
+              onChange={e => setFormData(p => ({ ...p, store_address: e.target.value }))}
+              placeholder={"e.g. 309 North Water Street\nSuite C\nCorpus Christi, TX 78401\nUnited States"}
+              rows={3}
+              data-testid="input-store-address"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Business Type</Label>
+              <Input
+                value={formData.business_type}
+                onChange={e => setFormData(p => ({ ...p, business_type: e.target.value }))}
+                placeholder="e.g. Boutique Retail"
+                data-testid="input-business-type"
+              />
+            </div>
+            <div>
+              <Label>Store Type</Label>
+              <Input
+                value={formData.store_type}
+                onChange={e => setFormData(p => ({ ...p, store_type: e.target.value }))}
+                placeholder="e.g. Brick & Mortar"
+                data-testid="input-store-type"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Website</Label>
+              <Input
+                value={formData.website}
+                onChange={e => setFormData(p => ({ ...p, website: e.target.value }))}
+                placeholder="e.g. tmwildflowers.com"
+                data-testid="input-website"
+              />
+            </div>
+            <div>
+              <Label>Instagram Handle</Label>
+              <Input
+                value={formData.instagram}
+                onChange={e => setFormData(p => ({ ...p, instagram: e.target.value }))}
+                placeholder="e.g. @tmwildflowers"
+                data-testid="input-instagram"
+              />
+            </div>
+          </div>
+          <div>
+            <Label>Notes</Label>
+            <Textarea
+              value={formData.notes}
+              onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))}
+              placeholder="Any additional notes about this retailer…"
+              rows={2}
+              data-testid="input-notes"
+            />
+          </div>
+          <div>
+            <Label>Your Name (Enriched by)</Label>
+            <Input
+              value={formData.enriched_by}
+              onChange={e => setFormData(p => ({ ...p, enriched_by: e.target.value }))}
+              placeholder="e.g. Rahul Verma"
+              data-testid="input-enriched-by"
+            />
+          </div>
+        </div>
+      </DetailModal>
     </PageTransition>
   );
 }

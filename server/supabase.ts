@@ -620,3 +620,59 @@ export async function deleteApplicationLink(id: string): Promise<void> {
   const { error } = await supabase.rpc("faire_delete_link", { p_id: id });
   if (error) console.error("[supabase] deleteApplicationLink error:", error.message);
 }
+
+export interface RetailerEnrichment {
+  retailer_id: string;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  store_address: string | null;
+  business_type: string | null;
+  store_type: string | null;
+  website: string | null;
+  instagram: string | null;
+  notes: string | null;
+  enriched_by: string | null;
+  enriched_at: string | null;
+  updated_at: string | null;
+}
+
+export async function getRetailerEnrichment(retailerId: string): Promise<RetailerEnrichment | null> {
+  const { data, error } = await supabase.rpc("faire_get_retailer_enrichment", {
+    p_retailer_id: retailerId,
+  });
+  if (error) { console.error("[supabase] getRetailerEnrichment error:", error.message); return null; }
+  const rows = data as RetailerEnrichment[];
+  return rows?.[0] ?? null;
+}
+
+export async function upsertRetailerEnrichment(params: {
+  retailer_id: string;
+  contact_name?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  store_address?: string | null;
+  business_type?: string | null;
+  store_type?: string | null;
+  website?: string | null;
+  instagram?: string | null;
+  notes?: string | null;
+  enriched_by?: string | null;
+}): Promise<RetailerEnrichment | null> {
+  const { data, error } = await supabase.rpc("faire_upsert_retailer_enrichment", {
+    p_retailer_id: params.retailer_id,
+    p_contact_name: params.contact_name ?? null,
+    p_contact_email: params.contact_email ?? null,
+    p_contact_phone: params.contact_phone ?? null,
+    p_store_address: params.store_address ?? null,
+    p_business_type: params.business_type ?? null,
+    p_store_type: params.store_type ?? null,
+    p_website: params.website ?? null,
+    p_instagram: params.instagram ?? null,
+    p_notes: params.notes ?? null,
+    p_enriched_by: params.enriched_by ?? null,
+  });
+  if (error) { console.error("[supabase] upsertRetailerEnrichment error:", error.message); return null; }
+  const rows = data as RetailerEnrichment[];
+  return rows?.[0] ?? null;
+}

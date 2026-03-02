@@ -34,6 +34,8 @@ import {
   deleteApplicationFollowup,
   upsertApplicationLink,
   deleteApplicationLink,
+  getRetailerEnrichment,
+  upsertRetailerEnrichment,
 } from "./supabase";
 import { fetchAllOrders, fetchAllProducts, fetchBrandProfile, fetchProduct, fetchRetailerProfile, updateVariantInventory } from "./faire-api";
 import { getWiseSummary, getWiseTransfers, getWiseProfiles } from "./wise";
@@ -674,6 +676,39 @@ export async function registerRoutes(
   app.delete("/api/faire/applications/:id/links/:lid", async (req, res) => {
     await deleteApplicationLink(req.params.lid);
     return res.json({ success: true });
+  });
+
+  app.get("/api/faire/retailers/:retailerId/enrichment", async (req, res) => {
+    const { retailerId } = req.params;
+    try {
+      const enrichment = await getRetailerEnrichment(retailerId);
+      return res.json({ enrichment });
+    } catch {
+      return res.status(500).json({ error: "Failed to fetch enrichment" });
+    }
+  });
+
+  app.post("/api/faire/retailers/:retailerId/enrichment", async (req, res) => {
+    const { retailerId } = req.params;
+    const body = req.body as {
+      contact_name?: string;
+      contact_email?: string;
+      contact_phone?: string;
+      store_address?: string;
+      business_type?: string;
+      store_type?: string;
+      website?: string;
+      instagram?: string;
+      notes?: string;
+      enriched_by?: string;
+    };
+    try {
+      const enrichment = await upsertRetailerEnrichment({ retailer_id: retailerId, ...body });
+      if (!enrichment) return res.status(500).json({ error: "Failed to save enrichment" });
+      return res.json({ enrichment });
+    } catch {
+      return res.status(500).json({ error: "Failed to save enrichment" });
+    }
   });
 
   app.get("/api/wise/summary", async (_req, res) => {

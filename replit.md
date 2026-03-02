@@ -95,11 +95,18 @@ Complete end-to-end order operations pipeline with 5 new pages:
 - **pricing.tsx** — slim products; variant pricing with DataTH/DataTD/DataTR + pagination; prepacks table also normalized; prepacks kept as local mock
 - **fulfillment.tsx** — orders filtered to NEW/PROCESSING states; ship dialog with `_storeId`; uses PageShell + PageHeader
 - **shipments.tsx** — shipments extracted from `order.shipments[]`; enriched with store/retailer info; DataTH/DataTD/DataTR + pagination
-- **retailers.tsx** — retailers from `/api/faire/retailers` with pre-computed stats (total_orders, total_spent_cents, last_order_at, store_ids); no orders query needed; paginated
-- **retailer-detail.tsx** — single retailer + order history; computed stats
+- **retailers.tsx** — retailers from `/api/faire/retailers`; paginated; "Enrich" button per row opens enrichment modal (contact name, email, phone, address, business type, store type, website, instagram, notes, enriched_by) → POST /api/faire/retailers/:id/enrichment
+- **retailer-detail.tsx** — single retailer + order history; computed stats; enrichment card displayed when data exists (contact, WhatsApp button from phone, address, website/instagram links); "Enrich/Edit Enrichment" CTA button in header; empty dashed state when not yet enriched; data persisted to Supabase `retailer_enrichments` table
 - **analytics.tsx** — revenue trends, order state breakdowns, geo data, top products from real data
 - **stores.tsx** — store list with per-store summary stats (revenue, order count, product count, retailer count, order pipeline badges); merged `?summary` endpoint with 5min server-side cache; DualCurrency INR subtext on revenue; Sync All + per-store sync + Orders nav
 - **quotations.tsx, quotation-detail.tsx, partner-portal.tsx, ledger.tsx, bank-transactions.tsx** — orders/stores from real API; operational mock data from mock-data-faire-ops retained
+
+**Retailer Enrichment (Supabase `retailer_enrichments` table):**
+- Table: `retailer_id (PK), contact_name, contact_email, contact_phone, store_address, business_type, store_type, website, instagram, notes, enriched_by, enriched_at, updated_at`
+- RPC functions: `faire_get_retailer_enrichment`, `faire_upsert_retailer_enrichment` (upsert with COALESCE — never overwrites existing fields with NULL)
+- API: `GET /api/faire/retailers/:id/enrichment`, `POST /api/faire/retailers/:id/enrichment`
+- WhatsApp URL formula: `https://wa.me/{digits_only}` from phone field
+- Supabase functions: `getRetailerEnrichment`, `upsertRetailerEnrichment` in server/supabase.ts
 
 **INR Dual-Currency Display (all 18 pages):**
 - All USD amounts show INR conversion as muted subtext at 90x rate

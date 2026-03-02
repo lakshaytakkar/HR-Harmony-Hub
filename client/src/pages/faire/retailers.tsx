@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { Users } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Users, Pencil } from "lucide-react";
 import { formatINRFromDollars, DualFromDollars } from "@/lib/faire-currency";
 import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { DetailModal } from "@/components/layout";
 import {
   PageShell,
   PageHeader,
@@ -37,11 +42,38 @@ interface EnrichedRetailer {
 
 export default function FaireRetailers() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedStore, setSelectedStore] = useState("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
+
+  const [enrichTarget, setEnrichTarget] = useState<{ id: string; name: string } | null>(null);
+  const [enrichForm, setEnrichForm] = useState({
+    contact_name: "", contact_email: "", contact_phone: "",
+    store_address: "", business_type: "", store_type: "",
+    website: "", instagram: "", notes: "", enriched_by: "",
+  });
+
+  const enrichMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: typeof enrichForm }) => {
+      const res = await fetch(`/api/faire/retailers/${id}/enrichment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      return res.json();
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/faire/retailers", id, "enrichment"] });
+      toast({ title: "Enrichment saved" });
+      setEnrichTarget(null);
+    },
+    onError: () => toast({ title: "Save failed", variant: "destructive" }),
+  });
 
   const handleSort = (key: string) => {
     setSort((prev) => {
@@ -205,6 +237,7 @@ export default function FaireRetailers() {
                 <SortableDataTH sortKey="total_spent" currentSort={sort} onSort={handleSort}>Total Spent</SortableDataTH>
                 <SortableDataTH sortKey="last_ordered" currentSort={sort} onSort={handleSort}>Last Order</SortableDataTH>
                 <SortableDataTH sortKey="status" currentSort={sort} onSort={handleSort}>Status</SortableDataTH>
+                <DataTH>Enrich</DataTH>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -232,10 +265,25 @@ export default function FaireRetailers() {
                   <DataTD>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-tighter ${retailer.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>{retailer.status}</span>
                   </DataTD>
+                  <DataTD>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setEnrichForm({ contact_name: "", contact_email: "", contact_phone: "", store_address: "", business_type: "", store_type: "", website: "", instagram: "", notes: "", enriched_by: "" });
+                        setEnrichTarget({ id: retailer.id, name: retailer.name });
+                      }}
+                      data-testid={`btn-enrich-${retailer.id}`}
+                    >
+                      <Pencil size={11} className="mr-1" /> Enrich
+                    </Button>
+                  </DataTD>
                 </DataTR>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={7} className="p-8 text-center text-sm text-muted-foreground font-medium">No retailers match your filters.</td></tr>
+                <tr><td colSpan={8} className="p-8 text-center text-sm text-muted-foreground font-medium">No retailers match your filters.</td></tr>
               )}
             </tbody>
           </table>
@@ -275,6 +323,77 @@ export default function FaireRetailers() {
             </Button>
           </div>
         </div>
+      )}
+      {enrichTarget && (
+        <DetailModal
+          open={!!enrichTarget}
+          onClose={() => setEnrichTarget(null)}
+          title="Enrich Retailer"
+          subtitle={`Add contact details for ${enrichTarget.name}`}
+          footer={
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setEnrichTarget(null)}>Cancel</Button>
+              <Button
+                onClick={() => enrichMutation.mutate({ id: enrichTarget.id, data: enrichForm })}
+                disabled={enrichMutation.isPending}
+                style={{ background: BRAND_COLOR }}
+                className="text-white hover:opacity-90"
+                data-testid="btn-save-enrich-modal"
+              >
+                {enrichMutation.isPending ? "Saving…" : "Save Details"}
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Contact Person Name</Label>
+                <Input value={enrichForm.contact_name} onChange={e => setEnrichForm(p => ({ ...p, contact_name: e.target.value }))} placeholder="e.g. Theresa Moore" data-testid="input-enrich-name" />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input type="email" value={enrichForm.contact_email} onChange={e => setEnrichForm(p => ({ ...p, contact_email: e.target.value }))} placeholder="e.g. theresa@store.com" data-testid="input-enrich-email" />
+              </div>
+            </div>
+            <div>
+              <Label>Phone (for WhatsApp)</Label>
+              <Input value={enrichForm.contact_phone} onChange={e => setEnrichForm(p => ({ ...p, contact_phone: e.target.value }))} placeholder="e.g. +1 361-813-1347" data-testid="input-enrich-phone" />
+            </div>
+            <div>
+              <Label>Store Address</Label>
+              <Textarea value={enrichForm.store_address} onChange={e => setEnrichForm(p => ({ ...p, store_address: e.target.value }))} placeholder={"309 North Water Street\nSuite C\nCorpus Christi, TX 78401"} rows={3} data-testid="input-enrich-address" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Business Type</Label>
+                <Input value={enrichForm.business_type} onChange={e => setEnrichForm(p => ({ ...p, business_type: e.target.value }))} placeholder="e.g. Boutique Retail" data-testid="input-enrich-business-type" />
+              </div>
+              <div>
+                <Label>Store Type</Label>
+                <Input value={enrichForm.store_type} onChange={e => setEnrichForm(p => ({ ...p, store_type: e.target.value }))} placeholder="e.g. Brick & Mortar" data-testid="input-enrich-store-type" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Website</Label>
+                <Input value={enrichForm.website} onChange={e => setEnrichForm(p => ({ ...p, website: e.target.value }))} placeholder="e.g. tmwildflowers.com" data-testid="input-enrich-website" />
+              </div>
+              <div>
+                <Label>Instagram Handle</Label>
+                <Input value={enrichForm.instagram} onChange={e => setEnrichForm(p => ({ ...p, instagram: e.target.value }))} placeholder="e.g. @tmwildflowers" data-testid="input-enrich-instagram" />
+              </div>
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Textarea value={enrichForm.notes} onChange={e => setEnrichForm(p => ({ ...p, notes: e.target.value }))} placeholder="Any notes about this retailer…" rows={2} data-testid="input-enrich-notes" />
+            </div>
+            <div>
+              <Label>Your Name (Enriched by)</Label>
+              <Input value={enrichForm.enriched_by} onChange={e => setEnrichForm(p => ({ ...p, enriched_by: e.target.value }))} placeholder="e.g. Rahul Verma" data-testid="input-enrich-by" />
+            </div>
+          </div>
+        </DetailModal>
       )}
     </PageShell>
   );
