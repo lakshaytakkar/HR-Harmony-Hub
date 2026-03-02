@@ -865,6 +865,14 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Applications",
+        defaultUrl: "/faire/applications",
+        icon: ClipboardList,
+        items: [
+          { title: "All Applications", url: "/faire/applications" },
+        ],
+      },
+      {
         title: "Quotations",
         defaultUrl: "/faire/quotations",
         icon: FileText,

@@ -457,3 +457,166 @@ export async function getTransactionProofUrl(storagePath: string): Promise<strin
   if (error) { console.error("[supabase] getTransactionProofUrl error:", error.message); return null; }
   return data.signedUrl;
 }
+
+// ── Seller Application helpers ─────────────────────────────────────────────────
+
+export interface SellerApplication {
+  id: string;
+  brand_name: string;
+  category: string | null;
+  brand_story: string | null;
+  logo_url: string | null;
+  banner_url: string | null;
+  email_id: string | null;
+  email_type: string | null;
+  application_date: string | null;
+  status: string;
+  marketplace_strategy: string | null;
+  domain_name: string | null;
+  website_url: string | null;
+  etsy_store_url: string | null;
+  reference_store_url: string | null;
+  num_products_listed: number | null;
+  listing_method: string | null;
+  csv_storage_path: string | null;
+  ein_storage_path: string | null;
+  articles_storage_path: string | null;
+  faire_reg_url: string | null;
+  notes: string | null;
+  linked_store_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface ApplicationFollowup {
+  id: string;
+  application_id: string;
+  followup_date: string;
+  followup_type: string;
+  note: string | null;
+  created_at: string | null;
+}
+
+export interface ApplicationLink {
+  id: string;
+  application_id: string;
+  label: string;
+  url: string;
+  link_type: string;
+  created_at: string | null;
+}
+
+export async function listSellerApplications(): Promise<SellerApplication[]> {
+  const { data, error } = await supabase.rpc("faire_list_applications");
+  if (error) { console.error("[supabase] listSellerApplications error:", error.message); return []; }
+  return (data as SellerApplication[]) ?? [];
+}
+
+export async function getSellerApplication(id: string): Promise<(SellerApplication & { followups: ApplicationFollowup[]; links: ApplicationLink[] }) | null> {
+  const { data, error } = await supabase.rpc("faire_get_application", { p_id: id });
+  if (error) { console.error("[supabase] getSellerApplication error:", error.message); return null; }
+  return data as (SellerApplication & { followups: ApplicationFollowup[]; links: ApplicationLink[] }) | null;
+}
+
+export async function upsertSellerApplication(params: {
+  id?: string | null;
+  brand_name: string;
+  category?: string | null;
+  brand_story?: string | null;
+  logo_url?: string | null;
+  banner_url?: string | null;
+  email_id?: string | null;
+  email_type?: string | null;
+  application_date?: string | null;
+  status?: string;
+  marketplace_strategy?: string | null;
+  domain_name?: string | null;
+  website_url?: string | null;
+  etsy_store_url?: string | null;
+  reference_store_url?: string | null;
+  num_products_listed?: number | null;
+  listing_method?: string | null;
+  csv_storage_path?: string | null;
+  ein_storage_path?: string | null;
+  articles_storage_path?: string | null;
+  faire_reg_url?: string | null;
+  notes?: string | null;
+  linked_store_id?: string | null;
+}): Promise<SellerApplication | null> {
+  const { data, error } = await supabase.rpc("faire_upsert_application", {
+    p_id: params.id ?? null,
+    p_brand_name: params.brand_name,
+    p_category: params.category ?? null,
+    p_brand_story: params.brand_story ?? null,
+    p_logo_url: params.logo_url ?? null,
+    p_banner_url: params.banner_url ?? null,
+    p_email_id: params.email_id ?? null,
+    p_email_type: params.email_type ?? "basic",
+    p_application_date: params.application_date ?? null,
+    p_status: params.status ?? "drafting",
+    p_marketplace_strategy: params.marketplace_strategy ?? "website",
+    p_domain_name: params.domain_name ?? null,
+    p_website_url: params.website_url ?? null,
+    p_etsy_store_url: params.etsy_store_url ?? null,
+    p_reference_store_url: params.reference_store_url ?? null,
+    p_num_products_listed: params.num_products_listed ?? 0,
+    p_listing_method: params.listing_method ?? "manual",
+    p_csv_storage_path: params.csv_storage_path ?? null,
+    p_ein_storage_path: params.ein_storage_path ?? null,
+    p_articles_storage_path: params.articles_storage_path ?? null,
+    p_faire_reg_url: params.faire_reg_url ?? "https://www.faire.com/brand-portal/signup",
+    p_notes: params.notes ?? null,
+    p_linked_store_id: params.linked_store_id ?? null,
+  });
+  if (error) { console.error("[supabase] upsertSellerApplication error:", error.message); return null; }
+  return data as SellerApplication;
+}
+
+export async function deleteSellerApplication(id: string): Promise<void> {
+  const { error } = await supabase.rpc("faire_delete_application", { p_id: id });
+  if (error) console.error("[supabase] deleteSellerApplication error:", error.message);
+}
+
+export async function addApplicationFollowup(params: {
+  application_id: string;
+  followup_date: string;
+  followup_type: string;
+  note?: string | null;
+}): Promise<ApplicationFollowup | null> {
+  const { data, error } = await supabase.rpc("faire_add_followup", {
+    p_application_id: params.application_id,
+    p_followup_date: params.followup_date,
+    p_followup_type: params.followup_type,
+    p_note: params.note ?? null,
+  });
+  if (error) { console.error("[supabase] addApplicationFollowup error:", error.message); return null; }
+  return data as ApplicationFollowup;
+}
+
+export async function deleteApplicationFollowup(id: string): Promise<void> {
+  const { error } = await supabase.rpc("faire_delete_followup", { p_id: id });
+  if (error) console.error("[supabase] deleteApplicationFollowup error:", error.message);
+}
+
+export async function upsertApplicationLink(params: {
+  id?: string | null;
+  application_id: string;
+  label: string;
+  url: string;
+  link_type?: string;
+}): Promise<ApplicationLink | null> {
+  const { data, error } = await supabase.rpc("faire_upsert_link", {
+    p_id: params.id ?? null,
+    p_application_id: params.application_id,
+    p_label: params.label,
+    p_url: params.url,
+    p_link_type: params.link_type ?? "other",
+  });
+  if (error) { console.error("[supabase] upsertApplicationLink error:", error.message); return null; }
+  return data as ApplicationLink;
+}
+
+export async function deleteApplicationLink(id: string): Promise<void> {
+  const { error } = await supabase.rpc("faire_delete_link", { p_id: id });
+  if (error) console.error("[supabase] deleteApplicationLink error:", error.message);
+}

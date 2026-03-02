@@ -26,6 +26,14 @@ import {
   addTransactionAttachment,
   uploadTransactionProof,
   getTransactionProofUrl,
+  listSellerApplications,
+  getSellerApplication,
+  upsertSellerApplication,
+  deleteSellerApplication,
+  addApplicationFollowup,
+  deleteApplicationFollowup,
+  upsertApplicationLink,
+  deleteApplicationLink,
 } from "./supabase";
 import { fetchAllOrders, fetchAllProducts, fetchBrandProfile, fetchProduct, fetchRetailerProfile, updateVariantInventory } from "./faire-api";
 
@@ -594,6 +602,77 @@ export async function registerRoutes(
       const msg = e instanceof Error ? e.message : "Unknown error";
       return res.status(500).json({ success: false, error: msg });
     }
+  });
+
+  // ── Seller Applications ──────────────────────────────────────────────────────
+
+  app.get("/api/faire/applications", async (_req, res) => {
+    const apps = await listSellerApplications();
+    return res.json({ applications: apps });
+  });
+
+  app.get("/api/faire/applications/:id", async (req, res) => {
+    const app = await getSellerApplication(req.params.id);
+    if (!app) return res.status(404).json({ error: "Application not found" });
+    return res.json({ application: app });
+  });
+
+  app.post("/api/faire/applications", async (req, res) => {
+    const body = req.body as Record<string, unknown>;
+    if (!body.brand_name) return res.status(400).json({ error: "brand_name is required" });
+    const result = await upsertSellerApplication({ id: null, brand_name: String(body.brand_name), ...body as any });
+    if (!result) return res.status(500).json({ error: "Failed to create application" });
+    return res.status(201).json({ application: result });
+  });
+
+  app.patch("/api/faire/applications/:id", async (req, res) => {
+    const body = req.body as Record<string, unknown>;
+    if (!body.brand_name) return res.status(400).json({ error: "brand_name is required" });
+    const result = await upsertSellerApplication({ id: req.params.id, brand_name: String(body.brand_name), ...body as any });
+    if (!result) return res.status(500).json({ error: "Failed to update application" });
+    return res.json({ application: result });
+  });
+
+  app.delete("/api/faire/applications/:id", async (req, res) => {
+    await deleteSellerApplication(req.params.id);
+    return res.json({ success: true });
+  });
+
+  app.post("/api/faire/applications/:id/followups", async (req, res) => {
+    const body = req.body as { followup_date?: string; followup_type?: string; note?: string };
+    if (!body.followup_date || !body.followup_type) return res.status(400).json({ error: "followup_date and followup_type are required" });
+    const result = await addApplicationFollowup({
+      application_id: req.params.id,
+      followup_date: body.followup_date,
+      followup_type: body.followup_type,
+      note: body.note ?? null,
+    });
+    if (!result) return res.status(500).json({ error: "Failed to add followup" });
+    return res.status(201).json({ followup: result });
+  });
+
+  app.delete("/api/faire/applications/:id/followups/:fid", async (req, res) => {
+    await deleteApplicationFollowup(req.params.fid);
+    return res.json({ success: true });
+  });
+
+  app.post("/api/faire/applications/:id/links", async (req, res) => {
+    const body = req.body as { label?: string; url?: string; link_type?: string };
+    if (!body.label || !body.url) return res.status(400).json({ error: "label and url are required" });
+    const result = await upsertApplicationLink({
+      id: null,
+      application_id: req.params.id,
+      label: body.label,
+      url: body.url,
+      link_type: body.link_type ?? "other",
+    });
+    if (!result) return res.status(500).json({ error: "Failed to add link" });
+    return res.status(201).json({ link: result });
+  });
+
+  app.delete("/api/faire/applications/:id/links/:lid", async (req, res) => {
+    await deleteApplicationLink(req.params.lid);
+    return res.json({ success: true });
   });
 
   return httpServer;
