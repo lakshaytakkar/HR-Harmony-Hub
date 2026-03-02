@@ -122,32 +122,41 @@ export default function FaireFulfillment() {
             const itemsTotal = (order.items ?? []).reduce((sum: number, i: any) => sum + i.price_cents * i.quantity, 0);
             return (
               <StaggerItem key={order.id}>
-                <div className={`rounded-xl border p-4 flex items-start gap-4 ${isNew ? "border-blue-300 bg-blue-50/40 dark:bg-blue-950/10" : "border-violet-300 bg-violet-50/40 dark:bg-violet-950/10"}`} data-testid={`fulfillment-card-${order.id}`}>
+                <div
+                  className="rounded-xl border bg-card p-4 flex items-start gap-4"
+                  style={{ borderLeftWidth: 3, borderLeftColor: isNew ? "#D97706" : BRAND_COLOR }}
+                  data-testid={`fulfillment-card-${order.id}`}
+                >
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className="text-[9px] font-mono">{order.display_id}</Badge>
-                      <Badge variant="outline" className="text-[10px]">{store?.name?.split(" ")[0] ?? "Store"}</Badge>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${isNew ? "bg-blue-100 text-blue-700" : "bg-violet-100 text-violet-700"}`}>
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <Badge variant="outline" className="text-xs font-mono">{order.display_id}</Badge>
+                      <Badge variant="outline" className="text-xs">{store?.name?.split(" ")[0] ?? "Store"}</Badge>
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full font-medium"
+                        style={isNew
+                          ? { background: "#FFFBEB", color: "#D97706" }
+                          : { background: "#ECFDF5", color: "#059669" }}
+                      >
                         {isNew ? "New — Accept First" : "Processing — Pack Now"}
                       </span>
                       {order.has_pending_retailer_cancellation_request && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">Cancel Requested</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-50 text-red-600">Cancel Requested</span>
                       )}
                     </div>
                     <p className="text-sm font-semibold">{order.address?.company_name ?? order.address?.name ?? order.retailer_id}</p>
-                    <p className="text-xs text-muted-foreground">{order.address?.city}{order.address?.state ? `, ${order.address.state}` : ""}</p>
-                    <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">{order.address?.city}{order.address?.state ? `, ${order.address.state}` : ""}</p>
+                    <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
                       <span>{(order.items ?? []).length} {(order.items ?? []).length === 1 ? "item" : "items"}</span>
                       <span className="font-semibold text-foreground"><DualCurrencyInline cents={itemsTotal} /></span>
                       <span>Ordered {getAge(order.created_at)}</span>
                     </div>
                     <div className="mt-2 space-y-1">
                       {(order.items ?? []).map((item: any) => (
-                        <p key={item.id} className="text-[10px] text-muted-foreground">• {item.product_name} — {item.variant_name} × {item.quantity}</p>
+                        <p key={item.id} className="text-xs text-muted-foreground">• {item.product_name} — {item.variant_name} × {item.quantity}</p>
                       ))}
                     </div>
                     {order.notes && (
-                      <p className="text-[10px] text-amber-700 bg-amber-50 dark:bg-amber-950/20 rounded px-2 py-1 mt-2">Note: {order.notes}</p>
+                      <p className="text-xs text-amber-700 bg-amber-50 dark:bg-amber-950/20 rounded px-2 py-1 mt-2">Note: {order.notes}</p>
                     )}
                   </div>
                   <Button
