@@ -178,9 +178,7 @@ import FaireVendors from "@/pages/faire/vendors";
 import FaireInventory from "@/pages/faire/inventory";
 import FaireApplications from "@/pages/faire/applications";
 import FaireApplicationDetail from "@/pages/faire/application-detail";
-import VendorDashboard from "@/pages/vendor-portal/dashboard";
 import VendorQuotations from "@/pages/vendor-portal/quotations";
-import VendorPipeline from "@/pages/vendor-portal/pipeline";
 import VendorLedger from "@/pages/vendor-portal/ledger";
 import SupransDashboard from "@/pages/suprans/dashboard";
 import SupransInbound from "@/pages/suprans/inbound";
@@ -454,12 +452,8 @@ function Router() {
       <Route path="/faire/analytics" component={FaireAnalytics} />
       <Route path="/faire/applications/:id" component={FaireApplicationDetail} />
       <Route path="/faire/applications" component={FaireApplications} />
-      <Route path="/vendor" component={VendorDashboard} />
       <Route path="/vendor/quotations" component={VendorQuotations} />
-      <Route path="/vendor/pipeline" component={VendorPipeline} />
       <Route path="/vendor/ledger" component={VendorLedger} />
-      <Route path="/vendor/chat" component={UniversalChat} />
-      <Route path="/vendor/reports" component={UniversalReports} />
       <Route component={NotFound} />
     </Switch>
   );

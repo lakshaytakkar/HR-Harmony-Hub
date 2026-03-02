@@ -942,16 +942,10 @@ export const verticals: Vertical[] = [
     icon: Briefcase,
     logo: VendorPortalLogo,
     color: "#7C3AED",
-    tagline: "Supplier Command Center",
-    description: "Vendor-facing portal for managing quotations, pipeline, and ledger",
+    tagline: "Supplier Quoting Portal",
+    description: "Submit quotes for requested items and view payment history",
     isDepartment: false,
     navCategories: [
-      {
-        title: "Dashboard",
-        defaultUrl: "/vendor",
-        icon: LayoutDashboard,
-        items: [],
-      },
       {
         title: "Quotations",
         defaultUrl: "/vendor/quotations",
@@ -959,27 +953,9 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
-        title: "Pipeline",
-        defaultUrl: "/vendor/pipeline",
-        icon: Truck,
-        items: [],
-      },
-      {
         title: "Ledger",
         defaultUrl: "/vendor/ledger",
         icon: Landmark,
-        items: [],
-      },
-      {
-        title: "Chat",
-        defaultUrl: "/vendor/chat",
-        icon: MessageCircle,
-        items: [],
-      },
-      {
-        title: "Reports",
-        defaultUrl: "/vendor/reports",
-        icon: FileText,
         items: [],
       },
     ],

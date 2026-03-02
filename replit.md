@@ -60,15 +60,11 @@ Complete end-to-end order operations pipeline with 5 new pages:
 
 ### Vendor Portal (`/vendor/*`) — purple #7C3AED (Mar 2026)
 
-Standalone supplier-facing portal. Separate vertical from FaireDesk. Vendors select their identity via a dropdown (persisted in `localStorage` key `vp_vendor_id`). All 4 faire_vendors are available.
+Minimal supplier-facing portal. 2 pages only. Vendors select their identity via a dropdown (persisted in `localStorage` key `vp_vendor_id`). Landing route is `/vendor/quotations`.
 
 **Pages:**
-- **Dashboard** `/vendor` — Identity card (name, country, rating, lead days, specialties), 4 stat cards (Open Requests, Quotes Submitted, Active Orders, Payments Made), Recent Quote Requests feed, Quick Actions panel
-- **Quotations** `/vendor/quotations` — 3 tabs: Open Requests (SENT quotes awaiting vendor pricing), Submitted (quotes vendor has priced), History (accepted/rejected); inline "Submit Pricing" form per quotation
-- **Pipeline** `/vendor/pipeline` — Accepted orders only; tracking update form (carrier + tracking number); order status progression
-- **Ledger** `/vendor/ledger` — Bank transactions filtered by vendor name keywords from `bank_transactions` table; per-vendor payment history
-- **Chat** `/vendor/chat` — Routes to universal chat component
-- **Reports** `/vendor/reports` — Routes to universal reports component
+- **Quotations** `/vendor/quotations` — 3 tabs: Open Requests (SENT quotes awaiting vendor pricing), Submitted (quotes vendor has priced), History (accepted/rejected); inline "Submit Pricing" form per quotation with item unit costs, shipping cost, lead days, and notes
+- **Ledger** `/vendor/ledger` — Bank transactions filtered by vendor name keywords from `bank_transactions` table; per-vendor payment history with credit/debit filter and expandable row detail
 
 **Vendor identity (faire_vendors Supabase table):**
 - fulf-001: ShipFast Logistics (USA, 4.7★, 245 orders)
