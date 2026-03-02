@@ -107,7 +107,7 @@ Complete end-to-end order operations pipeline with 5 new pages:
 - Indexes: source, entity, date DESC
 - RPC: `bank_update_transaction(p_id, p_is_business, p_category, p_notes, p_reconciled, p_tags, p_faire_order_id)` — UPDATEs and RETURNs the row
 - FX rates for USD normalization: GBP=1.27, AUD=0.65, CAD=0.74, CNY=0.14, INR=0.012, USD=1.0
-- Seeded data: 10 Mercury USD txns (Neom: ac004, Cloudnest: ac005) + 14 Faire payout txns
+- Seeded data: 10 Mercury USD txns (Neom: ac004, Cloudnest: ac005) + 15 Faire payout txns (25 total)
 - API routes: `GET /api/bank-transactions?source=&entity=&type=&search=&page=&limit=&is_business=` → `{transactions, total}`, `POST /api/bank-transactions` → `{transaction}`, `PATCH /api/bank-transactions/:id` → `{transaction}`
 
 **Ledger Parties (Supabase `ledger_parties` + `ledger_party_transactions` tables):**

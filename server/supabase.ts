@@ -350,6 +350,11 @@ export interface FaireVendor {
   whatsapp: string;
   is_default: boolean;
   notes: string;
+  country: string;
+  rating: number;
+  avg_lead_days: number;
+  specialties: string[];
+  completed_orders: number;
   created_at: string;
 }
 
