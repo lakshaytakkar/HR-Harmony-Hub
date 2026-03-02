@@ -91,6 +91,7 @@ import UniversalTeam from "@/pages/universal/team";
 import UniversalResources from "@/pages/universal/resources";
 import UniversalTasks from "@/pages/universal/tasks";
 import UniversalReports from "@/pages/universal/reports";
+import UniversalNotifications from "@/pages/universal/notifications";
 import HrmsDashboard from "@/pages/hrms/dashboard";
 import HrmsEmployees from "@/pages/hrms/employees";
 import HrmsEmployeeDetail from "@/pages/hrms/employee-detail";
@@ -187,6 +188,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/suprans" component={SupransDashboard} />
+      <Route path="/suprans/notifications" component={UniversalNotifications} />
       <Route path="/suprans/chat" component={UniversalChat} />
       <Route path="/suprans/team" component={UniversalTeam} />
       <Route path="/suprans/resources" component={UniversalResources} />
@@ -197,6 +199,7 @@ function Router() {
       <Route path="/suprans/reports" component={UniversalReports} />
       <Route path="/suprans/contacts-important" component={UniversalImportantContacts} />
       <Route path="/hr" component={Dashboard} />
+      <Route path="/hr/notifications" component={UniversalNotifications} />
       <Route path="/hr/chat" component={UniversalChat} />
       <Route path="/hr/team" component={UniversalTeam} />
       <Route path="/hr/resources" component={UniversalResources} />
@@ -298,6 +301,7 @@ function Router() {
       <Route path="/dev/projects" component={DevProjects} />
       <Route path="/dev/board" component={DevTasks} />
       <Route path="/ets" component={EtsDashboard} />
+      <Route path="/ets/notifications" component={UniversalNotifications} />
       <Route path="/ets/chat" component={UniversalChat} />
       <Route path="/ets/team" component={UniversalTeam} />
       <Route path="/ets/resources" component={UniversalResources} />
@@ -314,6 +318,7 @@ function Router() {
       <Route path="/ets/templates" component={EtsTemplates} />
       <Route path="/ets/settings" component={EtsSettings} />
       <Route path="/hrms" component={HrmsDashboard} />
+      <Route path="/hrms/notifications" component={UniversalNotifications} />
       <Route path="/hrms/chat" component={UniversalChat} />
       <Route path="/hrms/team" component={UniversalTeam} />
       <Route path="/hrms/resources" component={UniversalResources} />
@@ -334,6 +339,7 @@ function Router() {
       <Route path="/hrms/goals" component={HrmsGoals} />
       <Route path="/hrms/policies" component={HrmsPolicies} />
       <Route path="/ats" component={AtsDashboard} />
+      <Route path="/ats/notifications" component={UniversalNotifications} />
       <Route path="/ats/chat" component={UniversalChat} />
       <Route path="/ats/team" component={UniversalTeam} />
       <Route path="/ats/resources" component={UniversalResources} />
@@ -351,6 +357,7 @@ function Router() {
       <Route path="/ats/offers" component={AtsOffers} />
       <Route path="/ats/analytics" component={AtsAnalytics} />
       <Route path="/crm" component={CrmDashboard} />
+      <Route path="/crm/notifications" component={UniversalNotifications} />
       <Route path="/crm/chat" component={UniversalChat} />
       <Route path="/crm/team" component={UniversalTeam} />
       <Route path="/crm/resources" component={UniversalResources} />
@@ -367,6 +374,7 @@ function Router() {
       <Route path="/crm/payment-links" component={CrmPaymentLinks} />
       <Route path="/crm/templates" component={CrmTemplates} />
       <Route path="/finance" component={FinanceDashboard} />
+      <Route path="/finance/notifications" component={UniversalNotifications} />
       <Route path="/finance/chat" component={UniversalChat} />
       <Route path="/finance/team" component={UniversalTeam} />
       <Route path="/finance/resources" component={UniversalResources} />
@@ -382,6 +390,7 @@ function Router() {
       <Route path="/finance/compliance" component={FinanceCompliance} />
       <Route path="/finance/reports" component={UniversalReports} />
       <Route path="/oms" component={OmsDashboard} />
+      <Route path="/oms/notifications" component={UniversalNotifications} />
       <Route path="/oms/chat" component={UniversalChat} />
       <Route path="/oms/team" component={UniversalTeam} />
       <Route path="/oms/resources" component={UniversalResources} />
@@ -397,6 +406,7 @@ function Router() {
       <Route path="/oms/locations" component={OmsLocations} />
       <Route path="/oms/reports" component={UniversalReports} />
       <Route path="/social" component={SocialDashboard} />
+      <Route path="/social/notifications" component={UniversalNotifications} />
       <Route path="/social/chat" component={UniversalChat} />
       <Route path="/social/team" component={UniversalTeam} />
       <Route path="/social/resources" component={UniversalResources} />
@@ -414,6 +424,7 @@ function Router() {
       <Route path="/social/assignments" component={SocialAssignments} />
       <Route path="/social/analytics" component={SocialAnalytics} />
       <Route path="/faire" component={FaireDashboard} />
+      <Route path="/faire/notifications" component={UniversalNotifications} />
       <Route path="/faire/chat" component={UniversalChat} />
       <Route path="/faire/team" component={UniversalTeam} />
       <Route path="/faire/resources" component={UniversalResources} />

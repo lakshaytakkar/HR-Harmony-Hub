@@ -2,29 +2,34 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Bell, ShoppingBag, Truck, Package, DollarSign, Users, FileCheck, Settings, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useVertical } from "@/lib/vertical-store";
 import { faireNotifications, type AppNotification, type NotificationType } from "@/lib/mock-data-shared";
 
-const TYPE_CONFIG: Record<NotificationType, { icon: React.ElementType; color: string; bg: string }> = {
-  order:       { icon: ShoppingBag, color: "#2563EB", bg: "#EFF6FF" },
-  fulfillment: { icon: Truck,       color: "#D97706", bg: "#FFFBEB" },
-  inventory:   { icon: Package,     color: "#EA580C", bg: "#FFF7ED" },
-  finance:     { icon: DollarSign,  color: "#16A34A", bg: "#F0FDF4" },
-  retailer:    { icon: Users,       color: "#7C3AED", bg: "#F5F3FF" },
-  application: { icon: FileCheck,   color: "#0891B2", bg: "#ECFEFF" },
-  quotation:   { icon: MessageSquare, color: "#BE185D", bg: "#FDF2F8" },
-  system:      { icon: Settings,    color: "#64748B", bg: "#F8FAFC" },
+export const TYPE_CONFIG: Record<NotificationType, { icon: React.ElementType; color: string; bg: string; label: string }> = {
+  order:       { icon: ShoppingBag,    color: "#2563EB", bg: "#EFF6FF", label: "Orders" },
+  fulfillment: { icon: Truck,          color: "#D97706", bg: "#FFFBEB", label: "Fulfillment" },
+  inventory:   { icon: Package,        color: "#EA580C", bg: "#FFF7ED", label: "Inventory" },
+  finance:     { icon: DollarSign,     color: "#16A34A", bg: "#F0FDF4", label: "Finance" },
+  retailer:    { icon: Users,          color: "#7C3AED", bg: "#F5F3FF", label: "Retailers" },
+  application: { icon: FileCheck,      color: "#0891B2", bg: "#ECFEFF", label: "Applications" },
+  quotation:   { icon: MessageSquare,  color: "#BE185D", bg: "#FDF2F8", label: "Quotations" },
+  system:      { icon: Settings,       color: "#64748B", bg: "#F8FAFC", label: "System" },
 };
 
-function NotificationRow({
+export const NOTIFICATION_SOURCES: Record<string, AppNotification[]> = {
+  faire: faireNotifications,
+};
+
+export function NotificationRow({
   n,
   onRead,
+  compact = true,
 }: {
   n: AppNotification;
   onRead: (id: string, url: string) => void;
+  compact?: boolean;
 }) {
   const cfg = TYPE_CONFIG[n.type];
   const Icon = cfg.icon;
@@ -48,7 +53,7 @@ function NotificationRow({
         <p className={cn("text-sm leading-snug", !n.isRead ? "font-semibold" : "font-medium")}>
           {n.title}
         </p>
-        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
+        <p className={cn("text-xs text-muted-foreground mt-0.5 leading-relaxed", compact && "line-clamp-2")}>
           {n.description}
         </p>
         <p className="text-[10px] text-muted-foreground mt-1">{n.time}</p>
@@ -60,10 +65,6 @@ function NotificationRow({
   );
 }
 
-const NOTIFICATION_SOURCES: Record<string, AppNotification[]> = {
-  faire: faireNotifications,
-};
-
 export function NotificationPanel() {
   const [, setLocation] = useLocation();
   const { currentVertical } = useVertical();
@@ -73,7 +74,6 @@ export function NotificationPanel() {
   const [notifications, setNotifications] = useState<AppNotification[]>(source);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
-
   const todayNotifs = notifications.slice(0, 5);
   const earlierNotifs = notifications.slice(5);
 
@@ -136,28 +136,28 @@ export function NotificationPanel() {
           )}
         </div>
 
-        <ScrollArea className="max-h-[420px]">
+        <div className="overflow-y-auto" style={{ maxHeight: "420px" }}>
           {todayNotifs.length > 0 && (
             <div>
-              <div className="px-4 py-2 bg-muted/30 sticky top-0">
+              <div className="px-4 py-1.5 bg-muted/40 sticky top-0 z-10 border-b">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Today
                 </span>
               </div>
               {todayNotifs.map((n) => (
-                <NotificationRow key={n.id} n={n} onRead={markRead} />
+                <NotificationRow key={n.id} n={n} onRead={markRead} compact />
               ))}
             </div>
           )}
           {earlierNotifs.length > 0 && (
             <div>
-              <div className="px-4 py-2 bg-muted/30 sticky top-0">
+              <div className="px-4 py-1.5 bg-muted/40 sticky top-0 z-10 border-b">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Earlier
                 </span>
               </div>
               {earlierNotifs.map((n) => (
-                <NotificationRow key={n.id} n={n} onRead={markRead} />
+                <NotificationRow key={n.id} n={n} onRead={markRead} compact />
               ))}
             </div>
           )}
@@ -167,15 +167,18 @@ export function NotificationPanel() {
               <p className="text-sm">No notifications</p>
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         <div className="border-t px-4 py-2.5 text-center">
           <button
-            onClick={() => { setOpen(false); }}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => {
+              setOpen(false);
+              setLocation(`/${currentVertical.id}/notifications`);
+            }}
+            className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
             data-testid="btn-view-all-notifications"
           >
-            View all notifications
+            View all notifications →
           </button>
         </div>
       </PopoverContent>
