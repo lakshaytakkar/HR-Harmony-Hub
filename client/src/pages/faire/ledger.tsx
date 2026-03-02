@@ -15,7 +15,7 @@ import {
 } from "@/lib/mock-data-faire-ops";
 import {
   PageShell, PageHeader, StatGrid, StatCard, IndexToolbar,
-  DataTableContainer, DataTH, DataTD, DataTR, DetailModal,
+  DataTableContainer, DataTH, SortableDataTH, DataTD, DataTR, DetailModal,
 } from "@/components/layout";
 
 const BRAND_COLOR = "#1A6B45";
@@ -61,7 +61,17 @@ export default function FaireLedger() {
   const [selectedTxIds, setSelectedTxIds] = useState<string[]>([]);
   const [clearNotes, setClearNotes] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const PAGE_SIZE = 25;
+
+  const handleSort = (key: string) => {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+    setCurrentPage(1);
+  };
 
   const filtered = ledger.filter(e => {
     if (statusFilter !== "all" && e.payment_status !== statusFilter) return false;
@@ -127,16 +137,38 @@ export default function FaireLedger() {
         <DataTableContainer>
           {isLoading && <div className="h-48 animate-pulse bg-muted/30 rounded" />}
           {!isLoading && filtered.length === 0 && <div className="p-8 text-center text-sm text-muted-foreground">No ledger entries match current filters.</div>}
-          {!isLoading && filtered.length > 0 && <table className="w-full text-sm">
+          {!isLoading && filtered.length > 0 && (() => {
+            const sortedFiltered = sort
+              ? [...filtered].sort((a, b) => {
+                  const dir = sort.dir === "asc" ? 1 : -1;
+                  const k = sort.key;
+                  let aVal: any, bVal: any;
+                  if (k === "order") {
+                    const oA = allOrders.find((o: any) => o.id === a.order_id);
+                    const oB = allOrders.find((o: any) => o.id === b.order_id);
+                    aVal = oA?.display_id ?? ""; bVal = oB?.display_id ?? "";
+                  }
+                  else if (k === "payout") { aVal = a.faire_payout_cents; bVal = b.faire_payout_cents; }
+                  else if (k === "fulfiller_cost") { aVal = a.fulfiller_cost_cents; bVal = b.fulfiller_cost_cents; }
+                  else if (k === "margin") { aVal = a.net_margin_cents; bVal = b.net_margin_cents; }
+                  else { aVal = (a as any)[k]; bVal = (b as any)[k]; }
+                  if (aVal == null && bVal == null) return 0;
+                  if (aVal == null) return 1;
+                  if (bVal == null) return -1;
+                  if (typeof aVal === "number" && typeof bVal === "number") return (aVal - bVal) * dir;
+                  return String(aVal).localeCompare(String(bVal)) * dir;
+                })
+              : filtered;
+            return <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <DataTH>Order</DataTH>
+                <SortableDataTH sortKey="order" currentSort={sort} onSort={handleSort}>Order</SortableDataTH>
                 <DataTH>Store</DataTH>
-                <DataTH>Faire Payout</DataTH>
+                <SortableDataTH sortKey="payout" currentSort={sort} onSort={handleSort}>Faire Payout</SortableDataTH>
                 <DataTH>Commission</DataTH>
-                <DataTH>Fulfiller Cost</DataTH>
+                <SortableDataTH sortKey="fulfiller_cost" currentSort={sort} onSort={handleSort}>Fulfiller Cost</SortableDataTH>
                 <DataTH>Shipping</DataTH>
-                <DataTH>Net Margin</DataTH>
+                <SortableDataTH sortKey="margin" currentSort={sort} onSort={handleSort}>Net Margin</SortableDataTH>
                 <DataTH>Status</DataTH>
                 <DataTH>Faire Paid</DataTH>
                 <DataTH>Fulfiller Paid</DataTH>
@@ -145,7 +177,7 @@ export default function FaireLedger() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filtered.map(e => {
+              {sortedFiltered.map(e => {
                 const order = allOrders.find((o: any) => o.id === e.order_id);
                 const store = allStores.find((s: any) => s.id === e.store_id);
                 const sc = STATUS_CONFIG[e.payment_status];
@@ -215,7 +247,7 @@ export default function FaireLedger() {
                 );
               })}
             </tbody>
-          </table>}
+          </table>; })()}
         </DataTableContainer>
       </Fade>
 

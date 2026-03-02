@@ -14,7 +14,7 @@ import {
 } from "@/lib/mock-data-faire-ops";
 import {
   PageShell, PageHeader, StatGrid, StatCard, IndexToolbar, DataTableContainer,
-  DataTH, DataTD, DataTR, DetailModal,
+  DataTH, SortableDataTH, DataTD, DataTR, DetailModal,
 } from "@/components/layout";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -73,7 +73,16 @@ export default function FaireQuotations() {
   const allOrders = ordersData?.orders ?? [];
   const [statusFilter, setStatusFilter] = useState<QuotationStatus | "all">("all");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const [quotations, setQuotations] = useState(faireQuotations);
+
+  const handleSort = (key: string) => {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+  };
   const [showNew, setShowNew] = useState(false);
   const [newOrderId, setNewOrderId] = useState("");
   const [newFulfillerId, setNewFulfillerId] = useState("");
@@ -166,23 +175,49 @@ export default function FaireQuotations() {
         <DataTableContainer>
           {isLoading && <div className="h-48 animate-pulse bg-muted/30 rounded" />}
           {!isLoading && filtered.length === 0 && <div className="p-8 text-center text-sm text-muted-foreground">No quotations match current filters.</div>}
-          {!isLoading && filtered.length > 0 && <table className="w-full text-sm">
+          {!isLoading && filtered.length > 0 && (() => {
+            const sortedFiltered = sort
+              ? [...filtered].sort((a, b) => {
+                  const dir = sort.dir === "asc" ? 1 : -1;
+                  const k = sort.key;
+                  let aVal: any, bVal: any;
+                  if (k === "order") {
+                    const oA = allOrders.find((o: any) => o.id === a.order_id);
+                    const oB = allOrders.find((o: any) => o.id === b.order_id);
+                    aVal = oA?.display_id ?? ""; bVal = oB?.display_id ?? "";
+                  }
+                  else if (k === "fulfiller") {
+                    aVal = faireFulfillers.find(f => f.id === a.fulfiller_id)?.name ?? "";
+                    bVal = faireFulfillers.find(f => f.id === b.fulfiller_id)?.name ?? "";
+                  }
+                  else if (k === "total") { aVal = quotationFulfillerTotal(a); bVal = quotationFulfillerTotal(b); }
+                  else if (k === "margin") { aVal = marginPct(a, allOrders) ?? -999; bVal = marginPct(b, allOrders) ?? -999; }
+                  else if (k === "status") { aVal = a.status; bVal = b.status; }
+                  else { aVal = (a as any)[k]; bVal = (b as any)[k]; }
+                  if (aVal == null && bVal == null) return 0;
+                  if (aVal == null) return 1;
+                  if (bVal == null) return -1;
+                  if (typeof aVal === "number" && typeof bVal === "number") return (aVal - bVal) * dir;
+                  return String(aVal).localeCompare(String(bVal)) * dir;
+                })
+              : filtered;
+            return <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
                 <DataTH>Quote ID</DataTH>
-                <DataTH>Order</DataTH>
-                <DataTH>Fulfiller</DataTH>
+                <SortableDataTH sortKey="order" currentSort={sort} onSort={handleSort}>Order</SortableDataTH>
+                <SortableDataTH sortKey="fulfiller" currentSort={sort} onSort={handleSort}>Fulfiller</SortableDataTH>
                 <DataTH>Items</DataTH>
-                <DataTH>Fulfiller Total</DataTH>
+                <SortableDataTH sortKey="total" currentSort={sort} onSort={handleSort}>Fulfiller Total</SortableDataTH>
                 <DataTH>Faire Payout</DataTH>
-                <DataTH>Margin</DataTH>
-                <DataTH>Status</DataTH>
+                <SortableDataTH sortKey="margin" currentSort={sort} onSort={handleSort}>Margin</SortableDataTH>
+                <SortableDataTH sortKey="status" currentSort={sort} onSort={handleSort}>Status</SortableDataTH>
                 <DataTH>Sent / Received</DataTH>
                 <DataTH>Action</DataTH>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filtered.map(q => {
+              {sortedFiltered.map(q => {
                 const order = allOrders.find((o: any) => o.id === q.order_id);
                 const fulfiller = faireFulfillers.find(f => f.id === q.fulfiller_id);
                 const ftotal = quotationFulfillerTotal(q);
@@ -249,7 +284,7 @@ export default function FaireQuotations() {
                 );
               })}
             </tbody>
-          </table>}
+          </table>; })()}
         </DataTableContainer>
       </Fade>
 

@@ -97,17 +97,39 @@ export async function getStoreOrders(
 export async function getAllOrders(
   opts: { limit?: number; offset?: number; state?: string } = {}
 ): Promise<unknown[]> {
-  const { data, error } = await supabase.rpc("faire_get_all_orders", {
-    p_limit: opts.limit ?? 500,
-    p_offset: opts.offset ?? 0,
-    p_state: opts.state ?? null,
-  });
-  if (error) {
-    console.error("[supabase] getAllOrders error:", error.message);
-    return [];
+  if (opts.limit !== undefined && opts.offset !== undefined) {
+    const { data, error } = await supabase.rpc("faire_get_all_orders", {
+      p_limit: opts.limit,
+      p_offset: opts.offset,
+      p_state: opts.state ?? null,
+    });
+    if (error) {
+      console.error("[supabase] getAllOrders error:", error.message);
+      return [];
+    }
+    const rows = (data as { raw_data: unknown; store_id: string }[]) ?? [];
+    return rows.map((r) => ({ ...(r.raw_data as object), _storeId: r.store_id }));
   }
-  const rows = (data as { raw_data: unknown; store_id: string }[]) ?? [];
-  return rows.map((r) => ({ ...(r.raw_data as object), _storeId: r.store_id }));
+  const PAGE = 1000;
+  const all: unknown[] = [];
+  let offset = 0;
+  while (true) {
+    const { data, error } = await supabase.rpc("faire_get_all_orders", {
+      p_limit: PAGE,
+      p_offset: offset,
+      p_state: opts.state ?? null,
+    });
+    if (error) {
+      console.error("[supabase] getAllOrders error:", error.message);
+      break;
+    }
+    const rows = (data as { raw_data: unknown; store_id: string }[]) ?? [];
+    if (rows.length === 0) break;
+    all.push(...rows.map((r) => ({ ...(r.raw_data as object), _storeId: r.store_id })));
+    if (rows.length < PAGE) break;
+    offset += PAGE;
+  }
+  return all;
 }
 
 export async function getStoreProducts(

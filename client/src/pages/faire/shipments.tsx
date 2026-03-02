@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
-  PageShell, PageHeader, DataTableContainer, DataTH, DataTD, DataTR,
+  PageShell, PageHeader, DataTableContainer, DataTH, SortableDataTH, DataTD, DataTR,
 } from "@/components/layout";
 import { DualCurrency } from "@/lib/faire-currency";
 
@@ -30,7 +30,17 @@ export default function FaireShipments() {
   const [selectedStore, setSelectedStore] = useState("all");
   const [stateFilter, setStateFilter] = useState<"all" | "PRE_TRANSIT" | "IN_TRANSIT" | "DELIVERED">("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const PAGE_SIZE = 25;
+
+  const handleSort = (key: string) => {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+    setCurrentPage(1);
+  };
 
   const { data: ordersData, isLoading: ordersLoading } = useQuery<{ orders: any[] }>({
     queryKey: ["/api/faire/orders"],
@@ -71,9 +81,29 @@ export default function FaireShipments() {
       return true;
     });
 
-  const totalPages = Math.max(1, Math.ceil(enriched.length / PAGE_SIZE));
+  const sortedShipments = sort
+    ? [...enriched].sort((a, b) => {
+        let aVal: any, bVal: any;
+        switch (sort.key) {
+          case "id": aVal = a.id ?? ""; bVal = b.id ?? ""; break;
+          case "orderId": aVal = a.order?.display_id ?? ""; bVal = b.order?.display_id ?? ""; break;
+          case "store": aVal = a.store?.name ?? ""; bVal = b.store?.name ?? ""; break;
+          case "carrier": aVal = a.carrier ?? ""; bVal = b.carrier ?? ""; break;
+          case "shipped": aVal = a.shipped_at ?? ""; bVal = b.shipped_at ?? ""; break;
+          case "cost": aVal = a.maker_cost_cents ?? 0; bVal = b.maker_cost_cents ?? 0; break;
+          default: return 0;
+        }
+        if (typeof aVal === "number" && typeof bVal === "number") {
+          return sort.dir === "asc" ? aVal - bVal : bVal - aVal;
+        }
+        const cmp = String(aVal).localeCompare(String(bVal));
+        return sort.dir === "asc" ? cmp : -cmp;
+      })
+    : enriched;
+
+  const totalPages = Math.max(1, Math.ceil(sortedShipments.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedShipments = enriched.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const paginatedShipments = sortedShipments.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const copyTracking = (code: string) => {
     navigator.clipboard.writeText(code).then(() => toast({ title: "Copied", description: code }));
@@ -117,14 +147,14 @@ export default function FaireShipments() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <DataTH>Shipment ID</DataTH>
-                <DataTH>Order ID</DataTH>
-                <DataTH>Store</DataTH>
+                <SortableDataTH sortKey="id" currentSort={sort} onSort={handleSort}>Shipment ID</SortableDataTH>
+                <SortableDataTH sortKey="orderId" currentSort={sort} onSort={handleSort}>Order ID</SortableDataTH>
+                <SortableDataTH sortKey="store" currentSort={sort} onSort={handleSort}>Store</SortableDataTH>
                 <DataTH>Retailer</DataTH>
-                <DataTH>Carrier</DataTH>
+                <SortableDataTH sortKey="carrier" currentSort={sort} onSort={handleSort}>Carrier</SortableDataTH>
                 <DataTH>Tracking Code</DataTH>
-                <DataTH>Shipped</DataTH>
-                <DataTH>Shipping Cost</DataTH>
+                <SortableDataTH sortKey="shipped" currentSort={sort} onSort={handleSort}>Shipped</SortableDataTH>
+                <SortableDataTH sortKey="cost" currentSort={sort} onSort={handleSort} align="left">Shipping Cost</SortableDataTH>
                 <DataTH>Type</DataTH>
                 <DataTH>Order State</DataTH>
               </tr>
@@ -137,26 +167,26 @@ export default function FaireShipments() {
                   <DataTR key={ship.id} data-testid={`shipment-row-${ship.id}`}>
                     <DataTD className="font-mono text-muted-foreground">{ship.id}</DataTD>
                     <DataTD>
-                      <Badge variant="outline" className="text-[10px] font-mono">{ship.order?.display_id}</Badge>
+                      <Badge variant="outline" className="text-xs font-mono">{ship.order?.display_id}</Badge>
                     </DataTD>
                     <DataTD>
-                      <Badge variant="outline" className="text-[10px]">{ship.store?.name?.split(" ")[0] ?? "—"}</Badge>
+                      <Badge variant="outline" className="text-xs">{ship.store?.name?.split(" ")[0] ?? "—"}</Badge>
                     </DataTD>
                     <DataTD>{ship.retailerId ?? "—"}</DataTD>
                     <DataTD className="font-medium">{ship.carrier}</DataTD>
                     <DataTD>
                       <div className="flex items-center gap-1">
-                        <span className="text-[10px] font-mono bg-muted rounded px-1.5 py-0.5 max-w-[120px] truncate">{ship.tracking_code}</span>
+                        <span className="text-xs font-mono bg-muted rounded px-1.5 py-0.5 max-w-[120px] truncate">{ship.tracking_code}</span>
                         <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyTracking(ship.tracking_code)} data-testid={`btn-copy-tracking-${ship.id}`}><Copy size={10} /></Button>
                       </div>
                     </DataTD>
                     <DataTD>{ship.shipped_at ? new Date(ship.shipped_at).toLocaleDateString() : "—"}</DataTD>
                     <DataTD className="font-semibold">{ship.maker_cost_cents != null ? <DualCurrency cents={ship.maker_cost_cents} /> : "—"}</DataTD>
                     <DataTD>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">{shipTypeLabels[ship.shipping_type] ?? ship.shipping_type ?? "—"}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">{shipTypeLabels[ship.shipping_type] ?? ship.shipping_type ?? "—"}</span>
                     </DataTD>
                     <DataTD>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
                     </DataTD>
                   </DataTR>
                 );
@@ -169,10 +199,10 @@ export default function FaireShipments() {
         </DataTableContainer>
       </Fade>
 
-      {enriched.length > PAGE_SIZE && (
+      {sortedShipments.length > PAGE_SIZE && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, enriched.length)} of {enriched.length}
+            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, sortedShipments.length)} of {sortedShipments.length}
           </p>
           <div className="flex items-center gap-1">
             <Button size="sm" variant="outline" className="h-8" disabled={safePage <= 1} onClick={() => setCurrentPage(p => p - 1)} data-testid="btn-prev-page">Previous</Button>

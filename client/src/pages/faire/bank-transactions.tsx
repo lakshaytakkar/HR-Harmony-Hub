@@ -14,7 +14,7 @@ import {
 } from "@/lib/mock-data-faire-ops";
 import {
   PageShell, PageHeader, StatGrid, StatCard, IndexToolbar,
-  DataTableContainer, DataTH, DataTD, DataTR, DetailModal,
+  DataTableContainer, DataTH, SortableDataTH, DataTD, DataTR, DetailModal,
 } from "@/components/layout";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -58,7 +58,17 @@ export default function FaireBankTransactions() {
   const [addDesc, setAddDesc] = useState("");
   const [addBank, setAddBank] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const PAGE_SIZE = 25;
+
+  const handleSort = (key: string) => {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+    setCurrentPage(1);
+  };
 
   const filtered = transactions.filter(t => {
     if (filter === "CREDIT" && t.type !== "CREDIT") return false;
@@ -195,22 +205,41 @@ export default function FaireBankTransactions() {
         <DataTableContainer>
           {isLoading && <div className="h-48 animate-pulse bg-muted/30 rounded" />}
           {!isLoading && filtered.length === 0 && <div className="p-8 text-center text-sm text-muted-foreground">No transactions match current filters.</div>}
-          {!isLoading && filtered.length > 0 && <table className="w-full text-sm">
+          {!isLoading && filtered.length > 0 && (() => {
+            const sortedFiltered = sort
+              ? [...filtered].sort((a, b) => {
+                  const dir = sort.dir === "asc" ? 1 : -1;
+                  const k = sort.key;
+                  let aVal: any, bVal: any;
+                  if (k === "date") { aVal = a.date; bVal = b.date; }
+                  else if (k === "description") { aVal = a.description; bVal = b.description; }
+                  else if (k === "amount") { aVal = a.amount_cents; bVal = b.amount_cents; }
+                  else if (k === "type") { aVal = a.type; bVal = b.type; }
+                  else if (k === "reconciled") { aVal = a.reconciled ? 1 : 0; bVal = b.reconciled ? 1 : 0; }
+                  else { aVal = (a as any)[k]; bVal = (b as any)[k]; }
+                  if (aVal == null && bVal == null) return 0;
+                  if (aVal == null) return 1;
+                  if (bVal == null) return -1;
+                  if (typeof aVal === "number" && typeof bVal === "number") return (aVal - bVal) * dir;
+                  return String(aVal).localeCompare(String(bVal)) * dir;
+                })
+              : filtered;
+            return <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <DataTH>Date</DataTH>
-                <DataTH>Description</DataTH>
+                <SortableDataTH sortKey="date" currentSort={sort} onSort={handleSort}>Date</SortableDataTH>
+                <SortableDataTH sortKey="description" currentSort={sort} onSort={handleSort}>Description</SortableDataTH>
                 <DataTH>Bank</DataTH>
-                <DataTH>Type</DataTH>
-                <DataTH>Amount</DataTH>
+                <SortableDataTH sortKey="type" currentSort={sort} onSort={handleSort}>Type</SortableDataTH>
+                <SortableDataTH sortKey="amount" currentSort={sort} onSort={handleSort}>Amount</SortableDataTH>
                 <DataTH>Reference</DataTH>
                 <DataTH>Mapped Orders</DataTH>
-                <DataTH>Reconciled</DataTH>
+                <SortableDataTH sortKey="reconciled" currentSort={sort} onSort={handleSort}>Reconciled</SortableDataTH>
                 <DataTH>Action</DataTH>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filtered.map(t => (
+              {sortedFiltered.map(t => (
                 <DataTR
                   key={t.id}
                   data-testid={`row-txn-${t.id}`}
@@ -303,7 +332,7 @@ export default function FaireBankTransactions() {
                 </DataTR>
               ))}
             </tbody>
-          </table>}
+          </table>; })()}
         </DataTableContainer>
       </Fade>
 

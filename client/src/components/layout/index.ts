@@ -11,6 +11,7 @@ export {
   IndexToolbar,
   DataTableContainer,
   DataTH,
+  SortableDataTH,
   DataTD,
   DataTR,
   DetailSection,

@@ -174,6 +174,7 @@ import FairePartnerPortal from "@/pages/faire/partner-portal";
 import FaireLedger from "@/pages/faire/ledger";
 import FaireBankTransactions from "@/pages/faire/bank-transactions";
 import FaireVendors from "@/pages/faire/vendors";
+import FaireInventory from "@/pages/faire/inventory";
 import SupransDashboard from "@/pages/suprans/dashboard";
 import SupransInbound from "@/pages/suprans/inbound";
 import SupransEnrichment from "@/pages/suprans/enrichment";
@@ -432,6 +433,7 @@ function Router() {
       <Route path="/faire/ledger" component={FaireLedger} />
       <Route path="/faire/bank-transactions" component={FaireBankTransactions} />
       <Route path="/faire/vendors" component={FaireVendors} />
+      <Route path="/faire/inventory" component={FaireInventory} />
       <Route path="/faire/analytics" component={FaireAnalytics} />
       <Route component={NotFound} />
     </Switch>

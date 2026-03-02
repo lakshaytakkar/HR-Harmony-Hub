@@ -16,6 +16,7 @@ import {
   IndexToolbar,
   DataTableContainer,
   DataTH,
+  SortableDataTH,
   DataTD,
   DataTR,
   DetailModal,
@@ -32,7 +33,17 @@ export default function FaireInventory() {
   const [editQty, setEditQty] = useState("");
   const [backorderDate, setBackorderDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const PAGE_SIZE = 25;
+
+  const handleSort = (key: string) => {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+    setCurrentPage(1);
+  };
 
   const { data: productsData, isLoading } = useQuery<{ products: any[] }>({
     queryKey: ["/api/faire/products?slim"],
@@ -55,7 +66,7 @@ export default function FaireInventory() {
   const products = productsData?.products ?? [];
   const stores = storesData?.stores ?? [];
 
-  const allVariants = products.flatMap(product =>
+  const filteredVariants = products.flatMap(product =>
     (product.variants ?? []).map((variant: any) => ({
       ...variant,
       product,
@@ -66,6 +77,24 @@ export default function FaireInventory() {
     if (search && !v.product.name.toLowerCase().includes(search.toLowerCase()) && !v.sku?.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  const allVariants = sort
+    ? [...filteredVariants].sort((a: any, b: any) => {
+        const dir = sort.dir === "asc" ? 1 : -1;
+        const k = sort.key;
+        let aVal: any, bVal: any;
+        if (k === "product") { aVal = a.product?.name ?? ""; bVal = b.product?.name ?? ""; }
+        else if (k === "sku") { aVal = a.sku ?? ""; bVal = b.sku ?? ""; }
+        else if (k === "available_quantity") { aVal = a.available_quantity ?? 0; bVal = b.available_quantity ?? 0; }
+        else if (k === "store") { aVal = a.store?.name ?? ""; bVal = b.store?.name ?? ""; }
+        else { aVal = a[k]; bVal = b[k]; }
+        if (aVal == null && bVal == null) return 0;
+        if (aVal == null) return 1;
+        if (bVal == null) return -1;
+        if (typeof aVal === "number" && typeof bVal === "number") return (aVal - bVal) * dir;
+        return String(aVal).localeCompare(String(bVal)) * dir;
+      })
+    : filteredVariants;
 
   const totalSKUs = allVariants.length;
   const outOfStock = allVariants.filter((v: any) => v.available_quantity === 0).length;
@@ -146,12 +175,12 @@ export default function FaireInventory() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <DataTH>Product</DataTH>
-                <DataTH>Store</DataTH>
-                <DataTH>SKU</DataTH>
+                <SortableDataTH sortKey="product" currentSort={sort} onSort={handleSort}>Product</SortableDataTH>
+                <SortableDataTH sortKey="store" currentSort={sort} onSort={handleSort}>Store</SortableDataTH>
+                <SortableDataTH sortKey="sku" currentSort={sort} onSort={handleSort}>SKU</SortableDataTH>
                 <DataTH>Options</DataTH>
                 <DataTH>Wholesale</DataTH>
-                <DataTH>Available Qty</DataTH>
+                <SortableDataTH sortKey="available_quantity" currentSort={sort} onSort={handleSort}>Available Qty</SortableDataTH>
                 <DataTH>Backordered Until</DataTH>
                 <DataTH align="right">Actions</DataTH>
               </tr>

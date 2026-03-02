@@ -22,7 +22,7 @@ import {
 } from "@/lib/mock-data-faire-ops";
 import {
   PageShell, PageHeader, StatGrid, StatCard, IndexToolbar, DataTableContainer,
-  DataTH, DataTD, DataTR, DetailModal,
+  DataTH, SortableDataTH, DataTD, DataTR, DetailModal,
 } from "@/components/layout";
 import { DualCurrency } from "@/lib/faire-currency";
 import {
@@ -129,6 +129,8 @@ export default function FaireOrders() {
   const [cancelNotes, setCancelNotes] = useState("");
   const [cancelLoading, setCancelLoading] = useState(false);
 
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
+
   const [quoteOrderId, setQuoteOrderId] = useState<string | null>(null);
   const [quoteFulfillerId, setQuoteFulfillerId] = useState("");
   const [quoteNotes, setQuoteNotes] = useState("");
@@ -147,6 +149,14 @@ export default function FaireOrders() {
 
   const allOrders = ordersData?.orders ?? [];
 
+  const handleSort = (key: string) => {
+    setSort(prev => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+  };
+
   const filtered = allOrders.filter(o => {
     if (stateFilter !== "all" && o.state !== stateFilter) return false;
     if (search) {
@@ -158,9 +168,32 @@ export default function FaireOrders() {
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const sortedFiltered = sort
+    ? [...filtered].sort((a, b) => {
+        const dir = sort.dir === "asc" ? 1 : -1;
+        let av: string | number = "";
+        let bv: string | number = "";
+        switch (sort.key) {
+          case "date": av = a.created_at; bv = b.created_at; break;
+          case "order": av = String(a.display_id ?? a.id); bv = String(b.display_id ?? b.id); break;
+          case "retailer": av = retailerName(a).toLowerCase(); bv = retailerName(b).toLowerCase(); break;
+          case "store": av = storeName(a._storeId).toLowerCase(); bv = storeName(b._storeId).toLowerCase(); break;
+          case "items": av = (a.items ?? []).length; bv = (b.items ?? []).length; break;
+          case "total":
+            av = (a.items ?? []).reduce((s, i) => s + (i.price_cents ?? 0) * (i.quantity ?? 1), 0);
+            bv = (b.items ?? []).reduce((s, i) => s + (i.price_cents ?? 0) * (i.quantity ?? 1), 0);
+            break;
+          case "state": av = a.state; bv = b.state; break;
+        }
+        if (av < bv) return -1 * dir;
+        if (av > bv) return 1 * dir;
+        return 0;
+      })
+    : filtered;
+
+  const totalPages = Math.max(1, Math.ceil(sortedFiltered.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedOrders = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const paginatedOrders = sortedFiltered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const kpiCounts = {
     NEW: allOrders.filter(o => o.state === "NEW").length,
@@ -343,16 +376,16 @@ export default function FaireOrders() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <DataTH>Order</DataTH>
-                <DataTH>Retailer</DataTH>
-                <DataTH>Store</DataTH>
+                <SortableDataTH sortKey="order" currentSort={sort} onSort={handleSort}>Order</SortableDataTH>
+                <SortableDataTH sortKey="retailer" currentSort={sort} onSort={handleSort}>Retailer</SortableDataTH>
+                <SortableDataTH sortKey="store" currentSort={sort} onSort={handleSort}>Store</SortableDataTH>
                 <DataTH>Source</DataTH>
-                <DataTH align="center">Items</DataTH>
-                <DataTH>Total</DataTH>
+                <SortableDataTH sortKey="items" currentSort={sort} onSort={handleSort} align="center">Items</SortableDataTH>
+                <SortableDataTH sortKey="total" currentSort={sort} onSort={handleSort}>Total</SortableDataTH>
                 <DataTH>Commission</DataTH>
                 <DataTH>Quotation</DataTH>
-                <DataTH>Status</DataTH>
-                <DataTH>Date</DataTH>
+                <SortableDataTH sortKey="state" currentSort={sort} onSort={handleSort}>Status</SortableDataTH>
+                <SortableDataTH sortKey="date" currentSort={sort} onSort={handleSort}>Date</SortableDataTH>
                 <DataTH align="right">Actions</DataTH>
               </tr>
             </thead>
@@ -445,7 +478,7 @@ export default function FaireOrders() {
                   </DataTR>
                 );
               })}
-              {filtered.length === 0 && (
+              {sortedFiltered.length === 0 && (
                 <tr>
                   <td colSpan={11} className="px-4 py-8 text-center text-sm text-muted-foreground">
                     {allOrders.length === 0
@@ -459,10 +492,10 @@ export default function FaireOrders() {
         </DataTableContainer>
       </Fade>
 
-      {filtered.length > PAGE_SIZE && (
+      {sortedFiltered.length > PAGE_SIZE && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length}
+            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, sortedFiltered.length)} of {sortedFiltered.length}
           </p>
           <div className="flex items-center gap-1">
             <Button size="sm" variant="outline" className="h-8" disabled={safePage <= 1} onClick={() => setCurrentPage(p => p - 1)} data-testid="btn-prev-page">

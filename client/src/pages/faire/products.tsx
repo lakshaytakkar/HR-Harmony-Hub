@@ -15,6 +15,7 @@ import {
   IndexToolbar,
   DataTableContainer,
   DataTH,
+  SortableDataTH,
   DataTD,
   DataTR,
   DetailModal,
@@ -83,6 +84,7 @@ export default function FaireProducts() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const PAGE_SIZE = 50;
   const [assignModal, setAssignModal] = useState<{ productId: string; productName: string } | null>(null);
   const [assignVendorId, setAssignVendorId] = useState("");
@@ -130,9 +132,58 @@ export default function FaireProducts() {
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const handleSort = (key: string) => {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+  };
+
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    if (!sort) return 0;
+    const { key, dir } = sort;
+    let aVal: any, bVal: any;
+    switch (key) {
+      case "name":
+        aVal = (a.name ?? "").toLowerCase();
+        bVal = (b.name ?? "").toLowerCase();
+        break;
+      case "sku":
+        aVal = (a.variants?.[0]?.sku ?? "").toLowerCase();
+        bVal = (b.variants?.[0]?.sku ?? "").toLowerCase();
+        break;
+      case "store":
+        aVal = storeName(a._storeId).toLowerCase();
+        bVal = storeName(b._storeId).toLowerCase();
+        break;
+      case "wholesale":
+        aVal = Math.min(...(a.variants ?? []).map(v => v.wholesale_price_cents ?? 0).filter(Boolean), Infinity);
+        bVal = Math.min(...(b.variants ?? []).map(v => v.wholesale_price_cents ?? 0).filter(Boolean), Infinity);
+        break;
+      case "retail":
+        aVal = Math.min(...(a.variants ?? []).map(v => v.retail_price_cents ?? 0).filter(Boolean), Infinity);
+        bVal = Math.min(...(b.variants ?? []).map(v => v.retail_price_cents ?? 0).filter(Boolean), Infinity);
+        break;
+      case "moq":
+        aVal = a.minimum_order_quantity ?? 1;
+        bVal = b.minimum_order_quantity ?? 1;
+        break;
+      case "state":
+        aVal = a.lifecycle_state;
+        bVal = b.lifecycle_state;
+        break;
+      default:
+        return 0;
+    }
+    if (aVal < bVal) return dir === "asc" ? -1 : 1;
+    if (aVal > bVal) return dir === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sortedFiltered.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedProducts = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const paginatedProducts = sortedFiltered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const [settingInventory, setSettingInventory] = useState(false);
 
@@ -238,7 +289,7 @@ export default function FaireProducts() {
             <div className="flex items-center gap-2">
               <select
                 value={selectedStore}
-                onChange={e => { setSelectedStore(e.target.value); setSelectedIds([]); setCurrentPage(1); }}
+                onChange={e => { setSelectedStore(e.target.value); setCurrentPage(1); }}
                 className="h-9 text-sm border rounded-lg px-3 bg-background"
                 data-testid="select-store-filter"
               >
@@ -313,14 +364,14 @@ export default function FaireProducts() {
           <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <DataTH>Product</DataTH>
-                  <DataTH>SKU</DataTH>
-                  <DataTH>Store</DataTH>
+                  <SortableDataTH sortKey="name" currentSort={sort} onSort={handleSort}>Product</SortableDataTH>
+                  <SortableDataTH sortKey="sku" currentSort={sort} onSort={handleSort}>SKU</SortableDataTH>
+                  <SortableDataTH sortKey="store" currentSort={sort} onSort={handleSort}>Store</SortableDataTH>
                   <DataTH align="center">Variants</DataTH>
-                  <DataTH>Wholesale</DataTH>
-                  <DataTH>Retail</DataTH>
-                  <DataTH>MOQ / Case</DataTH>
-                  <DataTH>State</DataTH>
+                  <SortableDataTH sortKey="wholesale" currentSort={sort} onSort={handleSort}>Wholesale</SortableDataTH>
+                  <SortableDataTH sortKey="retail" currentSort={sort} onSort={handleSort}>Retail</SortableDataTH>
+                  <SortableDataTH sortKey="moq" currentSort={sort} onSort={handleSort}>MOQ / Case</SortableDataTH>
+                  <SortableDataTH sortKey="state" currentSort={sort} onSort={handleSort}>State</SortableDataTH>
                   <DataTH>Vendor</DataTH>
                   <DataTH align="right">Actions</DataTH>
                 </tr>

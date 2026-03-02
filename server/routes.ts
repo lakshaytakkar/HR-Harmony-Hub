@@ -142,14 +142,17 @@ export async function registerRoutes(
 
   app.get("/api/faire/orders", async (req, res) => {
     const state = req.query.state as string | undefined;
-    const limit = parseInt(req.query.limit as string) || 500;
-    const offset = parseInt(req.query.offset as string) || 0;
+    const hasLimit = req.query.limit !== undefined;
+    const hasOffset = req.query.offset !== undefined;
     try {
-      const orders = await getAllOrders({
+      const opts: { limit?: number; offset?: number; state?: string } = {
         state: state && state !== "all" ? state : undefined,
-        limit,
-        offset,
-      });
+      };
+      if (hasLimit || hasOffset) {
+        opts.limit = parseInt(req.query.limit as string) || 500;
+        opts.offset = parseInt(req.query.offset as string) || 0;
+      }
+      const orders = await getAllOrders(opts);
       return res.json({ orders });
     } catch {
       return res.status(500).json({ error: "Failed to fetch all orders" });

@@ -1,5 +1,5 @@
 import { type ReactNode, type ElementType, type ThHTMLAttributes, type TdHTMLAttributes } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
 import { PageTransition } from "@/components/ui/animated";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -477,6 +477,47 @@ export function DataTR({ children, onClick, className }: DataTRProps) {
     >
       {children}
     </tr>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SortableDataTH — clickable column header with sort direction indicator
+// Cycles: none → asc → desc → none
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface SortableDataTHProps {
+  sortKey: string;
+  currentSort: { key: string; dir: "asc" | "desc" } | null;
+  onSort: (key: string) => void;
+  align?: "left" | "right" | "center";
+  children: ReactNode;
+  className?: string;
+}
+
+export function SortableDataTH({ sortKey, currentSort, onSort, align = "left", children, className }: SortableDataTHProps) {
+  const isActive = currentSort?.key === sortKey;
+  const handleClick = () => onSort(sortKey);
+
+  return (
+    <th
+      onClick={handleClick}
+      className={cn(
+        "px-4 py-3 text-xs font-medium text-muted-foreground tracking-wide cursor-pointer select-none hover:text-foreground transition-colors",
+        align === "left" && "text-left",
+        align === "right" && "text-right",
+        align === "center" && "text-center",
+        className
+      )}
+    >
+      <span className="inline-flex items-center gap-1">
+        {children}
+        {isActive ? (
+          currentSort.dir === "asc" ? <ChevronUp size={12} /> : <ChevronDown size={12} />
+        ) : (
+          <ArrowUpDown size={10} className="opacity-30" />
+        )}
+      </span>
+    </th>
   );
 }
 

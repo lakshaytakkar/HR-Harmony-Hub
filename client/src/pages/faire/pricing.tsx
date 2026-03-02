@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useToast } from "@/hooks/use-toast";
 import { DualCurrency } from "@/lib/faire-currency";
 import {
-  PageShell, PageHeader, DataTableContainer, DataTH, DataTD, DataTR,
+  PageShell, PageHeader, DataTableContainer, DataTH, SortableDataTH, DataTD, DataTR,
 } from "@/components/layout";
 
 const BRAND_COLOR = "#1A6B45";
@@ -35,7 +35,17 @@ export default function FairePricing() {
   const [prepackName, setPrepackName] = useState("");
   const [prepackPrice, setPrepackPrice] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const PAGE_SIZE = 25;
+
+  const handleSort = (key: string) => {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+    setCurrentPage(1);
+  };
 
   const { data: productsData, isLoading: productsLoading } = useQuery<{ products: any[] }>({
     queryKey: ["/api/faire/products?slim"],
@@ -73,9 +83,33 @@ export default function FairePricing() {
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const sortedRows = sort
+    ? [...rows].sort((a, b) => {
+        const dir = sort.dir === "asc" ? 1 : -1;
+        const k = sort.key;
+        let aVal: any, bVal: any;
+        if (k === "productName") { aVal = a.productName; bVal = b.productName; }
+        else if (k === "sku") { aVal = a.sku; bVal = b.sku; }
+        else if (k === "wholesale") { aVal = a.wholesale_price_cents ?? 0; bVal = b.wholesale_price_cents ?? 0; }
+        else if (k === "retail") { aVal = a.retail_price_cents ?? 0; bVal = b.retail_price_cents ?? 0; }
+        else if (k === "margin") {
+          const rA = a.retail_price_cents ?? 0; const wA = a.wholesale_price_cents ?? 0;
+          const rB = b.retail_price_cents ?? 0; const wB = b.wholesale_price_cents ?? 0;
+          aVal = rA > 0 ? ((rA - wA) / rA) : 0;
+          bVal = rB > 0 ? ((rB - wB) / rB) : 0;
+        }
+        else { aVal = a[k]; bVal = b[k]; }
+        if (aVal == null && bVal == null) return 0;
+        if (aVal == null) return 1;
+        if (bVal == null) return -1;
+        if (typeof aVal === "number" && typeof bVal === "number") return (aVal - bVal) * dir;
+        return String(aVal).localeCompare(String(bVal)) * dir;
+      })
+    : rows;
+
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const paginatedRows = sortedRows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const filteredPrepacks = selectedStore === "all" ? mockPrepacks : mockPrepacks.filter(pp => pp.storeId === selectedStore);
 
@@ -111,12 +145,12 @@ export default function FairePricing() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <DataTH>Product</DataTH>
+                <SortableDataTH sortKey="productName" currentSort={sort} onSort={handleSort}>Product</SortableDataTH>
                 <DataTH>Store</DataTH>
-                <DataTH>SKU</DataTH>
-                <DataTH>Wholesale</DataTH>
-                <DataTH>Retail</DataTH>
-                <DataTH>Margin %</DataTH>
+                <SortableDataTH sortKey="sku" currentSort={sort} onSort={handleSort}>SKU</SortableDataTH>
+                <SortableDataTH sortKey="wholesale" currentSort={sort} onSort={handleSort}>Wholesale</SortableDataTH>
+                <SortableDataTH sortKey="retail" currentSort={sort} onSort={handleSort}>Retail</SortableDataTH>
+                <SortableDataTH sortKey="margin" currentSort={sort} onSort={handleSort}>Margin %</SortableDataTH>
                 <DataTH>MOQ</DataTH>
               </tr>
             </thead>
@@ -148,7 +182,7 @@ export default function FairePricing() {
         </DataTableContainer>
       </Fade>
 
-      {rows.length > PAGE_SIZE && (
+      {sortedRows.length > PAGE_SIZE && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, rows.length)} of {rows.length}

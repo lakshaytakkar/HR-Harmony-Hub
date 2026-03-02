@@ -16,6 +16,7 @@ import {
   DataTH,
   DataTD,
   DataTR,
+  SortableDataTH,
 } from "@/components/layout";
 
 const BRAND_COLOR = "#1A6B45";
@@ -40,6 +41,16 @@ export default function FaireRetailers() {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
+
+  const handleSort = (key: string) => {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+    setCurrentPage(1);
+  };
   const PAGE_SIZE = 25;
 
   const { data: storesData, isLoading: storesLoading } = useQuery<{ stores: any[] }>({
@@ -87,9 +98,23 @@ export default function FaireRetailers() {
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const sortedRetailers = sort
+    ? [...filtered].sort((a, b) => {
+        const dir = sort.dir === "asc" ? 1 : -1;
+        const key = sort.key as keyof EnrichedRetailer;
+        const aVal = a[key];
+        const bVal = b[key];
+        if (aVal == null && bVal == null) return 0;
+        if (aVal == null) return 1;
+        if (bVal == null) return -1;
+        if (typeof aVal === "number" && typeof bVal === "number") return (aVal - bVal) * dir;
+        return String(aVal).localeCompare(String(bVal)) * dir;
+      })
+    : filtered;
+
+  const totalPages = Math.max(1, Math.ceil(sortedRetailers.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedRetailers = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const paginatedRetailers = sortedRetailers.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const totalRetailers = enrichedRetailers.length;
   const activeRetailers = enrichedRetailers.filter(r => r.status === "active").length;
@@ -173,13 +198,13 @@ export default function FaireRetailers() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <DataTH>Retailer</DataTH>
-                <DataTH>Location</DataTH>
+                <SortableDataTH sortKey="name" currentSort={sort} onSort={handleSort}>Retailer</SortableDataTH>
+                <SortableDataTH sortKey="city" currentSort={sort} onSort={handleSort}>City/State</SortableDataTH>
                 <DataTH>Stores</DataTH>
-                <DataTH align="center">Orders</DataTH>
-                <DataTH>Total Spent</DataTH>
-                <DataTH>Last Order</DataTH>
-                <DataTH>Status</DataTH>
+                <SortableDataTH sortKey="total_orders" currentSort={sort} onSort={handleSort} align="center">Orders</SortableDataTH>
+                <SortableDataTH sortKey="total_spent" currentSort={sort} onSort={handleSort}>Total Spent</SortableDataTH>
+                <SortableDataTH sortKey="last_ordered" currentSort={sort} onSort={handleSort}>Last Order</SortableDataTH>
+                <SortableDataTH sortKey="status" currentSort={sort} onSort={handleSort}>Status</SortableDataTH>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -217,10 +242,10 @@ export default function FaireRetailers() {
         </DataTableContainer>
       </Fade>
 
-      {filtered.length > PAGE_SIZE && (
+      {sortedRetailers.length > PAGE_SIZE && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length}
+            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, sortedRetailers.length)} of {sortedRetailers.length}
           </p>
           <div className="flex items-center gap-1">
             <Button size="sm" variant="outline" className="h-8" disabled={safePage <= 1} onClick={() => setCurrentPage(p => p - 1)} data-testid="btn-prev-page">
