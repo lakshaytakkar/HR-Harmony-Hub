@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import multer from "multer";
 import { storage } from "./storage";
 import {
   getStoreCredentials,
@@ -46,7 +47,14 @@ import {
   addLedgerPartyTransaction,
   updateLedgerPartyTransaction,
   getPartyBalance,
+  getTaskActivity,
+  addTaskComment,
+  addTaskLink,
+  uploadTaskFile,
+  deleteTaskActivity,
 } from "./supabase";
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 import { fetchAllOrders, fetchAllProducts, fetchBrandProfile, fetchProduct, fetchRetailerProfile, updateVariantInventory } from "./faire-api";
 import { getWiseSummary, getWiseTransfers, getWiseProfiles } from "./wise";
 
@@ -873,6 +881,69 @@ export async function registerRoutes(
       return res.json({ balance });
     } catch {
       return res.status(500).json({ error: "Failed to fetch balance" });
+    }
+  });
+
+  // ── Task Activity (comments, attachments, links) ─────────────────────────────
+
+  app.get("/api/tasks/:taskId/activity", async (req, res) => {
+    try {
+      const items = await getTaskActivity(req.params.taskId);
+      return res.json({ items });
+    } catch {
+      return res.status(500).json({ error: "Failed to fetch activity" });
+    }
+  });
+
+  app.post("/api/tasks/:taskId/comments", async (req, res) => {
+    try {
+      const { content, author = "You" } = req.body as { content: string; author?: string };
+      if (!content?.trim()) return res.status(400).json({ error: "content is required" });
+      const item = await addTaskComment(req.params.taskId, content.trim(), author);
+      if (!item) return res.status(500).json({ error: "Failed to add comment" });
+      return res.json({ item });
+    } catch {
+      return res.status(500).json({ error: "Failed to add comment" });
+    }
+  });
+
+  app.post("/api/tasks/:taskId/links", async (req, res) => {
+    try {
+      const { url, title = "", author = "You" } = req.body as { url: string; title?: string; author?: string };
+      if (!url?.trim()) return res.status(400).json({ error: "url is required" });
+      const item = await addTaskLink(req.params.taskId, url.trim(), title.trim(), author);
+      if (!item) return res.status(500).json({ error: "Failed to add link" });
+      return res.json({ item });
+    } catch {
+      return res.status(500).json({ error: "Failed to add link" });
+    }
+  });
+
+  app.post("/api/tasks/:taskId/attachments", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: "file is required" });
+      const author = (req.body?.author as string) || "You";
+      const item = await uploadTaskFile(
+        req.params.taskId,
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        author
+      );
+      if (!item) return res.status(500).json({ error: "Failed to upload attachment" });
+      return res.json({ item });
+    } catch {
+      return res.status(500).json({ error: "Failed to upload attachment" });
+    }
+  });
+
+  app.delete("/api/tasks/:taskId/activity/:id", async (req, res) => {
+    try {
+      const ok = await deleteTaskActivity(req.params.id);
+      if (!ok) return res.status(500).json({ error: "Failed to delete activity" });
+      return res.json({ ok: true });
+    } catch {
+      return res.status(500).json({ error: "Failed to delete activity" });
     }
   });
 

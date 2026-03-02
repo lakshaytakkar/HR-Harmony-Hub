@@ -569,6 +569,52 @@ Only show stats cards on dashboards and list pages where the data is a meaningfu
 ### 4. Search Bar Rule
 Only include a search bar when there are 6 or more items in a list to filter. Do not add search to small static lists.
 
+## Task Activity Panel (Mar 2026)
+
+All task detail modals now include a real-time Activity panel (right-side) with three sections: **Comments**, **Files** (Supabase Storage), and **Links**.
+
+### Supabase Table: `task_activity`
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID PK | Auto-generated |
+| task_id | TEXT | References task ID (mock or any string) |
+| type | TEXT | `'comment'` \| `'attachment'` \| `'link'` |
+| content | TEXT | Comment body |
+| author | TEXT | Display name (default: `'Team'`) |
+| file_url | TEXT | Public Supabase Storage URL |
+| file_name | TEXT | Original filename |
+| file_size | INT | Bytes |
+| link_url | TEXT | Full URL |
+| link_title | TEXT | Optional display title |
+| created_at | TIMESTAMPTZ | Auto-set |
+
+### Supabase Storage: `task-attachments` bucket (public)
+- Files stored at path: `{taskId}/{timestamp}-{filename}`
+- Max 50MB per file
+- Public access, no auth required
+- Files deleted from Storage when activity row is deleted
+
+### API Routes (all new)
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/tasks/:taskId/activity` | Returns `{ items: ActivityItem[] }` sorted by created_at ASC |
+| POST | `/api/tasks/:taskId/comments` | Body: `{ content, author? }` → creates comment row |
+| POST | `/api/tasks/:taskId/links` | Body: `{ url, title? }` → creates link row |
+| POST | `/api/tasks/:taskId/attachments` | Multipart: `file` field → uploads to Supabase Storage → creates attachment row |
+| DELETE | `/api/tasks/:taskId/activity/:id` | Deletes row + Storage file if attachment |
+
+### Universal Task Detail Modal (tasks.tsx)
+- Converted from `DetailModal` to raw `Dialog` at `max-w-5xl`
+- Layout: `flex flex-row h-[75vh]` — left `flex-1` (description/progress/subtasks/details) + right `w-80 border-l` (activity panel)
+- Activity panel has Comments, Files (with upload), and Links sections
+- All 3 activity types use TanStack Query (`queryKey: ['/api/tasks', taskId, 'activity']`) + `useMutation` for writes
+
+### Dev Task Detail Dialog (task-detail-dialog.tsx)
+- Replaced static `currentTask.attachments` display with real Supabase-backed list
+- Added file upload → `POST /api/tasks/:id/attachments`
+- Per-attachment download link + delete button
+- Comments section remains local-state only (not persisted)
+
 ### 5. Detail Pages Rule
 Every entity with a list page must also have a dedicated detail page or detail dialog. This applies to: clients, leads, products, events, attendees, vendors, etc.
 

@@ -905,3 +905,109 @@ export async function getPartyBalance(partyId: string): Promise<number> {
   if (error) { console.error("[supabase] getPartyBalance error:", error.message); return 0; }
   return Number(data ?? 0);
 }
+
+// ── Task Activity (comments, attachments, links) ───────────────────────────────
+
+export interface TaskActivityItem {
+  id: string;
+  task_id: string;
+  type: "comment" | "attachment" | "link";
+  content: string | null;
+  author: string;
+  file_url: string | null;
+  file_name: string | null;
+  file_size: number | null;
+  link_url: string | null;
+  link_title: string | null;
+  created_at: string;
+}
+
+export async function getTaskActivity(taskId: string): Promise<TaskActivityItem[]> {
+  const { data, error } = await supabase
+    .from("task_activity")
+    .select("*")
+    .eq("task_id", taskId)
+    .order("created_at", { ascending: true });
+  if (error) { console.error("[supabase] getTaskActivity error:", error.message); return []; }
+  return (data ?? []) as TaskActivityItem[];
+}
+
+export async function addTaskComment(taskId: string, content: string, author: string): Promise<TaskActivityItem | null> {
+  const { data, error } = await supabase
+    .from("task_activity")
+    .insert([{ task_id: taskId, type: "comment", content, author }])
+    .select()
+    .single();
+  if (error) { console.error("[supabase] addTaskComment error:", error.message); return null; }
+  return data as TaskActivityItem;
+}
+
+export async function addTaskLink(taskId: string, url: string, title: string, author: string): Promise<TaskActivityItem | null> {
+  const { data, error } = await supabase
+    .from("task_activity")
+    .insert([{ task_id: taskId, type: "link", link_url: url, link_title: title || url, author }])
+    .select()
+    .single();
+  if (error) { console.error("[supabase] addTaskLink error:", error.message); return null; }
+  return data as TaskActivityItem;
+}
+
+export async function uploadTaskFile(
+  taskId: string,
+  buffer: Buffer,
+  filename: string,
+  mimeType: string,
+  author: string
+): Promise<TaskActivityItem | null> {
+  const ext = filename.split(".").pop() ?? "bin";
+  const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `${taskId}/${Date.now()}-${safeName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("task-attachments")
+    .upload(path, buffer, { contentType: mimeType, upsert: false });
+
+  if (uploadError) {
+    console.error("[supabase] uploadTaskFile storage error:", uploadError.message);
+    return null;
+  }
+
+  const { data: urlData } = supabase.storage.from("task-attachments").getPublicUrl(path);
+  const fileUrl = urlData?.publicUrl ?? "";
+
+  const { data, error } = await supabase
+    .from("task_activity")
+    .insert([{
+      task_id: taskId,
+      type: "attachment",
+      author,
+      file_url: fileUrl,
+      file_name: filename,
+      file_size: buffer.length,
+    }])
+    .select()
+    .single();
+
+  if (error) { console.error("[supabase] uploadTaskFile insert error:", error.message); return null; }
+  return data as TaskActivityItem;
+}
+
+export async function deleteTaskActivity(id: string): Promise<boolean> {
+  const { data: row } = await supabase
+    .from("task_activity")
+    .select("type, file_url")
+    .eq("id", id)
+    .single();
+
+  if (row?.type === "attachment" && row?.file_url) {
+    const url: string = row.file_url;
+    const match = url.match(/task-attachments\/(.+)$/);
+    if (match?.[1]) {
+      await supabase.storage.from("task-attachments").remove([decodeURIComponent(match[1])]);
+    }
+  }
+
+  const { error } = await supabase.from("task_activity").delete().eq("id", id);
+  if (error) { console.error("[supabase] deleteTaskActivity error:", error.message); return false; }
+  return true;
+}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   X,
   Bug,
@@ -18,7 +18,12 @@ import {
   Tag,
   Clock,
   FileText,
+  Upload,
+  Loader2,
+  ExternalLink,
+  Trash2,
 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +41,26 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { devProjects, devSprints, type DevTask } from "@/lib/mock-data-dev";
+
+interface ActivityItem {
+  id: string;
+  task_id: string;
+  type: "comment" | "attachment" | "link";
+  content: string | null;
+  author: string;
+  file_url: string | null;
+  file_name: string | null;
+  file_size: number | null;
+  link_url: string | null;
+  link_title: string | null;
+  created_at: string;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 const statusOptions = ["backlog", "todo", "in-progress", "in-review", "done", "cancelled"] as const;
 const priorityOptions = ["critical", "high", "medium", "low"] as const;
@@ -92,11 +117,56 @@ export function TaskDetailDialog({ task, open, onOpenChange, onTaskUpdate }: Tas
   const [newSubtask, setNewSubtask] = useState("");
   const [newComment, setNewComment] = useState("");
   const [localTask, setLocalTask] = useState<DevTask | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const qc = useQueryClient();
 
   const currentTask = localTask?.id === task?.id ? localTask : task;
 
   if (!currentTask) return null;
   const task_ = currentTask;
+
+  const { data: attachmentData } = useQuery<{ items: ActivityItem[] }>({
+    queryKey: ["/api/tasks", task_.id, "activity"],
+    queryFn: async () => {
+      const res = await fetch(`/api/tasks/${task_.id}/activity`);
+      if (!res.ok) throw new Error("Failed to fetch activity");
+      return res.json();
+    },
+    enabled: open,
+    select: (d) => ({ items: d.items.filter((i) => i.type === "attachment") }),
+  });
+
+  const supabaseAttachments = attachmentData?.items ?? [];
+
+  const deleteAttachmentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await fetch(`/api/tasks/${task_.id}/activity/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/tasks", task_.id, "activity"] });
+    },
+  });
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append("file", file);
+        await fetch(`/api/tasks/${task_.id}/attachments`, { method: "POST", body: fd });
+      }
+      qc.invalidateQueries({ queryKey: ["/api/tasks", task_.id, "activity"] });
+      toast({ title: "File uploaded successfully" });
+    } catch {
+      toast({ title: "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   const project = devProjects.find((p) => p.id === task_.projectId);
   const sprint = task_.sprintId ? devSprints.find((s) => s.id === task_.sprintId) : null;
@@ -258,27 +328,69 @@ export function TaskDetailDialog({ task, open, onOpenChange, onTaskUpdate }: Tas
               </div>
             </div>
 
-            {currentTask.attachments.length > 0 && (
-              <>
-                <Separator />
-                <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                    Attachments ({currentTask.attachments.length})
+            <>
+              <Separator />
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Attachments ({supabaseAttachments.length})
                   </h4>
-                  <div className="space-y-2">
-                    {currentTask.attachments.map((att, i) => (
-                      <div key={i} className="flex items-center gap-3 rounded-md border px-3 py-2" data-testid={`attachment-${i}`}>
-                        <Paperclip className="size-3.5 text-muted-foreground shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{att.name}</p>
-                          <p className="text-xs text-muted-foreground">{att.type} - {att.size}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs px-2 gap-1"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    data-testid="button-attach-file"
+                  >
+                    {uploading ? <Loader2 className="size-3 animate-spin" /> : <Upload className="size-3" />}
+                    {uploading ? "Uploading..." : "Attach"}
+                  </Button>
                 </div>
-              </>
-            )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  data-testid="input-file-upload"
+                />
+                <div className="space-y-2">
+                  {supabaseAttachments.length === 0 && (
+                    <p className="text-xs text-muted-foreground">No files attached. Click Attach to upload.</p>
+                  )}
+                  {supabaseAttachments.map((att) => (
+                    <div key={att.id} className="flex items-center gap-3 rounded-md border px-3 py-2 group" data-testid={`attachment-${att.id}`}>
+                      <Paperclip className="size-3.5 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{att.file_name}</p>
+                        {att.file_size != null && (
+                          <p className="text-xs text-muted-foreground">{formatBytes(att.file_size)}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {att.file_url && (
+                          <a href={att.file_url} target="_blank" rel="noopener noreferrer" data-testid={`link-download-${att.id}`}>
+                            <Button variant="ghost" size="icon" className="size-6">
+                              <ExternalLink className="size-3 text-muted-foreground" />
+                            </Button>
+                          </a>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-6"
+                          onClick={() => deleteAttachmentMutation.mutate(att.id)}
+                          data-testid={`btn-delete-attachment-${att.id}`}
+                        >
+                          <Trash2 className="size-3 text-muted-foreground" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           </div>
 
           <div className="w-full lg:w-[240px] shrink-0 border-t lg:border-t-0 lg:border-l bg-muted/30 p-4 space-y-4">
