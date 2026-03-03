@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus, CreditCard, CheckCircle, Link2, Paperclip, Upload, FileText,
-  RefreshCw, Landmark, Building2, User, Tag, X,
+  RefreshCw, Landmark, Building2, User, Tag, X, Pencil,
 } from "lucide-react";
 import { SiWise } from "react-icons/si";
 import { Fade } from "@/components/ui/animated";
@@ -112,7 +112,7 @@ function TagEditor({
           <button
             key={pt}
             onClick={() => tags.includes(pt) ? onChange(tags.filter((x) => x !== pt)) : addTag(pt)}
-            className="text-[11px] px-2 py-0.5 rounded-full border transition-all"
+            className="text-xs px-2 py-0.5 rounded-full border transition-all"
             style={
               tags.includes(pt)
                 ? { background: FAIRE_COLOR, color: "#fff", borderColor: FAIRE_COLOR }
@@ -135,7 +135,7 @@ function TagEditor({
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 pt-1">
           {tags.map((t) => (
-            <span key={t} className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full" style={{ background: "#EFF6FF", color: "#2563EB" }}>
+            <span key={t} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full" style={{ background: "#EFF6FF", color: "#2563EB" }}>
               {t}
               <button onClick={() => onChange(tags.filter((x) => x !== t))} className="hover:opacity-70" data-testid={`remove-tag-${t}`}><X size={9} /></button>
             </span>
@@ -176,8 +176,8 @@ function WiseView() {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-lg font-bold font-heading">Wise</span>
-              {profile && <Badge variant="outline" className="text-[10px]">{profileName}</Badge>}
-              {lastSynced && <span className="text-[10px] text-muted-foreground">Synced {new Date(lastSynced).toLocaleTimeString()}</span>}
+              {profile && <Badge variant="outline" className="text-xs">{profileName}</Badge>}
+              {lastSynced && <span className="text-xs text-muted-foreground">Synced {new Date(lastSynced).toLocaleTimeString()}</span>}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">Multi-currency business account · Live API</p>
           </div>
@@ -198,9 +198,9 @@ function WiseView() {
             return (
               <Card key={b.id ?? cur} className="border">
                 <CardContent className="pt-4 pb-4">
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{cur} Balance</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{cur} Balance</p>
                   <p className="text-xl font-bold mt-1" style={{ color: WISE_GREEN }}>{formatWiseCurrency(amt, cur)}</p>
-                  {b.type && <p className="text-[10px] text-muted-foreground mt-1 capitalize">{b.type.replace(/_/g, " ").toLowerCase()}</p>}
+                  {b.type && <p className="text-xs text-muted-foreground mt-1 capitalize">{b.type.replace(/_/g, " ").toLowerCase()}</p>}
                 </CardContent>
               </Card>
             );
@@ -233,7 +233,7 @@ function WiseView() {
                     <DataTD className="text-muted-foreground text-xs capitalize">{t.type?.replace(/_/g, " ").toLowerCase() ?? "transfer"}</DataTD>
                     <DataTD><span className="font-semibold">{formatWiseCurrency(amt, cur)}</span></DataTD>
                     <DataTD>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
                     </DataTD>
                   </DataTR>
                 );
@@ -330,7 +330,7 @@ function MercuryView() {
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-lg font-bold font-heading">Mercury</span>
-            <Badge variant="outline" className="text-[10px] text-muted-foreground border-muted-foreground/30">USD Business Checking</Badge>
+            <Badge variant="outline" className="text-xs text-muted-foreground border-muted-foreground/30">USD Business Checking</Badge>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">2 entities · Neom International LLC · Cloudnest LLC</p>
         </div>
@@ -350,7 +350,7 @@ function MercuryView() {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <p className="font-semibold text-sm">{label}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">{id === "neom" ? "Neom LLC" : "Cloudnest LLC"}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mt-0.5">{id === "neom" ? "Neom LLC" : "Cloudnest LLC"}</p>
                 </div>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-white text-sm" style={{ background: MERCURY_TEAL }}>M</div>
               </div>
@@ -406,10 +406,10 @@ function MercuryView() {
                   <DataTD className="text-muted-foreground whitespace-nowrap">{t.date}</DataTD>
                   <DataTD>
                     <div className="font-medium leading-tight max-w-xs">{t.description}</div>
-                    {t.reference && <div className="text-[10px] font-mono text-muted-foreground mt-0.5">{t.reference}</div>}
+                    {t.reference && <div className="text-xs font-mono text-muted-foreground mt-0.5">{t.reference}</div>}
                   </DataTD>
                   <DataTD>
-                    <Badge variant="outline" className="text-[10px] font-medium" style={{ borderColor: `${MERCURY_TEAL}40`, color: MERCURY_TEAL }}>
+                    <Badge variant="outline" className="text-xs font-medium" style={{ borderColor: `${MERCURY_TEAL}40`, color: MERCURY_TEAL }}>
                       {t.entity === "neom" ? "Neom" : "Cloudnest"}
                     </Badge>
                   </DataTD>
@@ -424,12 +424,12 @@ function MercuryView() {
                   </DataTD>
                   <DataTD>
                     {t.tags.length > 0
-                      ? <div className="flex flex-wrap gap-1">{t.tags.map((tag) => <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "#EFF6FF", color: "#2563EB" }}>{tag}</span>)}</div>
+                      ? <div className="flex flex-wrap gap-1">{t.tags.map((tag) => <span key={tag} className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "#EFF6FF", color: "#2563EB" }}>{tag}</span>)}</div>
                       : <span className="text-muted-foreground text-xs">—</span>}
                   </DataTD>
                   <DataTD>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setEditModal(t); setEditTags(t.tags ?? []); setEditNotes(t.notes ?? ""); setEditCategory(t.category ?? ""); }} data-testid={`btn-edit-${t.id}`}>
-                      <Tag size={11} className="mr-1" /> Edit
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => { setEditModal(t); setEditTags(t.tags ?? []); setEditNotes(t.notes ?? ""); setEditCategory(t.category ?? ""); }} data-testid={`btn-edit-${t.id}`} title="Edit">
+                      <Pencil size={14} />
                     </Button>
                   </DataTD>
                 </DataTR>
@@ -729,7 +729,7 @@ export default function FaireBankTransactions() {
                       <DataTH>Business?</DataTH>
                       <DataTH>Tags</DataTH>
                       <DataTH>Status</DataTH>
-                      <DataTH>Actions</DataTH>
+                      <DataTH align="right">Actions</DataTH>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -745,7 +745,7 @@ export default function FaireBankTransactions() {
                             <div className="font-medium leading-tight">{t.description}</div>
                           </div>
                         </DataTD>
-                        <DataTD className="text-muted-foreground text-xs">{t.bank_name}</DataTD>
+                        <DataTD className="text-sm text-muted-foreground">{t.bank_name}</DataTD>
                         <DataTD>
                           <Badge className="border-0 text-xs" style={{ background: t.type === "credit" ? "#ECFDF5" : "#FEF2F2", color: t.type === "credit" ? "#059669" : "#DC2626" }}>
                             {t.type.toUpperCase()}
@@ -776,7 +776,7 @@ export default function FaireBankTransactions() {
                         </DataTD>
                         <DataTD>
                           {t.tags.length > 0
-                            ? <div className="flex flex-wrap gap-1">{t.tags.map((tag) => <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "#EFF6FF", color: "#2563EB" }}>{tag}</span>)}</div>
+                            ? <div className="flex flex-wrap gap-1">{t.tags.map((tag) => <span key={tag} className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "#EFF6FF", color: "#2563EB" }}>{tag}</span>)}</div>
                             : <span className="text-muted-foreground text-xs">—</span>}
                         </DataTD>
                         <DataTD>
@@ -786,29 +786,24 @@ export default function FaireBankTransactions() {
                             <span className="text-xs text-amber-600 font-medium flex items-center gap-1"><Link2 className="h-3 w-3" /> Pending</span>
                           )}
                         </DataTD>
-                        <DataTD>
-                          <div className="flex items-center gap-1">
+                        <DataTD align="right">
+                          <div className="flex items-center justify-end gap-1">
                             {!t.reconciled && (
-                              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setMapModal(t); setMapOrderId(""); setMapSearch(""); }} data-testid={`button-map-${t.id}`}>
-                                Map Order
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => { setMapModal(t); setMapOrderId(""); setMapSearch(""); }} data-testid={`button-map-${t.id}`} title="Map Order">
+                                <Link2 size={14} />
                               </Button>
                             )}
-                            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setEditModal(t); setEditTags(t.tags ?? []); setEditNotes(t.notes ?? ""); setEditCategory(t.category ?? ""); }} data-testid={`btn-edit-${t.id}`}>
-                              <Tag size={11} className="mr-1" /> Edit
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => { setEditModal(t); setEditTags(t.tags ?? []); setEditNotes(t.notes ?? ""); setEditCategory(t.category ?? ""); }} data-testid={`btn-edit-${t.id}`} title="Edit">
+                              <Pencil size={14} />
                             </Button>
-                            <button
-                              className="relative h-7 w-7 flex items-center justify-center rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                              onClick={() => openAttachments(t)}
-                              data-testid={`button-attach-${t.id}`}
-                              title="Attachments"
-                            >
-                              <Paperclip size={13} />
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 relative" onClick={() => openAttachments(t)} data-testid={`button-attach-${t.id}`} title="Attachments">
+                              <Paperclip size={14} />
                               {(attachments[t.id]?.length ?? 0) > 0 && (
                                 <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white" style={{ background: FAIRE_COLOR }}>
                                   {attachments[t.id].length}
                                 </span>
                               )}
-                            </button>
+                            </Button>
                           </div>
                         </DataTD>
                       </DataTR>

@@ -169,7 +169,7 @@ export default function FaireVendors() {
                         <div>
                           <p className="font-medium">{v.name}</p>
                           {v.is_default && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold" style={{ background: "#FFFBEB", color: "#D97706" }}>DEFAULT</span>
+                            <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: "#FFFBEB", color: "#D97706" }}>DEFAULT</span>
                           )}
                         </div>
                       </div>

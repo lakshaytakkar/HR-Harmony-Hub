@@ -202,8 +202,8 @@ export default function FaireAnalytics() {
           ].map((k, i) => (
             <div key={i} className="rounded-xl border bg-card p-3" data-testid={`analytics-kpi-${i}`}>
               <p className="text-lg font-bold">{k.value}</p>
-              {k.sub && <p className="text-[10px] text-muted-foreground/70">{k.sub}</p>}
-              <p className="text-[10px] text-muted-foreground mt-0.5">{k.label}</p>
+              {k.sub && <p className="text-xs text-muted-foreground/70">{k.sub}</p>}
+              <p className="text-xs text-muted-foreground mt-0.5">{k.label}</p>
             </div>
           ))}
         </div>
@@ -331,14 +331,14 @@ export default function FaireAnalytics() {
                         <div className="w-full rounded-t-md transition-all" style={{ height: `${barH}%`, background: FAIRE_COLOR, opacity: i === monthlyData.length - 1 ? 1 : 0.7 }} />
                       </div>
                       <div className="text-center">
-                        <p className="text-[10px] font-bold"><DualFromDollars dollars={month.revenue} /></p>
+                        <p className="text-xs font-bold"><DualFromDollars dollars={month.revenue} /></p>
                         {pct !== null && (
-                          <div className={`flex items-center gap-0.5 text-[10px] font-medium ${pct >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                          <div className={`flex items-center gap-0.5 text-xs font-medium ${pct >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                             {pct >= 0 ? <TrendingUp size={8} /> : <TrendingDown size={8} />}
                             {Math.abs(pct)}%
                           </div>
                         )}
-                        <p className="text-[10px] text-muted-foreground">{month.label}</p>
+                        <p className="text-xs text-muted-foreground">{month.label}</p>
                       </div>
                     </div>
                   );

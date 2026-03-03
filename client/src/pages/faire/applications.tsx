@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus, ClipboardList, CheckCircle2, Clock, AlertTriangle, XCircle,
-  FileText, BookOpen, PlayCircle, ExternalLink,
+  FileText, BookOpen, PlayCircle, ExternalLink, Eye,
 } from "lucide-react";
 import { Fade } from "@/components/ui/animated";
 import { Badge } from "@/components/ui/badge";
@@ -256,6 +256,7 @@ export default function FaireApplications() {
                   <DataTH>Products</DataTH>
                   <DataTH>Applied Date</DataTH>
                   <DataTH>Created</DataTH>
+                  <DataTH align="right">Actions</DataTH>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -288,6 +289,17 @@ export default function FaireApplications() {
                       </DataTD>
                       <DataTD className="text-muted-foreground text-xs">
                         {a.created_at ? new Date(a.created_at).toLocaleDateString() : "—"}
+                      </DataTD>
+                      <DataTD align="right" onClick={e => e.stopPropagation()}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setLocation(`/faire/applications/${a.id}`)}
+                          data-testid={`button-view-application-${a.id}`}
+                        >
+                          <Eye size={14} />
+                        </Button>
                       </DataTD>
                     </DataTR>
                   );

@@ -228,7 +228,7 @@ export default function FaireQuotations() {
                   <SortableDataTH sortKey="margin" currentSort={sort} onSort={handleSort}>Margin</SortableDataTH>
                   <SortableDataTH sortKey="status" currentSort={sort} onSort={handleSort}>Status</SortableDataTH>
                   <DataTH>Sent / Received</DataTH>
-                  <DataTH>Action</DataTH>
+                  <DataTH align="right">Actions</DataTH>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -241,9 +241,9 @@ export default function FaireQuotations() {
                   const sc = STATUS_CONFIG[q.status];
                   const marginColor = mp === null ? "#6B7280" : mp > 30 ? "#059669" : mp >= 15 ? "#D97706" : "#DC2626";
                   return (
-                    <DataTR key={q.id} data-testid={`row-quotation-${q.id}`}>
+                    <DataTR key={q.id} onClick={() => setLocation(`/faire/quotations/${q.id}`)} data-testid={`row-quotation-${q.id}`}>
                       <DataTD>
-                        <span className="font-mono text-muted-foreground">{q.id}</span>
+                        <span className="text-xs font-mono text-muted-foreground">{q.id}</span>
                       </DataTD>
                       <DataTD>
                         {order ? (
@@ -283,16 +283,15 @@ export default function FaireQuotations() {
                         <div>{q.sent_at ? new Date(q.sent_at).toLocaleDateString() : "—"}</div>
                         <div>{q.received_at ? new Date(q.received_at).toLocaleDateString() : "—"}</div>
                       </DataTD>
-                      <DataTD>
+                      <DataTD align="right" onClick={e => e.stopPropagation()}>
                         <Button
                           size="sm"
-                          variant={q.status === "QUOTE_RECEIVED" ? "default" : "outline"}
-                          style={q.status === "QUOTE_RECEIVED" ? { background: FAIRE_COLOR, color: "white" } : {}}
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
                           onClick={() => setLocation(`/faire/quotations/${q.id}`)}
                           data-testid={`button-view-quotation-${q.id}`}
                         >
-                          <Eye className="h-3 w-3 mr-1" />
-                          {q.status === "QUOTE_RECEIVED" ? "Review" : "View"}
+                          <Eye size={14} />
                         </Button>
                       </DataTD>
                     </DataTR>

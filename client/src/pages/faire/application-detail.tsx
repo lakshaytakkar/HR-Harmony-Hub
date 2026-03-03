@@ -736,7 +736,7 @@ export default function FaireApplicationDetail() {
                 </div>
                 <div className="flex justify-between">
                   <span>ID</span>
-                  <span className="font-mono text-[10px]">{app.id.slice(0, 8)}…</span>
+                  <span className="font-mono text-xs text-muted-foreground">{app.id.slice(0, 8)}…</span>
                 </div>
               </CardContent>
             </Card>

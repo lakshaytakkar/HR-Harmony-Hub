@@ -170,9 +170,9 @@ export default function FairePricing() {
                   <DataTR key={r.id} data-testid={`pricing-row-${r.id}`}>
                     <DataTD>
                       <p className="font-medium">{r.productName}</p>
-                      <p className="text-[10px] text-muted-foreground">{(r.options ?? []).map((o: any) => o.value).join(" / ")}</p>
+                      <p className="text-xs text-muted-foreground">{(r.options ?? []).map((o: any) => o.value).join(" / ")}</p>
                     </DataTD>
-                    <DataTD><Badge variant="outline" className="text-[10px]">{r.store?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
+                    <DataTD><Badge variant="outline" className="text-xs">{r.store?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
                     <DataTD className="font-mono text-muted-foreground">{r.sku}</DataTD>
                     <DataTD className="font-semibold"><DualCurrency cents={wholesaleCents} /></DataTD>
                     <DataTD><DualCurrency cents={retailCents} /></DataTD>
@@ -242,7 +242,7 @@ export default function FairePricing() {
                   <DataTD className="text-muted-foreground">{pp.products.join(", ")}</DataTD>
                   <DataTD>{pp.units}</DataTD>
                   <DataTD className="font-semibold"><DualCurrency cents={pp.wholesale_price_cents} /></DataTD>
-                  <DataTD><Badge variant="outline" className="text-[10px]">{stores.find((s: any) => s.id === pp.storeId)?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
+                  <DataTD><Badge variant="outline" className="text-xs">{stores.find((s: any) => s.id === pp.storeId)?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
                 </DataTR>
               ))}
             </tbody>

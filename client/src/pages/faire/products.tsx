@@ -410,7 +410,7 @@ export default function FaireProducts() {
                           )}
                           <div>
                             <p className="font-medium">{product.name}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{category}</p>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider">{category}</p>
                           </div>
                         </div>
                       </DataTD>
@@ -419,12 +419,12 @@ export default function FaireProducts() {
                           {variants.length === 1 ? (variants[0].sku || "—") : (
                             <span title={variants.map(v => v.sku).filter(Boolean).join(", ")}>
                               {variants[0]?.sku || "—"}
-                              {variants.length > 1 && <span className="text-[10px] text-muted-foreground/60 ml-1">+{variants.length - 1}</span>}
+                              {variants.length > 1 && <span className="text-xs text-muted-foreground/60 ml-1">+{variants.length - 1}</span>}
                             </span>
                           )}
                         </div>
                       </DataTD>
-                      <DataTD><Badge variant="outline" className="text-[10px]">{storeName(product._storeId).split(" ")[0]}</Badge></DataTD>
+                      <DataTD><Badge variant="outline" className="text-xs">{storeName(product._storeId).split(" ")[0]}</Badge></DataTD>
                       <DataTD align="center" className="font-medium">{variants.length}</DataTD>
                       <DataTD className="font-semibold">
                         {wMin === 0 ? "—" : wMin === wMax ? (
@@ -432,7 +432,7 @@ export default function FaireProducts() {
                         ) : (
                           <span>
                             {`$${(wMin / 100).toFixed(0)}–$${(wMax / 100).toFixed(0)}`}
-                            <span className="block text-[10px] text-muted-foreground/70 font-normal">{formatINR(wMin)}–{formatINR(wMax)}</span>
+                            <span className="block text-xs text-muted-foreground/70 font-normal">{formatINR(wMin)}–{formatINR(wMax)}</span>
                           </span>
                         )}
                       </DataTD>
@@ -442,7 +442,7 @@ export default function FaireProducts() {
                         ) : (
                           <span>
                             {`$${(rMin / 100).toFixed(0)}–$${(rMax / 100).toFixed(0)}`}
-                            <span className="block text-[10px] text-muted-foreground/70 font-normal">{formatINR(rMin)}–{formatINR(rMax)}</span>
+                            <span className="block text-xs text-muted-foreground/70 font-normal">{formatINR(rMin)}–{formatINR(rMax)}</span>
                           </span>
                         )}
                       </DataTD>
@@ -455,8 +455,8 @@ export default function FaireProducts() {
                       </DataTD>
                       <DataTD>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium uppercase tracking-tighter" style={{ background: lc.bg, color: lc.text }}>{lifecycleLabels[product.lifecycle_state] ?? product.lifecycle_state}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium uppercase tracking-tighter" style={{ background: sc.bg, color: sc.text }}>{product.sale_state === "FOR_SALE" ? "For Sale" : "Paused"}</span>
+                          <span className="text-xs px-1.5 py-0.5 rounded font-medium uppercase tracking-tighter" style={{ background: lc.bg, color: lc.text }}>{lifecycleLabels[product.lifecycle_state] ?? product.lifecycle_state}</span>
+                          <span className="text-xs px-1.5 py-0.5 rounded font-medium uppercase tracking-tighter" style={{ background: sc.bg, color: sc.text }}>{product.sale_state === "FOR_SALE" ? "For Sale" : "Paused"}</span>
                         </div>
                       </DataTD>
                       <DataTD onClick={e => e.stopPropagation()}>
@@ -573,7 +573,7 @@ export default function FaireProducts() {
                     />
                     <div>
                       <p className="text-sm font-medium">{v.name}</p>
-                      {v.is_default && <span className="text-[10px] text-amber-600 font-semibold">DEFAULT</span>}
+                      {v.is_default && <span className="text-xs text-amber-600 font-semibold">DEFAULT</span>}
                     </div>
                   </label>
                 ))}

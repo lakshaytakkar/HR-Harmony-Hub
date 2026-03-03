@@ -157,7 +157,7 @@ export default function FaireProductDetail() {
                   {(product.images[selectedImageIdx]?.tags ?? []).length > 0 && (
                     <div className="absolute top-2 left-2 flex gap-1">
                       {product.images[selectedImageIdx].tags.map((t: string) => (
-                        <Badge key={t} variant="secondary" className="text-[9px]">{t}</Badge>
+                        <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
                       ))}
                     </div>
                   )}
@@ -233,16 +233,16 @@ export default function FaireProductDetail() {
                       <td className="p-3 text-xs font-mono">{variant.sku}</td>
                       <td className="p-3">
                         {(variant.options ?? []).map((o: any) => (
-                          <Badge key={o.name} variant="outline" className="text-[9px] mr-1">{o.name}: {o.value}</Badge>
+                          <Badge key={o.name} variant="outline" className="text-xs mr-1">{o.name}: {o.value}</Badge>
                         ))}
                       </td>
                       <td className="p-3 text-xs font-medium"><DualCurrency cents={variant.wholesale_price_cents} /></td>
                       <td className="p-3 text-xs"><DualCurrency cents={variant.retail_price_cents} /></td>
                       <td className="p-3">
                         <span className={`text-xs font-semibold ${isOut ? "text-red-600" : isLow ? "text-amber-600" : ""}`}>{variant.available_quantity}</span>
-                        {variant.backordered_until && <p className="text-[9px] text-muted-foreground">Until {new Date(variant.backordered_until).toLocaleDateString()}</p>}
+                        {variant.backordered_until && <p className="text-xs text-muted-foreground">Until {new Date(variant.backordered_until).toLocaleDateString()}</p>}
                       </td>
-                      <td className="p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ background: vlc.bg, color: vlc.color }}>{vlc.label}</span></td>
+                      <td className="p-3"><span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: vlc.bg, color: vlc.color }}>{vlc.label}</span></td>
                       <td className="p-3">
                         <div className="flex gap-1">
                           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setSelectedVariantId(variant.id); setEditWholesale((variant.wholesale_price_cents / 100).toFixed(2)); setEditRetail((variant.retail_price_cents / 100).toFixed(2)); setPriceOpen(true); }} data-testid={`btn-edit-price-${variant.id}`}>Edit Price</Button>
@@ -269,7 +269,7 @@ export default function FaireProductDetail() {
                     <p className="text-xs font-semibold">{review.retailer_name}</p>
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => <Star key={i} size={10} className={i < review.rating ? "text-amber-400 fill-amber-400" : "text-muted-foreground"} />)}
-                      <span className="text-[10px] text-muted-foreground ml-1">{new Date(review.created_at).toLocaleDateString()}</span>
+                      <span className="text-xs text-muted-foreground ml-1">{new Date(review.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">{review.comment}</p>

@@ -208,7 +208,7 @@ export default function FaireRetailerDetail() {
                   {isActive ? "active" : "inactive"}
                 </span>
                 {hasEnrichment && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: `${FAIRE_COLOR}15`, color: FAIRE_COLOR }}>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${FAIRE_COLOR}15`, color: FAIRE_COLOR }}>
                     Enriched
                   </span>
                 )}
@@ -268,7 +268,7 @@ export default function FaireRetailerDetail() {
                   <CardTitle className="text-sm">Contact & Business Details</CardTitle>
                   <button
                     onClick={openEnrichModal}
-                    className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
                     data-testid="btn-edit-enrichment-inline"
                   >
                     <Pencil size={11} /> Edit
@@ -291,7 +291,7 @@ export default function FaireRetailerDetail() {
                           href={whatsappUrl(enrichment.contact_phone)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[10px] px-1.5 py-0.5 rounded font-medium text-white"
+                          className="text-xs px-1.5 py-0.5 rounded font-medium text-white"
                           style={{ background: "#25D366" }}
                           data-testid="link-whatsapp"
                         >
@@ -344,7 +344,7 @@ export default function FaireRetailerDetail() {
                     </InfoRow>
                   )}
                   {enrichment?.enriched_by && (
-                    <p className="text-[10px] text-muted-foreground mt-3 pt-3 border-t">
+                    <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
                       Enriched by <span className="font-medium">{enrichment.enriched_by}</span>
                       {enrichment.updated_at && ` · ${new Date(enrichment.updated_at).toLocaleDateString()}`}
                     </p>
@@ -400,11 +400,11 @@ export default function FaireRetailerDetail() {
                           const itemsTotal = (order.items ?? []).reduce((s: number, i: any) => s + (i.price_cents ?? 0) * (i.quantity ?? 0), 0);
                           return (
                             <DataTR key={order.id} onClick={() => setLocation(`/faire/orders/${order.id}`)} data-testid={`order-history-row-${order.id}`}>
-                              <DataTD><Badge variant="outline" className="text-[10px] font-mono">{order.display_id}</Badge></DataTD>
-                              <DataTD><Badge variant="outline" className="text-[10px]">{store?.name?.split(" ")[0] ?? "Store"}</Badge></DataTD>
+                              <DataTD><Badge variant="outline" className="text-xs font-mono">{order.display_id}</Badge></DataTD>
+                              <DataTD><Badge variant="outline" className="text-xs">{store?.name?.split(" ")[0] ?? "Store"}</Badge></DataTD>
                               <DataTD className="text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</DataTD>
                               <DataTD className="font-semibold"><DualCurrency cents={itemsTotal} /></DataTD>
-                              <DataTD><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span></DataTD>
+                              <DataTD><span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span></DataTD>
                             </DataTR>
                           );
                         })}
@@ -426,13 +426,13 @@ export default function FaireRetailerDetail() {
                 <InfoRow label="Total Spent">
                   <span className="text-sm font-medium" data-testid="text-stat-total-spent">
                     ${totalSpentDollars.toLocaleString()}
-                    <span className="block text-[10px] text-muted-foreground/70 font-normal text-right">{formatINRFromDollars(totalSpentDollars)}</span>
+                    <span className="block text-xs text-muted-foreground/70 font-normal text-right">{formatINRFromDollars(totalSpentDollars)}</span>
                   </span>
                 </InfoRow>
                 <InfoRow label="Avg Order Value">
                   <span className="text-sm font-medium" data-testid="text-stat-avg-order-value">
                     ${avgOrderValue}
-                    <span className="block text-[10px] text-muted-foreground/70 font-normal text-right">{formatINRFromDollars(avgOrderValue)}</span>
+                    <span className="block text-xs text-muted-foreground/70 font-normal text-right">{formatINRFromDollars(avgOrderValue)}</span>
                   </span>
                 </InfoRow>
                 <InfoRow label="First Order" value={firstOrder ? new Date(firstOrder.created_at).toLocaleDateString() : "\u2014"} />

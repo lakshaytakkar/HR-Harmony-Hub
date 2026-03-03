@@ -394,10 +394,10 @@ export default function FaireOrderDetail() {
                   <DualCurrencyInline cents={itemsTotal} className="text-sm font-medium" />
                 </InfoRow>
                 <InfoRow label={`Commission${order.payout_costs?.commission_bps ? ` (${(order.payout_costs.commission_bps / 100).toFixed(0)}%)` : ""}`}>
-                  {commissionAmt > 0 ? <span className="text-sm font-medium">-{formatUSD(commissionAmt)} <span className="text-[10px] text-muted-foreground/70 font-normal">(-{formatINR(commissionAmt)})</span></span> : <span className="text-sm font-medium">—</span>}
+                  {commissionAmt > 0 ? <span className="text-sm font-medium">-{formatUSD(commissionAmt)} <span className="text-xs text-muted-foreground/70 font-normal">(-{formatINR(commissionAmt)})</span></span> : <span className="text-sm font-medium">—</span>}
                 </InfoRow>
                 <InfoRow label="Platform Fee">
-                  {(order.payout_costs?.payout_fee_cents ?? 0) > 0 ? <span className="text-sm font-medium">-{formatUSD(order.payout_costs.payout_fee_cents)} <span className="text-[10px] text-muted-foreground/70 font-normal">(-{formatINR(order.payout_costs.payout_fee_cents)})</span></span> : <span className="text-sm font-medium">—</span>}
+                  {(order.payout_costs?.payout_fee_cents ?? 0) > 0 ? <span className="text-sm font-medium">-{formatUSD(order.payout_costs.payout_fee_cents)} <span className="text-xs text-muted-foreground/70 font-normal">(-{formatINR(order.payout_costs.payout_fee_cents)})</span></span> : <span className="text-sm font-medium">—</span>}
                 </InfoRow>
                 <div className="border-t pt-2 flex items-center justify-between">
                   <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Estimated Payout</span>

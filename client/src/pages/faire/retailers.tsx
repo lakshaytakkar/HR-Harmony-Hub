@@ -245,7 +245,7 @@ export default function FaireRetailers() {
                 <DataTR key={retailer.id} onClick={() => setLocation(`/faire/retailers/${retailer.id}`)} data-testid={`retailer-row-${retailer.id}`}>
                   <DataTD>
                     <p className="font-medium">{retailer.name}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{retailer.id}</p>
+                    <p className="text-xs font-mono text-muted-foreground">{retailer.id}</p>
                   </DataTD>
                   <DataTD className="text-muted-foreground font-medium">
                     {[retailer.city, retailer.state].filter(Boolean).join(", ") || "—"}
@@ -254,7 +254,7 @@ export default function FaireRetailers() {
                     <div className="flex flex-wrap gap-1">
                       {retailer.storeIds.map(sid => {
                         const store = stores.find((s: any) => s.id === sid);
-                        return <Badge key={sid} variant="outline" className="text-[10px] font-medium">{store?.name?.split(" ")[0] ?? sid.slice(0, 8)}</Badge>;
+                        return <Badge key={sid} variant="outline" className="text-xs font-medium">{store?.name?.split(" ")[0] ?? sid.slice(0, 8)}</Badge>;
                       })}
                       {retailer.storeIds.length === 0 && <span className="text-muted-foreground text-xs">—</span>}
                     </div>
@@ -263,7 +263,7 @@ export default function FaireRetailers() {
                   <DataTD className="font-semibold"><DualFromDollars dollars={retailer.total_spent} /></DataTD>
                   <DataTD className="text-muted-foreground font-medium">{retailer.last_ordered ? new Date(retailer.last_ordered).toLocaleDateString() : "—"}</DataTD>
                   <DataTD>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-tighter ${retailer.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>{retailer.status}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium uppercase tracking-tighter ${retailer.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>{retailer.status}</span>
                   </DataTD>
                   <DataTD>
                     <Button

@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { RefreshCw, CheckCircle2, AlertTriangle, Package, ShoppingCart, Clock, ExternalLink, Users, DollarSign } from "lucide-react";
+import { RefreshCw, CheckCircle2, AlertTriangle, Clock, Eye } from "lucide-react";
 import { Fade } from "@/components/ui/animated";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -12,8 +11,6 @@ import {
   PageShell,
   PageHeader,
   IndexToolbar,
-  StatGrid,
-  StatCard,
   DataTableContainer,
   DataTH,
   DataTD,
@@ -144,7 +141,6 @@ export default function FaireStores() {
     return (
       <PageShell>
         <div className="h-10 bg-muted rounded w-64 animate-pulse" />
-        <div className="h-24 bg-muted rounded-xl animate-pulse" />
         <div className="space-y-3">
           {[...Array(6)].map((_, i) => <div key={i} className="h-20 bg-muted rounded-xl animate-pulse" />)}
         </div>
@@ -167,11 +163,6 @@ export default function FaireStores() {
 
   const activeCount = stores.filter(s => s.active).length;
   const syncedCount = stores.filter(s => s.last_synced_at).length;
-
-  const globalTotalRevenue = Object.values(summaries).reduce((s, v) => s + v.total_revenue_cents, 0);
-  const globalTotalOrders = Object.values(summaries).reduce((s, v) => s + v.total_orders, 0);
-  const globalTotalProducts = Object.values(summaries).reduce((s, v) => s + v.total_products, 0);
-  const globalTotalRetailers = Object.values(summaries).reduce((s, v) => s + v.unique_retailers, 0);
 
   return (
     <PageShell>
@@ -200,40 +191,6 @@ export default function FaireStores() {
       </Fade>
 
       <Fade>
-        <StatGrid cols={4}>
-          <StatCard
-            label="Total Revenue"
-            value={formatUSD(globalTotalRevenue)}
-            trend={formatINR(globalTotalRevenue)}
-            icon={DollarSign}
-            iconBg="#ECFDF5"
-            iconColor={FAIRE_COLOR}
-          />
-          <StatCard
-            label="Total Orders"
-            value={String(globalTotalOrders)}
-            icon={ShoppingCart}
-            iconBg="#EFF6FF"
-            iconColor="#2563EB"
-          />
-          <StatCard
-            label="Total Products"
-            value={String(globalTotalProducts)}
-            icon={Package}
-            iconBg="#FFF7ED"
-            iconColor="#EA580C"
-          />
-          <StatCard
-            label="Unique Retailers"
-            value={String(globalTotalRetailers)}
-            icon={Users}
-            iconBg="#FAF5FF"
-            iconColor="#7C3AED"
-          />
-        </StatGrid>
-      </Fade>
-
-      <Fade>
         <IndexToolbar
           search={search}
           onSearch={(v) => { setSearch(v); setCurrentPage(1); }}
@@ -253,7 +210,6 @@ export default function FaireStores() {
                 <DataTH>Orders</DataTH>
                 <DataTH>Products</DataTH>
                 <DataTH>Retailers</DataTH>
-                <DataTH>Order Pipeline</DataTH>
                 <DataTH>Status</DataTH>
                 <DataTH>Last Synced</DataTH>
                 <DataTH align="right">Actions</DataTH>
@@ -266,7 +222,7 @@ export default function FaireStores() {
                 const category = STORE_CATEGORIES[store.name] ?? "General Merchandise";
                 const s = summaries[store.id];
                 return (
-                  <DataTR key={store.id} data-testid={`store-row-${store.id}`}>
+                  <DataTR key={store.id} onClick={() => setLocation(`/faire/orders?store=${store.id}`)} data-testid={`store-row-${store.id}`}>
                     <DataTD>
                       <div className="flex items-center gap-3">
                         {logo ? (
@@ -284,10 +240,7 @@ export default function FaireStores() {
                             {store.name.charAt(0)}
                           </div>
                         )}
-                        <div>
-                          <p className="font-semibold text-sm" data-testid={`text-store-name-${store.id}`}>{store.name}</p>
-                          <p className="text-[11px] text-muted-foreground font-mono">{store.id.slice(0, 8)}</p>
-                        </div>
+                        <p className="font-semibold text-sm" data-testid={`text-store-name-${store.id}`}>{store.name}</p>
                       </div>
                     </DataTD>
                     <DataTD>
@@ -301,55 +254,13 @@ export default function FaireStores() {
                       ) : <span className="text-muted-foreground text-xs">—</span>}
                     </DataTD>
                     <DataTD>
-                      {s && s.total_orders > 0 ? (
-                        <div>
-                          <span className="font-semibold text-sm" data-testid={`text-orders-${store.id}`}>{s.total_orders}</span>
-                          <div className="text-[10px] text-muted-foreground">
-                            avg <DualCurrency cents={s.avg_order_value_cents} />
-                          </div>
-                        </div>
-                      ) : <span className="text-muted-foreground text-xs" data-testid={`text-orders-${store.id}`}>—</span>}
+                      <span className="font-semibold text-sm" data-testid={`text-orders-${store.id}`}>{s?.total_orders ?? 0}</span>
                     </DataTD>
                     <DataTD>
                       <span className="font-semibold text-sm" data-testid={`text-products-${store.id}`}>{s?.total_products ?? 0}</span>
                     </DataTD>
                     <DataTD>
-                      <div className="flex items-center gap-1.5 text-xs">
-                        <Users size={12} className="text-muted-foreground" />
-                        <span className="font-semibold" data-testid={`text-retailers-${store.id}`}>{s?.unique_retailers ?? 0}</span>
-                      </div>
-                    </DataTD>
-                    <DataTD>
-                      {s ? (
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {s.orders_new > 0 && (
-                            <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200 px-1.5 py-0">
-                              {s.orders_new} new
-                            </Badge>
-                          )}
-                          {s.orders_processing > 0 && (
-                            <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 px-1.5 py-0">
-                              {s.orders_processing} processing
-                            </Badge>
-                          )}
-                          {s.orders_in_transit > 0 && (
-                            <Badge variant="outline" className="text-[10px] bg-purple-50 text-purple-700 border-purple-200 px-1.5 py-0">
-                              {s.orders_in_transit} shipping
-                            </Badge>
-                          )}
-                          {s.orders_delivered > 0 && (
-                            <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 px-1.5 py-0">
-                              {s.orders_delivered} delivered
-                            </Badge>
-                          )}
-                          {s.orders_canceled > 0 && (
-                            <Badge variant="outline" className="text-[10px] bg-red-50 text-red-700 border-red-200 px-1.5 py-0">
-                              {s.orders_canceled} canceled
-                            </Badge>
-                          )}
-                          {s.total_orders === 0 && <span className="text-muted-foreground text-xs">No orders</span>}
-                        </div>
-                      ) : <span className="text-muted-foreground text-xs">—</span>}
+                      <span className="font-semibold text-sm" data-testid={`text-retailers-${store.id}`}>{s?.unique_retailers ?? 0}</span>
                     </DataTD>
                     <DataTD>
                       <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${store.active ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 text-emerald-600" : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 text-gray-500"}`}>
@@ -363,37 +274,26 @@ export default function FaireStores() {
                         {getLastSyncLabel(store.last_synced_at)}
                       </div>
                     </DataTD>
-                    <DataTD align="right">
+                    <DataTD align="right" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="h-8 text-xs"
-                          onClick={() => setLocation("/faire/orders")}
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setLocation(`/faire/orders?store=${store.id}`)}
                           data-testid={`btn-view-orders-${store.id}`}
                         >
-                          <ShoppingCart size={12} className="mr-1" />
-                          Orders
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 text-xs"
-                          onClick={() => handleSync(store)}
-                          disabled={isSyncing || !store.active}
-                          data-testid={`btn-sync-${store.id}`}
-                        >
-                          <RefreshCw size={12} className={`mr-1 ${isSyncing ? "animate-spin" : ""}`} />
-                          {isSyncing ? "Syncing..." : "Sync"}
+                          <Eye size={14} />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
                           className="h-8 w-8 p-0"
-                          onClick={() => window.open("https://www.faire.com/brand-portal", "_blank")}
-                          data-testid={`btn-open-faire-${store.id}`}
+                          onClick={() => handleSync(store)}
+                          disabled={isSyncing || !store.active}
+                          data-testid={`btn-sync-${store.id}`}
                         >
-                          <ExternalLink size={14} />
+                          <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
                         </Button>
                       </div>
                     </DataTD>
@@ -402,7 +302,7 @@ export default function FaireStores() {
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">
                     {stores.length === 0
                       ? "No stores configured. Add a Faire brand account to get started."
                       : "No stores match your search."}

@@ -181,7 +181,7 @@ export default function FaireShipments() {
                 const cfg = orderStateConfig[orderState] ?? { label: orderState, color: "#6B7280", bg: "#F9FAFB" };
                 return (
                   <DataTR key={ship.id} data-testid={`shipment-row-${ship.id}`}>
-                    <DataTD className="font-mono text-muted-foreground">{ship.id}</DataTD>
+                    <DataTD className="text-xs font-mono text-muted-foreground">{ship.id}</DataTD>
                     <DataTD>
                       <Badge variant="outline" className="text-xs font-mono">{ship.order?.display_id}</Badge>
                     </DataTD>
