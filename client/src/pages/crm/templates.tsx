@@ -9,8 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { messageTemplates, ALL_VERTICALS_IN_CRM, type MessageTemplate, type TemplateType } from "@/lib/mock-data-crm";
-
-const BRAND = "#0369A1";
+import { CRM_COLOR } from "@/lib/crm-config";
 
 const typeConfig: Record<TemplateType, { label: string; icon: typeof Mail; cls: string }> = {
   email: { label: "Email", icon: Mail, cls: "bg-blue-50 text-blue-700" },
@@ -143,7 +142,7 @@ export default function CrmTemplates() {
               {filtered.length}
             </span>
           </div>
-          <Button size="sm" className="rounded-full gap-1.5 text-white" style={{ backgroundColor: BRAND }} data-testid="btn-new-template">
+          <Button size="sm" className="rounded-full gap-1.5 text-white" style={{ backgroundColor: CRM_COLOR }} data-testid="btn-new-template">
             <Plus className="size-4" /> New Template
           </Button>
         </div>
@@ -160,7 +159,7 @@ export default function CrmTemplates() {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
                   typeFilter === t ? "text-white border-transparent" : "bg-background border-border text-muted-foreground hover:border-foreground/30"
                 }`}
-                style={typeFilter === t ? { backgroundColor: BRAND } : {}}
+                style={typeFilter === t ? { backgroundColor: CRM_COLOR } : {}}
               >
                 {Icon && <Icon className="size-3" />}
                 {t === "all" ? "All Types" : cfg?.label}
@@ -306,7 +305,7 @@ export default function CrmTemplates() {
                     </div>
                     <Button
                       className="w-full rounded-lg text-white gap-2"
-                      style={{ backgroundColor: BRAND }}
+                      style={{ backgroundColor: CRM_COLOR }}
                       onClick={() => {
                         navigator.clipboard.writeText(previewBody);
                         toast({ title: "Filled template copied", description: "Ready to paste." });

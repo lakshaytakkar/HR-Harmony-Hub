@@ -41,8 +41,8 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { getPersonAvatar } from "@/lib/avatars";
+import { CRM_COLOR } from "@/lib/crm-config";
 
-const BRAND_BLUE = "#0369A1";
 const MOCK_UPI_ID = "payments@supransbiz";
 
 interface PaymentLink {
@@ -304,7 +304,7 @@ export default function PaymentLinksPage() {
           </div>
           <Button 
             className="rounded-full h-10 px-6 gap-2"
-            style={{ backgroundColor: BRAND_BLUE }}
+            style={{ backgroundColor: CRM_COLOR }}
             onClick={() => setIsCreateDialogOpen(true)}
             data-testid="button-create-payment-link"
           >
@@ -335,7 +335,7 @@ export default function PaymentLinksPage() {
                     ? "text-white shadow-sm" 
                     : "text-muted-foreground hover:text-foreground"
                 }`}
-                style={filter === s ? { backgroundColor: BRAND_BLUE } : {}}
+                style={filter === s ? { backgroundColor: CRM_COLOR } : {}}
                 data-testid={`pill-status-${s}`}
               >
                 {s}
@@ -351,7 +351,7 @@ export default function PaymentLinksPage() {
             <Card className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer group">
               <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className={`size-10 rounded-full flex items-center justify-center text-white font-bold text-sm`} style={{ backgroundColor: BRAND_BLUE }}>
+                  <div className={`size-10 rounded-full flex items-center justify-center text-white font-bold text-sm`} style={{ backgroundColor: CRM_COLOR }}>
                     {link.customerName.charAt(0)}
                   </div>
                   <div className="space-y-0.5">
@@ -598,7 +598,7 @@ export default function PaymentLinksPage() {
             )}
             <Button 
               onClick={handleCreateLink}
-              style={{ backgroundColor: BRAND_BLUE }}
+              style={{ backgroundColor: CRM_COLOR }}
               className="px-6 rounded-full"
             >
               {currentStep < 3 ? "Continue" : "Finish & Save"}
@@ -639,7 +639,7 @@ export default function PaymentLinksPage() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsMarkAsPaidOpen(false)}>Cancel</Button>
             <Button 
-              style={{ backgroundColor: BRAND_BLUE }}
+              style={{ backgroundColor: CRM_COLOR }}
               onClick={() => selectedLink && handleMarkAsPaid(selectedLink.id)}
             >
               Confirm Payment

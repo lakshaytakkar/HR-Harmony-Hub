@@ -8,14 +8,14 @@ import { Input } from "@/components/ui/input";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { crmActivities, ALL_VERTICALS_IN_CRM, type CrmActivity, type ActivityType } from "@/lib/mock-data-crm";
+import { CRM_COLOR } from "@/lib/crm-config";
+import { StatusBadge } from "@/components/hr/status-badge";
 import {
   PageShell,
   PageHeader,
   IndexToolbar,
   DetailModal,
 } from "@/components/layout";
-
-const BRAND = "#0284C7";
 
 const typeConfig: Record<ActivityType, { label: string; icon: typeof Phone; color: string; bg: string; pill: string }> = {
   call: { label: "Call", icon: Phone, color: "text-blue-600", bg: "bg-blue-50", pill: "bg-blue-50 text-blue-700" },
@@ -24,12 +24,6 @@ const typeConfig: Record<ActivityType, { label: string; icon: typeof Phone; colo
   meeting: { label: "Meeting", icon: CalendarCheck, color: "text-amber-600", bg: "bg-amber-50", pill: "bg-amber-50 text-amber-700" },
   task: { label: "Task", icon: CheckSquare, color: "text-violet-600", bg: "bg-violet-50", pill: "bg-violet-50 text-violet-700" },
   note: { label: "Note", icon: FileText, color: "text-purple-600", bg: "bg-purple-50", pill: "bg-purple-50 text-purple-700" },
-};
-
-const statusConfig: Record<string, { label: string; cls: string }> = {
-  completed: { label: "Completed", cls: "bg-emerald-50 text-emerald-700" },
-  scheduled: { label: "Scheduled", cls: "bg-sky-50 text-sky-700" },
-  overdue: { label: "Overdue", cls: "bg-red-50 text-red-700" },
 };
 
 function groupByDate(activities: CrmActivity[]): { label: string; items: CrmActivity[] }[] {
@@ -110,7 +104,7 @@ export default function CrmActivities() {
         <IndexToolbar
           search=""
           onSearch={() => {}}
-          color={BRAND}
+          color={CRM_COLOR}
           filters={verticalOptions}
           activeFilter={verticalFilter}
           onFilter={setVerticalFilter}
@@ -187,7 +181,7 @@ export default function CrmActivities() {
                   {group.items.map((act) => {
                     const cfg = typeConfig[act.type];
                     const Icon = cfg.icon;
-                    const sc = statusConfig[act.status];
+                    const sc = null;
                     const vert = ALL_VERTICALS_IN_CRM.find(
                       (v) => v.id === act.vertical
                     );
@@ -280,7 +274,7 @@ export default function CrmActivities() {
             <Button variant="outline" onClick={() => setLogOpen(false)}>
               Cancel
             </Button>
-            <Button style={{ backgroundColor: BRAND }} className="text-white">
+            <Button style={{ backgroundColor: CRM_COLOR }} className="text-white">
               Save Activity
             </Button>
           </>

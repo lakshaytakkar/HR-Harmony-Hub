@@ -9,8 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { crmDeals, crmContacts, crmActivities, ALL_VERTICALS_IN_CRM, type CrmDeal } from "@/lib/mock-data-crm";
-
-const BRAND = "#0369A1";
+import { CRM_COLOR } from "@/lib/crm-config";
 
 const COLUMNS: { stage: string; label: string; border: string; bg: string; text: string; hdr: string }[] = [
   { stage: "new", label: "New Lead", border: "border-slate-200", bg: "bg-slate-50", text: "text-slate-700", hdr: "bg-slate-100" },
@@ -94,7 +93,7 @@ export default function CrmPipeline() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {[{ id: "all", name: "All Verticals", color: BRAND }, ...ALL_VERTICALS_IN_CRM].map(v => (
+          {[{ id: "all", name: "All Verticals", color: CRM_COLOR }, ...ALL_VERTICALS_IN_CRM].map(v => (
             <button
               key={v.id}
               onClick={() => setVerticalFilter(v.id)}

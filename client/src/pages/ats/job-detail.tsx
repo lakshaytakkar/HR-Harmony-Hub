@@ -7,26 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { StatusBadge } from "@/components/hr/status-badge";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { jobOpenings, applications, candidates } from "@/lib/mock-data-ats";
 
-const statusColors: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  paused: "bg-amber-100 text-amber-700",
-  closed: "bg-red-100 text-red-700",
-  draft: "bg-muted text-muted-foreground",
-};
 
-const stageColors: Record<string, string> = {
-  applied: "bg-slate-100 text-slate-700",
-  "phone-screen": "bg-sky-100 text-sky-700",
-  technical: "bg-violet-100 text-violet-700",
-  cultural: "bg-amber-100 text-amber-700",
-  final: "bg-orange-100 text-orange-700",
-  offer: "bg-emerald-100 text-emerald-700",
-  rejected: "bg-red-100 text-red-700",
-};
 
 export default function AtsJobDetail() {
   const { id } = useParams<{ id: string }>();
@@ -71,7 +57,7 @@ export default function AtsJobDetail() {
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <h1 className="text-2xl font-bold">{job.title}</h1>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusColors[paused ? "paused" : job.status]}`}>{paused ? "paused" : job.status}</span>
+                  <StatusBadge status={paused ? "paused" : job.status} />
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${job.priority === "high" ? "bg-red-100 text-red-700" : job.priority === "medium" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>{job.priority} priority</span>
                   <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-sky-100 text-sky-700">{job.department}</span>
                 </div>
@@ -172,7 +158,7 @@ export default function AtsJobDetail() {
                             <p className="text-xs text-muted-foreground">{cand?.currentRole}</p>
                           </td>
                           <td className="px-4 py-2.5">
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stageColors[app.stage] || "bg-muted text-muted-foreground"}`}>{app.stage}</span>
+                            <StatusBadge status={app.stage} />
                           </td>
                           <td className="px-4 py-2.5">
                             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setLocation(`/ats/candidates/${app.candidateId}`)} data-testid={`view-candidate-${app.candidateId}`}>View</Button>

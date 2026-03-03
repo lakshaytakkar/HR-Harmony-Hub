@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Fade } from "@/components/ui/animated";
 import { faireQuotations, type FaireQuotation } from "@/lib/mock-data-faire-ops";
+import { VENDOR_COLOR } from "@/lib/suprans-config";
 
-const BRAND_COLOR = "#7C3AED";
 
 const FULFILLER_ID_TO_NAME: Record<string, string> = {
   "fulf-001": "ShipFast Logistics",
@@ -105,7 +105,7 @@ function QuoteRequestCard({
           <Button
             size="sm"
             onClick={() => setExpanded(e => !e)}
-            style={{ background: expanded ? "var(--muted)" : BRAND_COLOR }}
+            style={{ background: expanded ? "var(--muted)" : VENDOR_COLOR }}
             className={expanded ? "text-foreground" : "text-white"}
             data-testid={`button-expand-${quotation.id}`}
           >
@@ -207,7 +207,7 @@ function QuoteRequestCard({
             </div>
 
             <div className="flex justify-end">
-              <Button onClick={handleSubmit} className="text-white" style={{ background: BRAND_COLOR }} data-testid={`button-submit-${quotation.id}`}>
+              <Button onClick={handleSubmit} className="text-white" style={{ background: VENDOR_COLOR }} data-testid={`button-submit-${quotation.id}`}>
                 <Send className="h-4 w-4 mr-2" /> Submit Quote
               </Button>
             </div>
@@ -371,7 +371,7 @@ export default function VendorQuotations() {
               onClick={() => setActiveTab(tab.key)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
               style={activeTab === tab.key
-                ? { background: BRAND_COLOR, color: "#fff" }
+                ? { background: VENDOR_COLOR, color: "#fff" }
                 : { color: "var(--muted-foreground)" }}
               data-testid={`tab-${tab.key}`}
             >

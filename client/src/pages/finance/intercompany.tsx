@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { ALL_FINANCE_COMPANIES, interCompanyBalances, exchangeRates } from "@/lib/mock-data-finance";
+import { FINANCE_COLOR } from "@/lib/finance-config";
 
-const BRAND = "#B45309";
 const RATE = exchangeRates[0].rate;
 
 function getCompany(id: string) {
@@ -59,7 +59,7 @@ export default function FinanceIntercompany() {
             <h1 className="text-2xl font-bold">Inter-Company Accounts</h1>
             <p className="text-sm text-muted-foreground">Due-to / Due-from balances across Neom, Cloudnest, SSPL & LIPL</p>
           </div>
-          <Button style={{ backgroundColor: BRAND }} className="text-white" data-testid="btn-record-settlement">
+          <Button style={{ backgroundColor: FINANCE_COLOR }} className="text-white" data-testid="btn-record-settlement">
             <RefreshCw className="h-4 w-4 mr-1" />Record Settlement
           </Button>
         </div>
@@ -144,7 +144,7 @@ export default function FinanceIntercompany() {
               onClick={() => setStatusFilter(s.id)}
               data-testid={`pill-ic-status-${s.id}`}
               className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${statusFilter === s.id ? "text-white border-transparent" : "bg-background border-muted-foreground/20 text-muted-foreground"}`}
-              style={statusFilter === s.id ? { backgroundColor: BRAND } : undefined}
+              style={statusFilter === s.id ? { backgroundColor: FINANCE_COLOR } : undefined}
             >{s.label}</button>
           ))}
         </div>

@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { ALL_FINANCE_COMPANIES, complianceFilings } from "@/lib/mock-data-finance";
+import { FINANCE_COLOR } from "@/lib/finance-config";
 
-const BRAND = "#B45309";
 const FILING_TYPES = ["All", "GST", "TDS", "ROC", "Income Tax", "IRS", "Wyoming", "Other"];
 
 function getCompany(id: string) {
@@ -114,7 +114,7 @@ export default function FinanceCompliance() {
                 onClick={() => setCompanyFilter(c.id)}
                 data-testid={`pill-company-${c.id}`}
                 className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${companyFilter === c.id ? "text-white border-transparent" : "bg-background border-muted-foreground/20 text-muted-foreground"}`}
-                style={companyFilter === c.id ? { backgroundColor: BRAND } : undefined}
+                style={companyFilter === c.id ? { backgroundColor: FINANCE_COLOR } : undefined}
               >{c.label}</button>
             ))}
           </div>
@@ -125,7 +125,7 @@ export default function FinanceCompliance() {
                 onClick={() => setTypeFilter(t)}
                 data-testid={`pill-type-${t}`}
                 className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${typeFilter === t ? "text-white border-transparent" : "bg-background border-muted-foreground/20 text-muted-foreground"}`}
-                style={typeFilter === t ? { backgroundColor: BRAND } : undefined}
+                style={typeFilter === t ? { backgroundColor: FINANCE_COLOR } : undefined}
               >{t}</button>
             ))}
           </div>

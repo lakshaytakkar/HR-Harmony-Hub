@@ -13,6 +13,7 @@ import {
   crmDeals, crmActivities, teamPerformance, ALL_VERTICALS_IN_CRM,
   type CrmDeal, type CrmActivity,
 } from "@/lib/mock-data-crm";
+import { CRM_COLOR } from "@/lib/crm-config";
 import {
   PageShell,
   HeroBanner,
@@ -22,8 +23,6 @@ import {
   SectionGrid,
 } from "@/components/layout";
 
-const BRAND = "#0369A1";
-const BRAND_DARK = "#0284C7";
 
 const stageOrder = ["new", "contacted", "qualified", "proposal", "negotiation", "won", "lost"] as const;
 const stageLabels: Record<string, string> = {
@@ -114,8 +113,8 @@ export default function CrmDashboard() {
         eyebrow="Sales CRM · Cross-Vertical"
         headline="Sales Dashboard"
         tagline={`${activeDeals.length} active deals worth ${formatINR(totalPipeline)} across all verticals. ${wonDeals.length} deals won totalling ${formatINR(totalWon)} this quarter.`}
-        color={BRAND}
-        colorDark={BRAND_DARK}
+        color={CRM_COLOR}
+        colorDark={CRM_COLOR}
         actions={
           <>
             <Button

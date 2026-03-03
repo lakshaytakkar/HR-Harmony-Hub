@@ -13,9 +13,9 @@ import {
   SectionCard,
   SectionGrid,
 } from "@/components/layout";
+import { StatusBadge } from "@/components/hr/status-badge";
+import { ATS_COLOR } from "@/lib/ats-config";
 
-const BRAND_COLOR = "#8B5CF6";
-const BRAND_DARK = "#7c3aed";
 
 const funnelStages = [
   { label: "Applied", count: 25, color: "bg-slate-400" },
@@ -25,16 +25,6 @@ const funnelStages = [
   { label: "Offer", count: 3, color: "bg-orange-400" },
   { label: "Hired", count: 1, color: "bg-emerald-500" },
 ];
-
-const stageColors: Record<string, string> = {
-  applied: "bg-slate-100 text-slate-700",
-  screening: "bg-sky-100 text-sky-700",
-  interview: "bg-violet-100 text-violet-700",
-  evaluation: "bg-amber-100 text-amber-700",
-  offer: "bg-orange-100 text-orange-700",
-  hired: "bg-emerald-100 text-emerald-700",
-  rejected: "bg-red-100 text-red-700",
-};
 
 export default function AtsDashboard() {
   const [, setLocation] = useLocation();
@@ -69,8 +59,8 @@ export default function AtsDashboard() {
         eyebrow="ATS · Recruitment"
         headline="Recruitment Dashboard"
         tagline={`${interviewsThisWeek} interviews scheduled this week and ${offersExtended} offers awaiting response.`}
-        color={BRAND_COLOR}
-        colorDark={BRAND_DARK}
+        color={ATS_COLOR}
+        colorDark={ATS_COLOR}
       />
 
       <StatGrid>
@@ -168,7 +158,7 @@ export default function AtsDashboard() {
                   <p className="text-sm font-medium truncate">{c.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{c.currentRole} · {c.currentCompany}</p>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${stageColors[c.stage]}`}>{c.stage}</span>
+                <StatusBadge status={c.stage} />
               </div>
             ))}
           </div>

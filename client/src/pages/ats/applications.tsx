@@ -15,16 +15,7 @@ import {
   DataTD,
   DataTR,
 } from "@/components/layout";
-
-const stageColors: Record<string, string> = {
-  applied: "bg-slate-100 text-slate-700",
-  "phone-screen": "bg-sky-100 text-sky-700",
-  technical: "bg-violet-100 text-violet-700",
-  cultural: "bg-amber-100 text-amber-700",
-  final: "bg-orange-100 text-orange-700",
-  offer: "bg-emerald-100 text-emerald-700",
-  rejected: "bg-red-100 text-red-700",
-};
+import { StatusBadge } from "@/components/hr/status-badge";
 
 const interviewers = Array.from(new Set(applications.map(a => a.currentInterviewer).filter(Boolean)))
 
@@ -130,7 +121,7 @@ export default function AtsApplications() {
                     <DataTD className="text-muted-foreground">{app.jobTitle}</DataTD>
                     <DataTD className="text-muted-foreground">{app.appliedDate}</DataTD>
                     <DataTD>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stageColors[app.stage] || "bg-muted text-muted-foreground"}`}>{app.stage}</span>
+                      <StatusBadge status={app.stage} />
                     </DataTD>
                     <DataTD className="text-muted-foreground">{app.currentInterviewer || "—"}</DataTD>
                     <DataTD className="text-muted-foreground">{app.lastActivity}</DataTD>

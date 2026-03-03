@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/hr/status-badge";
 import { leads, tourPackages, type Lead, type LeadStatus } from "@/lib/mock-data-goyo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
+import { EVENTS_COLOR } from "@/lib/events-config";
 import {
   PageShell,
   PageHeader,
@@ -25,7 +26,6 @@ import {
   DetailSection,
 } from "@/components/layout";
 
-const BRAND_COLOR = "#E91E63";
 
 const formatDate = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
@@ -163,7 +163,7 @@ export default function EventsLeads() {
               <Button
                 onClick={() => setDialogOpen(true)}
                 className="gap-2 text-white"
-                style={{ backgroundColor: BRAND_COLOR }}
+                style={{ backgroundColor: EVENTS_COLOR }}
                 data-testid="button-add-lead"
               >
                 <Plus className="size-4" /> Add Lead
@@ -178,7 +178,7 @@ export default function EventsLeads() {
           <StatCard label="Total Leads" value={totalLeads} icon={Users} iconBg="rgba(33, 150, 243, 0.1)" iconColor="#2196F3" />
           <StatCard label="New Today" value={newToday} icon={Calendar} iconBg="rgba(37, 99, 235, 0.1)" iconColor="#2563EB" />
           <StatCard label="Follow-ups Due" value={followUpsDue} icon={AlertCircle} iconBg="rgba(255, 152, 0, 0.1)" iconColor="#FF9800" />
-          <StatCard label="Conversion Rate" value={`${conversionRate}%`} icon={Users} iconBg="rgba(233, 30, 99, 0.1)" iconColor={BRAND_COLOR} />
+          <StatCard label="Conversion Rate" value={`${conversionRate}%`} icon={Users} iconBg="rgba(233, 30, 99, 0.1)" iconColor={EVENTS_COLOR} />
         </StatGrid>
       </Fade>
 
@@ -187,7 +187,7 @@ export default function EventsLeads() {
           search={search}
           onSearch={setSearch}
           placeholder="Search leads by name or city..."
-          color={BRAND_COLOR}
+          color={EVENTS_COLOR}
         />
       </Fade>
 
@@ -266,7 +266,7 @@ export default function EventsLeads() {
           <>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button 
-              style={{ backgroundColor: BRAND_COLOR }} 
+              style={{ backgroundColor: EVENTS_COLOR }} 
               className="text-white hover:opacity-90"
               onClick={() => setDialogOpen(false)}
             >

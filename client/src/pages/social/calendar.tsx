@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { socialPosts, campaigns, socialAccounts } from "@/lib/mock-data-social";
 
-const BRAND_COLOR = "#0D9488";
 
 const platformConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
   instagram: { icon: SiInstagram, color: "#E11D48", bg: "#FFF1F2" },

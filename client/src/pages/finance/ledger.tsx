@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { ALL_FINANCE_COMPANIES, chartOfAccounts, financeTransactions, type ChartOfAccount } from "@/lib/mock-data-finance";
+import { FINANCE_COLOR } from "@/lib/finance-config";
 
-const BRAND = "#B45309";
 const ACCOUNT_TYPE_ORDER = ["asset", "liability", "equity", "revenue", "expense"] as const;
 const TYPE_LABELS: Record<string, string> = {
   asset: "Assets", liability: "Liabilities", equity: "Equity", revenue: "Revenue", expense: "Expenses"
@@ -136,7 +136,7 @@ export default function FinanceLedger() {
                             onClick={() => setSelectedAccount(account)}
                             data-testid={`ledger-account-${account.id}`}
                             className={`w-full text-left px-3 py-1.5 rounded text-xs transition-colors ${selectedAccount?.id === account.id ? "font-semibold" : "text-muted-foreground hover:bg-muted"}`}
-                            style={selectedAccount?.id === account.id ? { backgroundColor: "#FEF3C7", color: BRAND } : undefined}
+                            style={selectedAccount?.id === account.id ? { backgroundColor: "#FEF3C7", color: FINANCE_COLOR } : undefined}
                           >
                             <span className="font-mono mr-1.5 opacity-60">{account.code}</span>{account.name}
                           </button>
@@ -222,7 +222,7 @@ export default function FinanceLedger() {
                         {companyFilter === "all" && <td className="px-4 py-2" />}
                         <td className="px-4 py-2 text-right font-semibold text-emerald-700">{fmtAmt(txWithBalance.reduce((s, t) => s + t.dr, 0), "INR")}</td>
                         <td className="px-4 py-2 text-right font-semibold text-red-600">{fmtAmt(txWithBalance.reduce((s, t) => s + t.cr, 0), "INR")}</td>
-                        <td className="px-4 py-2 text-right font-bold" style={{ color: BRAND }}>
+                        <td className="px-4 py-2 text-right font-bold" style={{ color: FINANCE_COLOR }}>
                           {fmtAmt(txWithBalance.length > 0 ? txWithBalance[txWithBalance.length - 1].balance : selectedAccount.openingBalance, "INR")}
                         </td>
                       </tr>

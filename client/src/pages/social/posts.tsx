@@ -8,19 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { socialPosts, campaigns, socialAccounts, type PostStage } from "@/lib/mock-data-social";
+import { StatusBadge } from "@/components/hr/status-badge";
+import { SOCIAL_COLOR } from "@/lib/social-config";
 
-const BRAND_COLOR = "#0D9488";
-
-const stageColors: Record<PostStage, string> = {
-  idea: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  script: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
-  design: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-  caption: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  approval: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-  scheduled: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
-  published: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  rejected: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-};
 
 const mediaColors: Record<string, string> = {
   reel: "#E11D48",
@@ -94,7 +84,7 @@ export default function SocialPosts() {
           <button
             onClick={() => setStageFilter("all")}
             className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${stageFilter === "all" ? "text-white border-transparent" : "border-border hover:bg-accent"}`}
-            style={stageFilter === "all" ? { background: BRAND_COLOR } : {}}
+            style={stageFilter === "all" ? { background: SOCIAL_COLOR } : {}}
             data-testid="pill-all"
           >
             All ({socialPosts.length})
@@ -104,7 +94,7 @@ export default function SocialPosts() {
               key={s}
               onClick={() => setStageFilter(s)}
               className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${stageFilter === s ? "text-white border-transparent" : "border-border hover:bg-accent"}`}
-              style={stageFilter === s ? { background: BRAND_COLOR } : {}}
+              style={stageFilter === s ? { background: SOCIAL_COLOR } : {}}
               data-testid={`pill-${s}`}
             >
               {s.charAt(0).toUpperCase() + s.slice(1)} ({socialPosts.filter(p => p.stage === s).length})
@@ -193,7 +183,7 @@ export default function SocialPosts() {
                       {campaign ? <Badge variant="outline" className="text-[10px]">{campaign.name}</Badge> : <span className="text-muted-foreground text-xs">—</span>}
                     </td>
                     <td className="p-3">
-                      <Badge className={`text-[10px] ${stageColors[post.stage]}`}>
+                      <Badge >
                         {post.stage.charAt(0).toUpperCase() + post.stage.slice(1)}
                       </Badge>
                     </td>

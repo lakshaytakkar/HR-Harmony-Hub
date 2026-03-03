@@ -3,26 +3,11 @@ import { Star } from "lucide-react";
 import { PageTransition, Fade } from "@/components/ui/animated";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { evaluations, interviews, type Evaluation } from "@/lib/mock-data-ats";
-
-const recommendationColors: Record<string, string> = {
-  "strong-yes": "bg-emerald-100 text-emerald-700",
-  "yes": "bg-sky-100 text-sky-700",
-  "maybe": "bg-amber-100 text-amber-700",
-  "no": "bg-orange-100 text-orange-700",
-  "strong-no": "bg-red-100 text-red-700",
-};
-
-const recommendationLabels: Record<string, string> = {
-  "strong-yes": "Strong Yes",
-  "yes": "Yes",
-  "maybe": "Maybe",
-  "no": "No",
-  "strong-no": "Strong No",
-};
+import { StatusBadge } from "@/components/hr/status-badge";
+import { DetailModal } from "@/components/layout";
 
 function StarDisplay({ rating }: { rating: number }) {
   return (
@@ -88,7 +73,7 @@ export default function AtsEvaluations() {
                         <td className="px-4 py-3 text-sm text-muted-foreground">{ev.interviewerName}</td>
                         <td className="px-4 py-3"><StarDisplay rating={ev.overallRating} /></td>
                         <td className="px-4 py-3">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${recommendationColors[ev.recommendation]}`}>{recommendationLabels[ev.recommendation]}</span>
+                          <StatusBadge status={ev.recommendation} />
                         </td>
                         <td className="px-4 py-3 text-sm text-muted-foreground">{ev.submittedDate}</td>
                         <td className="px-4 py-3">
@@ -137,11 +122,7 @@ export default function AtsEvaluations() {
         </Tabs>
       </Fade>
 
-      <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Evaluation Scorecard</DialogTitle>
-          </DialogHeader>
+      <DetailModal open={!!selected} onClose={() => setSelected(null)} title="Evaluation Scorecard">
           {selected && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -178,7 +159,7 @@ export default function AtsEvaluations() {
 
               <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
                 <span className="text-sm font-semibold">Recommendation</span>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${recommendationColors[selected.recommendation]}`}>{recommendationLabels[selected.recommendation]}</span>
+                <StatusBadge status={selected.recommendation} />
               </div>
 
               {selected.notes && (
@@ -186,8 +167,7 @@ export default function AtsEvaluations() {
               )}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+      </DetailModal>
     </PageTransition>
   );
 }

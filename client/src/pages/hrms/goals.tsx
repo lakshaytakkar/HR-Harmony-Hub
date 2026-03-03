@@ -10,12 +10,8 @@ import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { goals, employees } from "@/lib/mock-data-hrms";
-
-const statusColors: Record<string, { badge: string; bar: string }> = {
-  "on-track": { badge: "bg-emerald-100 text-emerald-700", bar: "bg-emerald-500" },
-  "at-risk": { badge: "bg-amber-100 text-amber-700", bar: "bg-amber-500" },
-  completed: { badge: "bg-sky-100 text-sky-700", bar: "bg-sky-500" },
-};
+import { HRMS_GOAL_CONFIG } from "@/lib/hrms-config";
+import { StatusBadge } from "@/components/hr/status-badge";
 
 export default function HrmsGoals() {
   const isLoading = useSimulatedLoading(700);
@@ -85,7 +81,7 @@ export default function HrmsGoals() {
                     <p className="font-semibold">{goal.title}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{goal.description}</p>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${statusColors[goal.status].badge}`}>{goal.status}</span>
+                  <StatusBadge status={goal.status} />
                 </div>
                 <div className="flex items-center gap-2">
                   <Avatar className="size-6">
@@ -101,7 +97,7 @@ export default function HrmsGoals() {
                     <span className="font-medium">{goal.progress}%</span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all duration-700 ${statusColors[goal.status].bar}`} style={{ width: `${goal.progress}%` }} />
+                    <div className={`h-full rounded-full transition-all duration-700 ${HRMS_GOAL_CONFIG[goal.status as keyof typeof HRMS_GOAL_CONFIG]?.bar ?? "bg-slate-400"}`} style={{ width: `${goal.progress}%` }} />
                   </div>
                 </div>
               </CardContent>

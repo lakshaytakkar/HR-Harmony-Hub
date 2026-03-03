@@ -13,25 +13,11 @@ import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { assignments as initialAssignments, socialPosts, campaigns, type Assignment, type AssignmentType } from "@/lib/mock-data-social";
 import { getPersonAvatar } from "@/lib/avatars";
+import { StatusBadge } from "@/components/hr/status-badge";
+import { SOCIAL_COLOR } from "@/lib/social-config";
 
-const BRAND_COLOR = "#0D9488";
 
 const statusCycle: Assignment["status"][] = ["pending", "in-progress", "done"];
-
-const statusColors: Record<Assignment["status"], string> = {
-  pending: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  "in-progress": "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
-  done: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  overdue: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-};
-
-const typeColors: Record<AssignmentType, string> = {
-  caption: "bg-amber-100 text-amber-700",
-  script: "bg-sky-100 text-sky-700",
-  design: "bg-violet-100 text-violet-700",
-  scheduling: "bg-teal-100 text-teal-700",
-  reporting: "bg-slate-100 text-slate-700",
-};
 
 const teamMembers = [
   { name: "Ananya", role: "SM Manager" },
@@ -148,7 +134,7 @@ export default function SocialAssignments() {
             return (
               <div key={name} className="rounded-xl border bg-card p-3 flex items-center gap-3 min-w-[160px] shrink-0" data-testid={`member-card-${name}`}>
                 <Avatar className="size-9">
-                  <AvatarFallback className="text-xs text-white" style={{ background: BRAND_COLOR }}>{name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="text-xs text-white" style={{ background: SOCIAL_COLOR }}>{name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="text-xs font-semibold">{name}</p>
@@ -205,12 +191,12 @@ export default function SocialAssignments() {
                     {asn.notes && <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{asn.notes}</p>}
                   </td>
                   <td className="p-3">
-                    <Badge className={`text-[10px] capitalize ${typeColors[asn.type]}`}>{asn.type}</Badge>
+                    <Badge >{asn.type}</Badge>
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">
                       <Avatar className="size-6">
-                        <AvatarFallback className="text-[9px] text-white" style={{ background: BRAND_COLOR }}>{asn.assignedTo.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="text-[9px] text-white" style={{ background: SOCIAL_COLOR }}>{asn.assignedTo.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="text-xs font-medium">{asn.assignedTo}</p>
@@ -230,9 +216,7 @@ export default function SocialAssignments() {
                       disabled={asn.status === "overdue"}
                       data-testid={`status-badge-${asn.id}`}
                     >
-                      <Badge className={`text-[10px] cursor-pointer ${statusColors[asn.status]} ${asn.status !== "overdue" ? "hover:opacity-80" : ""}`}>
-                        {asn.status === "in-progress" ? "In Progress" : asn.status.charAt(0).toUpperCase() + asn.status.slice(1)}
-                      </Badge>
+                      <StatusBadge status={asn.status} />
                     </button>
                   </td>
                 </tr>

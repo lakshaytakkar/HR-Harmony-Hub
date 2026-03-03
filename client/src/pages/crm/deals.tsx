@@ -20,8 +20,7 @@ import {
   DetailSection,
 } from "@/components/layout";
 import { Target, Calendar, BarChart3 } from "lucide-react";
-
-const BRAND = "#0284C7";
+import { CRM_COLOR } from "@/lib/crm-config";
 
 const stageBadge: Record<string, string> = {
   new: "bg-slate-100 text-slate-700",
@@ -161,7 +160,7 @@ export default function CrmDeals() {
           search={search}
           onSearch={setSearch}
           placeholder="Search deals..."
-          color={BRAND}
+          color={CRM_COLOR}
           filters={verticalOptions}
           activeFilter={verticalFilter}
           onFilter={setVerticalFilter}
@@ -368,7 +367,7 @@ export default function CrmDeals() {
             <Button variant="outline" onClick={() => setSelectedDeal(null)}>
               Close
             </Button>
-            <Button style={{ backgroundColor: BRAND }} className="text-white">
+            <Button style={{ backgroundColor: CRM_COLOR }} className="text-white">
               Edit Deal
             </Button>
           </>

@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { socialPosts, campaigns } from "@/lib/mock-data-social";
+import { SOCIAL_COLOR } from "@/lib/social-config";
+import { StatusBadge } from "@/components/hr/status-badge";
 
-const BRAND_COLOR = "#0D9488";
 
 const stageOrder = ["idea", "script", "design", "caption", "approval", "scheduled", "published"];
 
@@ -33,12 +34,6 @@ const platformIcons: Record<string, { icon: React.ElementType; color: string }> 
   linkedin: { icon: SiLinkedin, color: "#2563EB" },
   facebook: { icon: SiFacebook, color: "#1D4ED8" },
   threads: { icon: SiThreads, color: "#1F2937" },
-};
-
-const stageColors: Record<string, string> = {
-  idea: "bg-slate-100 text-slate-700", script: "bg-sky-100 text-sky-700", design: "bg-violet-100 text-violet-700",
-  caption: "bg-amber-100 text-amber-700", approval: "bg-orange-100 text-orange-700",
-  scheduled: "bg-teal-100 text-teal-700", published: "bg-emerald-100 text-emerald-700", rejected: "bg-red-100 text-red-700",
 };
 
 export default function SocialPostDetail() {
@@ -87,7 +82,7 @@ export default function SocialPostDetail() {
             <ArrowLeft size={16} className="mr-1" /> Post Library
           </Button>
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge className={stageColors[post.stage]}>{post.stage.charAt(0).toUpperCase() + post.stage.slice(1)}</Badge>
+            <StatusBadge status={post.stage} />
             <Badge variant="outline" className="capitalize">{post.mediaType}</Badge>
             <Badge variant="outline">{post.verticalTag}</Badge>
           </div>
@@ -150,7 +145,7 @@ export default function SocialPostDetail() {
               <Card className="border-teal-200 dark:border-teal-800">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <RefreshCw size={14} style={{ color: BRAND_COLOR }} />
+                    <RefreshCw size={14} style={{ color: SOCIAL_COLOR }} />
                     Repurpose This Content
                   </CardTitle>
                 </CardHeader>
@@ -166,7 +161,7 @@ export default function SocialPostDetail() {
                       className="flex-1 min-w-[140px] rounded-lg border border-teal-200 dark:border-teal-700 p-3 text-left hover:bg-teal-50 dark:hover:bg-teal-950/20 transition-colors"
                       data-testid={`btn-repurpose-${label.replace(/\s/g, "-").toLowerCase()}`}
                     >
-                      <p className="text-xs font-semibold" style={{ color: BRAND_COLOR }}>{label}</p>
+                      <p className="text-xs font-semibold" style={{ color: SOCIAL_COLOR }}>{label}</p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">{desc}</p>
                     </button>
                   ))}
@@ -194,14 +189,14 @@ export default function SocialPostDetail() {
                           <div className={`size-5 rounded-full flex items-center justify-center mt-0.5 ${
                             isCompleted ? "text-white" : isCurrent ? "border-2 bg-background" : "border-2 border-border bg-background"
                           }`} style={{
-                            background: isCompleted ? BRAND_COLOR : undefined,
-                            borderColor: isCurrent ? BRAND_COLOR : undefined,
+                            background: isCompleted ? SOCIAL_COLOR : undefined,
+                            borderColor: isCurrent ? SOCIAL_COLOR : undefined,
                           }}>
                             {isCompleted && <span className="text-[9px]">✓</span>}
-                            {isCurrent && <div className="size-2 rounded-full" style={{ background: BRAND_COLOR }} />}
+                            {isCurrent && <div className="size-2 rounded-full" style={{ background: SOCIAL_COLOR }} />}
                           </div>
                           {idx < stageOrder.length - 1 && (
-                            <div className={`w-0.5 h-7 mt-0.5 ${isCompleted ? "" : "bg-border"}`} style={{ background: isCompleted ? BRAND_COLOR : undefined }} />
+                            <div className={`w-0.5 h-7 mt-0.5 ${isCompleted ? "" : "bg-border"}`} style={{ background: isCompleted ? SOCIAL_COLOR : undefined }} />
                           )}
                         </div>
                         <div className="pb-1">

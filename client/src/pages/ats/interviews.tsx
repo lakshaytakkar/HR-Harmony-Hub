@@ -21,21 +21,9 @@ import {
   DetailModal,
   DetailSection,
 } from "@/components/layout";
+import { StatusBadge } from "@/components/hr/status-badge";
 
-const statusColors: Record<string, string> = {
-  scheduled: "bg-sky-100 text-sky-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  cancelled: "bg-red-100 text-red-700",
-  rescheduled: "bg-amber-100 text-amber-700",
-};
 
-const typeColors: Record<string, string> = {
-  phone: "bg-slate-100 text-slate-700",
-  video: "bg-sky-100 text-sky-700",
-  onsite: "bg-emerald-100 text-emerald-700",
-  technical: "bg-violet-100 text-violet-700",
-  panel: "bg-amber-100 text-amber-700",
-};
 
 const today = "2026-02-28";
 const thisWeekEnd = "2026-03-06";
@@ -181,10 +169,10 @@ export default function AtsInterviews() {
                   <DataTD className="font-medium">{iv.candidateName}</DataTD>
                   <DataTD className="text-muted-foreground">{iv.jobTitle}</DataTD>
                   <DataTD>{iv.scheduledDate} {iv.scheduledTime}</DataTD>
-                  <DataTD><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${typeColors[iv.type]}`}>{iv.type}</span></DataTD>
+                  <DataTD><StatusBadge status={iv.type} /></DataTD>
                   <DataTD className="text-muted-foreground max-w-[160px] truncate" title={iv.interviewers.join(", ")}>{iv.interviewers.join(", ")}</DataTD>
                   <DataTD className="text-muted-foreground">{iv.duration}m</DataTD>
-                  <DataTD><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[iv.status]}`}>{iv.status}</span></DataTD>
+                  <DataTD><StatusBadge status={iv.status} /></DataTD>
                   <DataTD align="right">
                     {iv.meetLink && (
                       <a href={iv.meetLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-violet-600 hover:underline" data-testid={`meet-link-${iv.id}`}>

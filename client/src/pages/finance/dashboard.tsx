@@ -17,7 +17,6 @@ import {
   type FinanceCompany,
 } from "@/lib/mock-data-finance";
 
-const BRAND = "#B45309";
 const CURRENT_RATE = exchangeRates[0].rate;
 
 function toINR(amount: number, currency: "INR" | "USD") {

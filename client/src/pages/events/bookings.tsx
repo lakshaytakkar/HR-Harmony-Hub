@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/hr/status-badge";
 import { bookings, tourPackages, type Booking } from "@/lib/mock-data-goyo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
+import { EVENTS_COLOR } from "@/lib/events-config";
 import {
   PageShell,
   PageHeader,
@@ -24,7 +25,6 @@ import {
   DetailSection,
 } from "@/components/layout";
 
-const BRAND_COLOR = "#E91E63";
 
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(val);
@@ -87,7 +87,7 @@ export default function EventsBookings() {
             <Button
               onClick={() => setDialogOpen(true)}
               className="gap-2 text-white"
-              style={{ backgroundColor: BRAND_COLOR }}
+              style={{ backgroundColor: EVENTS_COLOR }}
               data-testid="button-new-booking"
             >
               <Plus className="size-4" />
@@ -118,7 +118,7 @@ export default function EventsBookings() {
             value={thisMonth}
             icon={Calendar}
             iconBg="rgba(233, 30, 99, 0.1)"
-            iconColor={BRAND_COLOR}
+            iconColor={EVENTS_COLOR}
           />
           <StatCard
             label="Total Passengers"
@@ -135,7 +135,7 @@ export default function EventsBookings() {
           search={search}
           onSearch={setSearch}
           placeholder="Search by client name..."
-          color={BRAND_COLOR}
+          color={EVENTS_COLOR}
           filters={[
             { value: "all", label: "All Status" },
             { value: "confirmed", label: "Confirmed" },
@@ -151,7 +151,7 @@ export default function EventsBookings() {
                   key={p}
                   onClick={() => setPaymentFilter(p)}
                   className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${paymentFilter === p ? "text-white" : "bg-muted text-muted-foreground"}`}
-                  style={paymentFilter === p ? { backgroundColor: BRAND_COLOR } : {}}
+                  style={paymentFilter === p ? { backgroundColor: EVENTS_COLOR } : {}}
                   data-testid={`filter-payment-${p}`}
                 >
                   {p}
@@ -219,7 +219,7 @@ export default function EventsBookings() {
           <>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button 
-              style={{ backgroundColor: BRAND_COLOR }} 
+              style={{ backgroundColor: EVENTS_COLOR }} 
               className="text-white hover:opacity-90"
               onClick={() => {
                 setDialogOpen(false);
@@ -303,7 +303,7 @@ export default function EventsBookings() {
           <>
             <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>Cancel</Button>
             <Button 
-              style={{ backgroundColor: BRAND_COLOR }} 
+              style={{ backgroundColor: EVENTS_COLOR }} 
               className="text-white hover:opacity-90"
               onClick={() => {
                 setPaymentDialogOpen(false);

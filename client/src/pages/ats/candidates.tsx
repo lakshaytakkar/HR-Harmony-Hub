@@ -21,6 +21,7 @@ import {
   DetailModal,
   DetailSection,
 } from "@/components/layout";
+import { StatusBadge } from "@/components/hr/status-badge";
 import { Input } from "@/components/ui/input";
 
 const pipelineStages = ["applied", "screening", "interview", "evaluation", "offer", "hired"] as const;
@@ -32,14 +33,6 @@ const stageConfig: Record<string, { label: string; color: string; bg: string }> 
   evaluation: { label: "Evaluation", color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
   offer: { label: "Offer", color: "text-orange-700", bg: "bg-orange-50 border-orange-200" },
   hired: { label: "Hired", color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
-};
-
-const sourceColors: Record<string, string> = {
-  linkedin: "bg-sky-100 text-sky-700",
-  referral: "bg-violet-100 text-violet-700",
-  website: "bg-emerald-100 text-emerald-700",
-  "job-board": "bg-amber-100 text-amber-700",
-  direct: "bg-orange-100 text-orange-700",
 };
 
 export default function AtsCandidates() {
@@ -158,7 +151,7 @@ export default function AtsCandidates() {
                           <p className="text-[10px] text-muted-foreground truncate">{c.currentCompany}</p>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">{c.experience}y exp</span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${sourceColors[c.source]}`}>{c.source}</span>
+                            <StatusBadge status={c.source} />
                           </div>
                         </CardContent>
                       </Card>
@@ -201,7 +194,7 @@ export default function AtsCandidates() {
                     <DataTD className="text-muted-foreground">{c.currentRole} · {c.currentCompany}</DataTD>
                     <DataTD>{c.appliedJobTitle}</DataTD>
                     <DataTD>{c.experience}y</DataTD>
-                    <DataTD><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sourceColors[c.source]}`}>{c.source}</span></DataTD>
+                    <DataTD><StatusBadge status={c.source} /></DataTD>
                     <DataTD><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stageConfig[c.stage]?.bg || "bg-muted"} ${stageConfig[c.stage]?.color || "text-muted-foreground"}`}>{c.stage}</span></DataTD>
                   </DataTR>
                 ))}

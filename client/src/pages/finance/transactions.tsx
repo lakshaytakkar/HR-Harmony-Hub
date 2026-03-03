@@ -18,13 +18,8 @@ import {
 } from "@/components/layout";
 import { verticals } from "@/lib/verticals-config";
 import { Badge } from "@/components/ui/badge";
+import { FINANCE_GATEWAY_CONFIG } from "@/lib/finance-config";
 
-const GW_LABELS: Record<string, { label: string; cls: string }> = {
-  razorpay: { label: "RZP", cls: "bg-orange-100 text-orange-700" },
-  stripe: { label: "STRP", cls: "bg-violet-100 text-violet-700" },
-  bank: { label: "BANK", cls: "bg-slate-100 text-slate-600" },
-  cash: { label: "CASH", cls: "bg-emerald-100 text-emerald-700" },
-};
 
 function fmtAmt(tx: FinanceTransaction) {
   const sym = tx.currency === "USD" ? "$" : "₹";
@@ -134,7 +129,7 @@ export default function FinanceTransactions() {
               {filtered.map((tx) => {
                 const company = getCompany(tx.companyId);
                 const isIncome = tx.type === "income" || tx.type === "cash-in";
-                const gw = tx.gateway ? GW_LABELS[tx.gateway] : null;
+                const gw = tx.gateway ? FINANCE_GATEWAY_CONFIG[tx.gateway] : null;
                 return (
                   <DataTR key={tx.id} data-testid={`tx-row-${tx.id}`}>
                     <DataTD className="text-xs text-muted-foreground">{tx.date}</DataTD>
@@ -159,7 +154,7 @@ export default function FinanceTransactions() {
                     <DataTD>
                       {gw && (
                         <span
-                          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${gw.cls}`}
+                          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${(gw.bg + " " + gw.color)}`}
                         >
                           {gw.label}
                         </span>

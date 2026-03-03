@@ -12,7 +12,6 @@ import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { approvalRequests as initialApprovals, type ApprovalRequest } from "@/lib/mock-data-social";
 
-const BRAND_COLOR = "#0D9488";
 
 const platformIcons: Record<string, { icon: React.ElementType; color: string }> = {
   instagram: { icon: SiInstagram, color: "#E11D48" },

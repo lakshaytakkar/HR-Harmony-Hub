@@ -20,20 +20,7 @@ import {
   IndexToolbar,
   PrimaryAction,
 } from "@/components/layout";
-
-const statusColors: Record<string, string> = {
-  approved: "bg-emerald-100 text-emerald-700",
-  pending: "bg-amber-100 text-amber-700",
-  rejected: "bg-red-100 text-red-700",
-};
-
-const typeColors: Record<string, string> = {
-  casual: "bg-sky-100 text-sky-700",
-  sick: "bg-red-100 text-red-700",
-  annual: "bg-violet-100 text-violet-700",
-  maternity: "bg-pink-100 text-pink-700",
-  paternity: "bg-blue-100 text-blue-700",
-};
+import { StatusBadge } from "@/components/hr/status-badge";
 
 export default function HrmsLeaves() {
   const isLoading = useSimulatedLoading(700);
@@ -181,13 +168,13 @@ export default function HrmsLeaves() {
                 <DataTR key={leave.id} data-testid={`leave-row-${leave.id}`}>
                   <DataTD className="font-medium">{leave.employeeName}</DataTD>
                   <DataTD>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${typeColors[leave.type]}`}>{leave.type}</span>
+                    <StatusBadge status={leave.type} />
                   </DataTD>
                   <DataTD>{leave.days} day{leave.days > 1 ? "s" : ""}</DataTD>
                   <DataTD className="text-xs text-muted-foreground">{leave.startDate} → {leave.endDate}</DataTD>
                   <DataTD className="max-w-[200px] truncate" title={leave.reason}>{leave.reason}</DataTD>
                   <DataTD>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[leave.status]}`}>{leave.status}</span>
+                    <StatusBadge status={leave.status} />
                   </DataTD>
                   <DataTD align="right">
                     {leave.status === "pending" && (

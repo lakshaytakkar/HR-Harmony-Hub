@@ -16,8 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { socialPosts, socialAccounts, campaigns, approvalRequests } from "@/lib/mock-data-social";
+import { SOCIAL_COLOR } from "@/lib/social-config";
 
-const BRAND_COLOR = "#0D9488";
 
 const platformIcons: Record<string, { icon: React.ElementType; color: string; label: string }> = {
   instagram: { icon: SiInstagram, color: "#E11D48", label: "Instagram" },
@@ -74,7 +74,7 @@ export default function SocialDashboard() {
         eyebrow="👋 Good morning, Ananya"
         headline="SocialDesk"
         tagline="Content ops & brand performance across Suprans, LegalNations, USDrop and Gullee"
-        color={BRAND_COLOR}
+        color={SOCIAL_COLOR}
         colorDark="#0891B2"
         metrics={[
           { label: "Scheduled", value: scheduledThisWeek },
@@ -143,8 +143,8 @@ export default function SocialDashboard() {
                 onClick={() => setLocation(`/social/posts/${post.id}`)}
                 data-testid={`upcoming-post-${post.id}`}
               >
-                <div className="size-8 rounded-md flex items-center justify-center shrink-0" style={{ background: `${BRAND_COLOR}20` }}>
-                  <span className="text-[10px] font-bold" style={{ color: BRAND_COLOR }}>{post.mediaType.slice(0, 2).toUpperCase()}</span>
+                <div className="size-8 rounded-md flex items-center justify-center shrink-0" style={{ background: `${SOCIAL_COLOR}20` }}>
+                  <span className="text-[10px] font-bold" style={{ color: SOCIAL_COLOR }}>{post.mediaType.slice(0, 2).toUpperCase()}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{post.caption.slice(0, 60)}…</p>
@@ -171,7 +171,7 @@ export default function SocialDashboard() {
                 onClick={() => setLocation(`/social/posts/${post.id}`)}
                 data-testid={`top-post-${post.id}`}
               >
-                <div className="size-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: BRAND_COLOR }}>
+                <div className="size-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: SOCIAL_COLOR }}>
                   {i + 1}
                 </div>
                 <div className="flex-1 min-w-0">

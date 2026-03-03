@@ -20,12 +20,7 @@ import {
   DetailModal,
   DetailSection,
 } from "@/components/layout";
-
-const statusColors: Record<string, string> = {
-  processed: "bg-emerald-100 text-emerald-700",
-  pending: "bg-amber-100 text-amber-700",
-  "on-hold": "bg-red-100 text-red-700",
-};
+import { StatusBadge } from "@/components/hr/status-badge";
 
 export default function HrmsPayroll() {
   const isLoading = useSimulatedLoading(700);
@@ -167,7 +162,7 @@ export default function HrmsPayroll() {
                   <DataTD className="text-red-600">-₹{p.deductions.toLocaleString("en-IN")}</DataTD>
                   <DataTD className="font-semibold text-emerald-600">₹{p.netSalary.toLocaleString("en-IN")}</DataTD>
                   <DataTD>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[p.status]}`}>{p.status}</span>
+                    <StatusBadge status={p.status} />
                   </DataTD>
                   <DataTD className="text-muted-foreground">{p.payDate}</DataTD>
                 </DataTR>

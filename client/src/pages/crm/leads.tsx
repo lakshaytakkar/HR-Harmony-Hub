@@ -20,34 +20,10 @@ import {
   DetailSection,
   PrimaryAction,
 } from "@/components/layout";
+import { StatusBadge } from "@/components/hr/status-badge";
 
-const BRAND = "#0284C7";
-
-const statusConfig: Record<string, { label: string; cls: string }> = {
-  lead: { label: "New", cls: "bg-slate-100 text-slate-700" },
-  prospect: { label: "Contacted", cls: "bg-sky-100 text-sky-700" },
-  qualified: { label: "Qualified", cls: "bg-amber-100 text-amber-700" },
-  customer: { label: "Converted", cls: "bg-emerald-100 text-emerald-700" },
-  churned: { label: "Lost", cls: "bg-red-100 text-red-700" },
-};
-
-const sourceConfig: Record<string, string> = {
-  website: "bg-sky-50 text-sky-700",
-  referral: "bg-emerald-50 text-emerald-700",
-  linkedin: "bg-blue-50 text-blue-700",
-  "cold-outreach": "bg-slate-50 text-slate-700",
-  event: "bg-amber-50 text-amber-700",
-  partner: "bg-violet-50 text-violet-700",
-  inbound: "bg-teal-50 text-teal-700",
-};
-
-const kanbanCols = [
-  { key: "lead", label: "New Lead", color: "border-slate-300", bg: "bg-slate-50" },
-  { key: "prospect", label: "Contacted", color: "border-sky-300", bg: "bg-sky-50" },
-  { key: "qualified", label: "Qualified", color: "border-amber-300", bg: "bg-amber-50" },
-  { key: "customer", label: "Converted", color: "border-emerald-300", bg: "bg-emerald-50" },
-  { key: "churned", label: "Lost", color: "border-red-300", bg: "bg-red-50" },
-];
+import { CRM_COLOR, CRM_STATUS_CONFIG, CRM_KANBAN_COLS, CRM_SOURCE_CONFIG } from "@/lib/crm-config";
+const kanbanCols = CRM_KANBAN_COLS;
 
 const REPS = Array.from(new Set(crmContacts.map(c => c.assignedTo))).sort();
 
@@ -137,7 +113,7 @@ export default function CrmLeads() {
           search={search}
           onSearch={setSearch}
           placeholder="Search leads..."
-          color={BRAND}
+          color={CRM_COLOR}
           filters={verticalOptions}
           activeFilter={verticalFilter}
           onFilter={setVerticalFilter}
@@ -212,7 +188,7 @@ export default function CrmLeads() {
               <tbody className="divide-y">
                 {filtered.map((contact) => {
                   const vert = getVertical(contact.vertical);
-                  const sc = statusConfig[contact.status];
+                  const sc = null; // status badge handled by StatusBadge
                   return (
                     <DataTR
                       key={contact.id}
@@ -254,21 +230,10 @@ export default function CrmLeads() {
                         )}
                       </DataTD>
                       <DataTD>
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
-                            sourceConfig[contact.source] ??
-                            "bg-slate-50 text-slate-700"
-                          }`}
-                        >
-                          {contact.source.replace("-", " ")}
-                        </span>
+                        <StatusBadge status={contact.source} />
                       </DataTD>
                       <DataTD>
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${sc?.cls}`}
-                        >
-                          {sc?.label}
-                        </span>
+                        <StatusBadge status={contact.status} />
                       </DataTD>
                       <DataTD>
                         <div className="flex items-center gap-2">
@@ -361,9 +326,7 @@ export default function CrmLeads() {
                                   {vert.name}
                                 </span>
                               )}
-                              <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium capitalize ${sourceConfig[c.source] ?? ""}`}>
-                                {c.source.replace("-", " ")}
-                              </span>
+                              <StatusBadge status={c.source} />
                             </div>
                             <div className="flex items-center justify-between">
                               <img src={getPersonAvatar(c.assignedTo, 20)} alt={c.assignedTo} className="size-5 rounded-full" title={c.assignedTo} />
@@ -434,7 +397,7 @@ export default function CrmLeads() {
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium w-fit ${statusConfig[selectedLead.status]?.cls}`}>{statusConfig[selectedLead.status]?.label}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium w-fit ${""}`}>{(CRM_STATUS_CONFIG[selectedLead.status as keyof typeof CRM_STATUS_CONFIG]?.label ?? selectedLead.status)}</span>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Vertical</p>

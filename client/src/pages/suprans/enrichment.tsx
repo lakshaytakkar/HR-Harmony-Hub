@@ -20,8 +20,8 @@ import {
   type SupransLead,
 } from "@/lib/mock-data-suprans";
 import { cn } from "@/lib/utils";
+import { SUPRANS_COLOR } from "@/lib/suprans-config";
 
-const BRAND = "#3730A3";
 
 const PRIORITY_OPTIONS = [
   { value: "high", label: "High", color: "text-red-600", dot: "bg-red-500" },
@@ -96,7 +96,7 @@ export default function SupransEnrichment() {
         </div>
         <div
           className="rounded-full px-3 py-1 text-white text-xs font-bold"
-          style={{ backgroundColor: BRAND }}
+          style={{ backgroundColor: SUPRANS_COLOR }}
           data-testid="badge-enrichment-count"
         >
           {leads.length} to enrich
@@ -146,14 +146,14 @@ export default function SupransEnrichment() {
                 <div className="flex items-center gap-1.5 text-xs">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                   <span className="text-muted-foreground">AI suggests:</span>
-                  <span className="font-medium" style={{ color: BRAND }}>{suggestedVertical}</span>
+                  <span className="font-medium" style={{ color: SUPRANS_COLOR }}>{suggestedVertical}</span>
                   <ArrowRight className="w-3 h-3 text-muted-foreground" />
                 </div>
               </div>
               <button
                 onClick={() => openEnrich(lead)}
                 className="px-4 py-2 rounded-lg text-white text-sm font-medium shrink-0"
-                style={{ backgroundColor: BRAND }}
+                style={{ backgroundColor: SUPRANS_COLOR }}
                 data-testid={`button-enrich-${lead.id}`}
               >
                 Enrich
@@ -234,7 +234,7 @@ export default function SupransEnrichment() {
               onClick={handleEnrich}
               disabled={!selectedVertical}
               className="px-4 py-2 rounded-lg text-white text-sm font-medium flex items-center gap-2 disabled:opacity-50"
-              style={{ backgroundColor: BRAND }}
+              style={{ backgroundColor: SUPRANS_COLOR }}
               data-testid="button-confirm-enrich"
             >
               <CheckCircle2 className="w-4 h-4" />

@@ -21,12 +21,7 @@ import {
   DetailModal,
   DetailSection,
 } from "@/components/layout";
-
-const statusColors: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-700",
-  submitted: "bg-sky-100 text-sky-700",
-  acknowledged: "bg-emerald-100 text-emerald-700",
-};
+import { StatusBadge } from "@/components/hr/status-badge";
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -177,7 +172,7 @@ export default function HrmsPerformance() {
                   <DataTD>{r.rating > 0 ? <StarRating rating={r.rating} /> : <span className="text-xs text-muted-foreground">—</span>}</DataTD>
                   <DataTD className="text-muted-foreground">{r.reviewer}</DataTD>
                   <DataTD>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[r.status]}`}>{r.status}</span>
+                    <StatusBadge status={r.status} />
                   </DataTD>
                   <DataTD className="text-muted-foreground">{r.completedDate || "—"}</DataTD>
                 </DataTR>

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { crmContacts, crmCompanies, ALL_VERTICALS_IN_CRM } from "@/lib/mock-data-crm";
+import { CRM_COLOR } from "@/lib/crm-config";
 import {
   PageShell,
   PageHeader,
@@ -16,8 +17,6 @@ import {
   DataTD,
   DataTR,
 } from "@/components/layout";
-
-const BRAND = "#0284C7";
 
 const sizeConfig: Record<string, string> = {
   "1-10": "bg-slate-50 text-slate-600",
@@ -111,7 +110,7 @@ export default function CrmContacts() {
             search={search}
             onSearch={setSearch}
             placeholder="Search..."
-            color={BRAND}
+            color={CRM_COLOR}
             filters={verticalOptions}
             activeFilter={verticalFilter}
             onFilter={setVerticalFilter}

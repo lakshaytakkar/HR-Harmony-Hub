@@ -12,7 +12,6 @@ import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { mediaAssets, type MediaAsset, type AssetType } from "@/lib/mock-data-social";
 
-const BRAND_COLOR = "#0D9488";
 
 const assetColors: Record<AssetType, { bg: string; color: string; icon: React.ElementType }> = {
   image: { bg: "#EFF6FF", color: "#2563EB", icon: Image },

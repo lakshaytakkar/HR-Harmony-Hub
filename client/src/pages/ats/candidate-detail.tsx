@@ -7,42 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StatusBadge } from "@/components/hr/status-badge";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { candidates, applications, interviews, evaluations } from "@/lib/mock-data-ats";
-
-const stageColors: Record<string, string> = {
-  applied: "bg-slate-100 text-slate-700",
-  screening: "bg-sky-100 text-sky-700",
-  interview: "bg-violet-100 text-violet-700",
-  evaluation: "bg-amber-100 text-amber-700",
-  offer: "bg-orange-100 text-orange-700",
-  hired: "bg-emerald-100 text-emerald-700",
-  rejected: "bg-red-100 text-red-700",
-};
-
-const sourceColors: Record<string, string> = {
-  linkedin: "bg-sky-100 text-sky-700",
-  referral: "bg-violet-100 text-violet-700",
-  website: "bg-emerald-100 text-emerald-700",
-  "job-board": "bg-amber-100 text-amber-700",
-  direct: "bg-orange-100 text-orange-700",
-};
-
-const interviewStatusColors: Record<string, string> = {
-  scheduled: "bg-sky-100 text-sky-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  cancelled: "bg-red-100 text-red-700",
-  rescheduled: "bg-amber-100 text-amber-700",
-};
-
-const recommendationColors: Record<string, string> = {
-  "strong-yes": "bg-emerald-100 text-emerald-700",
-  "yes": "bg-sky-100 text-sky-700",
-  "maybe": "bg-amber-100 text-amber-700",
-  "no": "bg-orange-100 text-orange-700",
-  "strong-no": "bg-red-100 text-red-700",
-};
 
 const activityTimeline = (candidateId: string) => [
   { text: "Application received", date: "2026-02-08", icon: "📋" },
@@ -92,7 +60,7 @@ export default function AtsCandidateDetail() {
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <h1 className="text-2xl font-bold">{candidate.name}</h1>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${stageColors[candidate.stage]}`}>{candidate.stage}</span>
+                  <StatusBadge status={candidate.stage} />
                   <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-muted text-muted-foreground">{candidate.experience}y experience</span>
                 </div>
                 <p className="text-muted-foreground">{candidate.currentRole} · {candidate.currentCompany}</p>
@@ -136,7 +104,7 @@ export default function AtsCandidateDetail() {
                   <div className="flex justify-between"><span className="text-muted-foreground">Current Role</span><span>{candidate.currentRole}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Company</span><span>{candidate.currentCompany}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Experience</span><span>{candidate.experience} years</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Source</span><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sourceColors[candidate.source]}`}>{candidate.source}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Source</span><StatusBadge status={candidate.source} /></div>
                   <div className="flex justify-between items-center"><span className="text-muted-foreground">Rating</span>
                     <div className="flex">{[1,2,3,4,5].map(s => <Star key={s} className={`size-3.5 ${s <= candidate.rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />)}</div>
                   </div>
@@ -222,7 +190,7 @@ export default function AtsCandidateDetail() {
                         <td className="px-4 py-2.5 text-sm">{iv.scheduledDate} {iv.scheduledTime}</td>
                         <td className="px-4 py-2.5"><span className="text-xs px-2 py-0.5 rounded-full font-medium bg-violet-100 text-violet-700">{iv.type}</span></td>
                         <td className="px-4 py-2.5 text-sm text-muted-foreground">{iv.interviewers.join(", ")}</td>
-                        <td className="px-4 py-2.5"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${interviewStatusColors[iv.status]}`}>{iv.status}</span></td>
+                        <td className="px-4 py-2.5"><StatusBadge status={iv.status} /></td>
                       </tr>
                     ))}
                     {candInterviews.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">No interviews scheduled</td></tr>}
@@ -243,7 +211,7 @@ export default function AtsCandidateDetail() {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex">{[1,2,3,4,5].map(s => <Star key={s} className={`size-4 ${s <= Math.round(ev.overallRating) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />)}</div>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${recommendationColors[ev.recommendation]}`}>{ev.recommendation}</span>
+                      <StatusBadge status={ev.recommendation} />
                     </div>
                   </div>
                   <div className="space-y-2">

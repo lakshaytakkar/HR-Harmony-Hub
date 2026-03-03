@@ -17,13 +17,7 @@ import {
   DataTR,
   IndexToolbar,
 } from "@/components/layout";
-
-const statusColor: Record<string, string> = {
-  present: "bg-emerald-100 text-emerald-700",
-  absent: "bg-red-100 text-red-700",
-  "half-day": "bg-amber-100 text-amber-700",
-  wfh: "bg-sky-100 text-sky-700",
-};
+import { StatusBadge } from "@/components/hr/status-badge";
 
 const calendarStatusDot: Record<string, string> = {
   present: "bg-emerald-500",
@@ -173,7 +167,7 @@ export default function HrmsAttendance() {
                     <DataTD>{rec.checkOut}</DataTD>
                     <DataTD>{rec.hoursWorked > 0 ? `${rec.hoursWorked}h` : "-"}</DataTD>
                     <DataTD>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[rec.status]}`}>{rec.status}</span>
+                      <StatusBadge status={rec.status} />
                     </DataTD>
                   </DataTR>
                 ))}

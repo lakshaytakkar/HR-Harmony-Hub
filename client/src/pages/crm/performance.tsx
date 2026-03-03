@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { teamPerformance, crmDeals, ALL_VERTICALS_IN_CRM } from "@/lib/mock-data-crm";
+import { CRM_COLOR } from "@/lib/crm-config";
 import {
   PageShell,
   PageHeader,
@@ -18,8 +19,6 @@ import {
   StatGrid,
   StatCard,
 } from "@/components/layout";
-
-const BRAND = "#0284C7";
 
 function formatINR(v: number) {
   if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
@@ -177,7 +176,7 @@ export default function CrmPerformance() {
         <IndexToolbar
           search=""
           onSearch={() => {}}
-          color={BRAND}
+          color={CRM_COLOR}
           filters={verticalOptions}
           activeFilter={verticalFilter}
           onFilter={setVerticalFilter}

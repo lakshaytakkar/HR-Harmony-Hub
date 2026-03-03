@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { chinaHotels, tourPackages } from "@/lib/mock-data-goyo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { EVENTS_COLOR } from "@/lib/events-config";
 import {
   PageShell,
   PageHeader,
@@ -18,7 +19,6 @@ import {
   DetailSection,
 } from "@/components/layout";
 
-const BRAND_COLOR = "#E91E63";
 
 const cities = ["All", "Guangzhou", "Hong Kong", "Shanghai", "Yiwu", "Foshan", "Wuxi"];
 const starFilters = ["All", "3", "4", "5"];
@@ -78,7 +78,7 @@ export default function EventsHotels() {
             <Button
               onClick={() => setDialogOpen(true)}
               className="gap-2 text-white"
-              style={{ backgroundColor: BRAND_COLOR }}
+              style={{ backgroundColor: EVENTS_COLOR }}
               data-testid="button-add-hotel"
             >
               <Plus className="size-4" />
@@ -90,7 +90,7 @@ export default function EventsHotels() {
 
       <Fade>
         <StatGrid cols={3}>
-          <StatCard label="Partner Hotels" value={totalHotels} icon={Users} iconBg="rgba(233, 30, 99, 0.1)" iconColor={BRAND_COLOR} />
+          <StatCard label="Partner Hotels" value={totalHotels} icon={Users} iconBg="rgba(233, 30, 99, 0.1)" iconColor={EVENTS_COLOR} />
           <StatCard label="Cities Covered" value={uniqueCities} icon={MapPin} iconBg="rgba(33, 150, 243, 0.1)" iconColor="#2196F3" />
           <StatCard label="Avg Our Rate" value={`$${avgRate}`} icon={Star} iconBg="rgba(76, 175, 80, 0.1)" iconColor="#4CAF50" />
         </StatGrid>
@@ -101,7 +101,7 @@ export default function EventsHotels() {
           search={search}
           onSearch={setSearch}
           placeholder="Search by hotel name..."
-          color={BRAND_COLOR}
+          color={EVENTS_COLOR}
           filters={cities.map(c => ({ value: c, label: c }))}
           activeFilter={cityFilter}
           onFilter={setCityFilter}
@@ -196,7 +196,7 @@ export default function EventsHotels() {
           <>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button 
-              style={{ backgroundColor: BRAND_COLOR }} 
+              style={{ backgroundColor: EVENTS_COLOR }} 
               className="text-white hover:opacity-90"
               onClick={() => setDialogOpen(false)}
             >

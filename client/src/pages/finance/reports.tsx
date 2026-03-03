@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { ALL_FINANCE_COMPANIES, financeTransactions, chartOfAccounts } from "@/lib/mock-data-finance";
+import { FINANCE_COLOR } from "@/lib/finance-config";
 
-const BRAND = "#B45309";
 const USD_RATE = 83.20;
 
 function getCompany(id: string) {
@@ -128,7 +128,7 @@ export default function FinanceReports() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">Profit & Loss — Feb 2026</CardTitle>
-                  {showConsolidated && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Consolidated</Badge>}
+                  {showConsolidated && <Badge variant="outline" className="text-xs" style={{ borderColor: FINANCE_COLOR, color: FINANCE_COLOR }}>Consolidated</Badge>}
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -317,7 +317,7 @@ export default function FinanceReports() {
                 <div className="border-t-2 pt-4 space-y-1 text-sm">
                   <div className="flex justify-between"><span className="font-medium">Opening Cash Balance (Feb 1)</span><span className="font-bold">₹6.60L</span></div>
                   <div className="flex justify-between text-emerald-700"><span className="font-medium">Net Increase in Cash</span><span className="font-bold">+{fmtINR(totalCurrentIncome - totalCurrentExpense - 465000)}</span></div>
-                  <div className="flex justify-between border-t pt-2"><span className="font-semibold">Closing Cash Balance (Feb 28)</span><span className="font-bold" style={{ color: BRAND }}>{fmtINR(660000 + totalCurrentIncome - totalCurrentExpense - 465000)}</span></div>
+                  <div className="flex justify-between border-t pt-2"><span className="font-semibold">Closing Cash Balance (Feb 28)</span><span className="font-bold" style={{ color: FINANCE_COLOR }}>{fmtINR(660000 + totalCurrentIncome - totalCurrentExpense - 465000)}</span></div>
                 </div>
               </CardContent>
             </Card>

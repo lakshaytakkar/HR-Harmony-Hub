@@ -11,8 +11,8 @@ import {
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { omsOrders, omsShipments, omsInventory } from "@/lib/mock-data-oms";
 import { cn } from "@/lib/utils";
+import { OMS_COLOR } from "@/lib/oms-config";
 
-const BRAND = "#0891B2";
 
 const PIPELINE_STAGES: Array<{ key: string; label: string; color: string }> = [
   { key: "pending", label: "Pending", color: "bg-slate-100 text-slate-700" },
@@ -109,7 +109,7 @@ export default function OmsDashboard() {
         headline="Order & Fulfillment"
         tagline="B2B · B2C · Dropship · India Operations"
         color="#0E7490"
-        colorDark={BRAND}
+        colorDark={OMS_COLOR}
         metrics={[
           { label: "Total Orders", value: omsOrders.length },
           { label: "Total Revenue", value: `₹${(stats.totalRevenue / 100000).toFixed(1)}L` },

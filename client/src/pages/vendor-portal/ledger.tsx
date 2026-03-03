@@ -14,8 +14,8 @@ import {
   PageShell, DataTableContainer, DataTH, SortableDataTH, DataTD, DataTR, StatGrid, StatCard,
 } from "@/components/layout";
 import { formatUSD } from "@/lib/faire-currency";
+import { VENDOR_COLOR } from "@/lib/suprans-config";
 
-const BRAND_COLOR = "#7C3AED";
 
 const FULFILLER_KEYWORDS: Record<string, string[]> = {
   "ShipFast Logistics": ["shipfast", "ship fast"],
@@ -175,7 +175,7 @@ export default function VendorLedger() {
               key={f}
               onClick={() => setTypeFilter(f)}
               className="px-4 py-2 rounded-lg text-sm font-medium capitalize transition-all"
-              style={typeFilter === f ? { background: BRAND_COLOR, color: "#fff" } : { color: "var(--muted-foreground)" }}
+              style={typeFilter === f ? { background: VENDOR_COLOR, color: "#fff" } : { color: "var(--muted-foreground)" }}
               data-testid={`filter-${f}`}
             >
               {f === "all" ? "All" : f === "credit" ? "Credits Received" : "Debits Paid"}

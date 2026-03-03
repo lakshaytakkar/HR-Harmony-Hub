@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { ALL_FINANCE_COMPANIES, sharedExpenseRules, sharedExpenseHistory } from "@/lib/mock-data-finance";
+import { FINANCE_COLOR } from "@/lib/finance-config";
 
-const BRAND = "#B45309";
 
 function getCompany(id: string) {
   return ALL_FINANCE_COMPANIES.find(c => c.id === id)!;
@@ -51,7 +51,7 @@ export default function FinanceSharedExpenses() {
             <h1 className="text-2xl font-bold">Shared Expenses</h1>
             <p className="text-sm text-muted-foreground">Allocation rules + monthly split history across entities</p>
           </div>
-          <Button style={{ backgroundColor: BRAND }} className="text-white" data-testid="btn-add-rule">
+          <Button style={{ backgroundColor: FINANCE_COLOR }} className="text-white" data-testid="btn-add-rule">
             <Plus className="h-4 w-4 mr-1" />Add Rule
           </Button>
         </div>

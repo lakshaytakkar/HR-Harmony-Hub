@@ -15,8 +15,8 @@ import {
 import { supransLeads as initialLeads, type SupransLead } from "@/lib/mock-data-suprans";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { SUPRANS_COLOR } from "@/lib/suprans-config";
 
-const BRAND = "#3730A3";
 
 const SOURCES = ["all", "website", "referral", "instagram", "linkedin", "google-ads", "walk-in", "whatsapp"] as const;
 const SOURCE_LABELS: Record<string, string> = {
@@ -102,7 +102,7 @@ export default function SupransInbound() {
         <div className="flex items-center gap-2">
           <div
             className="rounded-full px-3 py-1 text-white text-xs font-bold"
-            style={{ backgroundColor: BRAND }}
+            style={{ backgroundColor: SUPRANS_COLOR }}
             data-testid="badge-new-count"
           >
             {leads.length} new
@@ -130,7 +130,7 @@ export default function SupransInbound() {
                 "rounded-full px-4 py-1.5 text-sm font-medium transition-colors shrink-0 cursor-pointer",
                 sourceFilter === src ? "text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
               )}
-              style={sourceFilter === src ? { backgroundColor: BRAND } : {}}
+              style={sourceFilter === src ? { backgroundColor: SUPRANS_COLOR } : {}}
               data-testid={`filter-source-${src}`}
             >
               {SOURCE_LABELS[src]}
@@ -180,7 +180,7 @@ export default function SupransInbound() {
                   <button
                     onClick={() => { setValidateLead(lead); setNotes(""); }}
                     className="text-sm px-3 py-1.5 rounded-lg text-white font-medium"
-                    style={{ backgroundColor: BRAND }}
+                    style={{ backgroundColor: SUPRANS_COLOR }}
                     data-testid={`button-validate-${lead.id}`}
                   >
                     Validate
@@ -229,7 +229,7 @@ export default function SupransInbound() {
             <button
               onClick={handleValidate}
               className="px-4 py-2 rounded-lg text-white text-sm font-medium flex items-center gap-2"
-              style={{ backgroundColor: BRAND }}
+              style={{ backgroundColor: SUPRANS_COLOR }}
               data-testid="button-confirm-validate"
             >
               <CheckCircle2 className="w-4 h-4" />

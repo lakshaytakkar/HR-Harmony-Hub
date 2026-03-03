@@ -8,6 +8,7 @@ import {
 import {
   supransLeads,
 } from "@/lib/mock-data-suprans";
+import { SUPRANS_COLOR } from "@/lib/suprans-config";
 import {
   PageShell,
   HeroBanner,
@@ -17,8 +18,6 @@ import {
   SectionGrid,
 } from "@/components/layout";
 
-const BRAND = "#3730A3";
-const BRAND_DARK = "#4F46E5";
 
 const SOURCE_ICONS: Record<string, typeof Globe> = {
   website: Globe,
@@ -80,8 +79,8 @@ export default function SupransDashboard() {
         eyebrow="Lead Intelligence Hub"
         headline="Suprans Command Center"
         tagline={`${supransLeads.length} total leads received across all verticals.`}
-        color={BRAND}
-        colorDark={BRAND_DARK}
+        color={SUPRANS_COLOR}
+        colorDark={SUPRANS_COLOR}
         metrics={[
           { label: "New Today", value: newToday },
           { label: "Assigned", value: assignedLeads.length },
@@ -163,7 +162,7 @@ export default function SupransDashboard() {
                       <button
                         onClick={() => setLocation(lead.status === "new" ? "/suprans/inbound" : "/suprans/enrichment")}
                         className="text-[10px] px-2 py-0.5 rounded text-white font-medium hover:opacity-90"
-                        style={{ backgroundColor: BRAND }}
+                        style={{ backgroundColor: SUPRANS_COLOR }}
                         data-testid={`button-quick-assign-${lead.id}`}
                       >
                         {lead.status === "new" ? "Validate" : "Enrich"}

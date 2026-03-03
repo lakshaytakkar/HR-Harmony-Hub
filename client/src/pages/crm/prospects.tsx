@@ -7,13 +7,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { crmContacts, crmDeals, ALL_VERTICALS_IN_CRM } from "@/lib/mock-data-crm";
+import { CRM_COLOR } from "@/lib/crm-config";
 import {
   PageShell,
   PageHeader,
   IndexToolbar,
 } from "@/components/layout";
-
-const BRAND = "#0284C7";
 
 const REPS = Array.from(new Set(crmContacts.map(c => c.assignedTo))).sort();
 
@@ -93,7 +92,7 @@ export default function CrmProspects() {
           search={search}
           onSearch={setSearch}
           placeholder="Search prospects..."
-          color={BRAND}
+          color={CRM_COLOR}
           filters={verticalOptions}
           activeFilter={verticalFilter}
           onFilter={setVerticalFilter}
@@ -186,7 +185,7 @@ export default function CrmProspects() {
                     <Button variant="outline" size="sm" className="flex-1 h-8 text-xs rounded-lg gap-1.5" data-testid={`btn-log-activity-${c.id}`}>
                       <Activity className="size-3" /> Log Activity
                     </Button>
-                    <Button size="sm" className="flex-1 h-8 text-xs rounded-lg text-white" style={{ backgroundColor: BRAND }} data-testid={`btn-create-deal-${c.id}`}>
+                    <Button size="sm" className="flex-1 h-8 text-xs rounded-lg text-white" style={{ backgroundColor: CRM_COLOR }} data-testid={`btn-create-deal-${c.id}`}>
                       Create Deal
                     </Button>
                   </div>

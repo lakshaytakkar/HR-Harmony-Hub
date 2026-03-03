@@ -22,14 +22,7 @@ import {
   DetailModal,
   DetailSection,
 } from "@/components/layout";
-
-const statusColors: Record<string, string> = {
-  draft: "bg-muted text-muted-foreground",
-  sent: "bg-sky-100 text-sky-700",
-  accepted: "bg-emerald-100 text-emerald-700",
-  declined: "bg-red-100 text-red-700",
-  expired: "bg-amber-100 text-amber-700",
-};
+import { StatusBadge } from "@/components/hr/status-badge";
 
 export default function AtsOffers() {
   const isLoading = useSimulatedLoading(700);
@@ -151,7 +144,7 @@ export default function AtsOffers() {
                   <DataTD className="text-muted-foreground">{offer.joiningDate}</DataTD>
                   <DataTD className="text-muted-foreground">{offer.expiryDate}</DataTD>
                   <DataTD>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[offer.status]}`}>{offer.status}</span>
+                    <StatusBadge status={offer.status} />
                   </DataTD>
                   <DataTD align="right">
                     <div className="flex justify-end gap-1">

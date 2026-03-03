@@ -14,14 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { campaigns, type Campaign } from "@/lib/mock-data-social";
+import { StatusBadge } from "@/components/hr/status-badge";
 
-const BRAND_COLOR = "#0D9488";
-
-const statusColors = {
-  active: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
-  completed: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  draft: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-};
 
 const platformIcons: Record<string, { icon: React.ElementType; color: string }> = {
   instagram: { icon: SiInstagram, color: "#E11D48" },
@@ -121,9 +115,7 @@ export default function SocialCampaigns() {
                       <h3 className="font-semibold text-sm truncate">{campaign.name}</h3>
                       <Badge variant="outline" className="text-[10px] mt-1">{campaign.brand}</Badge>
                     </div>
-                    <Badge className={`${statusColors[campaign.status]} text-[10px] ml-2 shrink-0`}>
-                      {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
-                    </Badge>
+                    <StatusBadge status={campaign.status} />
                   </div>
 
                   <p className="text-xs text-muted-foreground leading-relaxed mb-3 line-clamp-2">{campaign.goal}</p>

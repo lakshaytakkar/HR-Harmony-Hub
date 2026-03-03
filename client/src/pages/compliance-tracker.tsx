@@ -18,13 +18,6 @@ const typeLabels: Record<string, string> = {
   "state-alert": "State Alert",
 };
 
-const typeColors: Record<string, string> = {
-  "annual-report": "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-  "boi-recheck": "bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
-  "irs-compliance": "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-  "state-alert": "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300",
-};
-
 const statusVariantMap: Record<string, "success" | "error" | "warning"> = {
   completed: "success",
   overdue: "error",
@@ -48,7 +41,7 @@ const columns: Column<ComplianceItem>[] = [
     render: (item) => (
       <Badge
         variant="secondary"
-        className={`border-0 text-xs font-medium px-2 py-0.5 ${typeColors[item.type] || ""}`}
+        className="text-xs font-medium px-2 py-0.5 border-0"
         data-testid={`badge-compliance-type-${item.id}`}
       >
         {typeLabels[item.type] || item.type}

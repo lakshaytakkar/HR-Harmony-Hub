@@ -12,6 +12,7 @@ import {
   hrmsDepartments,
   leaveRequests,
 } from "@/lib/mock-data-hrms";
+import { HRMS_COLOR } from "@/lib/hrms-config";
 import {
   PageShell,
   HeroBanner,
@@ -21,8 +22,6 @@ import {
   SectionGrid,
 } from "@/components/layout";
 
-const BRAND_COLOR = "#0EA5E9";
-const BRAND_DARK = "#0284C7";
 
 export default function HrmsDashboard() {
   const [, setLocation] = useLocation();
@@ -73,8 +72,8 @@ export default function HrmsDashboard() {
         eyebrow="HRMS · People & Culture"
         headline="Good morning, Sneha 👋"
         tagline={`You have ${pendingLeaves} leave requests pending approval and 3 upcoming birthdays this week.`}
-        color={BRAND_COLOR}
-        colorDark={BRAND_DARK}
+        color={HRMS_COLOR}
+        colorDark={HRMS_COLOR}
       />
 
       <StatGrid>

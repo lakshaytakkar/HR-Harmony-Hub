@@ -10,24 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { employees, attendanceRecords, leaveRequests, payrollEntries, performanceReviews, goals } from "@/lib/mock-data-hrms";
-
-const statusColors: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  "on-leave": "bg-amber-100 text-amber-700",
-  terminated: "bg-red-100 text-red-700",
-};
-
-const typeColors: Record<string, string> = {
-  "full-time": "bg-sky-100 text-sky-700",
-  "part-time": "bg-violet-100 text-violet-700",
-  contract: "bg-orange-100 text-orange-700",
-};
-
-const goalsStatusColors: Record<string, string> = {
-  "on-track": "bg-emerald-100 text-emerald-700",
-  "at-risk": "bg-amber-100 text-amber-700",
-  completed: "bg-blue-100 text-blue-700",
-};
+import { StatusBadge } from "@/components/hr/status-badge";
 
 export default function HrmsEmployeeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -79,8 +62,8 @@ export default function HrmsEmployeeDetail() {
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <h1 className="text-2xl font-bold">{employee.name}</h1>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusColors[employee.status]}`}>{employee.status}</span>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${typeColors[employee.employmentType]}`}>{employee.employmentType}</span>
+                  <StatusBadge status={employee.status} />
+                  <StatusBadge status={employee.employmentType} />
                 </div>
                 <p className="text-muted-foreground mb-3">{employee.designation} · {employee.department}</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
@@ -150,7 +133,7 @@ export default function HrmsEmployeeDetail() {
                     <div key={goal.id} className="space-y-1">
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium">{goal.title}</p>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${goalsStatusColors[goal.status]}`}>{goal.status}</span>
+                        <StatusBadge status={goal.status} />
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">

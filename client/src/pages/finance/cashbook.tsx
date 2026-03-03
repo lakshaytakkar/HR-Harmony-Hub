@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { ALL_FINANCE_COMPANIES, cashBookEntries } from "@/lib/mock-data-finance";
+import { FINANCE_COLOR } from "@/lib/finance-config";
 
-const BRAND = "#B45309";
 
 function getCompany(id: string) {
   return ALL_FINANCE_COMPANIES.find(c => c.id === id)!;
@@ -87,7 +87,7 @@ export default function FinanceCashBook() {
                 {ALL_FINANCE_COMPANIES.map(c => <SelectItem key={c.id} value={c.id}>{c.shortName}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Button style={{ backgroundColor: BRAND }} className="text-white" data-testid="btn-new-cash-entry">
+            <Button style={{ backgroundColor: FINANCE_COLOR }} className="text-white" data-testid="btn-new-cash-entry">
               <Plus className="h-4 w-4 mr-1" />New Entry
             </Button>
           </div>
@@ -137,7 +137,7 @@ export default function FinanceCashBook() {
               onClick={() => setPeriod(p.id)}
               data-testid={`pill-period-${p.id}`}
               className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${period === p.id ? "text-white border-transparent" : "bg-background border-muted-foreground/20 text-muted-foreground"}`}
-              style={period === p.id ? { backgroundColor: BRAND } : undefined}
+              style={period === p.id ? { backgroundColor: FINANCE_COLOR } : undefined}
             >{p.label}</button>
           ))}
         </div>
@@ -199,7 +199,7 @@ export default function FinanceCashBook() {
                   <td colSpan={5} className="px-4 py-2 text-muted-foreground">Monthly Total</td>
                   <td className="px-4 py-2 text-right text-emerald-700">{fmtINR(totalIn)}</td>
                   <td className="px-4 py-2 text-right text-red-600">{fmtINR(totalOut)}</td>
-                  <td className="px-4 py-2 text-right" style={{ color: BRAND }}>{fmtINR(totalIn - totalOut)}</td>
+                  <td className="px-4 py-2 text-right" style={{ color: FINANCE_COLOR }}>{fmtINR(totalIn - totalOut)}</td>
                   <td />
                 </tr>
               </tfoot>

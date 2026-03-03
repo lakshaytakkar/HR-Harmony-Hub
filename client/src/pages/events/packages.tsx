@@ -5,23 +5,18 @@ import { Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 import { Button } from "@/components/ui/button";
 import { tourPackages, type PackageStatus } from "@/lib/mock-data-goyo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { StatusBadge } from "@/components/hr/status-badge";
+import { EVENTS_COLOR } from "@/lib/events-config";
 import {
   PageShell,
   PageHeader,
   IndexToolbar,
 } from "@/components/layout";
 
-const BRAND_COLOR = "#E91E63";
 
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(val);
 
-const statusConfig: Record<PackageStatus, { label: string; color: string }> = {
-  active: { label: "Active", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  upcoming: { label: "Upcoming", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  sold_out: { label: "Sold Out", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
-  closed: { label: "Closed", color: "bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400" },
-};
 
 const destinationGradients: Record<string, string> = {
   "Hong Kong": "from-rose-500 to-pink-600",
@@ -80,7 +75,7 @@ export default function EventsPackages() {
           actions={
             <Button
               className="gap-2 text-white"
-              style={{ backgroundColor: BRAND_COLOR }}
+              style={{ backgroundColor: EVENTS_COLOR }}
               data-testid="button-add-package"
             >
               <Plus className="size-4" />
@@ -95,7 +90,7 @@ export default function EventsPackages() {
           search={search}
           onSearch={setSearch}
           placeholder="Search packages or destinations..."
-          color={BRAND_COLOR}
+          color={EVENTS_COLOR}
           filters={[
             { value: "all", label: "All Packages" },
             { value: "active", label: "Active" },
@@ -113,7 +108,7 @@ export default function EventsPackages() {
           const pct = Math.round((sold / pkg.max_pax) * 100);
           const destKey = Object.keys(destinationGradients).find((k) => pkg.destination.includes(k)) || "default";
           const gradient = destinationGradients[destKey];
-          const sc = statusConfig[pkg.status];
+          
 
           return (
             <StaggerItem key={pkg.id}>
@@ -138,9 +133,7 @@ export default function EventsPackages() {
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <h3 className="text-sm font-bold leading-tight" data-testid={`text-pkg-name-${pkg.id}`}>{pkg.name}</h3>
-                    <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-tight whitespace-nowrap shrink-0 ${sc.color}`}>
-                      {sc.label}
-                    </span>
+                    <StatusBadge status={pkg.status} />
                   </div>
 
                   <div className="flex items-center gap-3 mb-3">
@@ -194,7 +187,7 @@ export default function EventsPackages() {
                     <Button
                       size="sm"
                       className="flex-1 text-xs text-white font-bold"
-                      style={{ backgroundColor: BRAND_COLOR }}
+                      style={{ backgroundColor: EVENTS_COLOR }}
                       onClick={() => navigate("/events/bookings")}
                       data-testid={`btn-book-${pkg.id}`}
                     >

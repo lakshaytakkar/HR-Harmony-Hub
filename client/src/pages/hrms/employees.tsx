@@ -23,18 +23,7 @@ import {
 } from "@/components/layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-const statusColors: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  "on-leave": "bg-amber-100 text-amber-700",
-  terminated: "bg-red-100 text-red-700",
-};
-
-const typeColors: Record<string, string> = {
-  "full-time": "bg-sky-100 text-sky-700",
-  "part-time": "bg-violet-100 text-violet-700",
-  contract: "bg-orange-100 text-orange-700",
-};
+import { StatusBadge } from "@/components/hr/status-badge";
 
 export default function HrmsEmployees() {
   const [, setLocation] = useLocation();
@@ -164,14 +153,10 @@ export default function HrmsEmployees() {
                   <DataTD className="text-muted-foreground">{emp.department}</DataTD>
                   <DataTD>{emp.designation}</DataTD>
                   <DataTD>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${typeColors[emp.employmentType]}`}>
-                      {emp.employmentType}
-                    </span>
+                    <StatusBadge status={emp.employmentType} />
                   </DataTD>
                   <DataTD>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[emp.status]}`}>
-                      {emp.status}
-                    </span>
+                    <StatusBadge status={emp.status} />
                   </DataTD>
                   <DataTD className="text-muted-foreground">{emp.location}</DataTD>
                   <DataTD className="text-muted-foreground">

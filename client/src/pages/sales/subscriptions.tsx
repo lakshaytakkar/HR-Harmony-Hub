@@ -24,13 +24,6 @@ const statusVariantMap: Record<string, "success" | "error" | "warning" | "neutra
   trialing: "info",
 };
 
-const statusLabelMap: Record<string, string> = {
-  active: "Active",
-  canceled: "Canceled",
-  past_due: "Past Due",
-  trialing: "Trialing",
-};
-
 export default function SubscriptionsPage() {
   const loading = useSimulatedLoading();
   const [data] = useState<Subscription[]>(subscriptions);
@@ -62,7 +55,7 @@ export default function SubscriptionsPage() {
       header: "Status",
       render: (item) => (
         <StatusBadge
-          status={statusLabelMap[item.status] || item.status}
+          status={undefined || item.status}
           variant={statusVariantMap[item.status]}
         />
       ),

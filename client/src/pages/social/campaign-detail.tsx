@@ -7,20 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { campaigns, socialPosts, type PostStage } from "@/lib/mock-data-social";
+import { StatusBadge } from "@/components/hr/status-badge";
+import { SOCIAL_COLOR } from "@/lib/social-config";
 
-const BRAND_COLOR = "#0D9488";
-
-const statusColors: Record<string, string> = {
-  active: "bg-teal-100 text-teal-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  draft: "bg-slate-100 text-slate-700",
-};
-
-const stageColors: Record<PostStage, string> = {
-  idea: "bg-slate-100 text-slate-700", script: "bg-sky-100 text-sky-700", design: "bg-violet-100 text-violet-700",
-  caption: "bg-amber-100 text-amber-700", approval: "bg-orange-100 text-orange-700",
-  scheduled: "bg-teal-100 text-teal-700", published: "bg-emerald-100 text-emerald-700", rejected: "bg-red-100 text-red-700",
-};
 
 const platformIcons: Record<string, { icon: React.ElementType; color: string }> = {
   instagram: { icon: SiInstagram, color: "#E11D48" },
@@ -78,7 +67,7 @@ export default function SocialCampaignDetail() {
       <Fade>
         <div
           className="rounded-2xl p-6 text-white"
-          style={{ background: `linear-gradient(135deg, ${BRAND_COLOR} 0%, #0891B2 100%)` }}
+          style={{ background: `linear-gradient(135deg, ${SOCIAL_COLOR} 0%, #0891B2 100%)` }}
         >
           <p className="text-xs text-white/70 uppercase tracking-wider font-medium mb-1">Campaign Goal</p>
           <p className="text-lg font-semibold">{campaign.goal}</p>
@@ -216,7 +205,7 @@ export default function SocialCampaignDetail() {
                         </div>
                       </td>
                       <td className="p-3">
-                        <Badge className={`text-[10px] ${stageColors[post.stage]}`}>
+                        <Badge >
                           {post.stage.charAt(0).toUpperCase() + post.stage.slice(1)}
                         </Badge>
                       </td>

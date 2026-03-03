@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { tourVendors, type VendorCategory } from "@/lib/mock-data-goyo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { EVENTS_COLOR } from "@/lib/events-config";
 import {
   PageShell,
   PageHeader,
@@ -18,7 +19,6 @@ import {
   DetailSection,
 } from "@/components/layout";
 
-const BRAND_COLOR = "#E91E63";
 
 const categoryConfig: Record<VendorCategory, { label: string; color: string }> = {
   ground_partner: { label: "Ground Partner", color: "bg-pink-100 text-pink-700" },
@@ -77,7 +77,7 @@ export default function EventsVendors() {
             <Button
               onClick={() => setDialogOpen(true)}
               className="gap-2 text-white"
-              style={{ backgroundColor: BRAND_COLOR }}
+              style={{ backgroundColor: EVENTS_COLOR }}
               data-testid="button-add-vendor"
             >
               <Plus className="size-4" />
@@ -91,7 +91,7 @@ export default function EventsVendors() {
         <StatGrid>
           <StatCard label="Total Vendors" value={tourVendors.length} icon={Users} iconBg="rgba(33, 150, 243, 0.1)" iconColor="#2196F3" />
           <StatCard label="Active Partners" value={activeCount} icon={Users} iconBg="rgba(76, 175, 80, 0.1)" iconColor="#4CAF50" />
-          <StatCard label="Key Partners" value={tourVendors.filter(v => v.category === "ground_partner").length} icon={Crown} iconBg="rgba(233, 30, 99, 0.1)" iconColor={BRAND_COLOR} />
+          <StatCard label="Key Partners" value={tourVendors.filter(v => v.category === "ground_partner").length} icon={Crown} iconBg="rgba(233, 30, 99, 0.1)" iconColor={EVENTS_COLOR} />
           <StatCard label="Service Rating" value="4.8" icon={Star} iconBg="rgba(255, 152, 0, 0.1)" iconColor="#FF9800" />
         </StatGrid>
       </Fade>
@@ -101,7 +101,7 @@ export default function EventsVendors() {
           search={search}
           onSearch={setSearch}
           placeholder="Search vendors or cities..."
-          color={BRAND_COLOR}
+          color={EVENTS_COLOR}
           filters={[
             { value: "all", label: "All Categories" },
             { value: "ground_partner", label: "Ground Partner" },
@@ -198,7 +198,7 @@ export default function EventsVendors() {
           <>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button 
-              style={{ backgroundColor: BRAND_COLOR }} 
+              style={{ backgroundColor: EVENTS_COLOR }} 
               className="text-white hover:opacity-90"
               onClick={() => setDialogOpen(false)}
             >

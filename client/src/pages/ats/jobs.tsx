@@ -17,27 +17,11 @@ import {
   DetailModal,
   DetailSection,
 } from "@/components/layout";
+import { StatusBadge } from "@/components/hr/status-badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const statusColors: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  paused: "bg-amber-100 text-amber-700",
-  closed: "bg-red-100 text-red-700",
-  draft: "bg-muted text-muted-foreground",
-};
 
-const priorityColors: Record<string, string> = {
-  high: "bg-red-100 text-red-700",
-  medium: "bg-amber-100 text-amber-700",
-  low: "bg-muted text-muted-foreground",
-};
-
-const typeColors: Record<string, string> = {
-  "full-time": "bg-sky-100 text-sky-700",
-  contract: "bg-violet-100 text-violet-700",
-  internship: "bg-orange-100 text-orange-700",
-};
 
 export default function AtsJobs() {
   const [, setLocation] = useLocation();
@@ -146,9 +130,9 @@ export default function AtsJobs() {
                     <p className="text-xs text-muted-foreground">{job.location}</p>
                   </DataTD>
                   <DataTD className="text-muted-foreground">{job.department}</DataTD>
-                  <DataTD><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${typeColors[job.type]}`}>{job.type}</span></DataTD>
-                  <DataTD><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[job.status]}`}>{job.status}</span></DataTD>
-                  <DataTD><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${priorityColors[job.priority]}`}>{job.priority}</span></DataTD>
+                  <DataTD><StatusBadge status={job.type} /></DataTD>
+                  <DataTD><StatusBadge status={job.status} /></DataTD>
+                  <DataTD><StatusBadge status={job.priority} /></DataTD>
                   <DataTD className="font-medium">{job.filled}/{job.openings}</DataTD>
                   <DataTD className="text-muted-foreground">{job.hiringManager}</DataTD>
                   <DataTD className="text-muted-foreground">{job.targetDate}</DataTD>

@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { socialPosts, campaigns } from "@/lib/mock-data-social";
+import { SOCIAL_COLOR } from "@/lib/social-config";
 
-const BRAND_COLOR = "#0D9488";
 
 type PlatformTab = "instagram" | "youtube" | "linkedin" | "facebook";
 type TimeFilter = "7d" | "30d" | "month" | "custom";
@@ -154,7 +154,7 @@ export default function SocialAnalytics() {
                   onClick={() => setLocation(`/social/posts/${post.id}`)}
                   data-testid={`top-post-${post.id}`}
                 >
-                  <div className="size-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: BRAND_COLOR }}>
+                  <div className="size-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: SOCIAL_COLOR }}>
                     {i + 1}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -189,7 +189,7 @@ export default function SocialAnalytics() {
                   <button
                     onClick={() => setLocation(`/social/posts/${post.id}`)}
                     className="text-[10px] font-medium shrink-0 hover:underline"
-                    style={{ color: BRAND_COLOR }}
+                    style={{ color: SOCIAL_COLOR }}
                     data-testid={`repurpose-${post.id}`}
                   >
                     Repurpose →
@@ -219,7 +219,7 @@ export default function SocialAnalytics() {
                   <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%`, background: campaign.status === "active" ? BRAND_COLOR : "#94A3B8" }}
+                      style={{ width: `${pct}%`, background: campaign.status === "active" ? SOCIAL_COLOR : "#94A3B8" }}
                     />
                   </div>
                   <p className="text-xs font-semibold w-14 text-right">{(campaign.totalReach / 1000).toFixed(0)}K</p>

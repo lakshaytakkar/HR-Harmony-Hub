@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { ALL_FINANCE_COMPANIES, journalEntries, type JournalEntry } from "@/lib/mock-data-finance";
+import { FINANCE_COLOR } from "@/lib/finance-config";
 
-const BRAND = "#B45309";
 
 function getCompany(id: string) {
   return ALL_FINANCE_COMPANIES.find(c => c.id === id) ?? ALL_FINANCE_COMPANIES[0];
@@ -54,7 +54,7 @@ export default function FinanceJournal() {
             <h1 className="text-2xl font-bold">Journal Entries</h1>
             <p className="text-sm text-muted-foreground">Double-entry bookkeeping records — Dr = Cr always</p>
           </div>
-          <Button style={{ backgroundColor: BRAND }} className="text-white" data-testid="btn-new-journal">
+          <Button style={{ backgroundColor: FINANCE_COLOR }} className="text-white" data-testid="btn-new-journal">
             <Plus className="h-4 w-4 mr-1" />New Journal Entry
           </Button>
         </div>
@@ -69,7 +69,7 @@ export default function FinanceJournal() {
                 onClick={() => setCompanyFilter(c.id)}
                 data-testid={`pill-company-${c.id}`}
                 className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${companyFilter === c.id ? "text-white border-transparent" : "bg-background border-muted-foreground/20 text-muted-foreground hover:border-amber-400"}`}
-                style={companyFilter === c.id ? { backgroundColor: BRAND, borderColor: BRAND } : undefined}
+                style={companyFilter === c.id ? { backgroundColor: FINANCE_COLOR, borderColor: FINANCE_COLOR } : undefined}
               >{c.label}</button>
             ))}
           </div>
@@ -80,7 +80,7 @@ export default function FinanceJournal() {
                 onClick={() => setStatusFilter(s.id)}
                 data-testid={`pill-status-${s.id}`}
                 className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${statusFilter === s.id ? "text-white border-transparent" : "bg-background border-muted-foreground/20 text-muted-foreground hover:border-amber-400"}`}
-                style={statusFilter === s.id ? { backgroundColor: BRAND, borderColor: BRAND } : undefined}
+                style={statusFilter === s.id ? { backgroundColor: FINANCE_COLOR, borderColor: FINANCE_COLOR } : undefined}
               >{s.label}</button>
             ))}
           </div>
@@ -148,7 +148,7 @@ export default function FinanceJournal() {
                       {selectedEntry.status}
                     </Badge>
                     {selectedEntry.status === "draft" && (
-                      <Button size="sm" style={{ backgroundColor: BRAND }} className="text-white" data-testid="btn-post-journal">
+                      <Button size="sm" style={{ backgroundColor: FINANCE_COLOR }} className="text-white" data-testid="btn-post-journal">
                         <Send className="h-3.5 w-3.5 mr-1" />Post Journal
                       </Button>
                     )}

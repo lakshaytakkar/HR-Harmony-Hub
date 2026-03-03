@@ -22,13 +22,6 @@ const statusVariantMap: Record<string, "success" | "error" | "warning" | "neutra
   pending: "neutral",
 };
 
-const statusLabelMap: Record<string, string> = {
-  "on-track": "On Track",
-  "over-budget": "Over Budget",
-  "under-budget": "Under Budget",
-  pending: "Pending",
-};
-
 const getEventName = (id: string) => hubEvents.find((e) => e.id === id)?.name ?? id;
 
 const allCategories = Array.from(new Set(hubBudgetItems.map((b) => b.category)));
@@ -109,7 +102,7 @@ export default function HubBudget() {
       header: "Status",
       render: (item) => (
         <StatusBadge
-          status={statusLabelMap[item.status]}
+          status={undefined}
           variant={statusVariantMap[item.status]}
         />
       ),

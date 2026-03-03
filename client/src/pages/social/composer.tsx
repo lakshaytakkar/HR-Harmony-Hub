@@ -11,8 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { campaigns } from "@/lib/mock-data-social";
+import { SOCIAL_COLOR } from "@/lib/social-config";
 
-const BRAND_COLOR = "#0D9488";
 
 const platformOptions = [
   { id: "instagram", label: "Instagram", icon: SiInstagram, color: "#E11D48" },
@@ -252,7 +252,7 @@ export default function SocialComposer() {
 
                   <Button
                     className="w-full text-white"
-                    style={{ background: BRAND_COLOR }}
+                    style={{ background: SOCIAL_COLOR }}
                     onClick={handleSendForApproval}
                     data-testid="btn-send-approval"
                   >
