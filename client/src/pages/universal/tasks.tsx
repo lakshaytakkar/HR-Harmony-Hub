@@ -35,7 +35,6 @@ import {
 
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { 
-  PageHeader, 
   PageShell,
   PrimaryAction,
   FilterPill
@@ -163,76 +162,80 @@ export default function UniversalTasks() {
 
   return (
     <PageShell className="flex flex-col h-full bg-background overflow-hidden p-0 lg:p-0">
-      {/* Header */}
-      <div className="px-16 py-4 lg:px-24 border-b shrink-0 flex items-center justify-between bg-card">
-        <PageHeader 
-          title="Tasks" 
-          subtitle="Manage and track team responsibilities" 
-          actions={
-            <div className="flex items-center gap-3">
-              <div className="flex items-center bg-muted p-1 rounded-lg border">
-                <Button 
-                  variant={viewMode === "board" ? "secondary" : "ghost"} 
-                  size="icon" 
-                  className={cn("h-8 w-8", viewMode === "board" && "bg-card shadow-sm")}
-                  onClick={() => setViewMode("board")}
-                  data-testid="btn-grid-view"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant={viewMode === "list" ? "secondary" : "ghost"} 
-                  size="icon" 
-                  className={cn("h-8 w-8", viewMode === "list" && "bg-card shadow-sm")}
-                  onClick={() => setViewMode("list")}
-                  data-testid="btn-list-view"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-              <PrimaryAction 
-                color={vertical.color}
-                icon={Plus}
-                onClick={() => setIsCreateOpen(true)}
-                testId="btn-new-task"
-              >
-                Add Task
-              </PrimaryAction>
-            </div>
-          }
-        />
-      </div>
+      {/* Header + Stats + Actions — single combined row */}
+      <div className="px-16 py-3 lg:px-24 border-b shrink-0 flex items-center gap-6 bg-card">
+        {/* Title */}
+        <div className="shrink-0">
+          <h1 className="text-[15px] font-semibold leading-tight">Tasks</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Manage and track team responsibilities</p>
+        </div>
 
-      {/* Stats Row — compact inline strip */}
-      <div className="flex items-stretch border-b bg-card shrink-0">
-        {([
-          { label: "Total Tasks", value: stats.total },
-          { label: "In Progress", value: stats.inProgress },
-          { label: "Overdue",     value: stats.overdue, red: true },
-          { label: "Completed",   value: stats.done,    green: true },
-        ] as { label: string; value: number; red?: boolean; green?: boolean }[]).map((s, i) => (
-          <div key={i} className={cn("flex-1 py-3 flex flex-col justify-center border-r last:border-r-0", i === 0 ? "pl-16 lg:pl-24 pr-5" : i === 3 ? "pl-5 pr-16 lg:pr-24" : "px-5")}>
-            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{s.label}</span>
-            <span className={cn("text-lg font-semibold", s.red && "text-red-500", s.green && "text-emerald-600")}>{s.value}</span>
+        {/* Divider */}
+        <div className="w-px h-8 bg-border shrink-0" />
+
+        {/* Stat cards */}
+        <div className="flex items-center gap-2.5 flex-1">
+          {([
+            { label: "Total",       value: stats.total },
+            { label: "In Progress", value: stats.inProgress,  color: "text-amber-500" },
+            { label: "Overdue",     value: stats.overdue,     color: "text-red-500" },
+            { label: "Completed",   value: stats.done,        color: "text-emerald-600" },
+          ] as { label: string; value: number; color?: string }[]).map((s) => (
+            <div key={s.label} className="flex items-center gap-2 px-3 py-1.5 rounded-lg border bg-muted/40 shadow-sm">
+              <span className={cn("text-base font-bold tabular-nums leading-none", s.color ?? "text-foreground")}>{s.value}</span>
+              <span className="text-[11px] text-muted-foreground font-medium">{s.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* View toggle + Add Task — right-aligned */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center bg-muted p-1 rounded-lg border">
+            <Button 
+              variant={viewMode === "board" ? "secondary" : "ghost"} 
+              size="icon" 
+              className={cn("h-7 w-7", viewMode === "board" && "bg-card shadow-sm")}
+              onClick={() => setViewMode("board")}
+              data-testid="btn-grid-view"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </Button>
+            <Button 
+              variant={viewMode === "list" ? "secondary" : "ghost"} 
+              size="icon" 
+              className={cn("h-7 w-7", viewMode === "list" && "bg-card shadow-sm")}
+              onClick={() => setViewMode("list")}
+              data-testid="btn-list-view"
+            >
+              <List className="h-3.5 w-3.5" />
+            </Button>
           </div>
-        ))}
+          <PrimaryAction 
+            color={vertical.color}
+            icon={Plus}
+            onClick={() => setIsCreateOpen(true)}
+            testId="btn-new-task"
+          >
+            Add Task
+          </PrimaryAction>
+        </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="px-16 py-4 lg:px-24 border-b flex items-center justify-between bg-card shrink-0 gap-4">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="relative w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="px-16 py-2.5 lg:px-24 border-b flex items-center justify-between bg-card shrink-0 gap-4">
+        <div className="flex items-center gap-3 flex-1">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input 
               placeholder="Search tasks..." 
-              className="pl-9 h-9"
+              className="pl-9 h-8 text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               data-testid="input-search"
             />
           </div>
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-40 h-9" data-testid="filter-priority">
+            <SelectTrigger className="w-36 h-8 text-sm" data-testid="filter-priority">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
             <SelectContent>
