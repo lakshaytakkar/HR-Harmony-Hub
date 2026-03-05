@@ -828,18 +828,27 @@ function TaskDetailDialog({
 
           {/* RIGHT: activity panel */}
           <div className="w-80 shrink-0 border-l flex flex-col overflow-hidden bg-muted/20">
-            <div className="bg-card border-b px-4 py-3 flex items-center gap-2">
-              <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Activity</span>
-            </div>
+            <Tabs defaultValue="comments" className="flex flex-col flex-1 overflow-hidden">
+              <div className="bg-card border-b px-3 pt-2 pb-0 shrink-0">
+                <TabsList className="w-full grid grid-cols-3 h-8 bg-muted/60">
+                  <TabsTrigger value="comments" className="text-[11px] gap-1" data-testid="tab-comments">
+                    <MessageSquare className="h-3 w-3" />
+                    Comments{comments.length > 0 ? ` (${comments.length})` : ""}
+                  </TabsTrigger>
+                  <TabsTrigger value="files" className="text-[11px] gap-1" data-testid="tab-files">
+                    <Paperclip className="h-3 w-3" />
+                    Files{attachments.length > 0 ? ` (${attachments.length})` : ""}
+                  </TabsTrigger>
+                  <TabsTrigger value="links" className="text-[11px] gap-1" data-testid="tab-links">
+                    <Link2 className="h-3 w-3" />
+                    Links{links.length > 0 ? ` (${links.length})` : ""}
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
-              {/* ── Comments ── */}
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
-                  <MessageSquare className="h-3 w-3" /> Comments
-                </p>
-                <div className="space-y-3 mb-3">
+              {/* Comments tab */}
+              <TabsContent value="comments" className="flex-1 overflow-y-auto px-4 py-3 m-0 space-y-3">
+                <div className="space-y-3">
                   {comments.length === 0 && (
                     <p className="text-xs text-muted-foreground">No comments yet.</p>
                   )}
@@ -869,7 +878,7 @@ function TaskDetailDialog({
                     </div>
                   ))}
                 </div>
-                <div className="flex items-end gap-2">
+                <div className="flex items-end gap-2 pt-1">
                   <Textarea
                     value={newComment}
                     onChange={e => setNewComment(e.target.value)}
@@ -893,26 +902,10 @@ function TaskDetailDialog({
                     {addCommentMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                   </Button>
                 </div>
-              </div>
+              </TabsContent>
 
-              {/* ── Files ── */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <Paperclip className="h-3 w-3" /> Files
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 text-[11px] px-2 gap-1"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    data-testid="button-attach-file"
-                  >
-                    {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-                    {uploading ? "Uploading..." : "Attach"}
-                  </Button>
-                </div>
+              {/* Files tab */}
+              <TabsContent value="files" className="flex-1 overflow-y-auto px-4 py-3 m-0 space-y-3">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -921,6 +914,17 @@ function TaskDetailDialog({
                   onChange={handleFileUpload}
                   data-testid="input-file-upload"
                 />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-xs gap-1.5"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  data-testid="button-attach-file"
+                >
+                  {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                  {uploading ? "Uploading..." : "Attach Files"}
+                </Button>
                 <div className="space-y-2">
                   {attachments.length === 0 && (
                     <p className="text-xs text-muted-foreground">No files attached.</p>
@@ -955,14 +959,11 @@ function TaskDetailDialog({
                     </div>
                   ))}
                 </div>
-              </div>
+              </TabsContent>
 
-              {/* ── Links ── */}
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
-                  <Link2 className="h-3 w-3" /> Links
-                </p>
-                <div className="space-y-2 mb-3">
+              {/* Links tab */}
+              <TabsContent value="links" className="flex-1 overflow-y-auto px-4 py-3 m-0 space-y-3">
+                <div className="space-y-2">
                   {links.length === 0 && (
                     <p className="text-xs text-muted-foreground">No links added.</p>
                   )}
@@ -994,7 +995,7 @@ function TaskDetailDialog({
                     </div>
                   ))}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 pt-1 border-t">
                   <Input
                     value={newLinkUrl}
                     onChange={e => setNewLinkUrl(e.target.value)}
@@ -1020,8 +1021,8 @@ function TaskDetailDialog({
                     Add Link
                   </Button>
                 </div>
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </DialogContent>

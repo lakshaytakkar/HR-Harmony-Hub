@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/hr/status-badge";
 import {
   Select,
@@ -291,62 +292,53 @@ export function TaskDetailDialog({ task, open, onOpenChange, onTaskUpdate }: Tas
 
             <Separator />
 
-            <div>
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                Comments ({currentTask.comments.length})
-              </h4>
-              <div className="space-y-3">
-                {currentTask.comments.map((comment) => (
-                  <div key={comment.id} className="flex gap-3" data-testid={`comment-${comment.id}`}>
-                    <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                      {getInitials(comment.author)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{comment.author}</span>
-                        <span className="text-xs text-muted-foreground">{comment.date}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-0.5">{comment.content}</p>
-                    </div>
-                  </div>
-                ))}
-                {currentTask.comments.length === 0 && (
-                  <p className="text-xs text-muted-foreground">No comments yet.</p>
-                )}
-              </div>
-              <div className="flex items-start gap-2 mt-3">
-                <Textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Write a comment..."
-                  className="min-h-[60px] text-sm resize-none"
-                  data-testid="input-add-comment"
-                />
-                <Button size="sm" onClick={addComment} className="shrink-0 mt-1" disabled={!newComment.trim()} data-testid="button-add-comment">
-                  <Send className="size-3.5" />
-                </Button>
-              </div>
-            </div>
+            <Tabs defaultValue="comments">
+              <TabsList className="w-full grid grid-cols-2 h-8 bg-muted/60">
+                <TabsTrigger value="comments" className="text-xs gap-1" data-testid="tab-comments">
+                  <Send className="size-3" />
+                  Comments{currentTask.comments.length > 0 ? ` (${currentTask.comments.length})` : ""}
+                </TabsTrigger>
+                <TabsTrigger value="files" className="text-xs gap-1" data-testid="tab-files">
+                  <Paperclip className="size-3" />
+                  Files{supabaseAttachments.length > 0 ? ` (${supabaseAttachments.length})` : ""}
+                </TabsTrigger>
+              </TabsList>
 
-            <>
-              <Separator />
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Attachments ({supabaseAttachments.length})
-                  </h4>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 text-xs px-2 gap-1"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    data-testid="button-attach-file"
-                  >
-                    {uploading ? <Loader2 className="size-3 animate-spin" /> : <Upload className="size-3" />}
-                    {uploading ? "Uploading..." : "Attach"}
+              <TabsContent value="comments" className="mt-3 space-y-3">
+                <div className="space-y-3">
+                  {currentTask.comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-3" data-testid={`comment-${comment.id}`}>
+                      <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                        {getInitials(comment.author)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{comment.author}</span>
+                          <span className="text-xs text-muted-foreground">{comment.date}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-0.5">{comment.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {currentTask.comments.length === 0 && (
+                    <p className="text-xs text-muted-foreground">No comments yet.</p>
+                  )}
+                </div>
+                <div className="flex items-start gap-2">
+                  <Textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Write a comment..."
+                    className="min-h-[60px] text-sm resize-none"
+                    data-testid="input-add-comment"
+                  />
+                  <Button size="sm" onClick={addComment} className="shrink-0 mt-1" disabled={!newComment.trim()} data-testid="button-add-comment">
+                    <Send className="size-3.5" />
                   </Button>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="files" className="mt-3 space-y-3">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -355,9 +347,20 @@ export function TaskDetailDialog({ task, open, onOpenChange, onTaskUpdate }: Tas
                   onChange={handleFileUpload}
                   data-testid="input-file-upload"
                 />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-xs gap-1.5"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  data-testid="button-attach-file"
+                >
+                  {uploading ? <Loader2 className="size-3 animate-spin" /> : <Upload className="size-3" />}
+                  {uploading ? "Uploading..." : "Attach Files"}
+                </Button>
                 <div className="space-y-2">
                   {supabaseAttachments.length === 0 && (
-                    <p className="text-xs text-muted-foreground">No files attached. Click Attach to upload.</p>
+                    <p className="text-xs text-muted-foreground">No files attached.</p>
                   )}
                   {supabaseAttachments.map((att) => (
                     <div key={att.id} className="flex items-center gap-3 rounded-md border px-3 py-2 group" data-testid={`attachment-${att.id}`}>
@@ -389,8 +392,8 @@ export function TaskDetailDialog({ task, open, onOpenChange, onTaskUpdate }: Tas
                     </div>
                   ))}
                 </div>
-              </div>
-            </>
+              </TabsContent>
+            </Tabs>
           </div>
 
           <div className="w-full lg:w-[240px] shrink-0 border-t lg:border-t-0 lg:border-l bg-muted/30 p-4 space-y-4">
