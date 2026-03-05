@@ -717,114 +717,118 @@ function TaskDetailDialog({
           {/* LEFT: task content */}
           <div className="flex-1 overflow-y-auto divide-y min-w-0">
             {/* Details */}
-            <div className="px-6 py-4 space-y-3">
-              {/* Row 1: Assigned To + Priority */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Assigned To</p>
-                  <Select value={task.assigneeName} onValueChange={onAssigneeChange}>
-                    <SelectTrigger className="h-8 text-xs border border-border/60 bg-background shadow-none gap-1.5" data-testid="select-task-assignee">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <Avatar className="h-4 w-4 shrink-0">
-                          <AvatarImage src={getPersonAvatar(task.assigneeName)} />
-                          <AvatarFallback className="text-[8px]">{task.assigneeName.substring(0, 2)}</AvatarFallback>
-                        </Avatar>
-                        <span className="truncate">{task.assigneeName}</span>
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {verticalMembers.filter(m => m.verticalId === task.verticalId).map(m => (
-                        <SelectItem key={m.id} value={m.name}>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-5 w-5">
-                              <AvatarImage src={getPersonAvatar(m.name)} />
-                              <AvatarFallback className="text-[9px]">{m.name.substring(0, 2)}</AvatarFallback>
+            <div className="px-6 py-3.5 space-y-2">
+              {(() => {
+                const labelCls = "w-24 shrink-0 text-xs font-medium text-muted-foreground";
+                const triggerCls = "h-7 text-xs font-medium border-0 bg-secondary shadow-none px-2.5 gap-1.5 w-auto max-w-[180px]";
+                const tagPalettes = [
+                  "bg-sky-50 text-sky-600 border border-sky-200",
+                  "bg-violet-50 text-violet-600 border border-violet-200",
+                  "bg-emerald-50 text-emerald-600 border border-emerald-200",
+                  "bg-amber-50 text-amber-600 border border-amber-200",
+                  "bg-rose-50 text-rose-600 border border-rose-200",
+                  "bg-indigo-50 text-indigo-600 border border-indigo-200",
+                  "bg-teal-50 text-teal-600 border border-teal-200",
+                  "bg-orange-50 text-orange-600 border border-orange-200",
+                ];
+                return (
+                  <>
+                    {/* Assigned To */}
+                    <div className="flex items-center gap-3">
+                      <span className={labelCls}>Assigned To</span>
+                      <Select value={task.assigneeName} onValueChange={onAssigneeChange}>
+                        <SelectTrigger className={triggerCls} data-testid="select-task-assignee">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Avatar className="h-4 w-4 shrink-0">
+                              <AvatarImage src={getPersonAvatar(task.assigneeName)} />
+                              <AvatarFallback className="text-[8px]">{task.assigneeName.substring(0, 2)}</AvatarFallback>
                             </Avatar>
-                            {m.name}
+                            <span className="truncate text-xs font-medium">{task.assigneeName}</span>
                           </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {verticalMembers.filter(m => m.verticalId === task.verticalId).map(m => (
+                            <SelectItem key={m.id} value={m.name}>
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarImage src={getPersonAvatar(m.name)} />
+                                  <AvatarFallback className="text-[9px]">{m.name.substring(0, 2)}</AvatarFallback>
+                                </Avatar>
+                                {m.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Priority</p>
-                  <Select value={task.priority} onValueChange={onPriorityChange}>
-                    <SelectTrigger className="h-8 text-xs border border-border/60 bg-background shadow-none" data-testid="select-task-priority">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="critical"><span className="text-red-500 font-medium">Critical</span></SelectItem>
-                      <SelectItem value="high"><span className="text-orange-500 font-medium">High</span></SelectItem>
-                      <SelectItem value="medium"><span className="text-blue-500 font-medium">Medium</span></SelectItem>
-                      <SelectItem value="low"><span className="text-slate-500 font-medium">Low</span></SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                    {/* Priority */}
+                    <div className="flex items-center gap-3">
+                      <span className={labelCls}>Priority</span>
+                      <Select value={task.priority} onValueChange={onPriorityChange}>
+                        <SelectTrigger className={triggerCls} data-testid="select-task-priority">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="critical"><span className="text-red-500 font-medium">Critical</span></SelectItem>
+                          <SelectItem value="high"><span className="text-orange-500 font-medium">High</span></SelectItem>
+                          <SelectItem value="medium"><span className="text-blue-500 font-medium">Medium</span></SelectItem>
+                          <SelectItem value="low"><span className="text-slate-500 font-medium">Low</span></SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              {/* Row 2: Status + Due Date */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Status</p>
-                  <Select value={task.status} onValueChange={onStatusChange}>
-                    <SelectTrigger className="h-8 text-xs border border-border/60 bg-background shadow-none" data-testid="select-task-status">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="backlog">Backlog</SelectItem>
-                      <SelectItem value="todo">To Do</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="review">In Review</SelectItem>
-                      <SelectItem value="done">Done</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    {/* Status */}
+                    <div className="flex items-center gap-3">
+                      <span className={labelCls}>Status</span>
+                      <Select value={task.status} onValueChange={onStatusChange}>
+                        <SelectTrigger className={triggerCls} data-testid="select-task-status">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="backlog">Backlog</SelectItem>
+                          <SelectItem value="todo">To Do</SelectItem>
+                          <SelectItem value="in-progress">In Progress</SelectItem>
+                          <SelectItem value="review">In Review</SelectItem>
+                          <SelectItem value="done">Done</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Due Date</p>
-                  <div className="relative">
-                    <Calendar className={cn("absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none z-10", isOverdue ? "text-red-500" : "text-muted-foreground")} />
-                    <input
-                      type="date"
-                      value={task.dueDate ? task.dueDate.split("T")[0] : ""}
-                      onChange={e => onDueDateChange(e.target.value)}
-                      className={cn(
-                        "h-8 w-full rounded-md border border-border/60 bg-background pl-8 pr-2 text-xs shadow-none outline-none focus:ring-1 focus:ring-ring",
-                        isOverdue ? "text-red-500 font-medium" : "text-foreground"
-                      )}
-                      data-testid="input-task-due-date"
-                    />
-                  </div>
-                </div>
-              </div>
+                    {/* Due Date */}
+                    <div className="flex items-center gap-3">
+                      <span className={labelCls}>Due Date</span>
+                      <div className="relative">
+                        <Calendar className={cn("absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 pointer-events-none z-10", isOverdue ? "text-red-500" : "text-muted-foreground")} />
+                        <input
+                          type="date"
+                          value={task.dueDate ? task.dueDate.split("T")[0] : ""}
+                          onChange={e => onDueDateChange(e.target.value)}
+                          className={cn(
+                            "h-7 rounded-md bg-secondary pl-6 pr-2 text-xs font-medium border-0 shadow-none outline-none focus:ring-1 focus:ring-ring",
+                            isOverdue ? "text-red-500" : "text-foreground"
+                          )}
+                          data-testid="input-task-due-date"
+                        />
+                      </div>
+                    </div>
 
-              {/* Tags */}
-              {task.tags.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tags</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {task.tags.map((tag, i) => {
-                      const palettes = [
-                        "bg-sky-50 text-sky-600 border border-sky-200",
-                        "bg-violet-50 text-violet-600 border border-violet-200",
-                        "bg-emerald-50 text-emerald-600 border border-emerald-200",
-                        "bg-amber-50 text-amber-600 border border-amber-200",
-                        "bg-rose-50 text-rose-600 border border-rose-200",
-                        "bg-indigo-50 text-indigo-600 border border-indigo-200",
-                        "bg-teal-50 text-teal-600 border border-teal-200",
-                        "bg-orange-50 text-orange-600 border border-orange-200",
-                      ];
-                      return (
-                        <span key={tag} className={cn("text-xs font-medium px-2.5 py-0.5 rounded-full", palettes[i % palettes.length])}>
-                          {tag}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                    {/* Tags */}
+                    {task.tags.length > 0 && (
+                      <div className="flex items-center gap-3">
+                        <span className={labelCls}>Tags</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {task.tags.map((tag, i) => (
+                            <span key={tag} className={cn("text-xs font-medium px-2 py-0.5 rounded-full", tagPalettes[i % tagPalettes.length])}>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             {/* Description */}
