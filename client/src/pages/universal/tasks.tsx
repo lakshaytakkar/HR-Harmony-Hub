@@ -27,10 +27,12 @@ import {
 import { detectVerticalFromUrl } from "@/lib/verticals-config";
 import { 
   sharedTasks, 
+  sharedTaskCodeMap,
   verticalMembers, 
   SharedTask, 
   SharedTaskSubtask 
 } from "@/lib/mock-data-shared";
+
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { 
   PageHeader, 
@@ -67,6 +69,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
+function getTaskCode(task: SharedTask): string {
+  return task.taskCode ?? sharedTaskCodeMap[task.id] ?? "T???";
+}
+
+function getTaskThumbnail(task: SharedTask): string {
+  return `https://api.dicebear.com/9.x/glass/svg?seed=${getTaskCode(task)}`;
+}
+
 export default function UniversalTasks() {
   const [location] = useLocation();
   const vertical = detectVerticalFromUrl(location);
@@ -85,6 +95,7 @@ export default function UniversalTasks() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [nextTaskNum, setNextTaskNum] = useState(sharedTasks.length + 1);
 
   const filteredTasks = useMemo(() => {
     let result = tasks;
@@ -126,8 +137,10 @@ export default function UniversalTasks() {
   const handleCreateTask = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    const taskCode = "T" + String(nextTaskNum).padStart(3, "0");
     const newTask: SharedTask = {
       id: `TASK-${Math.random().toString(36).substr(2, 9)}`,
+      taskCode,
       verticalId: vertical?.id || "",
       title: formData.get("title") as string,
       description: formData.get("description") as string,
@@ -140,6 +153,7 @@ export default function UniversalTasks() {
       subtasks: []
     };
     setTasks(prev => [...prev, newTask]);
+    setNextTaskNum(n => n + 1);
     setIsCreateOpen(false);
   };
 
@@ -450,6 +464,8 @@ function KanbanColumn({
 
 function TaskCard({ task, onClick }: { task: SharedTask, onClick: () => void }) {
   const isOverdue = !task.status.includes("done") && new Date(task.dueDate) < new Date();
+  const code = getTaskCode(task);
+  const thumb = getTaskThumbnail(task);
 
   return (
     <Card 
@@ -458,6 +474,15 @@ function TaskCard({ task, onClick }: { task: SharedTask, onClick: () => void }) 
       data-testid={`task-card-${task.id}`}
     >
       <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <img
+            src={thumb}
+            alt={code}
+            className="h-7 w-7 rounded-lg border bg-muted shrink-0 object-cover"
+            loading="lazy"
+          />
+          <span className="text-[10px] font-mono font-semibold text-muted-foreground tracking-wide">{code}</span>
+        </div>
         <Badge 
           className={cn(
             "text-[10px] px-2 py-0.5 border-0 font-medium capitalize",
@@ -469,7 +494,6 @@ function TaskCard({ task, onClick }: { task: SharedTask, onClick: () => void }) 
         >
           {task.priority}
         </Badge>
-        <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
       <div className="space-y-1">
         <h4 className="text-[14px] font-semibold line-clamp-2 leading-tight">{task.title}</h4>
@@ -526,9 +550,20 @@ function TasksListView({ tasks, onTaskClick }: { tasks: SharedTask[], onTaskClic
               >
                 <td className="p-4" onClick={(e) => e.stopPropagation()}><Checkbox /></td>
                 <td className="p-4">
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-[14px]">{task.title}</span>
-                    <span className="text-[12px] text-muted-foreground line-clamp-1">{task.description}</span>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={getTaskThumbnail(task)}
+                      alt={getTaskCode(task)}
+                      className="h-8 w-8 rounded-lg border bg-muted shrink-0 object-cover"
+                      loading="lazy"
+                    />
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-semibold text-muted-foreground">{getTaskCode(task)}</span>
+                        <span className="font-semibold text-[14px] truncate">{task.title}</span>
+                      </div>
+                      <span className="text-[12px] text-muted-foreground line-clamp-1">{task.description}</span>
+                    </div>
                   </div>
                 </td>
                 <td className="p-4">
@@ -696,10 +731,18 @@ function TaskDetailDialog({
         {/* Sticky header */}
         <div className="sticky top-0 z-10 bg-card border-b px-6 py-3 shrink-0">
           <div className="flex items-center gap-3">
+            <img
+              src={getTaskThumbnail(task)}
+              alt={getTaskCode(task)}
+              className="h-10 w-10 rounded-xl border bg-muted shrink-0 object-cover"
+            />
             <div className="flex flex-col min-w-0 flex-1">
-              <DialogTitle className="text-base font-semibold truncate" data-testid={`text-task-title-${task.id}`}>
-                {task.title}
-              </DialogTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-semibold text-muted-foreground tracking-wide shrink-0">{getTaskCode(task)}</span>
+                <DialogTitle className="text-base font-semibold truncate" data-testid={`text-task-title-${task.id}`}>
+                  {task.title}
+                </DialogTitle>
+              </div>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Created on {new Date(task.createdDate).toLocaleDateString()}
               </p>

@@ -58,6 +58,7 @@ export interface SharedTaskSubtask {
 
 export interface SharedTask {
   id: string;
+  taskCode?: string;
   verticalId: string;
   title: string;
   description: string;
@@ -375,6 +376,11 @@ export const sharedTasks: SharedTask[] = [
   { id: "T-ETS-008", verticalId: "ets", title: "Partner Performance Reviews — Q4", description: "Review Q4 performance for all 14 existing franchise partners — sales metrics, compliance scores, and renewal eligibility.", status: "todo", priority: "high", assigneeName: "Naveen Pillai", dueDate: "2026-03-12", tags: ["performance", "Q4", "franchise"], createdDate: "2026-02-24", subtasks: [{ id: "st-1", title: "Pull Q4 sales data", completed: false }, { id: "st-2", title: "Score each partner", completed: false }] },
   { id: "T-ETS-009", verticalId: "ets", title: "EazyToSell App — Concept Design", description: "Initiate concept design for a mobile app for franchise partners — order tracking, inventory check, and commission dashboard.", status: "backlog", priority: "low", assigneeName: "Meera Iyer", dueDate: "2026-04-20", tags: ["app", "mobile", "concept"], createdDate: "2026-02-28", subtasks: [{ id: "st-1", title: "Define core features", completed: false }] },
 ];
+
+export const sharedTaskCodeMap: Record<string, string> = {};
+sharedTasks.forEach((t, i) => {
+  sharedTaskCodeMap[t.id] = "T" + String(i + 1).padStart(3, "0");
+});
 
 export type NotificationType = "order" | "fulfillment" | "inventory" | "finance" | "retailer" | "application" | "system" | "quotation";
 
