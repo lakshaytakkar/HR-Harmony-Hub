@@ -1618,3 +1618,97 @@ export async function markAllNotificationsRead(verticalId: string): Promise<bool
   if (error) { console.error("[supabase] markAllNotificationsRead error:", error.message); return false; }
   return true;
 }
+
+// ── CORE: Tickets ───────────────────────────────────────────────────────────────
+
+export interface CoreTicket {
+  id: string;
+  ticket_code: string;
+  vertical_id: string | null;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  category: string | null;
+  reported_by: string | null;
+  assigned_to: string | null;
+  created_by: string | null;
+  tags: string[];
+  resolution: string | null;
+  due_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CoreTicketInput {
+  vertical_id?: string;
+  title: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  category?: string;
+  reported_by?: string;
+  assigned_to?: string;
+  created_by?: string;
+  tags?: string[];
+  resolution?: string;
+  due_date?: string;
+}
+
+export async function getCoreTickets(filters: {
+  verticalId?: string;
+  status?: string;
+  priority?: string;
+  assignedTo?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+} = {}): Promise<{ tickets: CoreTicket[]; total: number }> {
+  const page = filters.page ?? 1;
+  const limit = filters.limit ?? 50;
+  const offset = (page - 1) * limit;
+
+  let q = supabase.from("tickets").select("*", { count: "exact" });
+  if (filters.verticalId) q = q.eq("vertical_id", filters.verticalId);
+  if (filters.status) q = q.eq("status", filters.status);
+  if (filters.priority) q = q.eq("priority", filters.priority);
+  if (filters.assignedTo) q = q.eq("assigned_to", filters.assignedTo);
+  if (filters.search) q = q.or(`title.ilike.%${filters.search}%,ticket_code.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+  q = q.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
+
+  const { data, error, count } = await q;
+  if (error) {
+    console.error("[supabase] getCoreTickets error:", error.message);
+    return { tickets: [], total: 0 };
+  }
+  return { tickets: (data ?? []) as CoreTicket[], total: count ?? 0 };
+}
+
+export async function getCoreTicket(id: string): Promise<CoreTicket | null> {
+  const { data, error } = await supabase.from("tickets").select("*").eq("id", id).single();
+  if (error) { console.error("[supabase] getCoreTicket error:", error.message); return null; }
+  return data as CoreTicket;
+}
+
+export async function createCoreTicket(input: CoreTicketInput): Promise<CoreTicket | null> {
+  const { data, error } = await supabase.from("tickets").insert([input]).select().single();
+  if (error) { console.error("[supabase] createCoreTicket error:", error.message); return null; }
+  return data as CoreTicket;
+}
+
+export async function updateCoreTicket(id: string, patch: Partial<CoreTicketInput>): Promise<CoreTicket | null> {
+  const { data, error } = await supabase
+    .from("tickets")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) { console.error("[supabase] updateCoreTicket error:", error.message); return null; }
+  return data as CoreTicket;
+}
+
+export async function deleteCoreTicket(id: string): Promise<boolean> {
+  const { error } = await supabase.from("tickets").delete().eq("id", id);
+  if (error) { console.error("[supabase] deleteCoreTicket error:", error.message); return false; }
+  return true;
+}

@@ -89,6 +89,11 @@ import {
   getCoreNotifications,
   markNotificationRead,
   markAllNotificationsRead,
+  getCoreTickets,
+  getCoreTicket,
+  createCoreTicket,
+  updateCoreTicket,
+  deleteCoreTicket,
 } from "./supabase";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
@@ -1296,6 +1301,85 @@ export async function registerRoutes(
       await markAllNotificationsRead(verticalId);
       return res.json({ ok: true });
     } catch { return res.status(500).json({ error: "Failed to mark all read" }); }
+  });
+
+  // Tickets
+  app.get("/api/core/tickets", async (req, res) => {
+    try {
+      const { verticalId, status, priority, assignedTo, search, page, limit } = req.query as Record<string, string>;
+      const result = await getCoreTickets({
+        verticalId: verticalId || undefined,
+        status: status || undefined,
+        priority: priority || undefined,
+        assignedTo: assignedTo || undefined,
+        search: search || undefined,
+        page: page ? parseInt(page) : undefined,
+        limit: limit ? parseInt(limit) : undefined,
+      });
+      return res.json(result);
+    } catch { return res.status(500).json({ error: "Failed to fetch tickets" }); }
+  });
+
+  app.get("/api/core/tickets/:id", async (req, res) => {
+    try {
+      const ticket = await getCoreTicket(req.params.id);
+      if (!ticket) return res.status(404).json({ error: "Ticket not found" });
+      return res.json(ticket);
+    } catch { return res.status(500).json({ error: "Failed to fetch ticket" }); }
+  });
+
+  app.post("/api/core/tickets", async (req, res) => {
+    try {
+      const body = req.body;
+      if (!body.title) return res.status(400).json({ error: "title is required" });
+      const input: any = {
+        title: body.title,
+        description: body.description || "",
+        vertical_id: body.verticalId || body.vertical_id || "",
+        status: body.status || "open",
+        priority: body.priority || "medium",
+        category: body.category || "general",
+        reported_by: body.reportedBy || body.reported_by || "",
+        assigned_to: body.assignedTo || body.assigned_to || null,
+        created_by: body.createdBy || body.created_by || "",
+        tags: body.tags || [],
+        due_date: body.dueDate || body.due_date || null,
+      };
+      const ticket = await createCoreTicket(input);
+      if (!ticket) return res.status(500).json({ error: "Failed to create ticket" });
+      return res.status(201).json(ticket);
+    } catch { return res.status(500).json({ error: "Failed to create ticket" }); }
+  });
+
+  app.patch("/api/core/tickets/:id", async (req, res) => {
+    try {
+      const body = req.body;
+      const patch: any = {};
+      if (body.title !== undefined) patch.title = body.title;
+      if (body.description !== undefined) patch.description = body.description;
+      if (body.status !== undefined) patch.status = body.status;
+      if (body.priority !== undefined) patch.priority = body.priority;
+      if (body.category !== undefined) patch.category = body.category;
+      if (body.resolution !== undefined) patch.resolution = body.resolution;
+      if (body.tags !== undefined) patch.tags = body.tags;
+      if (body.assignedTo !== undefined) patch.assigned_to = body.assignedTo;
+      else if (body.assigned_to !== undefined) patch.assigned_to = body.assigned_to;
+      if (body.reportedBy !== undefined) patch.reported_by = body.reportedBy;
+      else if (body.reported_by !== undefined) patch.reported_by = body.reported_by;
+      if (body.dueDate !== undefined) patch.due_date = body.dueDate;
+      else if (body.due_date !== undefined) patch.due_date = body.due_date;
+      const ticket = await updateCoreTicket(req.params.id, patch);
+      if (!ticket) return res.status(500).json({ error: "Failed to update ticket" });
+      return res.json(ticket);
+    } catch { return res.status(500).json({ error: "Failed to update ticket" }); }
+  });
+
+  app.delete("/api/core/tickets/:id", async (req, res) => {
+    try {
+      const ok = await deleteCoreTicket(req.params.id);
+      if (!ok) return res.status(500).json({ error: "Failed to delete ticket" });
+      return res.json({ ok: true });
+    } catch { return res.status(500).json({ error: "Failed to delete ticket" }); }
   });
 
   app.use("/api/ai", aiChatRouter);

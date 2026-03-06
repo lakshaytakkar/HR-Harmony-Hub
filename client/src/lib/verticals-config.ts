@@ -138,6 +138,12 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Tickets",
+        defaultUrl: "/suprans/tickets",
+        icon: Ticket,
+        items: [],
+      },
+      {
         title: "Leads Inbox",
         defaultUrl: "/suprans/inbound",
         icon: UserPlus,
@@ -199,6 +205,12 @@ export const verticals: Vertical[] = [
         title: "Tasks",
         defaultUrl: "/hr/tasks",
         icon: ListChecks,
+        items: [],
+      },
+      {
+        title: "Tickets",
+        defaultUrl: "/hr/tickets",
+        icon: Ticket,
         items: [],
       },
       {
@@ -299,6 +311,12 @@ export const verticals: Vertical[] = [
         title: "Tasks",
         defaultUrl: "/sales/tasks",
         icon: ListChecks,
+        items: [],
+      },
+      {
+        title: "Tickets",
+        defaultUrl: "/sales/tickets",
+        icon: Ticket,
         items: [],
       },
       {
@@ -408,6 +426,12 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Tickets",
+        defaultUrl: "/events/tickets",
+        icon: Ticket,
+        items: [],
+      },
+      {
         title: "Tour Packages",
         defaultUrl: "/events/packages",
         icon: Package,
@@ -501,6 +525,12 @@ export const verticals: Vertical[] = [
         title: "Tasks",
         defaultUrl: "/hub/tasks",
         icon: ListChecks,
+        items: [],
+      },
+      {
+        title: "Tickets",
+        defaultUrl: "/hub/tickets",
+        icon: Ticket,
         items: [],
       },
       {
@@ -604,6 +634,12 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Tickets",
+        defaultUrl: "/admin/tickets",
+        icon: Ticket,
+        items: [],
+      },
+      {
         title: "System",
         defaultUrl: "/admin/settings",
         icon: Settings,
@@ -665,6 +701,12 @@ export const verticals: Vertical[] = [
         title: "Tasks",
         defaultUrl: "/dev/tasks",
         icon: ListChecks,
+        items: [],
+      },
+      {
+        title: "Tickets",
+        defaultUrl: "/dev/tickets",
+        icon: Ticket,
         items: [],
       },
       {
@@ -761,6 +803,12 @@ export const verticals: Vertical[] = [
         title: "Tasks",
         defaultUrl: "/ets/tasks",
         icon: ListChecks,
+        items: [],
+      },
+      {
+        title: "Tickets",
+        defaultUrl: "/ets/tickets",
+        icon: Ticket,
         items: [],
       },
       {
@@ -904,6 +952,12 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Tickets",
+        defaultUrl: "/faire/tickets",
+        icon: Ticket,
+        items: [],
+      },
+      {
         title: "Chat",
         defaultUrl: "/faire/chat",
         icon: MessageCircle,
@@ -958,6 +1012,12 @@ export const verticals: Vertical[] = [
         icon: Landmark,
         items: [],
       },
+      {
+        title: "Tickets",
+        defaultUrl: "/vendor/tickets",
+        icon: Ticket,
+        items: [],
+      },
     ],
   },
   {
@@ -999,6 +1059,12 @@ export const verticals: Vertical[] = [
         title: "Tasks",
         defaultUrl: "/hrms/tasks",
         icon: ListChecks,
+        items: [],
+      },
+      {
+        title: "Tickets",
+        defaultUrl: "/hrms/tickets",
+        icon: Ticket,
         items: [],
       },
       {
@@ -1109,6 +1175,12 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Tickets",
+        defaultUrl: "/ats/tickets",
+        icon: Ticket,
+        items: [],
+      },
+      {
         title: "Jobs",
         defaultUrl: "/ats/jobs",
         icon: Briefcase,
@@ -1208,6 +1280,12 @@ export const verticals: Vertical[] = [
         title: "Tasks",
         defaultUrl: "/crm/tasks",
         icon: ListChecks,
+        items: [],
+      },
+      {
+        title: "Tickets",
+        defaultUrl: "/crm/tickets",
+        icon: Ticket,
         items: [],
       },
       {
@@ -1317,6 +1395,12 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Tickets",
+        defaultUrl: "/finance/tickets",
+        icon: Ticket,
+        items: [],
+      },
+      {
         title: "Ledger",
         defaultUrl: "/finance/ledger",
         icon: BookMarked,
@@ -1420,6 +1504,12 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Tickets",
+        defaultUrl: "/oms/tickets",
+        icon: Ticket,
+        items: [],
+      },
+      {
         title: "Orders",
         defaultUrl: "/oms/orders",
         icon: ShoppingBag,
@@ -1520,6 +1610,12 @@ export const verticals: Vertical[] = [
         title: "Tasks",
         defaultUrl: "/social/tasks",
         icon: CheckSquare,
+        items: [],
+      },
+      {
+        title: "Tickets",
+        defaultUrl: "/social/tickets",
+        icon: Ticket,
         items: [],
       },
       {

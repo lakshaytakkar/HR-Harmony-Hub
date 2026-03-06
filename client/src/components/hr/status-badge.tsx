@@ -173,6 +173,24 @@ const variantMap: Record<string, StatusVariant> = {
   "In Review": "warning",
   "in-review": "warning",
 
+  // Tickets
+  Escalated: "error",
+  escalated: "error",
+  Waiting: "warning",
+  waiting: "warning",
+  Resolved: "success",
+  resolved: "success",
+  critical: "error",
+  Critical: "error",
+  "feature-request": "info",
+  bug: "error",
+  performance: "warning",
+  integration: "info",
+  infrastructure: "neutral",
+  "client-request": "warning",
+  content: "neutral",
+  general: "neutral",
+
   // Events
   Tentative: "warning",
   tentative: "warning",

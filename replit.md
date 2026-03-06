@@ -844,6 +844,35 @@ ai_messages(id uuid PK, conversation_id uuid FK, role text, content text, create
 ai_attachments(id uuid PK, conversation_id uuid FK, filename text, file_data text [base64], file_size int, mime_type text, created_at)
 ```
 
+## Universal Ticket Management System (Mar 2026)
+
+Cross-vertical ticket/issue tracking pinned in all 16 verticals as an icon in the top nav bar.
+
+### Supabase `tickets` Table
+```
+tickets(id uuid PK, ticket_code text UNIQUE auto-gen TK-0001+, vertical_id text, title text, description text, status text [open/in-progress/waiting/escalated/resolved/closed], priority text [critical/high/medium/low], category text, reported_by text, assigned_to text, created_by text, tags text[], resolution text, due_date date, created_at, updated_at)
+```
+- Auto-increment trigger `trg_assign_ticket_code` generates `TK-0001`, `TK-0002`, etc.
+- 20 seed tickets across 14 verticals (hr, sales, faire, events, hub, ets, hrms, crm, finance, oms, dev, social, ats, admin)
+
+### Ticket API Routes
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/core/tickets?verticalId=&status=&priority=&assignedTo=&search=&page=&limit=` | List with filters + pagination |
+| GET | `/api/core/tickets/:id` | Single ticket |
+| POST | `/api/core/tickets` | Create (accepts both camelCase and snake_case fields) |
+| PATCH | `/api/core/tickets/:id` | Update (status, priority, assigned_to, resolution, etc.) |
+| DELETE | `/api/core/tickets/:id` | Delete |
+
+### Frontend Pages
+- **Index**: `client/src/pages/universal/tickets.tsx` — PageShell + HeroBanner (vertical-branded) + StatGrid (5 cards) + IndexToolbar (search + status FilterPills + priority dropdown) + DataTable with row actions (View/Assign/Status/Delete) + Create FormDialog
+- **Detail**: `client/src/pages/universal/ticket-detail.tsx` — Back button + ticket code badge + status/priority badges + action bar (Change Status/Escalate/Resolve/Close/Delete) + editable details section + sidebar info card + timeline card
+
+### Navigation
+- "Tickets" nav entry added to all 16 verticals in `verticals-config.ts`
+- Pinned as icon button in top navigation via `PINNED_TITLES`
+- Routes: `/:vertical/tickets` (index) and `/:vertical/tickets/:id` (detail) registered in App.tsx
+
 ### AI Chat API Routes
 | Method | Path | Description |
 |--------|------|-------------|
