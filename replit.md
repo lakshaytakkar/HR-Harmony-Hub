@@ -956,6 +956,9 @@ Client-facing portal prototype accessible via vertical switcher under "Client Po
 | Messages | `/portal/legalnations/messages` | `client/src/pages/portal/legalnations/messages.tsx` |
 
 ### Navigation Entry
-- Vertical switcher (`vertical-switcher.tsx`) has "Client Portals" section with LegalNations entry
-- Top nav has LogOut icon button navigating back to `/hr`
+- Vertical switcher (`vertical-switcher.tsx`) has two portal categories:
+  - **Client Portals**: LegalNations entry (navigates to `/portal/legalnations`)
+  - **Vendor Portals**: Vendor Portal entry (navigates to `/vendor/quotations`, uses main app layout)
+- Portals are flagged with `isPortal: true` in verticals-config and filtered out of "Business Products"
+- LegalNations portal top nav has LogOut icon button navigating back to `/hr`
 - "Preview Mode" badge shown at top of portal pages

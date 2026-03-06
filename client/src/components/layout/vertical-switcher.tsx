@@ -8,8 +8,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { LegalNationsLogo } from "@/components/brand/legalnations-logo";
 import { Separator } from "@/components/ui/separator";
 
-const businessProducts = verticals.filter((v) => !v.isDepartment);
+const businessProducts = verticals.filter((v) => !v.isDepartment && !v.isPortal);
 const departments = verticals.filter((v) => v.isDepartment);
+const vendorPortals = verticals.filter((v) => v.isPortal);
 
 export function VerticalSwitcher() {
   const { currentVertical, setCurrentVertical } = useVertical();
@@ -135,9 +136,44 @@ export function VerticalSwitcher() {
               </button>
             </div>
 
+            {vendorPortals.length > 0 && (
+              <>
+                <Separator className="my-2" />
+
+                <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2 pt-1 pb-2">
+                  <ExternalLink className="size-3" />
+                  Vendor Portals
+                </p>
+                <div className="space-y-0.5">
+                  {vendorPortals.map((v) => {
+                    const isActive = currentVertical.id === v.id;
+                    const LogoComponent = v.logo;
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => handleSwitch(v.id)}
+                        className={cn(
+                          "w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-left transition-colors hover:bg-accent",
+                          isActive && "bg-accent"
+                        )}
+                        data-testid={`portal-option-${v.id}`}
+                      >
+                        <LogoComponent size={32} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold truncate leading-tight">{v.name}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{v.tagline}</p>
+                        </div>
+                        {isActive ? <Check className="size-3.5 text-primary shrink-0" /> : <ExternalLink className="size-3 text-muted-foreground shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
             <div className="mt-2 mx-2 pt-2 border-t border-border">
               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Preview client-facing portals as your customers see them.
+                Preview portals as your customers and vendors see them.
               </p>
             </div>
           </div>

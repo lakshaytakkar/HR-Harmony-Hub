@@ -94,6 +94,7 @@ export interface Vertical {
   description: string;
   navCategories: NavCategory[];
   isDepartment?: boolean;
+  isPortal?: boolean;
 }
 
 export const verticals: Vertical[] = [
@@ -1054,6 +1055,7 @@ export const verticals: Vertical[] = [
     tagline: "Supplier Quoting Portal",
     description: "Submit quotes for requested items and view payment history",
     isDepartment: false,
+    isPortal: true,
     navCategories: [
       {
         title: "Quotations",
