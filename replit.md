@@ -365,16 +365,27 @@ Minimal supplier-facing portal. 2 pages only. Vendors select their identity via 
 - **Offers** `/ats/offers` — offer management with preview dialog (formatted offer letter), send/accept/decline actions
 - **Analytics** `/ats/analytics` — funnel, source mix bars, time-to-hire by dept, top jobs, interviewer load
 
-## Universal Reports System (All 11 Verticals)
+## Universal Reports System (All 16 Verticals)
 - **Page**: `pages/universal/reports.tsx` — single shared component, auto-adapts via `detectVerticalFromUrl`
-- **Route**: `/[prefix]/reports` for all 11 verticals (except LBM Lifestyle uses `/admin/team-reports` to avoid conflict with existing system reports)
-- **Data**: `lib/mock-data-reports.ts` (types + assembly) + 3 group files:
+- **Route**: `/[prefix]/reports` for all 16 verticals (LBM Lifestyle also uses `/admin/team-reports`)
+- **Data**: `lib/mock-data-reports.ts` (types + assembly) + 4 group files:
   - `mock-data-reports-g1.ts` — hr, sales, events, eventhub
   - `mock-data-reports-g2.ts` — admin, dev, ets, faire
   - `mock-data-reports-g3.ts` — hrms, ats, social
+  - `mock-data-reports-g4.ts` — finance, oms, crm, suprans
 - **Each vertical**: 2 templates (1 Daily Employee + 1 Weekly Department), 5-7 fields each, ~10 mock submitted/pending/late reports spanning Feb 17–28 2026
-- **Features**: Stats bar, filter pills, Submit Report dropdown, FormDialog with dynamic fields, file-browser list grouped by date, View dialog (read-only), pending rows with "Submit Now"
-- **Nav**: "Reports" nav item added to all 11 verticals in verticals-config.ts
+- **Features**: Stats bar, filter pills, Submit Report dropdown, FormDialog with dynamic fields, file-browser list grouped by date, pending rows with "Submit Now"
+- **Enhanced Report Viewer** (`components/reports/report-viewer.tsx`): Rich report view with charts and fullscreen mode
+  - Key metric cards with color-coded borders and vs-previous trend arrows
+  - Bar chart for numeric fields (Metrics Overview)
+  - Historical trend chart comparing same-template submissions over time
+  - Bullet-point rendering for text/textarea fields
+  - Fullscreen mode toggle (expand icon → full-page overlay with sticky header)
+- **Report Trends Dashboard** (`components/reports/report-trends.tsx`): Aggregate charts on main page
+  - Submissions Over Time bar chart (last 7 periods, vertical brand color)
+  - By Scope donut pie chart (Employee/Department/Executive)
+  - Submissions by Template horizontal bar chart
+- **Nav**: "Reports" nav item added to all 16 verticals in verticals-config.ts
 
 ## PWA (Progressive Web App)
 - **Manifest**: `client/public/manifest.json` — name "TeamSync Portal", theme #225AEA, icons at 128/192/512px + SVG

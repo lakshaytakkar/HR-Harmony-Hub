@@ -39,6 +39,8 @@ import {
   type ReportFrequency,
   type ReportStatus,
 } from "@/lib/mock-data-reports";
+import ReportViewer from "@/components/reports/report-viewer";
+import ReportTrends from "@/components/reports/report-trends";
 
 const scopeConfig: Record<ReportScope, { label: string; icon: typeof User; border: string; badge: string; iconBg: string }> = {
   employee: {
@@ -186,59 +188,6 @@ function SubmitDialog({ open, template, color, onSubmit, onClose }: SubmitDialog
   );
 }
 
-interface ViewDialogProps {
-  open: boolean;
-  report: SubmittedReport;
-  template: ReportTemplate | undefined;
-  onClose: () => void;
-}
-
-function ViewDialog({ open, report, template, onClose }: ViewDialogProps) {
-  const sc = scopeConfig[report.scope];
-  const st = statusConfig[report.status];
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold">{report.templateName}</DialogTitle>
-          <DialogDescription className="sr-only">View submitted report details</DialogDescription>
-          <div className="flex flex-wrap gap-2 mt-2">
-            <span className={cn("inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium", sc.badge)}>{report.scope}</span>
-            <span className={cn("inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium", freqConfig[report.frequency])}>{report.frequency}</span>
-            <span className={cn("inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full font-medium", st.className)}>
-              <span className={cn("size-1.5 rounded-full", st.dot)} />{st.label}
-            </span>
-          </div>
-          <div className="mt-2 text-xs text-muted-foreground space-y-0.5">
-            <div><span className="font-medium">Period:</span> {report.periodLabel}</div>
-            <div><span className="font-medium">Submitted by:</span> {report.submittedBy} · {report.submittedByRole}</div>
-            {report.submittedAt && (
-              <div><span className="font-medium">Submitted at:</span> {new Date(report.submittedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</div>
-            )}
-          </div>
-        </DialogHeader>
-        <div className="mt-2 space-y-3">
-          {template?.fields.map((field) => {
-            const val = report.data[field.id];
-            if (val === undefined || val === null || val === "") return null;
-            const displayVal = field.unit ? `${val} ${field.unit}` : String(val);
-            return (
-              <div key={field.id} className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">{field.label}</p>
-                {field.type === "textarea"
-                  ? <div className="rounded-md bg-muted/50 px-3 py-2 text-sm whitespace-pre-wrap">{displayVal}</div>
-                  : <p className="text-sm font-medium">{displayVal}</p>}
-              </div>
-            );
-          })}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} data-testid="button-close-view">Close</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 interface ReportRowProps {
   report: SubmittedReport;
@@ -449,6 +398,8 @@ export default function UniversalReports() {
         />
       </StatGrid>
 
+      <ReportTrends reports={reports} color={color} />
+
       <div className="space-y-8">
         {/* Templates - Pattern E: SectionGrid/SectionCard */}
         <section className="space-y-4">
@@ -578,11 +529,13 @@ export default function UniversalReports() {
       )}
 
       {viewReport && (
-        <ViewDialog 
-          open={!!viewReport} 
+        <ReportViewer
+          open={!!viewReport}
           report={viewReport}
           template={templates.find((t) => t.id === viewReport.templateId)}
-          onClose={() => setViewReport(null)} 
+          allReports={reports}
+          color={color}
+          onClose={() => setViewReport(null)}
         />
       )}
     </PageShell>
