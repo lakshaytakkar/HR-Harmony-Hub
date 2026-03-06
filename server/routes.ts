@@ -52,6 +52,32 @@ import {
   addTaskLink,
   uploadTaskFile,
   deleteTaskActivity,
+  getVerticals,
+  getVertical,
+  getUsers,
+  getUser,
+  getCoreTasksByVertical,
+  getCoreTask,
+  createCoreTask,
+  updateCoreTask,
+  deleteCoreTask,
+  getCoreSubtasks,
+  upsertCoreSubtask,
+  deleteCoreSubtask,
+  toggleCoreSubtask,
+  getChannelsByVertical,
+  getChannelMessages,
+  createChannelMessage,
+  getCoreResources,
+  createCoreResource,
+  deleteCoreResource,
+  getCoreContacts,
+  createCoreContact,
+  updateCoreContact,
+  deleteCoreContact,
+  getCoreNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
 } from "./supabase";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
@@ -945,6 +971,210 @@ export async function registerRoutes(
     } catch {
       return res.status(500).json({ error: "Failed to delete activity" });
     }
+  });
+
+  // ── CORE API (/api/core/*) ────────────────────────────────────────────────────
+
+  // Verticals
+  app.get("/api/core/verticals", async (_req, res) => {
+    try { return res.json(await getVerticals()); }
+    catch { return res.status(500).json({ error: "Failed to fetch verticals" }); }
+  });
+
+  app.get("/api/core/verticals/:id", async (req, res) => {
+    try {
+      const v = await getVertical(req.params.id);
+      if (!v) return res.status(404).json({ error: "Not found" });
+      return res.json(v);
+    } catch { return res.status(500).json({ error: "Failed to fetch vertical" }); }
+  });
+
+  // Users
+  app.get("/api/core/users", async (req, res) => {
+    try { return res.json(await getUsers(req.query.verticalId as string | undefined)); }
+    catch { return res.status(500).json({ error: "Failed to fetch users" }); }
+  });
+
+  app.get("/api/core/users/:id", async (req, res) => {
+    try {
+      const u = await getUser(req.params.id);
+      if (!u) return res.status(404).json({ error: "Not found" });
+      return res.json(u);
+    } catch { return res.status(500).json({ error: "Failed to fetch user" }); }
+  });
+
+  // Tasks
+  app.get("/api/core/tasks", async (req, res) => {
+    try { return res.json(await getCoreTasksByVertical(req.query.verticalId as string | undefined)); }
+    catch { return res.status(500).json({ error: "Failed to fetch tasks" }); }
+  });
+
+  app.get("/api/core/tasks/:id", async (req, res) => {
+    try {
+      const t = await getCoreTask(req.params.id);
+      if (!t) return res.status(404).json({ error: "Not found" });
+      return res.json(t);
+    } catch { return res.status(500).json({ error: "Failed to fetch task" }); }
+  });
+
+  app.post("/api/core/tasks", async (req, res) => {
+    try {
+      const task = await createCoreTask(req.body);
+      if (!task) return res.status(500).json({ error: "Failed to create task" });
+      return res.status(201).json(task);
+    } catch { return res.status(500).json({ error: "Failed to create task" }); }
+  });
+
+  app.patch("/api/core/tasks/:id", async (req, res) => {
+    try {
+      const task = await updateCoreTask(req.params.id, req.body);
+      if (!task) return res.status(500).json({ error: "Failed to update task" });
+      return res.json(task);
+    } catch { return res.status(500).json({ error: "Failed to update task" }); }
+  });
+
+  app.delete("/api/core/tasks/:id", async (req, res) => {
+    try {
+      const ok = await deleteCoreTask(req.params.id);
+      if (!ok) return res.status(500).json({ error: "Failed to delete task" });
+      return res.json({ ok: true });
+    } catch { return res.status(500).json({ error: "Failed to delete task" }); }
+  });
+
+  // Task Subtasks
+  app.get("/api/core/tasks/:id/subtasks", async (req, res) => {
+    try { return res.json(await getCoreSubtasks(req.params.id)); }
+    catch { return res.status(500).json({ error: "Failed to fetch subtasks" }); }
+  });
+
+  app.post("/api/core/tasks/:id/subtasks", async (req, res) => {
+    try {
+      const s = await upsertCoreSubtask({ ...req.body, task_id: req.params.id });
+      if (!s) return res.status(500).json({ error: "Failed to create subtask" });
+      return res.status(201).json(s);
+    } catch { return res.status(500).json({ error: "Failed to create subtask" }); }
+  });
+
+  app.patch("/api/core/tasks/:id/subtasks/:sid", async (req, res) => {
+    try {
+      const { completed } = req.body;
+      const s = completed !== undefined
+        ? await toggleCoreSubtask(req.params.sid, completed)
+        : await upsertCoreSubtask({ ...req.body, id: req.params.sid, task_id: req.params.id });
+      if (!s) return res.status(500).json({ error: "Failed to update subtask" });
+      return res.json(s);
+    } catch { return res.status(500).json({ error: "Failed to update subtask" }); }
+  });
+
+  app.delete("/api/core/tasks/:id/subtasks/:sid", async (req, res) => {
+    try {
+      const ok = await deleteCoreSubtask(req.params.sid);
+      if (!ok) return res.status(500).json({ error: "Failed to delete subtask" });
+      return res.json({ ok: true });
+    } catch { return res.status(500).json({ error: "Failed to delete subtask" }); }
+  });
+
+  // Channels + Messages
+  app.get("/api/core/channels", async (req, res) => {
+    try {
+      const verticalId = req.query.verticalId as string;
+      if (!verticalId) return res.status(400).json({ error: "verticalId required" });
+      return res.json(await getChannelsByVertical(verticalId));
+    } catch { return res.status(500).json({ error: "Failed to fetch channels" }); }
+  });
+
+  app.get("/api/core/channels/:id/messages", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      return res.json(await getChannelMessages(req.params.id, limit));
+    } catch { return res.status(500).json({ error: "Failed to fetch messages" }); }
+  });
+
+  app.post("/api/core/channels/:id/messages", async (req, res) => {
+    try {
+      const msg = await createChannelMessage({ ...req.body, channel_id: req.params.id });
+      if (!msg) return res.status(500).json({ error: "Failed to send message" });
+      return res.status(201).json(msg);
+    } catch { return res.status(500).json({ error: "Failed to send message" }); }
+  });
+
+  // Resources
+  app.get("/api/core/resources", async (req, res) => {
+    try { return res.json(await getCoreResources(req.query.verticalId as string | undefined)); }
+    catch { return res.status(500).json({ error: "Failed to fetch resources" }); }
+  });
+
+  app.post("/api/core/resources", async (req, res) => {
+    try {
+      const r = await createCoreResource(req.body);
+      if (!r) return res.status(500).json({ error: "Failed to create resource" });
+      return res.status(201).json(r);
+    } catch { return res.status(500).json({ error: "Failed to create resource" }); }
+  });
+
+  app.delete("/api/core/resources/:id", async (req, res) => {
+    try {
+      const ok = await deleteCoreResource(req.params.id);
+      if (!ok) return res.status(500).json({ error: "Failed to delete resource" });
+      return res.json({ ok: true });
+    } catch { return res.status(500).json({ error: "Failed to delete resource" }); }
+  });
+
+  // Contacts
+  app.get("/api/core/contacts", async (req, res) => {
+    try { return res.json(await getCoreContacts(req.query.verticalId as string | undefined)); }
+    catch { return res.status(500).json({ error: "Failed to fetch contacts" }); }
+  });
+
+  app.post("/api/core/contacts", async (req, res) => {
+    try {
+      const c = await createCoreContact(req.body);
+      if (!c) return res.status(500).json({ error: "Failed to create contact" });
+      return res.status(201).json(c);
+    } catch { return res.status(500).json({ error: "Failed to create contact" }); }
+  });
+
+  app.patch("/api/core/contacts/:id", async (req, res) => {
+    try {
+      const c = await updateCoreContact(req.params.id, req.body);
+      if (!c) return res.status(500).json({ error: "Failed to update contact" });
+      return res.json(c);
+    } catch { return res.status(500).json({ error: "Failed to update contact" }); }
+  });
+
+  app.delete("/api/core/contacts/:id", async (req, res) => {
+    try {
+      const ok = await deleteCoreContact(req.params.id);
+      if (!ok) return res.status(500).json({ error: "Failed to delete contact" });
+      return res.json({ ok: true });
+    } catch { return res.status(500).json({ error: "Failed to delete contact" }); }
+  });
+
+  // Notifications
+  app.get("/api/core/notifications", async (req, res) => {
+    try {
+      return res.json(await getCoreNotifications(
+        req.query.verticalId as string | undefined,
+        req.query.userId as string | undefined
+      ));
+    } catch { return res.status(500).json({ error: "Failed to fetch notifications" }); }
+  });
+
+  app.post("/api/core/notifications/:id/read", async (req, res) => {
+    try {
+      const ok = await markNotificationRead(req.params.id);
+      if (!ok) return res.status(500).json({ error: "Failed to mark read" });
+      return res.json({ ok: true });
+    } catch { return res.status(500).json({ error: "Failed to mark read" }); }
+  });
+
+  app.post("/api/core/notifications/read-all", async (req, res) => {
+    try {
+      const verticalId = req.query.verticalId as string;
+      if (!verticalId) return res.status(400).json({ error: "verticalId required" });
+      await markAllNotificationsRead(verticalId);
+      return res.json({ ok: true });
+    } catch { return res.status(500).json({ error: "Failed to mark all read" }); }
   });
 
   return httpServer;

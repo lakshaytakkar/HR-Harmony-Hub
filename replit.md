@@ -58,6 +58,90 @@ All Faire index pages follow orders.tsx pattern:
 
 Pages standardized: applications, stores, shipments, pricing, quotations, vendors, inventory, bank-transactions, ledger, analytics, retailer-detail, product-detail, quotation-detail, order-detail, application-detail
 
+## Core Supabase Infrastructure (Mar 2026)
+
+Supabase project: `ngvrnwjisntjmqrtnume` (ap-southeast-1). All core tables are in the `public` schema and FK into each other. Faire-specific tables remain in the `faire` schema via RPC.
+
+### Core Tables (9 tables — shared across all 16 portals)
+
+| Table | Rows | Description |
+|-------|------|-------------|
+| `verticals` | 16 | Registry of all 16 portals (id = short name like `dev`, `faire`, `hr`) |
+| `users` | 20 | Internal team members (EMP-001–EMP-020) |
+| `user_verticals` | 34 | Many-to-many: user ↔ vertical membership with role |
+| `tasks` | 15+ | Cross-portal tasks (T074+ for DB-created; T001–T073 reserved for mock) |
+| `task_subtasks` | 0+ | Checklist items per task (cascade-deletes with parent) |
+| `channels` | 0+ | Chat channels per vertical (type: channel/dm/announcement) |
+| `channel_messages` | 0+ | Messages per channel |
+| `resources` | 0+ | Shared documents/links per vertical |
+| `contacts` | 0+ | Important contacts, supports multi-vertical via `vertical_ids TEXT[]` |
+| `notifications` | 0+ | System alerts; `user_id NULL` = broadcast to all |
+
+### FK Graph
+```
+verticals ←── tasks.vertical_id
+verticals ←── channels.vertical_id
+verticals ←── resources.vertical_id
+verticals ←── notifications.vertical_id
+verticals ←── user_verticals.vertical_id
+users     ←── tasks.assignee_id / created_by
+users     ←── channel_messages.sender_id
+users     ←── resources.added_by_id
+users     ←── contacts.added_by_id
+users     ←── user_verticals.user_id
+users     ←── notifications.user_id (nullable = broadcast)
+tasks     ←── task_subtasks.task_id (ON DELETE CASCADE)
+channels  ←── channel_messages.channel_id (ON DELETE CASCADE)
+```
+
+### task_code Sequence
+- DB trigger `trg_assign_task_code` auto-assigns `T074+` on new task INSERT
+- Mock data uses `T001–T073` (hard-coded in `sharedTaskCodeMap` in mock-data-shared.ts)
+
+### `/api/core/*` Routes (registered in server/routes.ts)
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/core/verticals` | List all 16 verticals |
+| GET | `/api/core/verticals/:id` | Single vertical |
+| GET | `/api/core/users?verticalId=` | All users (or filtered by vertical) |
+| GET | `/api/core/users/:id` | Single user |
+| GET | `/api/core/tasks?verticalId=` | Tasks (all or by vertical) |
+| GET/PATCH/DELETE | `/api/core/tasks/:id` | Single task CRUD |
+| GET/POST | `/api/core/tasks/:id/subtasks` | Subtask list + create |
+| PATCH/DELETE | `/api/core/tasks/:id/subtasks/:sid` | Toggle/update/delete subtask |
+| GET | `/api/core/channels?verticalId=` | Channels for vertical |
+| GET | `/api/core/channels/:id/messages` | Messages (limit param) |
+| POST | `/api/core/channels/:id/messages` | Send message |
+| GET/POST | `/api/core/resources?verticalId=` | Resources CRUD |
+| DELETE | `/api/core/resources/:id` | Delete resource |
+| GET/POST | `/api/core/contacts?verticalId=` | Contacts CRUD |
+| PATCH/DELETE | `/api/core/contacts/:id` | Update/delete contact |
+| GET | `/api/core/notifications?verticalId=&userId=` | Notifications |
+| POST | `/api/core/notifications/:id/read` | Mark one read |
+| POST | `/api/core/notifications/read-all?verticalId=` | Mark all read |
+
+### Tasks Page Live DB Wiring
+`client/src/pages/universal/tasks.tsx` now uses:
+- `useQuery(['/api/core/tasks?verticalId=X'])` — loads tasks from Supabase
+- Mock data fallback when DB returns 0 tasks for a vertical
+- `useMutation → POST /api/core/tasks` for task creation (persisted to DB)
+- `useMutation → PATCH /api/core/tasks/:id` + optimistic cache update for status/priority/assignee/dueDate
+- Subtask state remains in-memory (local `subtaskMap` state) — future phase will wire to DB
+
+### Seeded Data
+- 16 verticals (matching `verticals-config.ts` — id, name, color, tagline, description)
+- 20 users (EMP-001–EMP-020) with full profile data
+- 34 user-vertical memberships (cross-assigned per department)
+- 15 tasks across 7 verticals (dev, faire, hr, sales, finance, admin, hrms) — task codes T074–T088
+
+### Phase 2 — Portal-Specific Tables (Planned, Not Yet Created)
+- **HRMS**: `employees`, `departments`, `attendance`, `leaves`, `payroll`, `performance_reviews`
+- **ATS**: `jobs`, `candidates`, `applications`, `interviews`, `offers`
+- **CRM**: `crm_contacts`, `crm_companies`, `crm_deals`, `crm_activities`
+- **Events/GoyoTours**: `tour_packages`, `bookings`, `hotels`
+- **Finance**: `journal_entries`, `payment_records`
+- **OMS**: `oms_orders`, `oms_inventory`, `oms_shipments`
+
 ## Recent Additions (Feb 2026)
 
 ### CRM Payment Links (`/crm/payment-links`)

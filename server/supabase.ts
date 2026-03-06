@@ -1011,3 +1011,419 @@ export async function deleteTaskActivity(id: string): Promise<boolean> {
   if (error) { console.error("[supabase] deleteTaskActivity error:", error.message); return false; }
   return true;
 }
+
+// ── CORE: Verticals ────────────────────────────────────────────────────────────
+
+export interface CoreVertical {
+  id: string;
+  name: string;
+  short_name: string | null;
+  color: string;
+  tagline: string | null;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export async function getVerticals(): Promise<CoreVertical[]> {
+  const { data, error } = await supabase.from("verticals").select("*").order("name");
+  if (error) { console.error("[supabase] getVerticals error:", error.message); return []; }
+  return (data as CoreVertical[]) ?? [];
+}
+
+export async function getVertical(id: string): Promise<CoreVertical | null> {
+  const { data, error } = await supabase.from("verticals").select("*").eq("id", id).single();
+  if (error) { console.error("[supabase] getVertical error:", error.message); return null; }
+  return data as CoreVertical;
+}
+
+// ── CORE: Users ────────────────────────────────────────────────────────────────
+
+export interface CoreUser {
+  id: string;
+  employee_code: string | null;
+  name: string;
+  email: string;
+  phone: string | null;
+  role: string | null;
+  department: string | null;
+  designation: string | null;
+  employment_type: string | null;
+  status: string;
+  location: string | null;
+  skills: string[];
+  avatar_initials: string | null;
+  avatar_url: string | null;
+  salary: number | null;
+  reporting_manager_id: string | null;
+  joined_date: string | null;
+  created_at: string;
+}
+
+export async function getUsers(verticalId?: string): Promise<CoreUser[]> {
+  if (verticalId) {
+    const { data, error } = await supabase
+      .from("user_verticals")
+      .select("users(*)")
+      .eq("vertical_id", verticalId);
+    if (error) { console.error("[supabase] getUsers error:", error.message); return []; }
+    return ((data ?? []) as { users: CoreUser }[]).map((r) => r.users);
+  }
+  const { data, error } = await supabase.from("users").select("*").order("name");
+  if (error) { console.error("[supabase] getUsers error:", error.message); return []; }
+  return (data as CoreUser[]) ?? [];
+}
+
+export async function getUser(id: string): Promise<CoreUser | null> {
+  const { data, error } = await supabase.from("users").select("*").eq("id", id).single();
+  if (error) { console.error("[supabase] getUser error:", error.message); return null; }
+  return data as CoreUser;
+}
+
+// ── CORE: Tasks ────────────────────────────────────────────────────────────────
+
+export interface CoreTask {
+  id: string;
+  task_code: string | null;
+  vertical_id: string | null;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  assignee_id: string | null;
+  assignee_name: string | null;
+  due_date: string | null;
+  tags: string[];
+  created_by: string | null;
+  created_by_name: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CoreTaskInput {
+  vertical_id?: string;
+  title: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  assignee_id?: string;
+  assignee_name?: string;
+  due_date?: string;
+  tags?: string[];
+  created_by?: string;
+  created_by_name?: string;
+}
+
+export async function getCoreTasksByVertical(verticalId?: string): Promise<CoreTask[]> {
+  let q = supabase.from("tasks").select("*").order("created_at", { ascending: false });
+  if (verticalId) q = q.eq("vertical_id", verticalId);
+  const { data, error } = await q;
+  if (error) { console.error("[supabase] getCoreTasksByVertical error:", error.message); return []; }
+  return (data as CoreTask[]) ?? [];
+}
+
+export async function getCoreTask(id: string): Promise<CoreTask | null> {
+  const { data, error } = await supabase.from("tasks").select("*").eq("id", id).single();
+  if (error) { console.error("[supabase] getCoreTask error:", error.message); return null; }
+  return data as CoreTask;
+}
+
+export async function createCoreTask(input: CoreTaskInput): Promise<CoreTask | null> {
+  const { data, error } = await supabase.from("tasks").insert([input]).select().single();
+  if (error) { console.error("[supabase] createCoreTask error:", error.message); return null; }
+  return data as CoreTask;
+}
+
+export async function updateCoreTask(id: string, patch: Partial<CoreTaskInput>): Promise<CoreTask | null> {
+  const { data, error } = await supabase
+    .from("tasks")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) { console.error("[supabase] updateCoreTask error:", error.message); return null; }
+  return data as CoreTask;
+}
+
+export async function deleteCoreTask(id: string): Promise<boolean> {
+  const { error } = await supabase.from("tasks").delete().eq("id", id);
+  if (error) { console.error("[supabase] deleteCoreTask error:", error.message); return false; }
+  return true;
+}
+
+// ── CORE: Task Subtasks ────────────────────────────────────────────────────────
+
+export interface CoreSubtask {
+  id: string;
+  task_id: string;
+  title: string;
+  completed: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export async function getCoreSubtasks(taskId: string): Promise<CoreSubtask[]> {
+  const { data, error } = await supabase
+    .from("task_subtasks")
+    .select("*")
+    .eq("task_id", taskId)
+    .order("sort_order");
+  if (error) { console.error("[supabase] getCoreSubtasks error:", error.message); return []; }
+  return (data as CoreSubtask[]) ?? [];
+}
+
+export async function upsertCoreSubtask(input: {
+  id?: string;
+  task_id: string;
+  title: string;
+  completed?: boolean;
+  sort_order?: number;
+}): Promise<CoreSubtask | null> {
+  const { data, error } = await supabase
+    .from("task_subtasks")
+    .upsert([input], { onConflict: "id" })
+    .select()
+    .single();
+  if (error) { console.error("[supabase] upsertCoreSubtask error:", error.message); return null; }
+  return data as CoreSubtask;
+}
+
+export async function deleteCoreSubtask(id: string): Promise<boolean> {
+  const { error } = await supabase.from("task_subtasks").delete().eq("id", id);
+  if (error) { console.error("[supabase] deleteCoreSubtask error:", error.message); return false; }
+  return true;
+}
+
+export async function toggleCoreSubtask(id: string, completed: boolean): Promise<CoreSubtask | null> {
+  const { data, error } = await supabase
+    .from("task_subtasks")
+    .update({ completed })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) { console.error("[supabase] toggleCoreSubtask error:", error.message); return null; }
+  return data as CoreSubtask;
+}
+
+// ── CORE: Channels ─────────────────────────────────────────────────────────────
+
+export interface CoreChannel {
+  id: string;
+  vertical_id: string | null;
+  name: string;
+  type: string;
+  description: string | null;
+  member_names: string[];
+  is_pinned: boolean;
+  last_message: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+  created_at: string;
+}
+
+export async function getChannelsByVertical(verticalId: string): Promise<CoreChannel[]> {
+  const { data, error } = await supabase
+    .from("channels")
+    .select("*")
+    .eq("vertical_id", verticalId)
+    .order("is_pinned", { ascending: false })
+    .order("last_message_at", { ascending: false, nullsFirst: false });
+  if (error) { console.error("[supabase] getChannelsByVertical error:", error.message); return []; }
+  return (data as CoreChannel[]) ?? [];
+}
+
+// ── CORE: Channel Messages ─────────────────────────────────────────────────────
+
+export interface CoreMessage {
+  id: string;
+  channel_id: string;
+  sender_id: string | null;
+  sender_name: string;
+  content: string;
+  is_me: boolean;
+  attachments: unknown[];
+  created_at: string;
+}
+
+export async function getChannelMessages(channelId: string, limit = 100): Promise<CoreMessage[]> {
+  const { data, error } = await supabase
+    .from("channel_messages")
+    .select("*")
+    .eq("channel_id", channelId)
+    .order("created_at", { ascending: true })
+    .limit(limit);
+  if (error) { console.error("[supabase] getChannelMessages error:", error.message); return []; }
+  return (data as CoreMessage[]) ?? [];
+}
+
+export async function createChannelMessage(input: {
+  channel_id: string;
+  sender_name: string;
+  content: string;
+  is_me?: boolean;
+  sender_id?: string;
+}): Promise<CoreMessage | null> {
+  const { data, error } = await supabase
+    .from("channel_messages")
+    .insert([input])
+    .select()
+    .single();
+  if (error) { console.error("[supabase] createChannelMessage error:", error.message); return null; }
+  await supabase
+    .from("channels")
+    .update({ last_message: input.content, last_message_at: new Date().toISOString() })
+    .eq("id", input.channel_id);
+  return data as CoreMessage;
+}
+
+// ── CORE: Resources ────────────────────────────────────────────────────────────
+
+export interface CoreResource {
+  id: string;
+  vertical_id: string | null;
+  title: string;
+  description: string | null;
+  category: string | null;
+  file_type: string | null;
+  tags: string[];
+  added_by: string | null;
+  added_by_id: string | null;
+  file_size: string | null;
+  url: string | null;
+  storage_path: string | null;
+  is_pinned: boolean;
+  version: string;
+  created_at: string;
+}
+
+export async function getCoreResources(verticalId?: string): Promise<CoreResource[]> {
+  let q = supabase.from("resources").select("*").order("is_pinned", { ascending: false }).order("created_at", { ascending: false });
+  if (verticalId) q = q.eq("vertical_id", verticalId);
+  const { data, error } = await q;
+  if (error) { console.error("[supabase] getCoreResources error:", error.message); return []; }
+  return (data as CoreResource[]) ?? [];
+}
+
+export async function createCoreResource(input: {
+  vertical_id?: string;
+  title: string;
+  description?: string;
+  category?: string;
+  file_type?: string;
+  tags?: string[];
+  added_by?: string;
+  url?: string;
+  file_size?: string;
+  is_pinned?: boolean;
+}): Promise<CoreResource | null> {
+  const { data, error } = await supabase.from("resources").insert([input]).select().single();
+  if (error) { console.error("[supabase] createCoreResource error:", error.message); return null; }
+  return data as CoreResource;
+}
+
+export async function deleteCoreResource(id: string): Promise<boolean> {
+  const { error } = await supabase.from("resources").delete().eq("id", id);
+  if (error) { console.error("[supabase] deleteCoreResource error:", error.message); return false; }
+  return true;
+}
+
+// ── CORE: Contacts ─────────────────────────────────────────────────────────────
+
+export interface CoreContact {
+  id: string;
+  name: string;
+  title: string | null;
+  organization: string | null;
+  category: string | null;
+  vertical_ids: string[];
+  phone: string | null;
+  whatsapp: string | null;
+  email: string | null;
+  website: string | null;
+  city: string | null;
+  country: string | null;
+  priority: string;
+  notes: string | null;
+  tags: string[];
+  added_by: string | null;
+  added_by_id: string | null;
+  is_shared: boolean;
+  created_at: string;
+}
+
+export async function getCoreContacts(verticalId?: string): Promise<CoreContact[]> {
+  if (verticalId) {
+    const { data, error } = await supabase
+      .from("contacts")
+      .select("*")
+      .contains("vertical_ids", [verticalId])
+      .order("name");
+    if (error) { console.error("[supabase] getCoreContacts error:", error.message); return []; }
+    return (data as CoreContact[]) ?? [];
+  }
+  const { data, error } = await supabase.from("contacts").select("*").order("name");
+  if (error) { console.error("[supabase] getCoreContacts error:", error.message); return []; }
+  return (data as CoreContact[]) ?? [];
+}
+
+export async function createCoreContact(input: Partial<CoreContact>): Promise<CoreContact | null> {
+  const { data, error } = await supabase.from("contacts").insert([input]).select().single();
+  if (error) { console.error("[supabase] createCoreContact error:", error.message); return null; }
+  return data as CoreContact;
+}
+
+export async function updateCoreContact(id: string, patch: Partial<CoreContact>): Promise<CoreContact | null> {
+  const { data, error } = await supabase
+    .from("contacts")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) { console.error("[supabase] updateCoreContact error:", error.message); return null; }
+  return data as CoreContact;
+}
+
+export async function deleteCoreContact(id: string): Promise<boolean> {
+  const { error } = await supabase.from("contacts").delete().eq("id", id);
+  if (error) { console.error("[supabase] deleteCoreContact error:", error.message); return false; }
+  return true;
+}
+
+// ── CORE: Notifications ────────────────────────────────────────────────────────
+
+export interface CoreNotification {
+  id: string;
+  vertical_id: string | null;
+  user_id: string | null;
+  type: string;
+  title: string;
+  description: string | null;
+  action_url: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+export async function getCoreNotifications(verticalId?: string, userId?: string): Promise<CoreNotification[]> {
+  let q = supabase.from("notifications").select("*").order("created_at", { ascending: false }).limit(100);
+  if (verticalId) q = q.eq("vertical_id", verticalId);
+  if (userId) q = q.or(`user_id.eq.${userId},user_id.is.null`);
+  const { data, error } = await q;
+  if (error) { console.error("[supabase] getCoreNotifications error:", error.message); return []; }
+  return (data as CoreNotification[]) ?? [];
+}
+
+export async function markNotificationRead(id: string): Promise<boolean> {
+  const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+  if (error) { console.error("[supabase] markNotificationRead error:", error.message); return false; }
+  return true;
+}
+
+export async function markAllNotificationsRead(verticalId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("vertical_id", verticalId)
+    .eq("is_read", false);
+  if (error) { console.error("[supabase] markAllNotificationsRead error:", error.message); return false; }
+  return true;
+}

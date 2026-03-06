@@ -33,6 +33,37 @@ import {
   SharedTaskSubtask 
 } from "@/lib/mock-data-shared";
 
+interface CoreTask {
+  id: string;
+  task_code: string | null;
+  vertical_id: string | null;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  assignee_name: string | null;
+  due_date: string | null;
+  tags: string[];
+  created_at: string;
+}
+
+function coreTaskToShared(t: CoreTask): SharedTask {
+  return {
+    id: t.id,
+    taskCode: t.task_code ?? undefined,
+    verticalId: t.vertical_id ?? "",
+    title: t.title,
+    description: t.description ?? "",
+    status: t.status as SharedTask["status"],
+    priority: t.priority as SharedTask["priority"],
+    assigneeName: t.assignee_name ?? "",
+    dueDate: t.due_date ?? new Date().toISOString().split("T")[0],
+    tags: t.tags ?? [],
+    createdDate: t.created_at?.split("T")[0] ?? "",
+    subtasks: [],
+  };
+}
+
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { 
   PageShell,
@@ -80,21 +111,50 @@ export default function UniversalTasks() {
   const [location] = useLocation();
   const vertical = detectVerticalFromUrl(location);
   const loading = useSimulatedLoading(600);
+  const queryClient = useQueryClient();
 
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
   const [activeTab, setActiveTab] = useState<"all" | "my">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  
-  const [tasks, setTasks] = useState<SharedTask[]>(() => {
+
+  const tasksQueryKey = vertical?.id ? `/api/core/tasks?verticalId=${vertical.id}` : null;
+
+  const { data: dbTasks = [] } = useQuery<CoreTask[]>({
+    queryKey: [tasksQueryKey],
+    enabled: !!tasksQueryKey,
+  });
+
+  const [subtaskMap, setSubtaskMap] = useState<Record<string, SharedTaskSubtask[]>>({});
+
+  const tasks: SharedTask[] = useMemo(() => {
     if (!vertical) return [];
+    if (dbTasks.length > 0) return dbTasks.map(coreTaskToShared);
     return sharedTasks.filter(t => t.verticalId === vertical.id);
+  }, [dbTasks, vertical]);
+
+  const usingDB = dbTasks.length > 0;
+
+  const createTaskMutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      apiRequest("POST", "/api/core/tasks", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [tasksQueryKey] });
+      setIsCreateOpen(false);
+    },
+  });
+
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      apiRequest("PATCH", `/api/core/tasks/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [tasksQueryKey] });
+    },
   });
 
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [nextTaskNum, setNextTaskNum] = useState(sharedTasks.length + 1);
 
   const filteredTasks = useMemo(() => {
     let result = tasks;
@@ -136,27 +196,24 @@ export default function UniversalTasks() {
   const handleCreateTask = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const taskCode = "T" + String(nextTaskNum).padStart(3, "0");
-    const newTask: SharedTask = {
-      id: `TASK-${Math.random().toString(36).substr(2, 9)}`,
-      taskCode,
-      verticalId: vertical?.id || "",
+    const payload: Record<string, unknown> = {
+      vertical_id: vertical?.id ?? "",
       title: formData.get("title") as string,
-      description: formData.get("description") as string,
-      status: (formData.get("status") as SharedTask["status"]) || "todo",
-      priority: (formData.get("priority") as SharedTask["priority"]) || "medium",
-      assigneeName: formData.get("assignee") as string,
-      dueDate: formData.get("dueDate") as string,
-      tags: (formData.get("tags") as string).split(",").map(t => t.trim()).filter(Boolean),
-      createdDate: new Date().toISOString().split('T')[0],
-      subtasks: []
+      description: (formData.get("description") as string) || null,
+      status: (formData.get("status") as string) || "todo",
+      priority: (formData.get("priority") as string) || "medium",
+      assignee_name: (formData.get("assignee") as string) || null,
+      due_date: (formData.get("dueDate") as string) || null,
+      tags: ((formData.get("tags") as string) || "")
+        .split(",").map(t => t.trim()).filter(Boolean),
     };
-    setTasks(prev => [...prev, newTask]);
-    setNextTaskNum(n => n + 1);
-    setIsCreateOpen(false);
+    createTaskMutation.mutate(payload);
   };
 
-  const selectedTask = tasks.find(t => t.id === selectedTaskId);
+  const selectedTaskRaw = tasks.find(t => t.id === selectedTaskId);
+  const selectedTask = selectedTaskRaw
+    ? { ...selectedTaskRaw, subtasks: subtaskMap[selectedTaskRaw.id] ?? selectedTaskRaw.subtasks }
+    : undefined;
 
   if (!vertical) return null;
 
@@ -305,33 +362,61 @@ export default function UniversalTasks() {
           isOpen={isDetailOpen}
           onOpenChange={setIsDetailOpen}
           onStatusChange={(status) => {
-            setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, status: status as SharedTask["status"] } : t));
+            if (usingDB) {
+              queryClient.setQueryData(
+                [tasksQueryKey],
+                (old: CoreTask[]) => (old ?? []).map(t => t.id === selectedTask.id ? { ...t, status } : t)
+              );
+              updateTaskMutation.mutate({ id: selectedTask.id, data: { status } });
+            }
           }}
           onPriorityChange={(priority) => {
-            setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, priority: priority as SharedTask["priority"] } : t));
+            if (usingDB) {
+              queryClient.setQueryData(
+                [tasksQueryKey],
+                (old: CoreTask[]) => (old ?? []).map(t => t.id === selectedTask.id ? { ...t, priority } : t)
+              );
+              updateTaskMutation.mutate({ id: selectedTask.id, data: { priority } });
+            }
           }}
           onAssigneeChange={(name) => {
-            setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, assigneeName: name } : t));
+            if (usingDB) {
+              queryClient.setQueryData(
+                [tasksQueryKey],
+                (old: CoreTask[]) => (old ?? []).map(t => t.id === selectedTask.id ? { ...t, assignee_name: name } : t)
+              );
+              updateTaskMutation.mutate({ id: selectedTask.id, data: { assignee_name: name } });
+            }
           }}
           onDueDateChange={(date) => {
-            setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, dueDate: date } : t));
+            if (usingDB) {
+              queryClient.setQueryData(
+                [tasksQueryKey],
+                (old: CoreTask[]) => (old ?? []).map(t => t.id === selectedTask.id ? { ...t, due_date: date } : t)
+              );
+              updateTaskMutation.mutate({ id: selectedTask.id, data: { due_date: date } });
+            }
           }}
           onSubtaskToggle={(subtaskId) => {
-            setTasks(prev => prev.map(t => t.id === selectedTask.id ? {
-              ...t,
-              subtasks: t.subtasks.map(s => s.id === subtaskId ? { ...s, completed: !s.completed } : s)
-            } : t));
+            const currentSubs = subtaskMap[selectedTask.id] ?? selectedTask.subtasks;
+            setSubtaskMap(prev => ({
+              ...prev,
+              [selectedTask.id]: currentSubs.map(s =>
+                s.id === subtaskId ? { ...s, completed: !s.completed } : s
+              ),
+            }));
           }}
           onAddSubtask={(title) => {
             const newSubtask: SharedTaskSubtask = {
               id: `SUB-${Date.now()}`,
               title,
-              completed: false
+              completed: false,
             };
-            setTasks(prev => prev.map(t => t.id === selectedTask.id ? {
-              ...t,
-              subtasks: [...t.subtasks, newSubtask]
-            } : t));
+            const currentSubs = subtaskMap[selectedTask.id] ?? selectedTask.subtasks;
+            setSubtaskMap(prev => ({
+              ...prev,
+              [selectedTask.id]: [...currentSubs, newSubtask],
+            }));
           }}
         />
       )}
