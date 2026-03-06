@@ -13,9 +13,145 @@ const openai = createOpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY ?? "",
 });
 
-const DB_SCHEMA = `
-You have READ-ONLY access to the TeamSync PostgreSQL database via the queryDatabase tool. ALWAYS query the database to answer data questions — never guess or give generic instructions.
+let cachedLiveSchema: string | null = null;
+let schemaCacheTime = 0;
+const SCHEMA_CACHE_TTL = 5 * 60 * 1000;
 
+async function getLiveDatabaseSchema(): Promise<string> {
+  const now = Date.now();
+  if (cachedLiveSchema && (now - schemaCacheTime) < SCHEMA_CACHE_TTL) {
+    return cachedLiveSchema;
+  }
+
+  try {
+    const schemaQuery = `
+      SELECT
+        t.table_schema,
+        t.table_name,
+        json_agg(
+          json_build_object(
+            'column', c.column_name,
+            'type', c.data_type,
+            'nullable', c.is_nullable,
+            'default', c.column_default
+          ) ORDER BY c.ordinal_position
+        ) as columns
+      FROM information_schema.tables t
+      JOIN information_schema.columns c
+        ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+      WHERE t.table_schema IN ('public', 'faire')
+        AND t.table_type = 'BASE TABLE'
+      GROUP BY t.table_schema, t.table_name
+      ORDER BY t.table_schema, t.table_name
+    `;
+
+    const { data: schemaData, error: schemaError } = await supabase.rpc("exec_readonly_sql", { query_text: schemaQuery });
+
+    if (schemaError || !schemaData) {
+      console.error("[ai-schema] Failed to fetch live schema:", schemaError?.message);
+      return FALLBACK_SCHEMA;
+    }
+
+    const countQueries: string[] = [];
+    const tableNames: string[] = [];
+    for (const table of schemaData) {
+      const fullName = table.table_schema === 'public'
+        ? table.table_name
+        : `${table.table_schema}.${table.table_name}`;
+      tableNames.push(fullName);
+      countQueries.push(`SELECT '${fullName}' as tbl, COUNT(*)::int as cnt FROM ${fullName}`);
+    }
+
+    let countMap: Record<string, number> = {};
+    if (countQueries.length > 0) {
+      try {
+        const countSql = countQueries.join(" UNION ALL ");
+        const { data: countData } = await supabase.rpc("exec_readonly_sql", { query_text: countSql });
+        if (countData) {
+          for (const row of countData) {
+            countMap[row.tbl] = row.cnt;
+          }
+        }
+      } catch (e) {
+        console.error("[ai-schema] Count query failed:", e);
+      }
+    }
+
+    const sampleQueries: string[] = [];
+    const sampleTableNames: string[] = [];
+    for (const table of schemaData) {
+      const fullName = table.table_schema === 'public'
+        ? table.table_name
+        : `${table.table_schema}.${table.table_name}`;
+      const count = countMap[fullName] ?? 0;
+      if (count > 0 && !fullName.includes("ai_") && !fullName.includes("generated_images")) {
+        sampleTableNames.push(fullName);
+        sampleQueries.push(`SELECT '${fullName}' as _tbl, t.* FROM ${fullName} t LIMIT 2`);
+      }
+    }
+
+    let sampleMap: Record<string, any[]> = {};
+    for (let i = 0; i < sampleQueries.length; i++) {
+      try {
+        const { data: sampleData } = await supabase.rpc("exec_readonly_sql", { query_text: sampleQueries[i] });
+        if (sampleData && sampleData.length > 0) {
+          const tblName = sampleTableNames[i];
+          sampleMap[tblName] = sampleData.map((row: any) => {
+            const { _tbl, ...rest } = row;
+            const cleaned: Record<string, any> = {};
+            for (const [k, v] of Object.entries(rest)) {
+              if (typeof v === "string" && v.length > 120) {
+                cleaned[k] = (v as string).slice(0, 120) + "…";
+              } else {
+                cleaned[k] = v;
+              }
+            }
+            return cleaned;
+          });
+        }
+      } catch {}
+    }
+
+    let schemaText = "## LIVE DATABASE SCHEMA\n\n";
+
+    for (const table of schemaData) {
+      const fullName = table.table_schema === 'public'
+        ? table.table_name
+        : `${table.table_schema}.${table.table_name}`;
+      const count = countMap[fullName] ?? 0;
+      const cols = (table.columns as any[]).map((c: any) => {
+        const parts = [c.column];
+        parts.push(c.type);
+        if (c.nullable === 'NO') parts.push('NOT NULL');
+        if (c.default) {
+          const def = String(c.default);
+          if (def.includes('uuid') || def.includes('nextval') || def.includes('now()')) {
+            parts.push('AUTO');
+          }
+        }
+        return parts.join(' ');
+      });
+
+      schemaText += `### ${fullName} (${count} rows)\n`;
+      schemaText += `Columns: ${cols.join(', ')}\n`;
+
+      if (sampleMap[fullName]) {
+        schemaText += `Sample data: ${JSON.stringify(sampleMap[fullName])}\n`;
+      }
+      schemaText += "\n";
+    }
+
+    cachedLiveSchema = schemaText;
+    schemaCacheTime = now;
+    console.log(`[ai-schema] Built live schema context: ${schemaData.length} tables, ${Object.keys(sampleMap).length} with samples`);
+    return schemaText;
+  } catch (err) {
+    console.error("[ai-schema] Schema introspection failed:", err);
+    return FALLBACK_SCHEMA;
+  }
+}
+
+const FALLBACK_SCHEMA = `
 ## DATABASE SCHEMA (27 tables):
 
 ### Business Verticals
@@ -46,117 +182,88 @@ You have READ-ONLY access to the TeamSync PostgreSQL database via the queryDatab
 - ledger_parties(id uuid PK, name text, type text, contact_name text, email text, phone text, country text, currency text, credit_limit numeric, credit_days int, tags text[], is_active boolean)
 - ledger_party_transactions(id uuid PK, party_id uuid FK→ledger_parties, type text, direction text, date date, due_date date, amount numeric, currency text, amount_usd numeric, reference text, description text, status text, paid_amount numeric, payment_date date)
 
-### Faire / Wholesale
-- faire_vendors(id uuid PK, name text, contact_name text, email text, whatsapp text, is_default boolean, country text, rating numeric, avg_lead_days int, specialties text[], completed_orders int)
+### Faire / Wholesale (use faire.tablename for faire schema)
+- faire.stores(id uuid PK, brand_name text, store_url text, is_active boolean)
+- faire.orders(id text PK, store_id uuid FK, display_id text, state text, retailer_name text, created_at timestamptz)
+- faire.products(id text PK, store_id uuid FK, name text, lifecycle_state text)
+- faire.retailers(id text PK, name text, city text, state text, country text)
+- faire_vendors(id uuid PK, name text, contact_name text, email text, whatsapp text, is_default boolean, country text, rating numeric)
 - faire_product_vendors(product_id text, vendor_id uuid FK→faire_vendors, is_exclusive boolean)
-- faire_seller_applications(id uuid PK, brand_name text, category text, status text [drafting/applied/pending_docs/approved/rejected], marketplace_strategy text, domain_name text, website_url text, num_products_listed int)
-- faire_application_followups(id uuid PK, application_id uuid FK, followup_date date, followup_type text, note text)
-- faire_application_links(id uuid PK, application_id uuid FK, label text, url text, link_type text)
-- faire_transaction_attachments(id uuid PK, transaction_id text, file_name text, storage_path text)
-- retailer_enrichments(retailer_id text PK, contact_name text, contact_email text, store_address text, business_type text, website text, instagram text, notes text, enriched_by text)
+- faire_seller_applications(id uuid PK, brand_name text, category text, status text [drafting/applied/pending_docs/approved/rejected])
+- retailer_enrichments(retailer_id text PK, contact_name text, contact_email text, store_address text, business_type text)
 
 ### AI & Images
 - ai_conversations(id uuid PK, title text, vertical_id text)
 - ai_messages(id uuid PK, conversation_id uuid FK, role text, content text)
 - ai_attachments(id uuid PK, conversation_id uuid FK, filename text, file_size int, mime_type text)
 - generated_images(id uuid PK, prompt text, style text, aspect_ratio text, status text, vertical_id text, error_message text)
-
-## QUERY RULES:
-1. ONLY use SELECT statements. Never INSERT/UPDATE/DELETE/DROP/ALTER.
-2. Always LIMIT results to 50 rows max to prevent huge responses.
-3. Use COUNT(*) for counting questions.
-4. When filtering by vertical, use the vertical_id column.
-5. For date filtering, use PostgreSQL date functions (CURRENT_DATE, interval, etc.).
-6. Join tables when needed using FK relationships.
-7. Return clean, readable results. Use column aliases for clarity.
-8. If a query returns no results, say so clearly — don't make up data.
 `;
 
-const SYSTEM_PROMPT = `You are TeamSync AI — the intelligent co-pilot for the TeamSync business operations platform.
+function buildSystemPrompt(liveSchema: string, verticalId?: string): string {
+  const verticalContext = verticalId ? `\n\nThe user is currently viewing the "${verticalId}" vertical. When querying, prefer filtering by vertical_id = '${verticalId}' when relevant, but still answer cross-vertical questions when asked.` : "";
 
-TeamSync is an internal operating system for a multi-brand enterprise with the following verticals:
-1. **LegalNations** (id: hr) — US company formation, KYC, IRS compliance, document vault
-2. **USDrop AI** (id: sales) — Dropshipping, Shopify stores, product analytics
-3. **FaireDesk** (id: faire) — Wholesale marketplace on Faire, orders, retailers, vendors
-4. **GoyoTours** (id: events) — China B2B travel, tour packages, bookings
-5. **Suprans** (id: suprans) — Lead intake, enrichment, routing hub
-6. **EventHub** (id: hub) — Networking events, venues, attendees
-7. **EazyToSell** (id: ets) — Retail franchise, China-to-India market
+  return `You are TeamSync AI — the intelligent co-pilot for the TeamSync business operations platform.
+
+TeamSync is an internal operating system for a multi-brand enterprise with these verticals:
+1. **LegalNations** (id: hr) — US company formation, KYC, IRS compliance
+2. **USDrop AI** (id: sales) — Dropshipping, Shopify stores
+3. **FaireDesk** (id: faire) — Wholesale marketplace on Faire.com
+4. **GoyoTours** (id: events) — China B2B travel, tour packages
+5. **Suprans** (id: suprans) — Lead intake & routing hub
+6. **EventHub** (id: hub) — Networking events, venues
+7. **EazyToSell** (id: ets) — Retail franchise, China-to-India
 8. **Developer** (id: dev) — Internal tools, design system
 9. **LBM Lifestyle** (id: admin) — Admin operations
-10. **HRMS** (id: hrms) — HR management, employees, payroll, attendance
+10. **HRMS** (id: hrms) — HR management, employees, payroll
 11. **ATS** (id: ats) — Applicant tracking, recruitment
-12. **Sales CRM** (id: crm) — CRM, leads, deals, pipeline
-13. **Finance** (id: finance) — Accounting, ledger, transactions
-14. **OMS** (id: oms) — Order management, inventory, fulfillment
+12. **Sales CRM** (id: crm) — CRM, leads, deals
+13. **Finance** (id: finance) — Accounting, ledger
+14. **OMS** (id: oms) — Order management, inventory
 15. **SMM** (id: social) — Social media management
 16. **Vendor Portal** (id: vendor) — External vendor access
 
-${DB_SCHEMA}
+${liveSchema}
 
-**Your role:**
-- ALWAYS use the queryDatabase tool to answer questions about data, counts, statuses, lists, etc.
-- Never give generic instructions like "go to the dashboard and check" — query the actual database instead.
-- Provide real numbers, real names, real statuses from the database.
-- Be concise, professional, and actionable.
-- Use markdown formatting for clear presentation.
-- If a query fails, explain what happened and try a different approach.
-- You can make multiple queries in sequence to gather related data before answering.
-- When you generate an image, always include the image ID in your response using this exact format: [GENERATED_IMAGE:imageId] so the UI can render it inline. For example: [GENERATED_IMAGE:abc-123-def]
-- When asked to create, generate, draw, or design any image, use the generateImage tool.
-- Users can attach files (images, CSVs, PDFs, text files) to their messages. When a file is attached, its content is included directly in the message — for images you can see and analyze them, for text/CSV/JSON files the content is embedded as text. Always acknowledge and process attached file content when present.`;
+## CRITICAL RULES — READ CAREFULLY:
 
-async function getOrCreateConversation(
-  conversationId: string | undefined,
-  verticalId: string | undefined
-): Promise<string> {
-  if (conversationId) {
-    const { data } = await supabase
-      .from("ai_conversations")
-      .select("id")
-      .eq("id", conversationId)
-      .single();
-    if (data) return conversationId;
-  }
+### 1. ALWAYS QUERY THE DATABASE
+- NEVER guess, estimate, or fabricate data. If you don't know something, QUERY FOR IT.
+- NEVER say "I don't have access to..." or "I can't check..." — you CAN query the database.
+- NEVER give generic instructions like "go to the dashboard" — query the actual data instead.
+- If the user asks about any data, metrics, counts, lists, statuses, employees, tasks, orders, etc. — USE the queryDatabase tool.
 
-  const { data, error } = await supabase
-    .from("ai_conversations")
-    .insert({ title: "New Chat", vertical_id: verticalId ?? null })
-    .select("id")
-    .single();
+### 2. QUERY STRATEGY
+- Start with a discovery query if you're unsure about the data (e.g., SELECT column_name FROM information_schema.columns WHERE table_name = 'X').
+- Use COUNT(*) for counting questions, then follow up with detail queries if needed.
+- For Faire tables in the faire schema, use fully qualified names: faire.orders, faire.products, faire.stores, faire.retailers.
+- For public schema tables, use just the table name: users, tasks, tickets, etc.
+- Always use LIMIT (max 50). Use ORDER BY for meaningful results.
+- Join tables when you need related data (e.g., tasks + users for assignee names).
+- Use ILIKE for text search (case-insensitive).
 
-  if (error || !data) throw new Error("Failed to create conversation");
-  return data.id;
-}
+### 3. HANDLE ERRORS GRACEFULLY
+- If a query fails, READ the error message carefully. Common fixes:
+  - Wrong column name → use the listColumns tool to check actual column names
+  - Wrong table name → check if it needs faire. prefix
+  - Type mismatch → cast appropriately (e.g., ::text, ::int)
+- Try a simpler query if the first one fails.
+- You can make up to 10 sequential queries to answer complex questions.
 
-async function saveMessage(
-  conversationId: string,
-  role: "user" | "assistant",
-  content: string
-) {
-  await supabase
-    .from("ai_messages")
-    .insert({ conversation_id: conversationId, role, content });
-}
+### 4. RESPONSE FORMAT
+- Present data in clear markdown tables when showing lists.
+- Include actual numbers, names, and statuses from the database.
+- Summarize findings with key insights.
+- If asked to compare or analyze, show the relevant data first, then provide your analysis.
 
-async function updateConversationTitle(conversationId: string, firstUserMessage: string) {
-  const title = firstUserMessage.slice(0, 60) + (firstUserMessage.length > 60 ? "…" : "");
-  await supabase
-    .from("ai_conversations")
-    .update({ title, updated_at: new Date().toISOString() })
-    .eq("id", conversationId)
-    .eq("title", "New Chat");
-}
+### 5. TOOLS
+- **queryDatabase**: Run read-only SQL queries (SELECT only, max 50 rows)
+- **listColumns**: Get column names and types for any table (use when unsure about schema)
+- **generateImage**: Generate images with DALL-E 3
 
-function extractMessageContent(msg: any): string {
-  if (typeof msg.content === "string") return msg.content;
-  if (Array.isArray(msg.parts)) {
-    return msg.parts
-      .filter((p: any) => p.type === "text")
-      .map((p: any) => p.text)
-      .join("");
-  }
-  return "";
+### 6. ATTACHMENTS & IMAGES
+- Users can attach files (images, CSVs, PDFs, text files). Their content is included in the message.
+- When generating images, include the ID in your response: [GENERATED_IMAGE:imageId]
+${verticalContext}`;
 }
 
 function getDimensions(aspectRatio: string): { width: number; height: number } {
@@ -284,26 +391,81 @@ const generateImageTool = tool({
 
 const BLOCKED_SQL = /\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|GRANT|REVOKE|EXECUTE|COPY)\b/i;
 
+const listColumnsTool = tool({
+  description: "List all columns and their types for a specific database table. Use this BEFORE querying a table if you are unsure about column names. For faire schema tables, include the schema prefix (e.g., 'faire.orders').",
+  inputSchema: jsonSchema<{ tableName: string }>({
+    type: "object",
+    properties: {
+      tableName: { type: "string", description: "Table name (e.g., 'users', 'faire.orders', 'tasks'). Include schema prefix for non-public tables." },
+    },
+    required: ["tableName"],
+    additionalProperties: false,
+  }),
+  execute: async ({ tableName }) => {
+    console.log(`[ai-db] Listing columns for: ${tableName}`);
+
+    let schema = "public";
+    let table = tableName;
+    if (tableName.includes(".")) {
+      const parts = tableName.split(".");
+      schema = parts[0];
+      table = parts[1];
+    }
+
+    try {
+      const query = `SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = '${schema}' AND table_name = '${table}' ORDER BY ordinal_position`;
+      const { data, error } = await supabase.rpc("exec_readonly_sql", { query_text: query });
+
+      if (error) {
+        return { error: `Failed to list columns: ${error.message}`, columns: [] };
+      }
+
+      const sampleQuery = `SELECT * FROM ${tableName} LIMIT 3`;
+      const { data: sampleData } = await supabase.rpc("exec_readonly_sql", { query_text: sampleQuery });
+
+      return {
+        table: tableName,
+        columns: data ?? [],
+        sampleRows: (sampleData ?? []).map((row: any) => {
+          const cleaned: Record<string, any> = {};
+          for (const [k, v] of Object.entries(row)) {
+            if (typeof v === "string" && v.length > 150) {
+              cleaned[k] = (v as string).slice(0, 150) + "…";
+            } else {
+              cleaned[k] = v;
+            }
+          }
+          return cleaned;
+        }),
+        rowCount: sampleData?.length ?? 0,
+      };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      return { error: `Column listing failed: ${msg}`, columns: [] };
+    }
+  },
+});
+
 const queryDatabaseTool = tool({
-  description: "Execute a read-only SQL query against the TeamSync PostgreSQL database. Use this to answer any data-related questions. Only SELECT queries are allowed. Always LIMIT to 50 rows.",
+  description: "Execute a read-only SQL query against the TeamSync PostgreSQL database. Use this to answer any data-related questions. Only SELECT queries are allowed. Always include LIMIT (max 50). For faire schema tables, use fully qualified names like faire.orders, faire.products, faire.stores.",
   inputSchema: jsonSchema<{ sql: string; purpose: string }>({
     type: "object",
     properties: {
       sql: { type: "string", description: "The SELECT SQL query to execute. Must be read-only. Always include LIMIT." },
-      purpose: { type: "string", description: "Brief description of what this query is checking (for logging)" },
+      purpose: { type: "string", description: "Brief description of what this query is checking" },
     },
     required: ["sql", "purpose"],
     additionalProperties: false,
   }),
   execute: async ({ sql: query, purpose }) => {
-    console.log(`[ai-db] Query (${purpose}): ${query.slice(0, 200)}`);
+    console.log(`[ai-db] Query (${purpose}): ${query.slice(0, 300)}`);
 
     if (BLOCKED_SQL.test(query)) {
-      return { error: "Only SELECT queries are allowed. Write operations are blocked.", rows: [] };
+      return { error: "Only SELECT queries are allowed. Write operations are blocked.", rows: [], suggestion: "Rewrite your query using only SELECT statements." };
     }
 
     if (!query.trim().toUpperCase().startsWith("SELECT")) {
-      return { error: "Query must start with SELECT.", rows: [] };
+      return { error: "Query must start with SELECT.", rows: [], suggestion: "Start your query with SELECT." };
     }
 
     query = query.replace(/;\s*$/, "").trim();
@@ -323,16 +485,110 @@ const queryDatabaseTool = tool({
 
       if (error) {
         console.error("[ai-db] RPC error:", error.message);
-        return { error: `Query failed: ${error.message}. Try a simpler query or check table/column names.`, rows: [] };
+        const suggestion = buildQueryErrorSuggestion(error.message, query);
+        return {
+          error: `Query failed: ${error.message}`,
+          rows: [],
+          executedQuery: query,
+          suggestion,
+        };
       }
 
-      return { rows: data ?? [], rowCount: Array.isArray(data) ? data.length : 0 };
+      const rows = data ?? [];
+      return {
+        rows,
+        rowCount: rows.length,
+        executedQuery: query,
+        note: rows.length === 50 ? "Results limited to 50 rows. There may be more data. Use COUNT(*) to get the total, or add WHERE filters to narrow results." : undefined,
+      };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unknown error";
-      return { error: `Query execution failed: ${msg}`, rows: [] };
+      return { error: `Query execution failed: ${msg}`, rows: [], executedQuery: query };
     }
   },
 });
+
+function buildQueryErrorSuggestion(errorMsg: string, query: string): string {
+  const msg = errorMsg.toLowerCase();
+
+  if (msg.includes("does not exist") && msg.includes("relation")) {
+    const match = errorMsg.match(/relation "([^"]+)"/);
+    const tableName = match ? match[1] : "unknown";
+    if (!tableName.includes(".") && (tableName.startsWith("faire_") || ["orders", "products", "stores", "retailers", "shipments", "order_items"].includes(tableName))) {
+      return `Table "${tableName}" might be in the faire schema. Try "faire.${tableName}" instead. Use the listColumns tool to verify.`;
+    }
+    return `Table "${tableName}" was not found. Use the listColumns tool to check available tables, or try a different table name.`;
+  }
+
+  if (msg.includes("does not exist") && msg.includes("column")) {
+    const match = errorMsg.match(/column "([^"]+)"/);
+    const colName = match ? match[1] : "unknown";
+    return `Column "${colName}" does not exist. Use the listColumns tool to check the actual column names for this table.`;
+  }
+
+  if (msg.includes("type") && (msg.includes("mismatch") || msg.includes("cannot"))) {
+    return "There's a type mismatch. Try casting values (e.g., ::text, ::int, ::date) or check the column types with listColumns.";
+  }
+
+  if (msg.includes("syntax error")) {
+    return "SQL syntax error. Double-check your query syntax. Common issues: missing quotes around strings, wrong JOIN syntax, or reserved words used as identifiers.";
+  }
+
+  return "Try a simpler version of the query, or use listColumns to verify the table structure.";
+}
+
+async function getOrCreateConversation(
+  conversationId: string | undefined,
+  verticalId: string | undefined
+): Promise<string> {
+  if (conversationId) {
+    const { data } = await supabase
+      .from("ai_conversations")
+      .select("id")
+      .eq("id", conversationId)
+      .single();
+    if (data) return conversationId;
+  }
+
+  const { data, error } = await supabase
+    .from("ai_conversations")
+    .insert({ title: "New Chat", vertical_id: verticalId ?? null })
+    .select("id")
+    .single();
+
+  if (error || !data) throw new Error("Failed to create conversation");
+  return data.id;
+}
+
+async function saveMessage(
+  conversationId: string,
+  role: "user" | "assistant",
+  content: string
+) {
+  await supabase
+    .from("ai_messages")
+    .insert({ conversation_id: conversationId, role, content });
+}
+
+async function updateConversationTitle(conversationId: string, firstUserMessage: string) {
+  const title = firstUserMessage.slice(0, 60) + (firstUserMessage.length > 60 ? "…" : "");
+  await supabase
+    .from("ai_conversations")
+    .update({ title, updated_at: new Date().toISOString() })
+    .eq("id", conversationId)
+    .eq("title", "New Chat");
+}
+
+function extractMessageContent(msg: any): string {
+  if (typeof msg.content === "string") return msg.content;
+  if (Array.isArray(msg.parts)) {
+    return msg.parts
+      .filter((p: any) => p.type === "text")
+      .map((p: any) => p.text)
+      .join("");
+  }
+  return "";
+}
 
 router.post("/chat", async (req: Request, res: Response) => {
   try {
@@ -426,15 +682,20 @@ router.post("/chat", async (req: Request, res: Response) => {
       }
     }
 
-    const verticalContext = verticalId ? `\n\nCurrent vertical context: ${verticalId}. When querying, filter by vertical_id = '${verticalId}' when relevant.` : "";
+    const liveSchema = await getLiveDatabaseSchema();
+    const systemPrompt = buildSystemPrompt(liveSchema, verticalId);
 
     const result = streamText({
       model: openai.chat("gpt-4o"),
-      system: SYSTEM_PROMPT + verticalContext,
+      system: systemPrompt,
       messages: aiMessages,
-      tools: { queryDatabase: queryDatabaseTool, generateImage: generateImageTool },
-      stopWhen: stepCountIs(5),
-      maxOutputTokens: 4096,
+      tools: {
+        queryDatabase: queryDatabaseTool,
+        listColumns: listColumnsTool,
+        generateImage: generateImageTool,
+      },
+      stopWhen: stepCountIs(10),
+      maxOutputTokens: 8192,
       onFinish: async ({ text }) => {
         if (text) {
           await saveMessage(convId, "assistant", text);
