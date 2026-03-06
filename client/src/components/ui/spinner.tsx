@@ -1,59 +1,34 @@
-import { Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import type { ComponentProps } from "react"
+import { Loader2Icon } from "lucide-react"
 
-const sizeMap = {
-  xs: "size-3",
-  sm: "size-4",
-  md: "size-6",
-  lg: "size-8",
-  xl: "size-12",
-} as const;
+import { cn } from "@/lib/utils"
 
-interface SpinnerProps {
-  size?: keyof typeof sizeMap;
-  className?: string;
-}
-
-export function Spinner({ size = "md", className }: SpinnerProps) {
+function Spinner({ className, ...props }: ComponentProps<"svg">) {
   return (
-    <Loader2
-      className={cn("animate-spin text-primary", sizeMap[size], className)}
-      data-testid="spinner"
+    <Loader2Icon
+      role="status"
+      aria-label="Loading"
+      className={cn("size-4 animate-spin", className)}
+      {...props}
     />
-  );
+  )
 }
 
-interface PageSpinnerProps {
-  label?: string;
-  size?: keyof typeof sizeMap;
-}
-
-export function PageSpinner({ label, size = "lg" }: PageSpinnerProps) {
+function PageSpinner({ className, label, ...props }: ComponentProps<"div"> & { label?: string }) {
   return (
-    <div
-      className="flex flex-1 flex-col items-center justify-center gap-3 p-8"
-      data-testid="page-spinner"
-    >
-      <Spinner size={size} />
-      {label && (
-        <p className="text-sm text-muted-foreground" data-testid="text-spinner-label">
-          {label}
-        </p>
-      )}
+    <div className={cn("flex flex-col items-center justify-center min-h-[200px] gap-3", className)} {...props}>
+      <Spinner className="size-8" />
+      {label && <span className="text-sm text-muted-foreground">{label}</span>}
     </div>
-  );
+  )
 }
 
-interface InlineSpinnerProps {
-  size?: keyof typeof sizeMap;
-  className?: string;
-}
-
-export function InlineSpinner({ size = "xs", className }: InlineSpinnerProps) {
+function InlineSpinner({ className, ...props }: ComponentProps<"span">) {
   return (
-    <Spinner
-      size={size}
-      className={cn("inline-block", className)}
-    />
-  );
+    <span className={cn("inline-flex items-center gap-2", className)} {...props}>
+      <Spinner className="size-3" />
+    </span>
+  )
 }
+
+export { Spinner, PageSpinner, InlineSpinner }

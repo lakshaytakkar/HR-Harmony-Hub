@@ -841,7 +841,15 @@ TeamSync includes a floating AI co-pilot powered by **Vercel AI SDK** and **Open
 
 ### Files
 - `client/src/components/ai-chat/AIChatWidget.tsx` — main widget (trigger, drawer, full-page modes)
-- `client/src/components/ai-elements/` — AI Elements components (conversation, message, shimmer, suggestion)
+- `client/src/components/ai-elements/` — AI Elements components:
+  - `conversation.tsx`, `message.tsx`, `shimmer.tsx`, `suggestion.tsx` — core chat UI
+  - `reasoning.tsx` — collapsible "Thinking..." panel with auto-open/close during streaming
+  - `tool.tsx` — tool call visualization with status badges (Running/Completed/Error)
+  - `chain-of-thought.tsx` — multi-step reasoning display with step icons and status
+  - `sources.tsx` — collapsible source citations with link list
+  - `code-block.tsx` — syntax-highlighted code blocks with Shiki, copy button, language selector
+  - `prompt-input.tsx` — rich prompt input with file attachments, drag-drop, referenced sources
+  - `attachments.tsx` — file attachment display (grid/inline/list variants) with preview and remove
 - `server/ai-chat.ts` — Express router with `/api/ai/chat`, `/api/ai/conversations`, `/api/ai/conversations/:id/messages`
 
 ### Supabase Tables
