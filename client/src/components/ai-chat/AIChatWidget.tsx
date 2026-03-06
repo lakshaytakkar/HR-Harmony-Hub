@@ -1443,7 +1443,7 @@ export function AIChatWidget() {
                             data-testid={`ai-conversation-${conv.id}`}
                           >
                             <MessageSquare className="size-3.5 mt-0.5 shrink-0 opacity-60" />
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0 overflow-hidden">
                               {editingId === conv.id ? (
                                 <input
                                   ref={editInputRef}
@@ -1459,53 +1459,53 @@ export function AIChatWidget() {
                                   onClick={(e) => e.stopPropagation()}
                                 />
                               ) : (
-                                <p className="font-medium truncate leading-tight text-xs">
+                                <p className="font-medium leading-tight text-xs break-words line-clamp-2">
                                   {conv.title}
                                 </p>
                               )}
                               <div className="flex items-center gap-1 mt-0.5">
-                                <Clock className="size-2.5 opacity-50" />
+                                <Clock className="size-2.5 opacity-50 shrink-0" />
                                 <span className="text-[10px] text-muted-foreground">
                                   {formatRelativeTime(conv.updated_at)}
                                 </span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-0.5 shrink-0">
+                            <div className="flex items-center gap-0.5 shrink-0 self-center">
                               {editingId === conv.id ? (
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  className="h-5 w-5 text-primary"
+                                  className="h-7 w-7 sm:h-6 sm:w-6 text-primary"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     submitRename();
                                   }}
                                   data-testid={`ai-rename-save-${conv.id}`}
                                 >
-                                  <Check className="size-3" />
+                                  <Check className="size-3.5 sm:size-3" />
                                 </Button>
                               ) : (
                                 <>
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                                    className="h-7 w-7 sm:h-6 sm:w-6 text-muted-foreground hover:text-foreground"
                                     onClick={(e) => startRenaming(conv, e)}
                                     data-testid={`ai-rename-conversation-${conv.id}`}
                                   >
-                                    <Pencil className="size-2.5" />
+                                    <Pencil className="size-3 sm:size-2.5" />
                                   </Button>
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                                    className="h-7 w-7 sm:h-6 sm:w-6 text-muted-foreground hover:text-destructive"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       deleteConversationMutation.mutate(conv.id);
                                     }}
                                     data-testid={`ai-delete-conversation-${conv.id}`}
                                   >
-                                    <Trash2 className="size-2.5" />
+                                    <Trash2 className="size-3 sm:size-2.5" />
                                   </Button>
                                 </>
                               )}
