@@ -835,4 +835,24 @@ ai_messages(id uuid PK, conversation_id uuid FK, role text, content text, create
 - `ai` (Vercel AI SDK v6), `@ai-sdk/openai`, `@ai-sdk/react` — streaming AI
 - `use-stick-to-bottom`, `streamdown`, `@streamdown/*` — chat scroll + markdown rendering
 - `motion` — shimmer animation in AI elements
-- OpenAI integration configured via Replit AI Integrations (env: `OPENAI_API_KEY`, `OPENAI_BASE_URL`)
+- `multer` — file upload handling (memory storage, 10MB limit)
+- OpenAI integration configured via Replit AI Integrations (env: `AI_INTEGRATIONS_OPENAI_API_KEY`, `AI_INTEGRATIONS_OPENAI_BASE_URL`)
+- Chat streaming uses `pipeTextStreamToResponse` (AI SDK v6) with `streamProtocol: "text"` in `useChat`
+
+### Supabase AI Tables
+```
+ai_attachments(id uuid PK, conversation_id uuid FK, filename text, file_data text [base64], file_size int, mime_type text, created_at)
+```
+
+### AI Chat API Routes
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/ai/chat` | Stream chat response (OpenAI gpt-4o) |
+| GET | `/api/ai/conversations` | List all conversations |
+| POST | `/api/ai/conversations` | Create conversation |
+| GET | `/api/ai/conversations/:id/messages` | Get messages |
+| DELETE | `/api/ai/conversations/:id` | Delete conversation |
+| POST | `/api/ai/upload` | Upload file (multipart, conversationId required) |
+| GET | `/api/ai/conversations/:id/attachments` | List attachments |
+| GET | `/api/ai/attachments/:id/download` | Download attachment |
+| DELETE | `/api/ai/attachments/:id` | Delete attachment |

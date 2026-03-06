@@ -4,7 +4,8 @@ import { useChat } from "@ai-sdk/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   X, Maximize2, Minimize2, Plus, Send, Square, Trash2,
-  MessageSquare, Sparkles, Clock, ChevronRight, Bot
+  MessageSquare, Sparkles, Clock, ChevronRight, Bot,
+  Paperclip, Download, FileText, Menu
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,14 @@ interface AiMessage {
   created_at: string;
 }
 
+interface AiAttachment {
+  id: string;
+  filename: string;
+  file_size: number;
+  mime_type: string;
+  created_at: string;
+}
+
 const SUGGESTIONS = [
   "Summarize active formations this week",
   "What tasks are overdue right now?",
@@ -63,11 +72,57 @@ function formatRelativeTime(dateStr: string): string {
   return `${diffDays}d ago`;
 }
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function FilePreview({ attachment }: { attachment: AiAttachment }) {
+  const isImage = attachment.mime_type.startsWith("image/");
+
+  if (isImage) {
+    return (
+      <a
+        href={`/api/ai/attachments/${attachment.id}/download`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block max-w-[200px] rounded-lg overflow-hidden border hover:opacity-90 transition-opacity"
+        data-testid={`attachment-preview-${attachment.id}`}
+      >
+        <img
+          src={`/api/ai/attachments/${attachment.id}/download`}
+          alt={attachment.filename}
+          className="w-full h-auto max-h-[160px] object-cover"
+        />
+        <div className="px-2 py-1 text-[10px] text-muted-foreground truncate bg-muted/50">
+          {attachment.filename}
+        </div>
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={`/api/ai/attachments/${attachment.id}/download`}
+      download={attachment.filename}
+      className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-muted/30 hover:bg-muted/60 transition-colors max-w-[240px]"
+      data-testid={`attachment-file-${attachment.id}`}
+    >
+      <FileText className="size-4 shrink-0 text-primary" />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium truncate">{attachment.filename}</p>
+        <p className="text-[10px] text-muted-foreground">{formatFileSize(attachment.file_size)}</p>
+      </div>
+      <Download className="size-3.5 shrink-0 text-muted-foreground" />
+    </a>
+  );
+}
+
 interface ChatWindowProps {
   conversationId: string;
   initialMessages: AiMessage[];
   verticalId: string;
-  onNewConversationId?: (id: string) => void;
   isExpanded: boolean;
 }
 
@@ -78,7 +133,9 @@ function ChatWindow({
   isExpanded,
 }: ChatWindowProps) {
   const formRef = useRef<HTMLFormElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   const mappedInitial = initialMessages.map((m) => ({
     id: m.id,
@@ -92,10 +149,17 @@ function ChatWindow({
       api: "/api/ai/chat",
       body: { conversationId, verticalId },
       initialMessages: mappedInitial,
+      streamProtocol: "text",
       onFinish: () => {
         queryClient.invalidateQueries({ queryKey: ["/api/ai/conversations"] });
       },
     });
+
+  const { data: attachments = [] } = useQuery<AiAttachment[]>({
+    queryKey: ["/api/ai/conversations", conversationId, "attachments"],
+    enabled: !!conversationId,
+    refetchOnWindowFocus: false,
+  });
 
   const isLoading = status === "submitted" || status === "streaming";
 
@@ -117,20 +181,55 @@ function ChatWindow({
     [setInput]
   );
 
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !conversationId) return;
+
+    setUploadingFile(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("conversationId", conversationId);
+
+      const res = await fetch("/api/ai/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        queryClient.invalidateQueries({
+          queryKey: ["/api/ai/conversations", conversationId, "attachments"],
+        });
+      }
+    } catch (err) {
+      console.error("File upload failed:", err);
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [conversationId, queryClient]);
+
+  const handleDownloadConversation = useCallback(() => {
+    const markdown = messages
+      .map((m) => `**${m.role === "user" ? "You" : "TeamSync AI"}:**\n${m.content}`)
+      .join("\n\n---\n\n");
+    const blob = new Blob([markdown], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "conversation.md";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-full min-h-0">
       <Conversation className="flex-1 min-h-0">
-        <ConversationContent className={cn("py-4", isExpanded ? "px-8 max-w-3xl mx-auto w-full" : "px-4")}>
+        <ConversationContent className={cn("py-4", isExpanded ? "px-4 sm:px-8 max-w-3xl mx-auto w-full" : "px-4")}>
           {messages.length === 0 ? (
-            <ConversationEmptyState
-              icon={
-                <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-2">
-                  <img src={aiIcon} alt="TeamSync AI" className="w-8 h-8" />
-                </div>
-              }
-              title="TeamSync AI"
-              description="Ask me anything about your business operations across all verticals."
-            >
+            <ConversationEmptyState>
               <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-2 mx-auto">
                 <img src={aiIcon} alt="TeamSync AI" className="w-8 h-8" />
               </div>
@@ -153,6 +252,13 @@ function ChatWindow({
             </ConversationEmptyState>
           ) : (
             <>
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {attachments.map((att) => (
+                    <FilePreview key={att.id} attachment={att} />
+                  ))}
+                </div>
+              )}
               {messages.map((message) => (
                 <Message key={message.id} from={message.role}>
                   <MessageContent>
@@ -180,7 +286,7 @@ function ChatWindow({
       </Conversation>
 
       {messages.length > 0 && messages.length < 3 && (
-        <div className={cn("px-4 pb-2", isExpanded && "px-8 max-w-3xl mx-auto w-full")}>
+        <div className={cn("px-4 pb-2", isExpanded && "px-4 sm:px-8 max-w-3xl mx-auto w-full")}>
           <Suggestions>
             {SUGGESTIONS.slice(0, 3).map((s) => (
               <Suggestion
@@ -194,9 +300,32 @@ function ChatWindow({
         </div>
       )}
 
-      <div className={cn("border-t p-3", isExpanded && "px-8 pb-6")}>
+      <div className={cn("border-t p-3", isExpanded && "px-4 sm:px-8 pb-6")}>
         <form ref={formRef} onSubmit={handleSubmit}>
-          <div className={cn("relative flex items-end gap-2 rounded-xl border bg-background shadow-sm focus-within:ring-1 focus-within:ring-ring px-3 py-2", isExpanded && "max-w-3xl mx-auto")}>
+          <div className={cn(
+            "relative flex items-end gap-2 rounded-xl border bg-background shadow-sm focus-within:ring-1 focus-within:ring-ring px-3 py-2",
+            isExpanded && "max-w-3xl mx-auto"
+          )}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleFileUpload}
+              accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx,.json"
+              data-testid="ai-chat-file-input"
+            />
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingFile}
+              title="Attach file"
+              data-testid="ai-chat-attach"
+            >
+              <Paperclip className={cn("size-3.5", uploadingFile && "animate-spin")} />
+            </Button>
             <Textarea
               value={input}
               onChange={handleInputChange}
@@ -206,6 +335,19 @@ function ChatWindow({
               className="flex-1 resize-none border-0 shadow-none focus-visible:ring-0 bg-transparent p-0 text-sm min-h-[28px] max-h-32"
               data-testid="ai-chat-input"
             />
+            {messages.length > 0 && (
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                onClick={handleDownloadConversation}
+                title="Download conversation"
+                data-testid="ai-chat-download"
+              >
+                <Download className="size-3.5" />
+              </Button>
+            )}
             {isLoading ? (
               <Button
                 type="button"
@@ -243,6 +385,7 @@ export function AIChatWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const { currentVertical } = useContext(VerticalContext);
   const queryClient = useQueryClient();
 
@@ -309,10 +452,6 @@ export function AIChatWidget() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k" && isOpen) {
-        e.preventDefault();
-        handleClose();
-      }
       if (e.key === "Escape" && isOpen) {
         if (isExpanded) setIsExpanded(false);
         else handleClose();
@@ -354,111 +493,150 @@ export function AIChatWidget() {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="fixed inset-0 z-50 flex bg-background"
           >
-            <div className="w-[280px] flex flex-col border-r bg-sidebar shrink-0">
-              <div className="flex items-center gap-2.5 px-4 py-4 border-b">
-                <img src={aiIcon} alt="" className="w-7 h-7 object-contain shrink-0" />
-                <span className="font-semibold text-sm">TeamSync AI</span>
-                <div className="ml-auto flex items-center gap-1">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7"
-                    onClick={() => setIsExpanded(false)}
-                    data-testid="ai-chat-minimize"
-                    title="Compact view"
-                  >
-                    <Minimize2 className="size-3.5" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7"
-                    onClick={handleClose}
-                    data-testid="ai-chat-close-expanded"
-                    title="Close"
-                  >
-                    <X className="size-3.5" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="p-3 border-b">
-                <Button
-                  className="w-full h-9 gap-2 justify-start text-sm font-medium"
-                  onClick={handleNewChat}
-                  disabled={createConversationMutation.isPending}
-                  data-testid="ai-chat-new"
+            <AnimatePresence>
+              {sidebarOpen && (
+                <motion.div
+                  initial={{ x: -280, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -280, opacity: 0 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="w-[280px] flex flex-col border-r bg-muted/30 shrink-0 absolute sm:relative inset-y-0 left-0 z-10"
                 >
-                  <Plus className="size-3.5" />
-                  New Chat
-                </Button>
-              </div>
-
-              <ScrollArea className="flex-1">
-                <div className="p-2 space-y-0.5">
-                  {conversations.length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-6 px-3">
-                      Your conversations will appear here
-                    </p>
-                  )}
-                  {conversations.map((conv) => (
-                    <div
-                      key={conv.id}
-                      className={cn(
-                        "group flex items-start gap-2 rounded-lg px-2.5 py-2 cursor-pointer text-sm transition-colors",
-                        activeConversationId === conv.id
-                          ? "bg-primary/10 text-primary"
-                          : "hover:bg-muted text-foreground"
-                      )}
-                      onClick={() => handleSelectConversation(conv.id)}
-                      data-testid={`ai-conversation-${conv.id}`}
-                    >
-                      <MessageSquare className="size-3.5 mt-0.5 shrink-0 opacity-60" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate leading-tight text-xs">
-                          {conv.title}
-                        </p>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <Clock className="size-2.5 opacity-50" />
-                          <span className="text-[10px] text-muted-foreground">
-                            {formatRelativeTime(conv.updated_at)}
-                          </span>
-                        </div>
-                      </div>
+                  <div className="flex items-center gap-2.5 px-4 py-4 border-b">
+                    <img src={aiIcon} alt="" className="w-7 h-7 object-contain shrink-0" />
+                    <span className="font-semibold text-sm">TeamSync AI</span>
+                    <div className="ml-auto flex items-center gap-1">
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-5 w-5 opacity-0 group-hover:opacity-100 shrink-0 text-muted-foreground hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteConversationMutation.mutate(conv.id);
-                        }}
-                        data-testid={`ai-delete-conversation-${conv.id}`}
+                        className="h-7 w-7 sm:hidden"
+                        onClick={() => setSidebarOpen(false)}
+                        data-testid="ai-chat-close-sidebar"
+                        title="Close sidebar"
                       >
-                        <Trash2 className="size-3" />
+                        <X className="size-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => setIsExpanded(false)}
+                        data-testid="ai-chat-minimize"
+                        title="Compact view"
+                      >
+                        <Minimize2 className="size-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={handleClose}
+                        data-testid="ai-chat-close-expanded"
+                        title="Close"
+                      >
+                        <X className="size-3.5" />
                       </Button>
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                  </div>
 
-              <div className="p-3 border-t">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Sparkles className="size-3" />
-                  <span>Powered by OpenAI</span>
-                </div>
-              </div>
-            </div>
+                  <div className="p-3 border-b">
+                    <Button
+                      className="w-full h-9 gap-2 justify-start text-sm font-medium"
+                      onClick={handleNewChat}
+                      disabled={createConversationMutation.isPending}
+                      data-testid="ai-chat-new"
+                    >
+                      <Plus className="size-3.5" />
+                      New Chat
+                    </Button>
+                  </div>
+
+                  <ScrollArea className="flex-1">
+                    <div className="p-2 space-y-0.5">
+                      {conversations.length === 0 && (
+                        <p className="text-xs text-muted-foreground text-center py-6 px-3">
+                          Your conversations will appear here
+                        </p>
+                      )}
+                      {conversations.map((conv) => (
+                        <div
+                          key={conv.id}
+                          className={cn(
+                            "group flex items-start gap-2 rounded-lg px-2.5 py-2 cursor-pointer text-sm transition-colors",
+                            activeConversationId === conv.id
+                              ? "bg-primary/10 text-primary"
+                              : "hover:bg-muted text-foreground"
+                          )}
+                          onClick={() => handleSelectConversation(conv.id)}
+                          data-testid={`ai-conversation-${conv.id}`}
+                        >
+                          <MessageSquare className="size-3.5 mt-0.5 shrink-0 opacity-60" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate leading-tight text-xs">
+                              {conv.title}
+                            </p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <Clock className="size-2.5 opacity-50" />
+                              <span className="text-[10px] text-muted-foreground">
+                                {formatRelativeTime(conv.updated_at)}
+                              </span>
+                            </div>
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-5 w-5 opacity-0 group-hover:opacity-100 shrink-0 text-muted-foreground hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteConversationMutation.mutate(conv.id);
+                            }}
+                            data-testid={`ai-delete-conversation-${conv.id}`}
+                          >
+                            <Trash2 className="size-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+
+                  <div className="p-3 border-t">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Sparkles className="size-3" />
+                      <span>Powered by OpenAI</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {sidebarOpen && (
+              <div
+                className="fixed inset-0 bg-black/20 z-[5] sm:hidden"
+                onClick={() => setSidebarOpen(false)}
+              />
+            )}
 
             <div className="flex-1 flex flex-col min-w-0">
-              <div className="flex items-center gap-3 px-6 py-4 border-b">
+              <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b">
+                {!sidebarOpen && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 mr-1"
+                    onClick={() => setSidebarOpen(true)}
+                    data-testid="ai-chat-open-sidebar"
+                    title="Open sidebar"
+                  >
+                    <Menu className="size-4" />
+                  </Button>
+                )}
                 <Bot className="size-4 text-primary" />
-                <span className="font-semibold text-sm">
+                <span className="font-semibold text-sm truncate">
                   {conversations.find((c) => c.id === activeConversationId)?.title ?? "New Chat"}
                 </span>
                 <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
                   <ChevronRight className="size-3.5" />
-                  <span className="capitalize">{currentVertical?.id ?? "all"}</span>
+                  <span className="capitalize hidden sm:inline">{currentVertical?.id ?? "all"}</span>
                 </div>
               </div>
 
@@ -484,7 +662,7 @@ export function AIChatWidget() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-40 bg-black/10"
               onClick={handleClose}
             />
             <motion.div
@@ -493,7 +671,7 @@ export function AIChatWidget() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "100%", opacity: 0 }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 z-50 w-[420px] flex flex-col bg-background border-l shadow-2xl"
+              className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[420px] flex flex-col bg-background border-l shadow-2xl"
             >
               <div className="flex items-center gap-2.5 px-4 py-3.5 border-b shrink-0">
                 <img src={aiIcon} alt="" className="w-7 h-7 object-contain shrink-0" />
@@ -559,7 +737,7 @@ export function AIChatWidget() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                     <Sparkles className="size-3" />
-                    <span>Powered by OpenAI via Replit</span>
+                    <span>Powered by OpenAI</span>
                   </div>
                   {conversations.length > 0 && (
                     <button

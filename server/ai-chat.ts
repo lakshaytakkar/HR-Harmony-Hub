@@ -2,13 +2,15 @@ import type { Request, Response } from "express";
 import { Router } from "express";
 import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
+import multer from "multer";
 import { supabase } from "./supabase";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 const openai = createOpenAI({
-  baseURL: process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1",
-  apiKey: process.env.OPENAI_API_KEY ?? "",
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ?? process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1",
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY ?? "",
 });
 
 const SYSTEM_PROMPT = `You are TeamSync AI — the intelligent co-pilot for the TeamSync business operations platform.
@@ -121,7 +123,7 @@ router.post("/chat", async (req: Request, res: Response) => {
       model: openai("gpt-4o"),
       system: SYSTEM_PROMPT + (verticalId ? `\n\nCurrent vertical context: ${verticalId}` : ""),
       messages: aiMessages,
-      maxTokens: 2048,
+      maxOutputTokens: 2048,
       onFinish: async ({ text }) => {
         await saveMessage(convId, "assistant", text);
         await supabase
@@ -132,7 +134,7 @@ router.post("/chat", async (req: Request, res: Response) => {
     });
 
     res.setHeader("X-Conversation-Id", convId);
-    result.pipeDataStreamToResponse(res);
+    result.pipeTextStreamToResponse(res);
   } catch (err) {
     console.error("[ai-chat] chat error:", err);
     return res.status(500).json({ error: "AI chat failed" });
@@ -199,6 +201,87 @@ router.delete("/conversations/:id", async (req: Request, res: Response) => {
     return res.json({ ok: true });
   } catch {
     return res.status(500).json({ error: "Failed to delete conversation" });
+  }
+});
+
+router.post("/upload", upload.single("file"), async (req: Request, res: Response) => {
+  try {
+    const file = req.file;
+    const conversationId = req.body.conversationId as string;
+
+    if (!file) return res.status(400).json({ error: "No file provided" });
+    if (!conversationId) return res.status(400).json({ error: "conversationId required" });
+
+    const base64Data = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+
+    const { data, error } = await supabase
+      .from("ai_attachments")
+      .insert({
+        conversation_id: conversationId,
+        filename: file.originalname,
+        file_data: base64Data,
+        file_size: file.size,
+        mime_type: file.mimetype,
+      })
+      .select("id, filename, file_size, mime_type, created_at")
+      .single();
+
+    if (error || !data) return res.status(500).json({ error: "Failed to upload file" });
+    return res.json(data);
+  } catch {
+    return res.status(500).json({ error: "Failed to upload file" });
+  }
+});
+
+router.get("/conversations/:id/attachments", async (req: Request, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from("ai_attachments")
+      .select("id, filename, file_size, mime_type, created_at")
+      .eq("conversation_id", req.params.id)
+      .order("created_at", { ascending: true });
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json(data ?? []);
+  } catch {
+    return res.status(500).json({ error: "Failed to fetch attachments" });
+  }
+});
+
+router.get("/attachments/:id/download", async (req: Request, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from("ai_attachments")
+      .select("filename, file_data, mime_type")
+      .eq("id", req.params.id)
+      .single();
+
+    if (error || !data) return res.status(404).json({ error: "Attachment not found" });
+
+    const base64Match = (data.file_data as string).match(/^data:[^;]+;base64,(.+)$/);
+    if (!base64Match) return res.status(500).json({ error: "Invalid file data" });
+
+    const buffer = Buffer.from(base64Match[1], "base64");
+    res.setHeader("Content-Type", data.mime_type as string);
+    res.setHeader("Content-Disposition", `attachment; filename="${data.filename}"`);
+    res.setHeader("Content-Length", buffer.length.toString());
+    return res.send(buffer);
+  } catch {
+    return res.status(500).json({ error: "Failed to download attachment" });
+  }
+});
+
+router.delete("/attachments/:id", async (req: Request, res: Response) => {
+  try {
+    const { error } = await supabase
+      .from("ai_attachments")
+      .delete()
+      .eq("id", req.params.id);
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ ok: true });
+  } catch {
+    return res.status(500).json({ error: "Failed to delete attachment" });
   }
 });
 
