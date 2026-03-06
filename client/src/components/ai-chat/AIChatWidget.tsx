@@ -1152,6 +1152,9 @@ export function AIChatWidget() {
   const handleSelectConversation = useCallback((id: string) => {
     setActiveConversationId(id);
     setChatKey((k) => k + 1);
+    if (window.innerWidth < 640) {
+      setSidebarOpen(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -1216,11 +1219,11 @@ export function AIChatWidget() {
             <AnimatePresence>
               {sidebarOpen && (
                 <motion.div
-                  initial={{ x: -280, opacity: 0 }}
+                  initial={{ x: "-100%", opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: -280, opacity: 0 }}
+                  exit={{ x: "-100%", opacity: 0 }}
                   transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  className="w-[280px] flex flex-col border-r bg-muted/30 shrink-0 absolute sm:relative inset-y-0 left-0 z-10"
+                  className="w-full sm:w-[280px] flex flex-col border-r bg-muted/30 shrink-0 absolute sm:relative inset-y-0 left-0 z-10"
                 >
                   <div className="flex items-center gap-2.5 px-4 py-4 border-b">
                     <img src={aiIcon} alt="" className="w-7 h-7 object-contain shrink-0" />
@@ -1229,12 +1232,12 @@ export function AIChatWidget() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-7 w-7 sm:hidden"
+                        className="h-8 w-8 sm:h-7 sm:w-7 sm:hidden"
                         onClick={() => setSidebarOpen(false)}
                         data-testid="ai-chat-close-sidebar"
                         title="Close sidebar"
                       >
-                        <X className="size-3.5" />
+                        <ChevronLeft className="size-4 sm:size-3.5" />
                       </Button>
                       <Button
                         size="icon"
@@ -1263,27 +1266,27 @@ export function AIChatWidget() {
                     <button
                       onClick={() => setSidebarTab("chats")}
                       className={cn(
-                        "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors border-b-2",
+                        "flex-1 flex items-center justify-center gap-1.5 py-3 sm:py-2.5 text-sm sm:text-xs font-medium transition-colors border-b-2",
                         sidebarTab === "chats"
                           ? "border-primary text-primary"
                           : "border-transparent text-muted-foreground hover:text-foreground"
                       )}
                       data-testid="ai-sidebar-tab-chats"
                     >
-                      <MessageSquare className="size-3.5" />
+                      <MessageSquare className="size-4 sm:size-3.5" />
                       Chats
                     </button>
                     <button
                       onClick={() => setSidebarTab("studio")}
                       className={cn(
-                        "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors border-b-2",
+                        "flex-1 flex items-center justify-center gap-1.5 py-3 sm:py-2.5 text-sm sm:text-xs font-medium transition-colors border-b-2",
                         sidebarTab === "studio"
                           ? "border-primary text-primary"
                           : "border-transparent text-muted-foreground hover:text-foreground"
                       )}
                       data-testid="ai-sidebar-tab-studio"
                     >
-                      <ImageIcon className="size-3.5" />
+                      <ImageIcon className="size-4 sm:size-3.5" />
                       Assets
                     </button>
                   </div>
@@ -1292,23 +1295,23 @@ export function AIChatWidget() {
                     <>
                       <div className="p-3 border-b flex items-center gap-2">
                         <Button
-                          className="flex-1 h-9 gap-2 justify-start text-sm font-medium"
+                          className="flex-1 h-10 sm:h-9 gap-2 justify-start text-sm font-medium"
                           onClick={handleNewChat}
                           disabled={createConversationMutation.isPending}
                           data-testid="ai-chat-new"
                         >
-                          <Plus className="size-3.5" />
+                          <Plus className="size-4 sm:size-3.5" />
                           New Chat
                         </Button>
                         <Button
                           size="icon"
                           variant={searchMode ? "secondary" : "ghost"}
-                          className="h-9 w-9 shrink-0"
+                          className="h-10 w-10 sm:h-9 sm:w-9 shrink-0"
                           onClick={searchMode ? closeSearch : openSearch}
                           data-testid="ai-chat-search-toggle"
                           title="Search chats"
                         >
-                          {searchMode ? <X className="size-3.5" /> : <Search className="size-3.5" />}
+                          {searchMode ? <X className="size-4 sm:size-3.5" /> : <Search className="size-4 sm:size-3.5" />}
                         </Button>
                       </div>
                     </>
@@ -1375,7 +1378,7 @@ export function AIChatWidget() {
                           <div
                             key={result.id}
                             className={cn(
-                              "group flex flex-col gap-1 rounded-lg px-2.5 py-2 cursor-pointer text-sm transition-colors",
+                              "group flex flex-col gap-1 rounded-lg px-3 py-3 sm:px-2.5 sm:py-2 cursor-pointer text-sm transition-colors",
                               activeConversationId === result.id
                                 ? "bg-primary/10 text-primary"
                                 : "hover:bg-muted text-foreground"
@@ -1431,7 +1434,7 @@ export function AIChatWidget() {
                           <div
                             key={conv.id}
                             className={cn(
-                              "group flex items-start gap-2 rounded-lg px-2.5 py-2 cursor-pointer text-sm transition-colors",
+                              "group flex items-start gap-2 rounded-lg px-3 py-3 sm:px-2.5 sm:py-2 cursor-pointer text-sm transition-colors",
                               activeConversationId === conv.id
                                 ? "bg-primary/10 text-primary"
                                 : "hover:bg-muted text-foreground"
