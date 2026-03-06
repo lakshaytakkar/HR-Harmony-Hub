@@ -1010,11 +1010,12 @@ export function AIChatWidget() {
     refetchOnWindowFocus: false,
   });
 
-  const { data: savedMessages = [] } = useQuery<AiMessage[]>({
+  const { data: savedMessages = [], isFetching: messagesLoading, dataUpdatedAt: messagesUpdatedAt } = useQuery<AiMessage[]>({
     queryKey: ["/api/ai/conversations", activeConversationId, "messages"],
     enabled: !!activeConversationId,
     refetchOnWindowFocus: false,
-    staleTime: 30000,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const { data: libraryImages = [], isLoading: libraryLoading } = useQuery<GeneratedImageData[]>({
@@ -1617,15 +1618,19 @@ export function AIChatWidget() {
                     </div>
                   </div>
 
-                  {activeConversationId && (
+                  {activeConversationId && messagesLoading ? (
+                    <div className="flex-1 flex items-center justify-center">
+                      <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : activeConversationId ? (
                     <ChatWindow
-                      key={`expanded-${activeConversationId}-${chatKey}`}
+                      key={`expanded-${activeConversationId}-${chatKey}-${messagesUpdatedAt}`}
                       conversationId={activeConversationId}
                       initialMessages={savedMessages}
                       verticalId={currentVertical?.id ?? ""}
                       isExpanded
                     />
-                  )}
+                  ) : null}
                 </>
               )}
             </div>
@@ -1695,9 +1700,13 @@ export function AIChatWidget() {
               </div>
 
               <div className="flex-1 min-h-0">
-                {activeConversationId ? (
+                {activeConversationId && messagesLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : activeConversationId ? (
                   <ChatWindow
-                    key={`drawer-${activeConversationId}-${chatKey}`}
+                    key={`drawer-${activeConversationId}-${chatKey}-${messagesUpdatedAt}`}
                     conversationId={activeConversationId}
                     initialMessages={savedMessages}
                     verticalId={currentVertical?.id ?? ""}
