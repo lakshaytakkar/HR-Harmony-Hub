@@ -26,6 +26,41 @@ import {
   useState,
 } from "react";
 import { Streamdown } from "streamdown";
+import { useLocation } from "wouter";
+
+function PortalLink({ href, children, ...props }: ComponentProps<"a">) {
+  const [, navigate] = useLocation();
+
+  if (!href) {
+    return <span {...props}>{children}</span>;
+  }
+
+  const isInternal = href.startsWith("/");
+
+  if (isInternal) {
+    const slug = href.replace(/[^a-zA-Z0-9-]/g, "-").slice(0, 60);
+    return (
+      <a
+        {...props}
+        href={href}
+        onClick={(e) => {
+          e.preventDefault();
+          navigate(href);
+        }}
+        className="text-primary font-medium underline underline-offset-2 decoration-primary/40 hover:decoration-primary cursor-pointer"
+        data-testid={`link-portal-${slug}`}
+      >
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <a {...props} href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+      {children}
+    </a>
+  );
+}
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
@@ -318,6 +353,7 @@ export const MessageBranchPage = ({
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
 const streamdownPlugins = { cjk, code, math, mermaid };
+const streamdownComponents = { a: PortalLink as any };
 
 export const MessageResponse = memo(
   ({ className, ...props }: MessageResponseProps) => (
@@ -327,6 +363,7 @@ export const MessageResponse = memo(
         className
       )}
       plugins={streamdownPlugins}
+      components={streamdownComponents}
       {...props}
     />
   ),

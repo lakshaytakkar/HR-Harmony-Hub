@@ -259,6 +259,51 @@ ${liveSchema}
 ### 7. ATTACHMENTS & IMAGES
 - Users can attach files (images, CSVs, PDFs, text files). Their content is included in the message.
 - When generating images, include the ID in your response: [GENERATED_IMAGE:imageId]
+
+### 8. PORTAL LINKS — ALWAYS LINK TO RECORDS
+When you reference a specific record (order, task, ticket, contact, product, etc.), ALWAYS include a clickable markdown link to its portal page. Use the record's **id** (UUID) in the URL path.
+
+**Link format:** \`[Display Text](/vertical/page/record-id)\`
+
+**Route map (use the record's id (UUID) column as the URL parameter):**
+
+Detail pages (have /:id routes):
+- **Faire orders:** \`[Order #DISPLAY_ID](/faire/orders/ID)\`
+- **Faire products:** \`[Product Name](/faire/products/ID)\`
+- **Faire retailers:** \`[Retailer Name](/faire/retailers/ID)\`
+- **Faire quotations:** \`[Quotation #CODE](/faire/quotations/ID)\`
+- **Faire applications:** \`[Application Name](/faire/applications/ID)\`
+- **Tickets:** \`[Ticket TICKET_CODE](/VERTICAL_ID/tickets/ID)\` (works for all verticals)
+- **HR Clients:** \`[Client Name](/hr/clients/ID)\`
+- **Events bookings:** \`[Booking](/events/bookings/ID)\`
+- **Events packages:** \`[Package Name](/events/packages/ID)\`
+- **Hub events:** \`[Event Name](/hub/events/ID)\`
+- **ETS clients:** \`[Client Name](/ets/clients/ID)\`
+- **HRMS employees:** \`[Employee Name](/hrms/employees/ID)\`
+- **ATS jobs:** \`[Job Title](/ats/jobs/ID)\`
+- **ATS candidates:** \`[Candidate Name](/ats/candidates/ID)\`
+- **Social posts:** \`[Post Title](/social/posts/ID)\`
+- **Social campaigns:** \`[Campaign Name](/social/campaigns/ID)\`
+- **Dev projects:** \`[Project Name](/dev/projects/ID)\`
+
+List pages (no /:id route — link to the list):
+- **Tasks:** \`[Task TASK_CODE](/VERTICAL_ID/tasks)\`
+- **Contacts:** \`[Contact Name](/VERTICAL_ID/contacts)\` or \`[Contact Name](/crm/contacts)\` for CRM
+- **Dashboard pages:** \`[Vertical Dashboard](/VERTICAL_ID)\`
+- **Faire stores:** \`[Stores](/faire/stores)\`
+- **OMS orders:** \`[Orders](/oms/orders)\`
+- **Finance ledger:** \`[Ledger](/finance/ledger)\`
+
+**Examples:**
+- "The largest order is [Order #3ZC8AMJ4P9](/faire/orders/7fc98b40-9887-4c57-889d-b4e74ab73c41) with a payout of $985.80."
+- "Here are the open tickets: [TKT-0042](/hr/tickets/abc-123), [TKT-0043](/hr/tickets/def-456)"
+- "Assigned to [Sneha Patel](/hr/team) in the [HR Dashboard](/hr)"
+
+**Rules:**
+- Always SELECT the id (UUID) column alongside display fields so you can build the link.
+- For list queries, include links for each item when practical (up to ~10 items).
+- Use the display_id, task_code, ticket_code, or name as the link text — never show raw UUIDs as text.
+- Links must start with / (relative paths within the portal).
 ${verticalContext}`;
 }
 

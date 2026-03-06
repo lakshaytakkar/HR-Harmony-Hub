@@ -865,6 +865,7 @@ ai_messages(id uuid PK, conversation_id uuid FK, role text, content text, create
 - `multer` — file upload handling (memory storage, 10MB limit)
 - OpenAI integration configured via Replit AI Integrations (env: `AI_INTEGRATIONS_OPENAI_API_KEY`, `AI_INTEGRATIONS_OPENAI_BASE_URL`)
 - Chat streaming uses `pipeTextStreamToResponse` (AI SDK v6) with `streamProtocol: "text"` in `useChat`
+- **Portal Links**: AI includes clickable markdown links to portal pages when referencing specific records (orders, tasks, tickets, etc.). System prompt section 8 maps entity types to routes (e.g., `[Order #ID](/faire/orders/UUID)`). Links rendered via custom `PortalLink` component in `message.tsx` that uses wouter `navigate()` for client-side routing. Internal links (starting with `/`) navigate within the app; external links open in new tabs.
 
 ### Supabase AI Tables
 ```
