@@ -24,26 +24,7 @@ async function getLiveDatabaseSchema(): Promise<string> {
   }
 
   try {
-    const schemaQuery = `
-      SELECT
-        t.table_schema,
-        t.table_name,
-        json_agg(
-          json_build_object(
-            'column', c.column_name,
-            'type', c.data_type,
-            'nullable', c.is_nullable,
-            'default', c.column_default
-          ) ORDER BY c.ordinal_position
-        ) as columns
-      FROM information_schema.tables t
-      JOIN information_schema.columns c
-        ON t.table_schema = c.table_schema AND t.table_name = c.table_name
-      WHERE t.table_schema IN ('public', 'faire')
-        AND t.table_type = 'BASE TABLE'
-      GROUP BY t.table_schema, t.table_name
-      ORDER BY t.table_schema, t.table_name
-    `;
+    const schemaQuery = `SELECT t.table_schema, t.table_name, json_agg(json_build_object('column', c.column_name, 'type', c.data_type, 'nullable', c.is_nullable, 'default', c.column_default) ORDER BY c.ordinal_position) as columns FROM information_schema.tables t JOIN information_schema.columns c ON t.table_schema = c.table_schema AND t.table_name = c.table_name WHERE t.table_schema IN ('public', 'faire') AND t.table_type = 'BASE TABLE' GROUP BY t.table_schema, t.table_name ORDER BY t.table_schema, t.table_name`;
 
     const { data: schemaData, error: schemaError } = await supabase.rpc("exec_readonly_sql", { query_text: schemaQuery });
 
@@ -403,6 +384,10 @@ const listColumnsTool = tool({
   }),
   execute: async ({ tableName }) => {
     console.log(`[ai-db] Listing columns for: ${tableName}`);
+
+    if (!/^[a-zA-Z0-9_.]+$/.test(tableName)) {
+      return { error: "Invalid table name. Use only letters, numbers, underscores, and dots.", columns: [] };
+    }
 
     let schema = "public";
     let table = tableName;

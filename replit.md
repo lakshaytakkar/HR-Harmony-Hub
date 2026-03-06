@@ -830,7 +830,7 @@ TeamSync includes a floating AI co-pilot powered by **Vercel AI SDK** and **Open
 - **Full-page mode**: Covers entire viewport. Left sidebar (280px) shows conversation history; right side shows the active chat.
 - **Streaming**: `useChat` from `@ai-sdk/react` v3 with `DefaultChatTransport` from `ai` hitting `POST /api/ai/chat`. Uses `streamText` + `pipeUIMessageStreamToResponse` for Express streaming with tool-call support. Input managed via local `useState` + `sendMessage({ text }, { body: { attachmentIds } })`.
 - **Attachment Processing**: Files uploaded via `POST /api/ai/upload` are stored as base64 in `ai_attachments` table. Client tracks `pendingAttachmentIds` and sends them with the next message via `ChatRequestOptions.body`. Server fetches attachment data, converts images to `Buffer` for GPT-4o vision, and embeds text/CSV/JSON content directly in the message content parts. Pending attachment indicator shows above the input.
-- **DB Tool Calling**: AI has read-only access to 27 Supabase tables via `queryDatabase` tool. Uses `tool()` from AI SDK v6 with `jsonSchema` (not Zod — Replit modelfarm proxy requires explicit `type: "object"`). `stopWhen: stepCountIs(5)` allows multi-step queries. Blocked SQL patterns: INSERT/UPDATE/DELETE/DROP/ALTER/CREATE/TRUNCATE/GRANT/REVOKE/EXECUTE/COPY.
+- **DB Tool Calling**: AI has read-only access to all Supabase tables (public + faire schemas) via 3 tools: `queryDatabase` (SQL), `listColumns` (schema introspection), `generateImage` (DALL-E 3). Uses `tool()` from AI SDK v6 with `jsonSchema`. `stopWhen: stepCountIs(10)` allows complex multi-step queries. Live schema discovery at startup via `information_schema` (cached 5min) with row counts and sample data per table. Self-correction: when queries fail, AI gets error suggestions and can use `listColumns` to discover actual column names. Blocked SQL patterns: INSERT/UPDATE/DELETE/DROP/ALTER/CREATE/TRUNCATE/GRANT/REVOKE/EXECUTE/COPY.
 - **Image Generation Tool**: AI can generate images via `generateImage` tool (DALL-E 3). Images stored in `generated_images` table with `source: "chat"`. Inline rendering via `[GENERATED_IMAGE:id]` marker in assistant responses.
 - **Chat Search**: `GET /api/ai/conversations/search?q=...` searches titles and message content with debounced input, highlighted matches, and message snippets.
 - **Media Library**: Sidebar tab in expanded chat view shows all AI-generated images (from both chat and Image Studio) in a gallery grid with download links.
@@ -903,7 +903,7 @@ tickets(id uuid PK, ticket_code text UNIQUE auto-gen TK-0001+, vertical_id text,
 ### AI Chat API Routes
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/ai/chat` | Stream chat response (OpenAI gpt-4o). Tools: queryDatabase, generateImage |
+| POST | `/api/ai/chat` | Stream chat response (OpenAI gpt-4o). Tools: queryDatabase, listColumns, generateImage. Live schema introspection with 5min cache. |
 | GET | `/api/ai/conversations/search?q=` | Search conversations by title and message content |
 | GET | `/api/ai/conversations` | List all conversations (last 50, sorted by updated_at) |
 | POST | `/api/ai/conversations` | Create conversation |
