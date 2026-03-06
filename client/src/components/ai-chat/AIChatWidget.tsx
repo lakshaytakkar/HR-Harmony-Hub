@@ -330,7 +330,7 @@ function ChatWindow({
               <Paperclip className={cn("size-3.5", uploadingFile && "animate-spin")} />
             </Button>
             <Textarea
-              value={input}
+              value={input ?? ""}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Ask TeamSync AI…"
@@ -366,7 +366,7 @@ function ChatWindow({
               <Button
                 type="submit"
                 size="icon"
-                disabled={!input.trim()}
+                disabled={!input?.trim()}
                 className="h-8 w-8 shrink-0 rounded-lg"
                 data-testid="ai-chat-send"
               >
