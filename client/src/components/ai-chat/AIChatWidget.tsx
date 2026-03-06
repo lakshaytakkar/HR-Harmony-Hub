@@ -7,7 +7,7 @@ import {
   X, Maximize2, Minimize2, Plus, Send, Square, Trash2,
   MessageSquare, Sparkles, Clock, ChevronRight, Bot,
   Paperclip, Download, FileText, Menu, Pencil, Check,
-  Database, Plug, Zap
+  Database, Plug, Zap, Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,10 +26,48 @@ import {
 } from "@/components/ai-elements/message";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { VerticalContext } from "@/lib/vertical-store";
+import { Input } from "@/components/ui/input";
 import aiIcon from "@assets/ai-chat-icon.png";
 
 const _preload = new Image();
 _preload.src = aiIcon;
+
+interface SearchResult {
+  id: string;
+  title: string;
+  vertical_id: string | null;
+  created_at: string;
+  updated_at: string;
+  titleMatch: boolean;
+  messageSnippets: { content: string; role: string }[];
+}
+
+function HighlightText({ text, query }: { text: string; query: string }) {
+  if (!query || query.length < 2) return <>{text}</>;
+  const parts: { text: string; match: boolean }[] = [];
+  const lower = text.toLowerCase();
+  const qLower = query.toLowerCase();
+  let lastIdx = 0;
+  let idx = lower.indexOf(qLower);
+  while (idx !== -1) {
+    if (idx > lastIdx) parts.push({ text: text.slice(lastIdx, idx), match: false });
+    parts.push({ text: text.slice(idx, idx + query.length), match: true });
+    lastIdx = idx + query.length;
+    idx = lower.indexOf(qLower, lastIdx);
+  }
+  if (lastIdx < text.length) parts.push({ text: text.slice(lastIdx), match: false });
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.match ? (
+          <mark key={i} className="bg-primary/20 text-primary rounded-sm px-0.5">{p.text}</mark>
+        ) : (
+          <span key={i}>{p.text}</span>
+        )
+      )}
+    </>
+  );
+}
 
 interface AiConversation {
   id: string;
@@ -460,6 +498,11 @@ export function AIChatWidget() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const editInputRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchMode, setSearchMode] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const { currentVertical } = useContext(VerticalContext);
   const queryClient = useQueryClient();
 
@@ -475,6 +518,41 @@ export function AIChatWidget() {
     refetchOnWindowFocus: false,
     staleTime: 30000,
   });
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedQuery(value.trim());
+    }, 300);
+  }, []);
+
+  const { data: searchResults = [], isFetching: isSearching, isError: isSearchError } = useQuery<SearchResult[]>({
+    queryKey: ["/api/ai/conversations/search", debouncedQuery],
+    queryFn: async () => {
+      if (!debouncedQuery || debouncedQuery.length < 2) return [];
+      const res = await fetch(`/api/ai/conversations/search?q=${encodeURIComponent(debouncedQuery)}`);
+      if (!res.ok) throw new Error("Search failed");
+      return res.json();
+    },
+    retry: 1,
+    enabled: searchMode && debouncedQuery.length >= 2,
+    refetchOnWindowFocus: false,
+    staleTime: 10000,
+  });
+
+  const openSearch = useCallback(() => {
+    setSearchMode(true);
+    setSearchQuery("");
+    setDebouncedQuery("");
+    setTimeout(() => searchInputRef.current?.focus(), 100);
+  }, []);
+
+  const closeSearch = useCallback(() => {
+    setSearchMode(false);
+    setSearchQuery("");
+    setDebouncedQuery("");
+  }, []);
 
   const createConversationMutation = useMutation({
     mutationFn: async () => {
@@ -557,6 +635,9 @@ export function AIChatWidget() {
   const handleClose = useCallback(() => {
     setIsOpen(false);
     setIsExpanded(false);
+    setSearchMode(false);
+    setSearchQuery("");
+    setDebouncedQuery("");
   }, []);
 
   const handleNewChat = useCallback(() => {
@@ -571,13 +652,22 @@ export function AIChatWidget() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
+        if (searchMode) {
+          closeSearch();
+          return;
+        }
         if (isExpanded) setIsExpanded(false);
         else handleClose();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "k" && isOpen && isExpanded) {
+        e.preventDefault();
+        if (searchMode) closeSearch();
+        else openSearch();
       }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, isExpanded, handleClose]);
+  }, [isOpen, isExpanded, searchMode, handleClose, closeSearch, openSearch]);
 
   return (
     <>
@@ -664,9 +754,9 @@ export function AIChatWidget() {
                     </div>
                   </div>
 
-                  <div className="p-3 border-b">
+                  <div className="p-3 border-b flex items-center gap-2">
                     <Button
-                      className="w-full h-9 gap-2 justify-start text-sm font-medium"
+                      className="flex-1 h-9 gap-2 justify-start text-sm font-medium"
                       onClick={handleNewChat}
                       disabled={createConversationMutation.isPending}
                       data-testid="ai-chat-new"
@@ -674,106 +764,214 @@ export function AIChatWidget() {
                       <Plus className="size-3.5" />
                       New Chat
                     </Button>
+                    <Button
+                      size="icon"
+                      variant={searchMode ? "secondary" : "ghost"}
+                      className="h-9 w-9 shrink-0"
+                      onClick={searchMode ? closeSearch : openSearch}
+                      data-testid="ai-chat-search-toggle"
+                      title="Search chats"
+                    >
+                      {searchMode ? <X className="size-3.5" /> : <Search className="size-3.5" />}
+                    </Button>
                   </div>
+
+                  <AnimatePresence>
+                    {searchMode && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="overflow-hidden border-b"
+                      >
+                        <div className="p-3">
+                          <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+                            <Input
+                              ref={searchInputRef}
+                              value={searchQuery}
+                              onChange={(e) => handleSearchChange(e.target.value)}
+                              placeholder="Search titles & messages…"
+                              className="h-8 pl-8 pr-3 text-xs"
+                              data-testid="ai-chat-search-input"
+                              onKeyDown={(e) => {
+                                if (e.key === "Escape") closeSearch();
+                              }}
+                            />
+                          </div>
+                          {debouncedQuery.length >= 2 && (
+                            <p className={cn("text-[10px] mt-1.5 px-0.5", isSearchError ? "text-destructive" : "text-muted-foreground")}>
+                              {isSearching
+                                ? "Searching…"
+                                : isSearchError
+                                  ? "Search failed — try again"
+                                  : `${searchResults.length} result${searchResults.length !== 1 ? "s" : ""} found`}
+                            </p>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   <ScrollArea className="flex-1">
-                    <div className="p-2 space-y-0.5">
-                      {conversations.length === 0 && (
-                        <p className="text-xs text-muted-foreground text-center py-6 px-3">
-                          Your conversations will appear here
-                        </p>
-                      )}
-                      {conversations.map((conv) => (
-                        <div
-                          key={conv.id}
-                          className={cn(
-                            "group flex items-start gap-2 rounded-lg px-2.5 py-2 cursor-pointer text-sm transition-colors",
-                            activeConversationId === conv.id
-                              ? "bg-primary/10 text-primary"
-                              : "hover:bg-muted text-foreground"
-                          )}
-                          onClick={() => editingId !== conv.id && handleSelectConversation(conv.id)}
-                          data-testid={`ai-conversation-${conv.id}`}
-                        >
-                          <MessageSquare className="size-3.5 mt-0.5 shrink-0 opacity-60" />
-                          <div className="flex-1 min-w-0">
-                            {editingId === conv.id ? (
-                              <input
-                                ref={editInputRef}
-                                value={editTitle}
-                                onChange={(e) => setEditTitle(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") submitRename();
-                                  if (e.key === "Escape") setEditingId(null);
-                                }}
-                                onBlur={submitRename}
-                                className="w-full text-xs font-medium bg-background border rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-ring"
-                                data-testid={`ai-rename-input-${conv.id}`}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            ) : (
-                              <p className="font-medium truncate leading-tight text-xs">
-                                {conv.title}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-1 mt-0.5">
-                              <Clock className="size-2.5 opacity-50" />
-                              <span className="text-[10px] text-muted-foreground">
-                                {formatRelativeTime(conv.updated_at)}
-                              </span>
-                            </div>
+                    {searchMode && debouncedQuery.length >= 2 ? (
+                      <div className="p-2 space-y-0.5">
+                        {isSearchError && !isSearching && (
+                          <div className="text-center py-8 px-3">
+                            <Search className="size-8 mx-auto text-destructive/30 mb-2" />
+                            <p className="text-xs text-destructive">Search failed</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">Please try again</p>
                           </div>
-                          <div className="flex items-center gap-0.5 shrink-0">
-                            {editingId === conv.id ? (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-5 w-5 text-primary"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  submitRename();
-                                }}
-                                data-testid={`ai-rename-save-${conv.id}`}
-                              >
-                                <Check className="size-3" />
-                              </Button>
-                            ) : (
-                              <>
+                        )}
+                        {searchResults.length === 0 && !isSearching && !isSearchError && (
+                          <div className="text-center py-8 px-3">
+                            <Search className="size-8 mx-auto text-muted-foreground/30 mb-2" />
+                            <p className="text-xs text-muted-foreground">No conversations found</p>
+                            <p className="text-[10px] text-muted-foreground/70 mt-0.5">Try different search terms</p>
+                          </div>
+                        )}
+                        {searchResults.map((result) => (
+                          <div
+                            key={result.id}
+                            className={cn(
+                              "group flex flex-col gap-1 rounded-lg px-2.5 py-2 cursor-pointer text-sm transition-colors",
+                              activeConversationId === result.id
+                                ? "bg-primary/10 text-primary"
+                                : "hover:bg-muted text-foreground"
+                            )}
+                            onClick={() => {
+                              handleSelectConversation(result.id);
+                              closeSearch();
+                            }}
+                            data-testid={`ai-search-result-${result.id}`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <MessageSquare className="size-3.5 mt-0.5 shrink-0 opacity-60" />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate leading-tight text-xs">
+                                  <HighlightText text={result.title} query={debouncedQuery} />
+                                </p>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <Clock className="size-2.5 opacity-50" />
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {formatRelativeTime(result.updated_at)}
+                                  </span>
+                                  {result.titleMatch && result.messageSnippets.length > 0 && (
+                                    <span className="text-[9px] bg-primary/10 text-primary px-1 rounded ml-1">
+                                      title + messages
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            {result.messageSnippets.length > 0 && (
+                              <div className="ml-6 pl-0.5 border-l-2 border-muted space-y-1 mt-0.5">
+                                {result.messageSnippets.map((snippet, i) => (
+                                  <p key={i} className="text-[10px] text-muted-foreground leading-relaxed pl-2 line-clamp-2">
+                                    <span className="text-[9px] font-medium uppercase opacity-60 mr-1">
+                                      {snippet.role === "user" ? "You" : "AI"}:
+                                    </span>
+                                    <HighlightText text={snippet.content} query={debouncedQuery} />
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-2 space-y-0.5">
+                        {conversations.length === 0 && (
+                          <p className="text-xs text-muted-foreground text-center py-6 px-3">
+                            Your conversations will appear here
+                          </p>
+                        )}
+                        {conversations.map((conv) => (
+                          <div
+                            key={conv.id}
+                            className={cn(
+                              "group flex items-start gap-2 rounded-lg px-2.5 py-2 cursor-pointer text-sm transition-colors",
+                              activeConversationId === conv.id
+                                ? "bg-primary/10 text-primary"
+                                : "hover:bg-muted text-foreground"
+                            )}
+                            onClick={() => editingId !== conv.id && handleSelectConversation(conv.id)}
+                            data-testid={`ai-conversation-${conv.id}`}
+                          >
+                            <MessageSquare className="size-3.5 mt-0.5 shrink-0 opacity-60" />
+                            <div className="flex-1 min-w-0">
+                              {editingId === conv.id ? (
+                                <input
+                                  ref={editInputRef}
+                                  value={editTitle}
+                                  onChange={(e) => setEditTitle(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") submitRename();
+                                    if (e.key === "Escape") setEditingId(null);
+                                  }}
+                                  onBlur={submitRename}
+                                  className="w-full text-xs font-medium bg-background border rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-ring"
+                                  data-testid={`ai-rename-input-${conv.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              ) : (
+                                <p className="font-medium truncate leading-tight text-xs">
+                                  {conv.title}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <Clock className="size-2.5 opacity-50" />
+                                <span className="text-[10px] text-muted-foreground">
+                                  {formatRelativeTime(conv.updated_at)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-0.5 shrink-0">
+                              {editingId === conv.id ? (
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
-                                  onClick={(e) => startRenaming(conv, e)}
-                                  data-testid={`ai-rename-conversation-${conv.id}`}
-                                >
-                                  <Pencil className="size-2.5" />
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                                  className="h-5 w-5 text-primary"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    deleteConversationMutation.mutate(conv.id);
+                                    submitRename();
                                   }}
-                                  data-testid={`ai-delete-conversation-${conv.id}`}
+                                  data-testid={`ai-rename-save-${conv.id}`}
                                 >
-                                  <Trash2 className="size-2.5" />
+                                  <Check className="size-3" />
                                 </Button>
-                              </>
-                            )}
+                              ) : (
+                                <>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                                    onClick={(e) => startRenaming(conv, e)}
+                                    data-testid={`ai-rename-conversation-${conv.id}`}
+                                  >
+                                    <Pencil className="size-2.5" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteConversationMutation.mutate(conv.id);
+                                    }}
+                                    data-testid={`ai-delete-conversation-${conv.id}`}
+                                  >
+                                    <Trash2 className="size-2.5" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </ScrollArea>
-
-                  <div className="p-3 border-t">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Sparkles className="size-3" />
-                      <span>Powered by OpenAI</span>
-                    </div>
-                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

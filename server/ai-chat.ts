@@ -262,6 +262,86 @@ router.post("/chat", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/conversations/search", async (req: Request, res: Response) => {
+  try {
+    const q = (req.query.q as string || "").trim();
+    if (!q || q.length < 2) return res.json([]);
+
+    const pattern = `%${q}%`;
+
+    const { data: titleMatches, error: titleErr } = await supabase
+      .from("ai_conversations")
+      .select("id, title, vertical_id, created_at, updated_at")
+      .ilike("title", pattern)
+      .order("updated_at", { ascending: false })
+      .limit(20);
+
+    if (titleErr) return res.status(500).json({ error: "Search failed" });
+
+    const { data: messageMatches, error: msgErr } = await supabase
+      .from("ai_messages")
+      .select("conversation_id, content, role, created_at")
+      .ilike("content", pattern)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (msgErr) return res.status(500).json({ error: "Search failed" });
+
+    const messageConvIds = new Set(
+      (messageMatches ?? []).map((m) => m.conversation_id)
+    );
+    const titleConvIds = new Set((titleMatches ?? []).map((c) => c.id));
+
+    const missingIds = [...messageConvIds].filter((id) => !titleConvIds.has(id));
+    let extraConvs: any[] = [];
+    if (missingIds.length > 0) {
+      const { data, error: extraErr } = await supabase
+        .from("ai_conversations")
+        .select("id, title, vertical_id, created_at, updated_at")
+        .in("id", missingIds);
+      if (extraErr) return res.status(500).json({ error: "Search failed" });
+      extraConvs = data ?? [];
+    }
+
+    const allConvs = [...(titleMatches ?? []), ...extraConvs];
+
+    const snippetsByConv = new Map<string, { content: string; role: string }[]>();
+    for (const m of messageMatches ?? []) {
+      if (!snippetsByConv.has(m.conversation_id)) {
+        snippetsByConv.set(m.conversation_id, []);
+      }
+      const arr = snippetsByConv.get(m.conversation_id)!;
+      if (arr.length < 3) {
+        const idx = m.content.toLowerCase().indexOf(q.toLowerCase());
+        const start = Math.max(0, idx - 40);
+        const end = Math.min(m.content.length, idx + q.length + 40);
+        const snippet =
+          (start > 0 ? "…" : "") +
+          m.content.slice(start, end) +
+          (end < m.content.length ? "…" : "");
+        arr.push({ content: snippet, role: m.role });
+      }
+    }
+
+    const results = allConvs.map((conv) => ({
+      ...conv,
+      titleMatch: conv.title.toLowerCase().includes(q.toLowerCase()),
+      messageSnippets: snippetsByConv.get(conv.id) ?? [],
+    }));
+
+    results.sort((a, b) => {
+      if (a.titleMatch && !b.titleMatch) return -1;
+      if (!a.titleMatch && b.titleMatch) return 1;
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+    });
+
+    return res.json(results);
+  } catch (err) {
+    console.error("[ai-chat] search error:", err);
+    return res.status(500).json({ error: "Search failed" });
+  }
+});
+
 router.get("/conversations", async (_req: Request, res: Response) => {
   try {
     const { data, error } = await supabase
