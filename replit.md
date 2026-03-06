@@ -828,7 +828,9 @@ TeamSync includes a floating AI co-pilot powered by **Vercel AI SDK** and **Open
 - **Trigger**: Flower icon button (`@assets/image_1772789030064.png`), fixed bottom-right, Framer Motion spring animations
 - **Drawer mode**: Right-side panel, 420px, slides in with Framer Motion. Default view.
 - **Full-page mode**: Covers entire viewport. Left sidebar (280px) shows conversation history; right side shows the active chat.
-- **Streaming**: `useChat` from `@ai-sdk/react` v3 with `TextStreamChatTransport` from `ai` hitting `POST /api/ai/chat`. Uses `streamText` + `pipeTextStreamToResponse` for Express streaming. Input managed via local `useState` + `sendMessage({ text })`.
+- **Streaming**: `useChat` from `@ai-sdk/react` v3 with `DefaultChatTransport` from `ai` hitting `POST /api/ai/chat`. Uses `streamText` + `pipeUIMessageStreamToResponse` for Express streaming with tool-call support. Input managed via local `useState` + `sendMessage({ text })`.
+- **DB Tool Calling**: AI has read-only access to 27 Supabase tables via `queryDatabase` tool. Uses `tool()` from AI SDK v6 with `jsonSchema` (not Zod — Replit modelfarm proxy requires explicit `type: "object"`). `maxSteps: 5` allows multi-step queries. Blocked SQL patterns: INSERT/UPDATE/DELETE/DROP/ALTER/CREATE/TRUNCATE/GRANT/REVOKE/EXECUTE/COPY.
+- **Supabase RPC**: `exec_readonly_sql(query_text)` — SECURITY DEFINER function that validates SELECT-only, executes via `jsonb_agg(row_to_json(t))`, returns JSONB array.
 - **Persistence**: All conversations and messages saved to Supabase (`ai_conversations`, `ai_messages` tables).
 - **Chat History**: Sidebar in expanded view shows all conversations with inline rename (pencil icon → edit input) and delete. Drawer view shows recent 8 chats at bottom.
 - **Rename**: `PATCH /api/ai/conversations/:id` with `{ title }`. Inline edit in sidebar with Enter to save, Escape to cancel.

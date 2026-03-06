@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useContext, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useChat } from "@ai-sdk/react";
-import { TextStreamChatTransport } from "ai";
+import { DefaultChatTransport } from "ai";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   X, Maximize2, Minimize2, Plus, Send, Square, Trash2,
@@ -69,8 +69,8 @@ interface ActiveIntegration {
 }
 
 const ACTIVE_INTEGRATIONS: ActiveIntegration[] = [
-  { name: "Supabase DB", icon: Database, status: "connected", description: "PostgreSQL database" },
-  { name: "OpenAI", icon: Zap, status: "connected", description: "GPT-4o model" },
+  { name: "Supabase DB", icon: Database, status: "connected", description: "PostgreSQL — live query access" },
+  { name: "OpenAI", icon: Zap, status: "connected", description: "GPT-4o with tool calling" },
 ];
 
 function formatRelativeTime(dateStr: string): string {
@@ -161,7 +161,7 @@ function ChatWindow({
 
   const transport = useMemo(
     () =>
-      new TextStreamChatTransport({
+      new DefaultChatTransport({
         api: "/api/ai/chat",
         body: { conversationId, verticalId },
       }),
