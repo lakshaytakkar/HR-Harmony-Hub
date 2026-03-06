@@ -625,6 +625,22 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
     if (!file) return res.status(400).json({ error: "No file provided" });
     if (!conversationId) return res.status(400).json({ error: "conversationId required" });
 
+    const { data: convCheck } = await supabase
+      .from("ai_conversations")
+      .select("id")
+      .eq("id", conversationId)
+      .single();
+
+    if (!convCheck) {
+      const { error: createErr } = await supabase
+        .from("ai_conversations")
+        .insert({ id: conversationId, title: "New Chat" });
+      if (createErr) {
+        console.error("[ai-chat] Failed to create conversation for upload:", createErr.message);
+        return res.status(500).json({ error: "Failed to create conversation for upload" });
+      }
+    }
+
     const base64Data = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
 
     const { data, error } = await supabase
@@ -639,9 +655,16 @@ router.post("/upload", upload.single("file"), async (req: Request, res: Response
       .select("id, filename, file_size, mime_type, created_at")
       .single();
 
-    if (error || !data) return res.status(500).json({ error: "Failed to upload file" });
+    if (error) {
+      console.error("[ai-chat] Upload insert error:", error.message, error.details);
+      return res.status(500).json({ error: `Failed to upload file: ${error.message}` });
+    }
+    if (!data) return res.status(500).json({ error: "Failed to upload file: no data returned" });
+
+    console.log(`[ai-chat] File uploaded: ${file.originalname} (${file.size} bytes) -> ${data.id}`);
     return res.json(data);
-  } catch {
+  } catch (err) {
+    console.error("[ai-chat] Upload exception:", err);
     return res.status(500).json({ error: "Failed to upload file" });
   }
 });
@@ -669,17 +692,28 @@ router.get("/attachments/:id/download", async (req: Request, res: Response) => {
       .eq("id", req.params.id)
       .single();
 
-    if (error || !data) return res.status(404).json({ error: "Attachment not found" });
+    if (error) {
+      console.error("[ai-chat] Attachment download error:", error.message);
+      return res.status(404).json({ error: "Attachment not found" });
+    }
+    if (!data) return res.status(404).json({ error: "Attachment not found" });
 
-    const base64Match = (data.file_data as string).match(/^data:[^;]+;base64,(.+)$/);
-    if (!base64Match) return res.status(500).json({ error: "Invalid file data" });
+    const fileData = data.file_data as string;
+    if (!fileData) {
+      return res.status(500).json({ error: "Attachment has no file data" });
+    }
+
+    const base64Match = fileData.match(/^data:[^;]+;base64,(.+)$/);
+    if (!base64Match) return res.status(500).json({ error: "Invalid file data format" });
 
     const buffer = Buffer.from(base64Match[1], "base64");
+    const filename = (data.filename as string).replace(/[^\w.\-]/g, "_");
     res.setHeader("Content-Type", data.mime_type as string);
-    res.setHeader("Content-Disposition", `attachment; filename="${data.filename}"`);
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.setHeader("Content-Length", buffer.length.toString());
     return res.send(buffer);
-  } catch {
+  } catch (err) {
+    console.error("[ai-chat] Download exception:", err);
     return res.status(500).json({ error: "Failed to download attachment" });
   }
 });

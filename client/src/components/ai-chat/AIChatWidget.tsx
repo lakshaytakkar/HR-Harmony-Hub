@@ -808,6 +808,7 @@ function ChatWindow({
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [uploadingFile, setUploadingFile] = useState(false);
   const [input, setInput] = useState("");
   const [pendingAttachmentIds, setPendingAttachmentIds] = useState<string[]>([]);
@@ -886,6 +887,13 @@ function ChatWindow({
     const file = e.target.files?.[0];
     if (!file || !conversationId) return;
 
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ title: "File too large", description: "Maximum file size is 10 MB.", variant: "destructive" });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     setUploadingFile(true);
     try {
       const formData = new FormData();
@@ -905,14 +913,19 @@ function ChatWindow({
         queryClient.invalidateQueries({
           queryKey: ["/api/ai/conversations", conversationId, "attachments"],
         });
+      } else {
+        const errData = await res.json().catch(() => ({ error: "Upload failed" }));
+        console.error("[ai-chat] Upload failed:", res.status, errData);
+        toast({ title: "Upload failed", description: errData.error || "Could not upload file.", variant: "destructive" });
       }
     } catch (err) {
       console.error("File upload failed:", err);
+      toast({ title: "Upload failed", description: "Network error — could not upload file.", variant: "destructive" });
     } finally {
       setUploadingFile(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  }, [conversationId, queryClient]);
+  }, [conversationId, queryClient, toast]);
 
   const getMessageText = useCallback((msg: typeof messages[0]) => {
     if (!msg.parts) return "";
