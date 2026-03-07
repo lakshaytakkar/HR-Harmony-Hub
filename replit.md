@@ -651,13 +651,17 @@ Universal pages exist under `client/src/pages/universal/` and are shared by all 
    - Compliance (Compliance Tracker, Annual Reports)
    - Analytics (Formation Analytics, Team Performance)
    - 7-stage workflow: Lead Converted → Intake → Formation Filed → EIN → BOI Filing → Bank/Stripe → Completion
-2. **USDrop AI** (id: `sales`, color: #F34147) — D2C Dropshipping SaaS Backoffice — Routes: `/sales/*`
-   - Dashboard, **Universal**: Chat, Team, Resources, Tasks
-   - Products & Catalog (Products, Categories, Suppliers, Winning Products)
-   - Users & Subscriptions (Users, Leads, Plans, Subscriptions)
-   - Operations (Shopify Stores, Fulfillment, Competitor Stores)
-   - Support & Learning (Support Tickets, Courses, Help Center)
-   - Analytics (Revenue Analytics, User Analytics, Product Performance)
+2. **USDrop AI** (id: `sales`, color: #F34147) — D2C Dropshipping SaaS Admin Command Center — Routes: `/usdrop/*`
+   - **Dashboard** `/usdrop` — Command Center with Pipeline Funnel, LLC Status Breakdown, Stalled Clients, Activity Feed, 4 stat cards
+   - **Pipeline** `/usdrop/leads` — Pre-sales pipeline: Kanban board (7 stages: new→contacted→engaged→qualified→demo_done→negotiation→converted), Hot Leads tab, slide-over drawer with activity/notes/call log/WhatsApp
+   - **Clients** — All Clients table (`/usdrop/clients`) with batch/status/LLC tracking + stalled highlighting + Batch Manager tab; LLC Tracker (`/usdrop/llc`) 7-column kanban with days-stuck color coding
+   - **Users & Subscriptions** (All Users `/usdrop/users`, User Detail `/usdrop/users/:id` with 7 tabs: Overview/LLC/Learning/Access/Business/Activity/Notes, Leads, Plans, Subscriptions)
+   - **Products & Catalog** (Products with trending/winning/locked toggles + bulk actions + detail edit panel, Categories with 2-panel layout + subcategories, Suppliers, Winning Products)
+   - **Content Management** (Courses with module/chapter drill-down + published toggles, Free Learning `/usdrop/content/free-learning` accordion CMS, Mentorship Sessions `/usdrop/content/sessions`)
+   - **Operations** (Shopify Stores, Fulfillment, Competitor Stores)
+   - **Support** (Tickets, Help Center)
+   - **Analytics** (Revenue Analytics, User Analytics, Product Performance)
+   - **Universal**: Chat, Team, Resources, Tasks, Reports, Contacts, Users & Access, Apps
 3. **GoyoTours** (id: `events`, color: #E91E63) — China B2B Travel CRM for Mr. Suprans' delegation business — Routes: `/goyotours/*`
    - **Universal**: Chat, Team, Resources, Tasks, Important Contacts (`/goyotours/contacts`)
    - **Dashboard** — pink gradient welcome banner, 4 KPI cards (Revenue Collected, Bookings, Active Leads, Seats Available), horizontal package strip with progress bars, lead pipeline chips, payment summary, recent bookings table, urgent actions (overdue follow-ups + pending visas)

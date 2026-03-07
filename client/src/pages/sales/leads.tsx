@@ -1,70 +1,243 @@
-import { useState } from "react";
-import { Mail, Plus } from "lucide-react";
+import { useState, useMemo } from "react";
+import {
+  Plus,
+  Search,
+  Phone,
+  Mail,
+  Copy,
+  BookOpen,
+  Clock,
+  Flame,
+  MessageCircle,
+  ExternalLink,
+  Calendar,
+  User,
+  MapPin,
+  FileText,
+  Link2,
+} from "lucide-react";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { StatusBadge } from "@/components/hr/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { leads, type Lead } from "@/lib/mock-data-sales";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import {
+  pipelineLeads,
+  pipelineStageConfig,
+  type PipelineLead,
+  type PipelineStage,
+} from "@/lib/mock-data-sales";
 import { PersonCell } from "@/components/ui/avatar-cells";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import {
   PageShell,
   PageHeader,
-  IndexToolbar,
-  DataTableContainer,
-  DataTH,
-  DataTD,
-  DataTR,
+  FilterPill,
+  StatCard,
+  StatGrid,
 } from "@/components/layout";
+import { KanbanBoard, type KanbanColumnData, type KanbanCardItem } from "@/components/blocks";
 import { verticals } from "@/lib/verticals-config";
+import { cn } from "@/lib/utils";
 
-const statusVariantMap: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
-  new: "neutral",
-  contacted: "info",
-  qualified: "warning",
-  converted: "success",
-  lost: "error",
+const STAGES: PipelineStage[] = ["new", "contacted", "engaged", "qualified", "demo_done", "negotiation", "converted"];
+
+const engagementColors: Record<string, { bg: string; text: string; label: string }> = {
+  cold: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-300", label: "Cold" },
+  warm: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300", label: "Warm" },
+  hot: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-300", label: "Hot" },
 };
 
-const sourceVariantMap: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
-  website: "info",
-  referral: "success",
-  ad: "warning",
-  organic: "neutral",
-};
+function daysColor(days: number) {
+  if (days <= 2) return "text-emerald-600 dark:text-emerald-400";
+  if (days <= 5) return "text-amber-600 dark:text-amber-400";
+  return "text-red-600 dark:text-red-400";
+}
+
+function generateWhatsAppMessage(lead: PipelineLead): string {
+  const stage = pipelineStageConfig[lead.pipelineStage].label;
+  if (lead.pipelineStage === "new") {
+    return `Hi ${lead.name}! Welcome to USDrop AI. I see you've started your dropshipping journey and completed ${lead.chaptersCompleted} chapters already. I'm ${lead.assignedTo}, your dedicated success manager. How can I help you get started?`;
+  }
+  if (lead.pipelineStage === "contacted" || lead.pipelineStage === "engaged") {
+    return `Hi ${lead.name}! Great progress on your learning - ${lead.chaptersCompleted}/${lead.totalChapters} chapters done! Ready to take the next step? I'd love to show you how our paid tools can accelerate your dropshipping business. When's a good time for a quick call?`;
+  }
+  if (lead.pipelineStage === "qualified" || lead.pipelineStage === "demo_done") {
+    return `Hi ${lead.name}! Following up on our conversation about USDrop AI Pro. You've already mastered the fundamentals (${lead.chaptersCompleted} chapters complete). Let me know if you have any questions about the plan - I can also share some success stories from similar users.`;
+  }
+  return `Hi ${lead.name}! Just checking in on your decision. Our special offer is still available. Let me know if you'd like to discuss anything - happy to help!`;
+}
 
 export default function LeadsPage() {
   const loading = useSimulatedLoading();
-  const [data] = useState<Lead[]>(leads);
+  const [data, setData] = useState<PipelineLead[]>(pipelineLeads);
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("kanban");
+  const [selectedLead, setSelectedLead] = useState<PipelineLead | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [dateFilter, setDateFilter] = useState("all");
+  const { toast } = useToast();
 
   const vertical = verticals.find((v) => v.id === "sales")!;
 
-  const filtered = data.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.email.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = activeFilter === "all" || item.status === activeFilter;
-    return matchesSearch && matchesFilter;
-  });
+  const filtered = useMemo(() => {
+    return data.filter((item) => {
+      const matchesSearch =
+        item.name.toLowerCase().includes(search.toLowerCase()) ||
+        item.email.toLowerCase().includes(search.toLowerCase()) ||
+        item.phone.includes(search);
+      return matchesSearch;
+    });
+  }, [data, search]);
 
-  const filterOptions = [
-    { value: "all", label: "All Leads" },
-    { value: "new", label: "New" },
-    { value: "contacted", label: "Contacted" },
-    { value: "qualified", label: "Qualified" },
-    { value: "converted", label: "Converted" },
-  ];
+  const kanbanColumns: KanbanColumnData[] = useMemo(() => {
+    return STAGES.map((stage) => {
+      const stageLeads = filtered.filter((l) => l.pipelineStage === stage);
+      const config = pipelineStageConfig[stage];
+      return {
+        id: stage,
+        title: config.label,
+        color: config.color,
+        cards: stageLeads.map((l) => ({
+          id: l.id,
+          title: l.name,
+          subtitle: `${l.chaptersCompleted}/${l.totalChapters} chapters`,
+          badges: [
+            { label: engagementColors[l.engagementLevel].label, variant: "secondary" },
+          ],
+          dueDate: `${l.daysInStage}d in stage`,
+          assignee: l.assignedTo,
+        })),
+      };
+    });
+  }, [filtered]);
+
+  const hotLeads = useMemo(() => {
+    return [...filtered]
+      .filter((l) => l.pipelineStage !== "converted")
+      .sort((a, b) => b.engagementScore - a.engagementScore);
+  }, [filtered]);
+
+  const stats = useMemo(() => {
+    const total = data.length;
+    const hot = data.filter((l) => l.engagementLevel === "hot").length;
+    const converted = data.filter((l) => l.pipelineStage === "converted").length;
+    const avgScore = Math.round(data.reduce((s, l) => s + l.engagementScore, 0) / total);
+    return { total, hot, converted, avgScore };
+  }, [data]);
+
+  function handleCardClick(card: KanbanCardItem) {
+    const lead = data.find((l) => l.id === card.id);
+    if (lead) {
+      setSelectedLead(lead);
+      setDrawerOpen(true);
+    }
+  }
+
+  function handleCardMove(cardId: string, _sourceCol: string, targetCol: string) {
+    setData((prev) =>
+      prev.map((l) =>
+        l.id === cardId ? { ...l, pipelineStage: targetCol as PipelineStage, daysInStage: 0 } : l
+      )
+    );
+  }
+
+  function handleCopyWhatsApp(lead: PipelineLead) {
+    const msg = generateWhatsAppMessage(lead);
+    navigator.clipboard.writeText(msg).then(() => {
+      toast({ title: "Copied to clipboard", description: "WhatsApp message ready to paste" });
+    });
+  }
+
+  function renderKanbanCard(card: KanbanCardItem, _columnId: string) {
+    const lead = data.find((l) => l.id === card.id);
+    if (!lead) return null;
+    const eng = engagementColors[lead.engagementLevel];
+
+    return (
+      <Card
+        className="p-3 cursor-pointer hover-elevate"
+        onClick={() => {
+          setSelectedLead(lead);
+          setDrawerOpen(true);
+        }}
+        data-testid={`kanban-card-${lead.id}`}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate" data-testid={`card-name-${lead.id}`}>{lead.name}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{lead.phone}</p>
+          </div>
+          <Badge variant="secondary" className={cn("text-[10px] px-1.5 py-0 shrink-0", eng.bg, eng.text)}>
+            {eng.label}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <BookOpen className="h-3 w-3" />
+            {lead.chaptersCompleted}/{lead.totalChapters}
+          </span>
+          <span className={cn("flex items-center gap-1", daysColor(lead.daysInStage))}>
+            <Clock className="h-3 w-3" />
+            {lead.daysInStage}d
+          </span>
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-[11px] text-muted-foreground">{lead.assignedTo.split(" ")[0]}</span>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCopyWhatsApp(lead);
+            }}
+            data-testid={`btn-whatsapp-${lead.id}`}
+          >
+            <MessageCircle className="h-3 w-3" />
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <PageShell>
       <PageHeader
-        title="Leads"
-        subtitle="Manage and track your sales pipeline"
+        title="Pipeline"
+        subtitle="Pre-sales pipeline management with kanban and hot leads tracking"
         actions={
           <Button
             className="gap-2"
             style={{ backgroundColor: vertical.color }}
+            onClick={() => setAddDialogOpen(true)}
             data-testid="button-add-lead"
           >
             <Plus className="h-4 w-4" />
@@ -73,68 +246,415 @@ export default function LeadsPage() {
         }
       />
 
-      <IndexToolbar
-        search={search}
-        onSearch={setSearch}
-        filters={filterOptions}
-        activeFilter={activeFilter}
-        onFilter={setActiveFilter}
-        color={vertical.color}
-        placeholder="Search leads..."
-      />
+      <StatGrid>
+        <StatCard
+          label="Total Leads"
+          value={stats.total}
+          icon={User}
+          iconBg="#6366f120"
+          iconColor="#6366f1"
+        />
+        <StatCard
+          label="Hot Leads"
+          value={stats.hot}
+          icon={Flame}
+          iconBg="#ef444420"
+          iconColor="#ef4444"
+        />
+        <StatCard
+          label="Converted"
+          value={stats.converted}
+          icon={ExternalLink}
+          iconBg="#22c55e20"
+          iconColor="#22c55e"
+        />
+        <StatCard
+          label="Avg Score"
+          value={`${stats.avgScore}%`}
+          icon={BookOpen}
+          iconBg="#f59e0b20"
+          iconColor="#f59e0b"
+        />
+      </StatGrid>
 
-      {loading ? (
-        <TableSkeleton rows={8} columns={6} />
-      ) : (
-        <DataTableContainer>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/30">
-                <DataTH>Contact</DataTH>
-                <DataTH>Source</DataTH>
-                <DataTH>Status</DataTH>
-                <DataTH>Assigned To</DataTH>
-                <DataTH>Created</DataTH>
-                <DataTH align="right">Actions</DataTH>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {filtered.map((item) => (
-                <DataTR key={item.id}>
-                  <DataTD>
-                    <PersonCell name={item.name} subtitle={item.email} size="sm" />
-                  </DataTD>
-                  <DataTD>
-                    <StatusBadge
-                      status={item.source.charAt(0).toUpperCase() + item.source.slice(1)}
-                      variant={sourceVariantMap[item.source]}
-                    />
-                  </DataTD>
-                  <DataTD>
-                    <StatusBadge
-                      status={item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                      variant={statusVariantMap[item.status]}
-                    />
-                  </DataTD>
-                  <DataTD>
-                    <PersonCell name={item.assignedTo} size="sm" />
-                  </DataTD>
-                  <DataTD>
-                    <span className="text-sm text-muted-foreground">{item.createdDate}</span>
-                  </DataTD>
-                  <DataTD align="right">
-                    <a href={`mailto:${item.email}`} data-testid={`btn-email-${item.id}`}>
-                      <Button variant="ghost" size="icon" className="size-8">
-                        <Mail className="size-4" />
-                      </Button>
-                    </a>
-                  </DataTD>
-                </DataTR>
-              ))}
-            </tbody>
-          </table>
-        </DataTableContainer>
-      )}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="relative w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            className="pl-10 h-9 bg-muted/30"
+            placeholder="Search leads by name, email, phone..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            data-testid="input-search-leads"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <FilterPill active={dateFilter === "all"} color={vertical.color} onClick={() => setDateFilter("all")} testId="pill-date-all">All Time</FilterPill>
+          <FilterPill active={dateFilter === "7d"} color={vertical.color} onClick={() => setDateFilter("7d")} testId="pill-date-7d">Last 7 Days</FilterPill>
+          <FilterPill active={dateFilter === "30d"} color={vertical.color} onClick={() => setDateFilter("30d")} testId="pill-date-30d">Last 30 Days</FilterPill>
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList data-testid="tabs-pipeline">
+          <TabsTrigger value="kanban" data-testid="tab-kanban">Kanban Board</TabsTrigger>
+          <TabsTrigger value="hot-leads" data-testid="tab-hot-leads">Hot Leads</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="kanban" className="mt-4">
+          {loading ? (
+            <TableSkeleton rows={6} columns={7} />
+          ) : (
+            <KanbanBoard
+              columns={kanbanColumns}
+              onCardClick={handleCardClick}
+              onCardMove={handleCardMove}
+              renderCard={renderKanbanCard}
+              columnClassName="w-52 min-w-[13rem]"
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="hot-leads" className="mt-4">
+          {loading ? (
+            <TableSkeleton rows={10} columns={6} />
+          ) : (
+            <div className="rounded-xl border bg-card overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Contact</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Engagement</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Score</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Chapters</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Stage</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Days in Stage</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground tracking-wide">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {hotLeads.map((lead) => {
+                    const eng = engagementColors[lead.engagementLevel];
+                    const stageConf = pipelineStageConfig[lead.pipelineStage];
+                    return (
+                      <tr
+                        key={lead.id}
+                        className="hover:bg-muted/20 transition-colors cursor-pointer"
+                        onClick={() => {
+                          setSelectedLead(lead);
+                          setDrawerOpen(true);
+                        }}
+                        data-testid={`hot-lead-row-${lead.id}`}
+                      >
+                        <td className="px-4 py-3.5">
+                          <PersonCell name={lead.name} subtitle={lead.phone} size="sm" />
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <Badge variant="secondary" className={cn("text-[10px]", eng.bg, eng.text)}>
+                            {eng.label}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 w-16 rounded-full bg-muted overflow-visible">
+                              <div
+                                className="h-full rounded-full"
+                                style={{
+                                  width: `${lead.engagementScore}%`,
+                                  backgroundColor: lead.engagementScore >= 70 ? "#22c55e" : lead.engagementScore >= 40 ? "#f59e0b" : "#6b7280",
+                                }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium">{lead.engagementScore}%</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 text-sm">
+                          {lead.chaptersCompleted}/{lead.totalChapters}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <Badge variant="outline" className="text-[10px]" style={{ borderColor: stageConf.color, color: stageConf.color }}>
+                            {stageConf.label}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className={cn("text-sm font-medium", daysColor(lead.daysInStage))}>
+                            {lead.daysInStage} days
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyWhatsApp(lead);
+                              }}
+                              data-testid={`btn-wa-${lead.id}`}
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.location.href = `tel:${lead.phone}`;
+                              }}
+                              data-testid={`btn-call-${lead.id}`}
+                            >
+                              <Phone className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          {selectedLead && (
+            <>
+              <SheetHeader>
+                <SheetTitle data-testid="drawer-lead-name">{selectedLead.name}</SheetTitle>
+                <SheetDescription>{selectedLead.email}</SheetDescription>
+              </SheetHeader>
+
+              <div className="mt-6 space-y-6">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge
+                    variant="outline"
+                    style={{
+                      borderColor: pipelineStageConfig[selectedLead.pipelineStage].color,
+                      color: pipelineStageConfig[selectedLead.pipelineStage].color,
+                    }}
+                    data-testid="badge-lead-stage"
+                  >
+                    {pipelineStageConfig[selectedLead.pipelineStage].label}
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      engagementColors[selectedLead.engagementLevel].bg,
+                      engagementColors[selectedLead.engagementLevel].text
+                    )}
+                    data-testid="badge-lead-engagement"
+                  >
+                    {engagementColors[selectedLead.engagementLevel].label}
+                  </Badge>
+                  {selectedLead.plan !== "none" && (
+                    <Badge variant="secondary" data-testid="badge-lead-plan">
+                      {selectedLead.plan.charAt(0).toUpperCase() + selectedLead.plan.slice(1)}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span data-testid="text-lead-phone">{selectedLead.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate" data-testid="text-lead-email">{selectedLead.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span data-testid="text-lead-location">{selectedLead.city}, {selectedLead.country}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span data-testid="text-lead-created">{selectedLead.createdDate}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => handleCopyWhatsApp(selectedLead)}
+                    data-testid="btn-drawer-whatsapp"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Copy WhatsApp
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => {
+                      toast({ title: "Payment link sent", description: `Sent to ${selectedLead.email}` });
+                    }}
+                    data-testid="btn-drawer-payment"
+                  >
+                    <Link2 className="h-4 w-4" />
+                    Send Payment Link
+                  </Button>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h4 className="text-sm font-semibold mb-2" data-testid="section-activity-summary">Activity Summary</h4>
+                  <p className="text-sm text-muted-foreground" data-testid="text-activity-summary">
+                    {selectedLead.activitySummary}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <Card className="p-3">
+                      <p className="text-xs text-muted-foreground">Engagement Score</p>
+                      <p className="text-lg font-bold mt-1" data-testid="text-engagement-score">{selectedLead.engagementScore}%</p>
+                    </Card>
+                    <Card className="p-3">
+                      <p className="text-xs text-muted-foreground">Chapters Progress</p>
+                      <p className="text-lg font-bold mt-1" data-testid="text-chapters-progress">{selectedLead.chaptersCompleted}/{selectedLead.totalChapters}</p>
+                    </Card>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h4 className="text-sm font-semibold mb-2" data-testid="section-notes">Notes</h4>
+                  <p className="text-sm text-muted-foreground" data-testid="text-lead-notes">{selectedLead.notes}</p>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h4 className="text-sm font-semibold mb-2" data-testid="section-call-log">Call Log</h4>
+                  {selectedLead.callLog.length === 0 ? (
+                    <p className="text-sm text-muted-foreground" data-testid="text-no-calls">No calls recorded yet</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {selectedLead.callLog.map((call, i) => (
+                        <div key={i} className="flex items-start gap-3" data-testid={`call-log-${i}`}>
+                          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                            <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-medium">{call.date}</p>
+                              <span className="text-xs text-muted-foreground shrink-0">{call.duration}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">{call.summary}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h4 className="text-sm font-semibold mb-2" data-testid="section-whatsapp-preview">WhatsApp Message Preview</h4>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-sm whitespace-pre-wrap" data-testid="text-whatsapp-preview">
+                      {generateWhatsAppMessage(selectedLead)}
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="mt-2 gap-2"
+                      onClick={() => handleCopyWhatsApp(selectedLead)}
+                      data-testid="btn-copy-wa-preview"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      Copy Message
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="max-w-md" data-testid="dialog-add-lead">
+          <DialogHeader>
+            <DialogTitle>Add New Lead</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              const newLead: PipelineLead = {
+                id: `PL-${String(data.length + 1).padStart(3, "0")}`,
+                name: fd.get("name") as string,
+                email: fd.get("email") as string,
+                phone: fd.get("phone") as string,
+                source: (fd.get("source") as PipelineLead["source"]) || "website",
+                pipelineStage: "new",
+                engagementLevel: "cold",
+                engagementScore: 0,
+                chaptersCompleted: 0,
+                totalChapters: 12,
+                daysInStage: 0,
+                assignedTo: "Karan Gupta",
+                createdDate: new Date().toISOString().split("T")[0],
+                lastActivity: new Date().toISOString().split("T")[0],
+                notes: fd.get("notes") as string || "",
+                callLog: [],
+                activitySummary: "Newly added lead",
+                plan: "none",
+                city: fd.get("city") as string || "Unknown",
+                country: "India",
+              };
+              setData((prev) => [newLead, ...prev]);
+              setAddDialogOpen(false);
+              toast({ title: "Lead added", description: `${newLead.name} added to pipeline` });
+            }}
+          >
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="lead-name">Name</Label>
+                <Input id="lead-name" name="name" required data-testid="input-lead-name" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lead-email">Email</Label>
+                <Input id="lead-email" name="email" type="email" required data-testid="input-lead-email" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lead-phone">Phone</Label>
+                <Input id="lead-phone" name="phone" placeholder="+91 XXXXX XXXXX" required data-testid="input-lead-phone" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lead-city">City</Label>
+                <Input id="lead-city" name="city" data-testid="input-lead-city" />
+              </div>
+              <div className="space-y-2">
+                <Label>Source</Label>
+                <Select name="source" defaultValue="website">
+                  <SelectTrigger data-testid="select-lead-source">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="website">Website</SelectItem>
+                    <SelectItem value="youtube">YouTube</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                    <SelectItem value="ad">Ad</SelectItem>
+                    <SelectItem value="referral">Referral</SelectItem>
+                    <SelectItem value="organic">Organic</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lead-notes">Notes</Label>
+                <Textarea id="lead-notes" name="notes" className="resize-none" data-testid="input-lead-notes" />
+              </div>
+            </div>
+            <DialogFooter className="mt-6">
+              <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)} data-testid="btn-cancel-add">Cancel</Button>
+              <Button type="submit" style={{ backgroundColor: vertical.color }} data-testid="btn-submit-add">Add Lead</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }

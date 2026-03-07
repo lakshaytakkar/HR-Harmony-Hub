@@ -45,6 +45,11 @@ import SalesHelpCenter from "@/pages/sales/help-center";
 import SalesRevenue from "@/pages/sales/revenue";
 import SalesUserAnalytics from "@/pages/sales/user-analytics";
 import SalesProductPerformance from "@/pages/sales/product-performance";
+import SalesClients from "@/pages/sales/clients";
+import SalesLLCTracker from "@/pages/sales/llc-tracker";
+import SalesUserDetail from "@/pages/sales/user-detail";
+import SalesFreeLearning from "@/pages/sales/content-free-learning";
+import SalesMentorshipSessions from "@/pages/sales/content-sessions";
 import EventsDashboard from "@/pages/events/dashboard";
 import EventsPackages from "@/pages/events/packages";
 import EventsPackageDetail from "@/pages/events/package-detail";
@@ -262,7 +267,10 @@ function Router() {
       <Route path="/usdrop/categories" component={SalesCategories} />
       <Route path="/usdrop/suppliers" component={SalesSuppliers} />
       <Route path="/usdrop/winning-products" component={SalesWinningProducts} />
+      <Route path="/usdrop/users/:id" component={SalesUserDetail} />
       <Route path="/usdrop/users" component={SalesUsers} />
+      <Route path="/usdrop/clients" component={SalesClients} />
+      <Route path="/usdrop/llc" component={SalesLLCTracker} />
       <Route path="/usdrop/leads" component={SalesLeads} />
       <Route path="/usdrop/plans" component={SalesPlans} />
       <Route path="/usdrop/subscriptions" component={SalesSubscriptions} />
@@ -272,6 +280,8 @@ function Router() {
       <Route path="/usdrop/tickets" component={UniversalTickets} />
       <Route path="/usdrop/courses/:id" component={SalesCourseDetail} />
       <Route path="/usdrop/courses" component={SalesCourses} />
+      <Route path="/usdrop/content/free-learning" component={SalesFreeLearning} />
+      <Route path="/usdrop/content/sessions" component={SalesMentorshipSessions} />
       <Route path="/usdrop/help-center" component={SalesHelpCenter} />
       <Route path="/usdrop/revenue" component={SalesRevenue} />
       <Route path="/usdrop/user-analytics" component={SalesUserAnalytics} />

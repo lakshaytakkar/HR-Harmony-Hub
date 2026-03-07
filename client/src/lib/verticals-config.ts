@@ -51,6 +51,8 @@ import {
   Tag,
   RotateCcw,
   Blocks,
+  Kanban,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -322,6 +324,82 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Pipeline",
+        defaultUrl: "/usdrop/leads",
+        icon: Kanban,
+        items: [],
+      },
+      {
+        title: "Clients",
+        defaultUrl: "/usdrop/clients",
+        icon: Users,
+        items: [
+          { title: "All Clients", url: "/usdrop/clients" },
+          { title: "LLC Tracker", url: "/usdrop/llc" },
+        ],
+      },
+      {
+        title: "Users & Subscriptions",
+        defaultUrl: "/usdrop/users",
+        icon: UserCheck,
+        items: [
+          { title: "All Users", url: "/usdrop/users" },
+          { title: "Leads", url: "/usdrop/leads" },
+          { title: "Plans", url: "/usdrop/plans" },
+          { title: "Subscriptions", url: "/usdrop/subscriptions" },
+        ],
+      },
+      {
+        title: "Products & Catalog",
+        defaultUrl: "/usdrop/products",
+        icon: Package,
+        items: [
+          { title: "Products", url: "/usdrop/products" },
+          { title: "Categories", url: "/usdrop/categories" },
+          { title: "Suppliers", url: "/usdrop/suppliers" },
+          { title: "Winning Products", url: "/usdrop/winning-products" },
+        ],
+      },
+      {
+        title: "Content Management",
+        defaultUrl: "/usdrop/courses",
+        icon: GraduationCap,
+        items: [
+          { title: "Courses", url: "/usdrop/courses" },
+          { title: "Free Learning", url: "/usdrop/content/free-learning" },
+          { title: "Mentorship Sessions", url: "/usdrop/content/sessions" },
+        ],
+      },
+      {
+        title: "Operations",
+        defaultUrl: "/usdrop/stores",
+        icon: Store,
+        items: [
+          { title: "Shopify Stores", url: "/usdrop/stores" },
+          { title: "Fulfillment", url: "/usdrop/fulfillment" },
+          { title: "Competitor Stores", url: "/usdrop/competitors" },
+        ],
+      },
+      {
+        title: "Support",
+        defaultUrl: "/usdrop/tickets",
+        icon: Headphones,
+        items: [
+          { title: "Tickets", url: "/usdrop/tickets" },
+          { title: "Help Center", url: "/usdrop/help-center" },
+        ],
+      },
+      {
+        title: "Analytics",
+        defaultUrl: "/usdrop/revenue",
+        icon: LineChart,
+        items: [
+          { title: "Revenue Analytics", url: "/usdrop/revenue" },
+          { title: "User Analytics", url: "/usdrop/user-analytics" },
+          { title: "Product Performance", url: "/usdrop/product-performance" },
+        ],
+      },
+      {
         title: "Chat",
         defaultUrl: "/usdrop/chat",
         icon: MessageCircle,
@@ -344,64 +422,6 @@ export const verticals: Vertical[] = [
         defaultUrl: "/usdrop/tasks",
         icon: ListChecks,
         items: [],
-      },
-      {
-        title: "Tickets",
-        defaultUrl: "/usdrop/tickets",
-        icon: Ticket,
-        items: [],
-      },
-      {
-        title: "Products & Catalog",
-        defaultUrl: "/usdrop/products",
-        icon: Package,
-        items: [
-          { title: "Products", url: "/usdrop/products" },
-          { title: "Categories", url: "/usdrop/categories" },
-          { title: "Suppliers", url: "/usdrop/suppliers" },
-          { title: "Winning Products", url: "/usdrop/winning-products" },
-        ],
-      },
-      {
-        title: "Users & Subscriptions",
-        defaultUrl: "/usdrop/users",
-        icon: Users,
-        items: [
-          { title: "Users", url: "/usdrop/users" },
-          { title: "Leads", url: "/usdrop/leads" },
-          { title: "Plans", url: "/usdrop/plans" },
-          { title: "Subscriptions", url: "/usdrop/subscriptions" },
-        ],
-      },
-      {
-        title: "Operations",
-        defaultUrl: "/usdrop/stores",
-        icon: Store,
-        items: [
-          { title: "Shopify Stores", url: "/usdrop/stores" },
-          { title: "Fulfillment", url: "/usdrop/fulfillment" },
-          { title: "Competitor Stores", url: "/usdrop/competitors" },
-        ],
-      },
-      {
-        title: "Support & Learning",
-        defaultUrl: "/usdrop/tickets",
-        icon: Headphones,
-        items: [
-          { title: "Support Tickets", url: "/usdrop/tickets" },
-          { title: "Courses", url: "/usdrop/courses" },
-          { title: "Help Center", url: "/usdrop/help-center" },
-        ],
-      },
-      {
-        title: "Analytics",
-        defaultUrl: "/usdrop/revenue",
-        icon: LineChart,
-        items: [
-          { title: "Revenue Analytics", url: "/usdrop/revenue" },
-          { title: "User Analytics", url: "/usdrop/user-analytics" },
-          { title: "Product Performance", url: "/usdrop/product-performance" },
-        ],
       },
       {
         title: "Reports",
