@@ -64,6 +64,7 @@ Comprehensive reusable block library organized by category:
 - **Payment**: `BillingCard`, `PricingTable`, `CheckoutForm`, `InvoiceList`
 - **Table**: `SimpleTable` (lightweight typed table), `QuickLinksBlock`
 - **LMS**: `CourseCard`, `CourseGrid`, `ModuleAccordion`, `LessonItem`, `ProgressRing`, `QuizBlock`, `CertificateCard`, `CourseDetailHeader`
+- **Access Control**: `AccessProvider` (context wrapper), `useAccessControl` (hook), `AccessGate` (permission-gating wrapper with hide/lock-overlay/blur/full-page-lock modes), `PermissionBadge`
 
 Barrel export: `client/src/components/blocks/index.ts`
 
@@ -189,6 +190,30 @@ channels  ←── channel_messages.channel_id (ON DELETE CASCADE)
 - **Events/GoyoTours**: `tour_packages`, `bookings`, `hotels`
 - **Finance**: `journal_entries`, `payment_records`
 - **OMS**: `oms_orders`, `oms_inventory`, `oms_shipments`
+
+## User Management & RBAC System (Mar 2026)
+
+### Mock Data (`client/src/lib/mock-data-users.ts`)
+- Types: `AppUser`, `UserGroup`, `Permission`, `PermissionCategory`
+- 10 mock users across 4 statuses (activated/invited/suspended/not-invited), 3 auth methods, 4 creation methods
+- 5 user groups: Super Admin (all perms), Manager (most), Team Member (limited), Viewer (read-only), Client Portal User (portal-only)
+- 10 permission categories: Dashboard, Clients, Documents, Operations, Finance, HR, Reports, Settings, Users, User Groups
+- `hasPermission(userGroupIds, category, action)` utility function
+
+### Pages
+- **Users & Access** `/:vertical/user-management` — Two-tab layout (Users / User Groups), DataTable with search/filter/status pills, Invite User dialog
+- **User Groups** `/:vertical/user-groups` — Group cards with permission matrix, Create/Edit group dialog, member list, permission breakdown
+
+### Access Control Components (`client/src/components/blocks/access-gate.tsx`)
+- `AccessProvider` — React context providing current user groups
+- `useAccessControl()` — Hook returning `{ hasAccess, userGroups, allGroups, checkPermission(category, action) }`
+- `AccessGate` — Wrapper with 4 fallback modes: `hide`, `lock-overlay`, `blur`, `full-page-lock`
+- `PermissionBadge` — Shows required permission as a badge
+
+### Routes
+- Registered across all 15 verticals: `/:vertical/user-management` and `/:vertical/user-groups`
+- "Users & Access" nav category added to all verticals with Shield icon
+- USDrop: `/usdrop/user-management` (separate from existing `/usdrop/users` which is SalesUsers)
 
 ## Recent Additions (Feb 2026)
 

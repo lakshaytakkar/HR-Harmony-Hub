@@ -166,6 +166,15 @@ export const verticals: Vertical[] = [
         icon: Phone,
         items: [],
       },
+      {
+        title: "Users & Access",
+        defaultUrl: "/suprans/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/suprans/user-management" },
+          { title: "User Groups", url: "/suprans/user-groups" },
+        ],
+      },
     ],
   },
   {
@@ -271,6 +280,15 @@ export const verticals: Vertical[] = [
         defaultUrl: "/legalnations/contacts",
         icon: Phone,
         items: [],
+      },
+      {
+        title: "Users & Access",
+        defaultUrl: "/legalnations/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/legalnations/user-management" },
+          { title: "User Groups", url: "/legalnations/user-groups" },
+        ],
       },
     ],
   },
@@ -384,6 +402,15 @@ export const verticals: Vertical[] = [
         icon: Phone,
         items: [],
       },
+      {
+        title: "Users & Access",
+        defaultUrl: "/usdrop/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/usdrop/user-management" },
+          { title: "User Groups", url: "/usdrop/user-groups" },
+        ],
+      },
     ],
   },
   {
@@ -484,6 +511,15 @@ export const verticals: Vertical[] = [
         defaultUrl: "/goyotours/analytics",
         icon: BarChart3,
         items: [],
+      },
+      {
+        title: "Users & Access",
+        defaultUrl: "/goyotours/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/goyotours/user-management" },
+          { title: "User Groups", url: "/goyotours/user-groups" },
+        ],
       },
     ],
   },
@@ -592,6 +628,15 @@ export const verticals: Vertical[] = [
         icon: Phone,
         items: [],
       },
+      {
+        title: "Users & Access",
+        defaultUrl: "/eventhub/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/eventhub/user-management" },
+          { title: "User Groups", url: "/eventhub/user-groups" },
+        ],
+      },
     ],
   },
   {
@@ -660,6 +705,15 @@ export const verticals: Vertical[] = [
         defaultUrl: "/lbm/contacts",
         icon: Phone,
         items: [],
+      },
+      {
+        title: "Users & Access",
+        defaultUrl: "/lbm/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/lbm/user-management" },
+          { title: "User Groups", url: "/lbm/user-groups" },
+        ],
       },
     ],
   },
@@ -765,6 +819,15 @@ export const verticals: Vertical[] = [
         icon: Phone,
         items: [],
       },
+      {
+        title: "Users & Access",
+        defaultUrl: "/dev/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/dev/user-management" },
+          { title: "User Groups", url: "/dev/user-groups" },
+        ],
+      },
     ],
   },
   {
@@ -865,6 +928,15 @@ export const verticals: Vertical[] = [
         defaultUrl: "/ets/contacts",
         icon: Phone,
         items: [],
+      },
+      {
+        title: "Users & Access",
+        defaultUrl: "/ets/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/ets/user-management" },
+          { title: "User Groups", url: "/ets/user-groups" },
+        ],
       },
     ],
   },
@@ -990,6 +1062,15 @@ export const verticals: Vertical[] = [
         defaultUrl: "/faire/contacts",
         icon: Phone,
         items: [],
+      },
+      {
+        title: "Users & Access",
+        defaultUrl: "/faire/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/faire/user-management" },
+          { title: "User Groups", url: "/faire/user-groups" },
+        ],
       },
     ],
   },
@@ -1136,6 +1217,15 @@ export const verticals: Vertical[] = [
         icon: Phone,
         items: [],
       },
+      {
+        title: "Users & Access",
+        defaultUrl: "/hrms/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/hrms/user-management" },
+          { title: "User Groups", url: "/hrms/user-groups" },
+        ],
+      },
     ],
   },
   {
@@ -1243,6 +1333,15 @@ export const verticals: Vertical[] = [
         defaultUrl: "/ats/contacts",
         icon: Phone,
         items: [],
+      },
+      {
+        title: "Users & Access",
+        defaultUrl: "/ats/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/ats/user-management" },
+          { title: "User Groups", url: "/ats/user-groups" },
+        ],
       },
     ],
   },
@@ -1356,6 +1455,15 @@ export const verticals: Vertical[] = [
         icon: Phone,
         items: [],
       },
+      {
+        title: "Users & Access",
+        defaultUrl: "/crm/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/crm/user-management" },
+          { title: "User Groups", url: "/crm/user-groups" },
+        ],
+      },
     ],
   },
   {
@@ -1464,6 +1572,15 @@ export const verticals: Vertical[] = [
         defaultUrl: "/finance/contacts-important",
         icon: Phone,
         items: [],
+      },
+      {
+        title: "Users & Access",
+        defaultUrl: "/finance/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/finance/user-management" },
+          { title: "User Groups", url: "/finance/user-groups" },
+        ],
       },
     ],
   },
@@ -1574,6 +1691,15 @@ export const verticals: Vertical[] = [
         icon: Phone,
         items: [],
       },
+      {
+        title: "Users & Access",
+        defaultUrl: "/oms/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/oms/user-management" },
+          { title: "User Groups", url: "/oms/user-groups" },
+        ],
+      },
     ],
   },
   {
@@ -1669,6 +1795,15 @@ export const verticals: Vertical[] = [
         defaultUrl: "/social/contacts",
         icon: Phone,
         items: [],
+      },
+      {
+        title: "Users & Access",
+        defaultUrl: "/social/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/social/user-management" },
+          { title: "User Groups", url: "/social/user-groups" },
+        ],
       },
     ],
   },

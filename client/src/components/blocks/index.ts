@@ -29,3 +29,5 @@ export type { SimpleTableColumn, QuickLinkItem } from "./table-blocks";
 
 export { CourseCard, CourseGrid, LessonItem, ModuleAccordion, ProgressRing, QuizBlock, CertificateCard, CourseDetailHeader } from "./lms-blocks";
 export type { CourseCardItem, LessonItemData, ModuleData, QuizOption, CertificateCardItem } from "./lms-blocks";
+
+export { AccessProvider, useAccessControl, AccessGate, PermissionBadge } from "./access-gate";

@@ -42,4 +42,5 @@ export {
   BillingCard, PricingTable, CheckoutForm, InvoiceList,
   SimpleTable, QuickLinksBlock,
   CourseCard, CourseGrid, LessonItem, ModuleAccordion, ProgressRing, QuizBlock, CertificateCard, CourseDetailHeader,
+  AccessProvider, useAccessControl, AccessGate, PermissionBadge,
 } from "@/components/blocks";
