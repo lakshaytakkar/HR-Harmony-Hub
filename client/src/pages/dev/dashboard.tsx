@@ -182,10 +182,10 @@ export default function DevDashboard() {
       color: "#f59e0b",
     },
     {
-      title: "Toolkit",
-      description: "Apps, credentials & links",
+      title: "Apps & Credentials",
+      description: "External services & API keys",
       icon: Wrench,
-      url: "/dev/toolkit",
+      url: "/dev/apps",
       color: "#10b981",
     },
   ];
@@ -390,7 +390,7 @@ export default function DevDashboard() {
           <SectionCard
             title="Credential Status"
             viewAllLabel="View All"
-            onViewAll={() => navigate("/dev/toolkit")}
+            onViewAll={() => navigate("/dev/apps")}
           >
             <div className="grid grid-cols-3 gap-4 mb-5">
               <div className="flex flex-col items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/50" data-testid="credential-active-count">

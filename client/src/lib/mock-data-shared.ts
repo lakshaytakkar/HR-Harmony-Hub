@@ -391,6 +391,93 @@ sharedTasks.forEach((t, i) => {
   sharedTaskCodeMap[t.id] = "T" + String(i + 1).padStart(3, "0");
 });
 
+export interface ExternalApp {
+  id: string;
+  verticalId: string;
+  appName: string;
+  url: string;
+  category: "hosting" | "database" | "ai" | "payment" | "analytics" | "communication" | "design" | "docs" | "crm" | "hr" | "other";
+  status: "active" | "expired" | "pending";
+  environment: "production" | "staging" | "dev";
+  apiKeyHint: string;
+  notes: string;
+  addedDate: string;
+  iconName: string;
+}
+
+export const sharedExternalApps: ExternalApp[] = [
+  { id: "APP-001", verticalId: "dev", appName: "Replit", url: "https://replit.com", category: "hosting", status: "active", environment: "production", apiKeyHint: "••••7x4f", notes: "Primary development and hosting platform. Hacker plan.", addedDate: "2025-12-10", iconName: "SiReplit" },
+  { id: "APP-002", verticalId: "dev", appName: "Supabase", url: "https://supabase.com", category: "database", status: "active", environment: "production", apiKeyHint: "••••kQ9m", notes: "PostgreSQL database, auth, and storage. Free tier.", addedDate: "2025-12-12", iconName: "SiSupabase" },
+  { id: "APP-003", verticalId: "dev", appName: "Claude API (Anthropic)", url: "https://console.anthropic.com", category: "ai", status: "active", environment: "production", apiKeyHint: "••••Wp3r", notes: "Claude 3.5 Sonnet for code generation and analysis.", addedDate: "2025-12-15", iconName: "SiAnthropic" },
+  { id: "APP-004", verticalId: "dev", appName: "Stripe", url: "https://dashboard.stripe.com", category: "payment", status: "pending", environment: "dev", apiKeyHint: "••••test", notes: "Payment processing — test mode only for now.", addedDate: "2026-02-01", iconName: "SiStripe" },
+  { id: "APP-005", verticalId: "dev", appName: "Vercel", url: "https://vercel.com", category: "hosting", status: "active", environment: "staging", apiKeyHint: "••••Nj8k", notes: "Staging deployments for client previews.", addedDate: "2025-12-20", iconName: "SiVercel" },
+  { id: "APP-006", verticalId: "dev", appName: "GitHub", url: "https://github.com", category: "other", status: "active", environment: "production", apiKeyHint: "••••ghp_", notes: "Source code repositories and CI/CD.", addedDate: "2025-12-10", iconName: "SiGithub" },
+  { id: "APP-007", verticalId: "dev", appName: "OpenAI", url: "https://platform.openai.com", category: "ai", status: "active", environment: "production", apiKeyHint: "••••sk-p", notes: "GPT-4o for content generation and embeddings.", addedDate: "2025-12-18", iconName: "SiOpenai" },
+  { id: "APP-008", verticalId: "dev", appName: "PostHog", url: "https://app.posthog.com", category: "analytics", status: "expired", environment: "production", apiKeyHint: "••••phc_", notes: "Product analytics — free tier expired, needs renewal.", addedDate: "2025-12-25", iconName: "SiPosthog" },
+  { id: "APP-009", verticalId: "dev", appName: "Resend", url: "https://resend.com", category: "communication", status: "active", environment: "production", apiKeyHint: "••••re_l", notes: "Transactional email service for notifications.", addedDate: "2026-02-05", iconName: "SiResend" },
+  { id: "APP-010", verticalId: "dev", appName: "Cloudflare", url: "https://dash.cloudflare.com", category: "hosting", status: "active", environment: "production", apiKeyHint: "••••cf_x", notes: "DNS management and CDN for custom domains.", addedDate: "2026-02-10", iconName: "SiCloudflare" },
+  { id: "APP-011", verticalId: "dev", appName: "Figma", url: "https://figma.com", category: "design", status: "active", environment: "production", apiKeyHint: "", notes: "UI/UX design files and component specifications.", addedDate: "2025-12-15", iconName: "SiFigma" },
+  { id: "APP-012", verticalId: "dev", appName: "Notion", url: "https://notion.so", category: "docs", status: "active", environment: "production", apiKeyHint: "", notes: "Team documentation, meeting notes, and project specs.", addedDate: "2025-12-10", iconName: "SiNotion" },
+
+  { id: "APP-020", verticalId: "hr", appName: "Stripe", url: "https://dashboard.stripe.com", category: "payment", status: "active", environment: "production", apiKeyHint: "••••sk_ln", notes: "Live Stripe key for LegalNations formation payments.", addedDate: "2025-12-20", iconName: "SiStripe" },
+  { id: "APP-021", verticalId: "hr", appName: "Supabase", url: "https://supabase.com", category: "database", status: "active", environment: "production", apiKeyHint: "••••ln_anon", notes: "LegalNations Supabase anon key for client-side queries.", addedDate: "2025-12-22", iconName: "SiSupabase" },
+  { id: "APP-022", verticalId: "hr", appName: "DocuSign", url: "https://docusign.com", category: "docs", status: "active", environment: "production", apiKeyHint: "••••ds_k", notes: "E-signature for formation documents and compliance filings.", addedDate: "2026-01-05", iconName: "Globe" },
+  { id: "APP-023", verticalId: "hr", appName: "Resend", url: "https://resend.com", category: "communication", status: "active", environment: "production", apiKeyHint: "••••re_ln", notes: "Client notification emails for formation status updates.", addedDate: "2026-01-10", iconName: "SiResend" },
+  { id: "APP-024", verticalId: "hr", appName: "Vercel", url: "https://vercel.com", category: "hosting", status: "active", environment: "staging", apiKeyHint: "••••vc_ln", notes: "LegalNations staging deployment.", addedDate: "2026-01-12", iconName: "SiVercel" },
+
+  { id: "APP-030", verticalId: "sales", appName: "Razorpay", url: "https://dashboard.razorpay.com", category: "payment", status: "active", environment: "production", apiKeyHint: "••••rzp_s", notes: "Payment links and UPI collection for Suprans leads.", addedDate: "2026-01-15", iconName: "Globe" },
+  { id: "APP-031", verticalId: "sales", appName: "Google Workspace", url: "https://workspace.google.com", category: "communication", status: "active", environment: "production", apiKeyHint: "", notes: "Email, calendar, and shared drives for the sales team.", addedDate: "2025-12-10", iconName: "Globe" },
+  { id: "APP-032", verticalId: "sales", appName: "Zoho CRM", url: "https://crm.zoho.com", category: "crm", status: "pending", environment: "dev", apiKeyHint: "••••zh_t", notes: "CRM integration planned for lead sync — test mode.", addedDate: "2026-02-20", iconName: "Globe" },
+
+  { id: "APP-040", verticalId: "ets", appName: "Razorpay", url: "https://dashboard.razorpay.com", category: "payment", status: "active", environment: "production", apiKeyHint: "••••rzp_live", notes: "EazyToSell Razorpay live key for franchise payments.", addedDate: "2026-02-10", iconName: "Globe" },
+  { id: "APP-041", verticalId: "ets", appName: "Supabase", url: "https://supabase.com", category: "database", status: "active", environment: "production", apiKeyHint: "••••ets_anon", notes: "EazyToSell Supabase anon key for client-side data.", addedDate: "2026-02-12", iconName: "SiSupabase" },
+  { id: "APP-042", verticalId: "ets", appName: "Shiprocket", url: "https://app.shiprocket.in", category: "other", status: "active", environment: "production", apiKeyHint: "••••sr_k", notes: "Shipping and logistics integration for order fulfillment.", addedDate: "2026-02-15", iconName: "Globe" },
+  { id: "APP-043", verticalId: "ets", appName: "WhatsApp Business API", url: "https://business.whatsapp.com", category: "communication", status: "pending", environment: "dev", apiKeyHint: "••••wa_t", notes: "WhatsApp order updates and customer notifications — setup in progress.", addedDate: "2026-02-20", iconName: "Globe" },
+  { id: "APP-044", verticalId: "ets", appName: "Tally ERP", url: "https://tallysolutions.com", category: "other", status: "active", environment: "production", apiKeyHint: "", notes: "GST invoicing and accounting integration.", addedDate: "2026-01-20", iconName: "Globe" },
+
+  { id: "APP-050", verticalId: "faire", appName: "Faire API", url: "https://faire.com", category: "other", status: "active", environment: "production", apiKeyHint: "••••faire_k", notes: "Faire marketplace API for order sync and product listing.", addedDate: "2026-01-05", iconName: "Globe" },
+  { id: "APP-051", verticalId: "faire", appName: "Stripe", url: "https://dashboard.stripe.com", category: "payment", status: "active", environment: "production", apiKeyHint: "••••sk_faire", notes: "Payment processing for direct wholesale orders.", addedDate: "2026-01-08", iconName: "SiStripe" },
+  { id: "APP-052", verticalId: "faire", appName: "ShipStation", url: "https://shipstation.com", category: "other", status: "active", environment: "production", apiKeyHint: "••••ss_k", notes: "Shipping label generation and tracking for wholesale fulfillment.", addedDate: "2026-01-10", iconName: "Globe" },
+
+  { id: "APP-060", verticalId: "events", appName: "Eventbrite", url: "https://eventbrite.com", category: "other", status: "active", environment: "production", apiKeyHint: "••••eb_k", notes: "Event listing and ticket sales for GoyoTours experiences.", addedDate: "2025-12-20", iconName: "Globe" },
+  { id: "APP-061", verticalId: "events", appName: "Google Calendar API", url: "https://calendar.google.com", category: "communication", status: "active", environment: "production", apiKeyHint: "••••gc_k", notes: "Calendar sync for event scheduling and reminders.", addedDate: "2025-12-22", iconName: "Globe" },
+  { id: "APP-062", verticalId: "events", appName: "Razorpay", url: "https://dashboard.razorpay.com", category: "payment", status: "active", environment: "production", apiKeyHint: "••••rzp_ev", notes: "Payment collection for event bookings and packages.", addedDate: "2026-01-05", iconName: "Globe" },
+
+  { id: "APP-070", verticalId: "admin", appName: "Slack", url: "https://slack.com", category: "communication", status: "active", environment: "production", apiKeyHint: "••••xoxb", notes: "Team communication and automated notifications.", addedDate: "2025-12-05", iconName: "SiSlack" },
+  { id: "APP-071", verticalId: "admin", appName: "Google Workspace", url: "https://workspace.google.com", category: "communication", status: "active", environment: "production", apiKeyHint: "", notes: "Company-wide email, calendar, and document management.", addedDate: "2025-12-05", iconName: "Globe" },
+  { id: "APP-072", verticalId: "admin", appName: "Razorpay", url: "https://dashboard.razorpay.com", category: "payment", status: "active", environment: "production", apiKeyHint: "••••rzp_adm", notes: "Master Razorpay account for all payment verticals.", addedDate: "2025-12-10", iconName: "Globe" },
+
+  { id: "APP-080", verticalId: "finance", appName: "Tally ERP", url: "https://tallysolutions.com", category: "other", status: "active", environment: "production", apiKeyHint: "", notes: "Primary accounting and GST compliance software.", addedDate: "2025-12-05", iconName: "Globe" },
+  { id: "APP-081", verticalId: "finance", appName: "Razorpay", url: "https://dashboard.razorpay.com", category: "payment", status: "active", environment: "production", apiKeyHint: "••••rzp_fin", notes: "Payment gateway dashboard for reconciliation.", addedDate: "2025-12-10", iconName: "Globe" },
+  { id: "APP-082", verticalId: "finance", appName: "HDFC Netbanking", url: "https://netbanking.hdfcbank.com", category: "payment", status: "active", environment: "production", apiKeyHint: "", notes: "Corporate bank account for fund transfers.", addedDate: "2025-12-10", iconName: "Globe" },
+
+  { id: "APP-090", verticalId: "hrms", appName: "GreytHR", url: "https://greythr.com", category: "hr", status: "active", environment: "production", apiKeyHint: "••••gr_k", notes: "Payroll processing and attendance management.", addedDate: "2025-12-05", iconName: "Globe" },
+  { id: "APP-091", verticalId: "hrms", appName: "Slack", url: "https://slack.com", category: "communication", status: "active", environment: "production", apiKeyHint: "••••xoxb_hr", notes: "HR team notifications and leave request approvals.", addedDate: "2025-12-05", iconName: "SiSlack" },
+  { id: "APP-092", verticalId: "hrms", appName: "Google Workspace", url: "https://workspace.google.com", category: "communication", status: "active", environment: "production", apiKeyHint: "", notes: "Employee email accounts and shared HR documents.", addedDate: "2025-12-05", iconName: "Globe" },
+
+  { id: "APP-100", verticalId: "crm", appName: "Zoho CRM", url: "https://crm.zoho.com", category: "crm", status: "active", environment: "production", apiKeyHint: "••••zh_p", notes: "Customer relationship management for all verticals.", addedDate: "2026-01-15", iconName: "Globe" },
+  { id: "APP-101", verticalId: "crm", appName: "Resend", url: "https://resend.com", category: "communication", status: "active", environment: "production", apiKeyHint: "••••re_crm", notes: "Automated CRM email sequences and follow-ups.", addedDate: "2026-01-20", iconName: "SiResend" },
+  { id: "APP-102", verticalId: "crm", appName: "Twilio", url: "https://twilio.com", category: "communication", status: "pending", environment: "dev", apiKeyHint: "••••tw_t", notes: "SMS and call integration for CRM outreach — in testing.", addedDate: "2026-02-10", iconName: "Globe" },
+
+  { id: "APP-110", verticalId: "oms", appName: "Shiprocket", url: "https://app.shiprocket.in", category: "other", status: "active", environment: "production", apiKeyHint: "••••sr_oms", notes: "Shipping and logistics for order management.", addedDate: "2026-01-20", iconName: "Globe" },
+  { id: "APP-111", verticalId: "oms", appName: "Razorpay", url: "https://dashboard.razorpay.com", category: "payment", status: "active", environment: "production", apiKeyHint: "••••rzp_oms", notes: "COD reconciliation and online payment tracking.", addedDate: "2026-01-22", iconName: "Globe" },
+
+  { id: "APP-120", verticalId: "social", appName: "Meta Business Suite", url: "https://business.facebook.com", category: "other", status: "active", environment: "production", apiKeyHint: "••••meta_k", notes: "Instagram and Facebook page management and ad campaigns.", addedDate: "2026-01-10", iconName: "Globe" },
+  { id: "APP-121", verticalId: "social", appName: "Buffer", url: "https://buffer.com", category: "other", status: "active", environment: "production", apiKeyHint: "••••buf_k", notes: "Social media scheduling and analytics.", addedDate: "2026-01-15", iconName: "Globe" },
+  { id: "APP-122", verticalId: "social", appName: "Canva", url: "https://canva.com", category: "design", status: "active", environment: "production", apiKeyHint: "", notes: "Social media graphic design and templates.", addedDate: "2025-12-20", iconName: "Globe" },
+
+  { id: "APP-130", verticalId: "ats", appName: "LinkedIn Recruiter", url: "https://linkedin.com/recruiter", category: "hr", status: "active", environment: "production", apiKeyHint: "", notes: "Talent sourcing and job posting.", addedDate: "2026-01-05", iconName: "Globe" },
+  { id: "APP-131", verticalId: "ats", appName: "Calendly", url: "https://calendly.com", category: "communication", status: "active", environment: "production", apiKeyHint: "••••cal_k", notes: "Interview scheduling with candidates.", addedDate: "2026-01-10", iconName: "Globe" },
+
+  { id: "APP-140", verticalId: "suprans", appName: "Google Workspace", url: "https://workspace.google.com", category: "communication", status: "active", environment: "production", apiKeyHint: "", notes: "Lead communication and document sharing.", addedDate: "2025-12-10", iconName: "Globe" },
+  { id: "APP-141", verticalId: "suprans", appName: "Zoho CRM", url: "https://crm.zoho.com", category: "crm", status: "active", environment: "production", apiKeyHint: "••••zh_sup", notes: "Lead tracking and pipeline management.", addedDate: "2026-01-15", iconName: "Globe" },
+
+  { id: "APP-150", verticalId: "eventhub", appName: "Eventbrite", url: "https://eventbrite.com", category: "other", status: "active", environment: "production", apiKeyHint: "••••eb_hub", notes: "Event ticketing and attendee management.", addedDate: "2026-01-05", iconName: "Globe" },
+  { id: "APP-151", verticalId: "eventhub", appName: "Google Maps API", url: "https://console.cloud.google.com", category: "other", status: "active", environment: "production", apiKeyHint: "••••gm_k", notes: "Venue mapping and location services for events.", addedDate: "2026-01-08", iconName: "Globe" },
+
+  { id: "APP-160", verticalId: "vendor-portal", appName: "Razorpay", url: "https://dashboard.razorpay.com", category: "payment", status: "active", environment: "production", apiKeyHint: "••••rzp_vp", notes: "Vendor payment processing and payout management.", addedDate: "2026-01-20", iconName: "Globe" },
+];
+
 export type NotificationType = "order" | "fulfillment" | "inventory" | "finance" | "retailer" | "application" | "system" | "quotation";
 
 export interface AppNotification {

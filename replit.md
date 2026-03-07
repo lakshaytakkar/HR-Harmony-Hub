@@ -577,7 +577,7 @@ The portal supports multiple business verticals, each with its own navigation, b
 - **Vertical Switcher** (`client/src/components/layout/vertical-switcher.tsx`): Dropdown in topbar to switch between verticals, shows brand logos
 
 ### Universal Sections (Cross-Vertical)
-4 universal pages exist under `client/src/pages/universal/` and are shared by all 7 verticals. Each page detects its vertical via `detectVerticalFromUrl(useLocation())` and filters mock data from `client/src/lib/mock-data-shared.ts` by `verticalId`.
+Universal pages exist under `client/src/pages/universal/` and are shared by all verticals. Each page detects its vertical via `detectVerticalFromUrl(useLocation())` and filters mock data from `client/src/lib/mock-data-shared.ts` by `verticalId`.
 
 **Nav order (standardized for all verticals):** Dashboard → Chat → Team → Resources → Tasks → [vertical-specific sections]
 
@@ -585,17 +585,19 @@ The portal supports multiple business verticals, each with its own navigation, b
 - **Team** (`/[prefix]/team`) — Card grid of vertical team members with avatar, status dot, role, contact info, hover action row (Message/Call). "Invite Member" FormDialog header CTA. Search + department + status filters.
 - **Resources** (`/[prefix]/resources`) — File card grid with pinned strip, category filter pills, grid/list toggle. Type-colored file icons (pdf=red, excel=green, ppt=orange, doc=blue, link=violet). Detail dialog with metadata + Open Resource button. "Add Resource" FormDialog.
 - **Tasks** (`/[prefix]/tasks`) — Kanban board (5 columns: Backlog/Todo/In Progress/Review/Done) with task cards (priority badge, tags, due date, assignee avatar), List view, My Tasks tab. Task create dialog + Task detail dialog (subtask checklist, status select, comments). Stats row (Total/In Progress/Overdue/Done).
+- **Apps & Credentials** (`/[prefix]/apps`) — Card grid of external apps and API credentials filtered by vertical. Each card shows app name, description, status badge (Active/Expired/Pending), environment badge (production/staging/dev), category badge, and masked API key hint. Summary stats row (Total Apps/Active/With Credentials/Expired or Pending). Category + status + environment filter chips. Replaces the old Dev Toolkit page — now universal across all verticals.
 
-**Shared mock data** (`client/src/lib/mock-data-shared.ts`): TypeScript interfaces + mock data for all 7 verticals:
+**Shared mock data** (`client/src/lib/mock-data-shared.ts`): TypeScript interfaces + mock data for all verticals:
 - `VerticalMember[]` — 4 members per vertical, with status (online/away/offline), skills, location
 - `ChatChannel[]` — channels + DMs per vertical, with unread counts, isPinned, lastMessage
 - `ChatMessage[]` — messages per channel, with isMe boolean for sender styling
 - `SharedResource[]` — 5-6 resources per vertical, categories: Brochure/Script/Spreadsheet/Link/Presentation/Document/Template + Process/SOP/Playbook/Workflow/Learning (knowledge type with expandable content)
 - `SharedTask[]` — 8-9 tasks per vertical, across all 5 statuses and 4 priorities, with subtask arrays
+- `ExternalApp[]` — 2-12 apps per vertical, with status/environment/category/apiKeyHint; categories: hosting, database, ai, payment, analytics, communication, design, docs, crm, hr, other
 
-**Route renames** (3 existing routes moved to avoid conflicts with universal `/tasks` and `/resources`):
+**Route renames** (existing routes moved to avoid conflicts with universal pages):
 - `/legalnations/tasks` (LegalNations Task Board) → `/legalnations/task-board`
-- `/dev/tasks` (Developer ClickUp-style board) → `/dev/board`
+- `/dev/toolkit` (Developer Toolkit) → removed; replaced by universal `/dev/apps`
 - `/dev/resources` (Developer Knowledge Base) → merged into universal `/dev/resources` (KB items appear as expandable Process/SOP/Playbook/Workflow/Learning entries)
 
 ### Universal Important Contacts (`/[prefix]/contacts`)

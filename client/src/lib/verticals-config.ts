@@ -50,6 +50,7 @@ import {
   BookMarked,
   Tag,
   RotateCcw,
+  Blocks,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -175,6 +176,12 @@ export const verticals: Vertical[] = [
           { title: "User Groups", url: "/suprans/user-groups" },
         ],
       },
+      {
+        title: "Apps",
+        defaultUrl: "/suprans/apps",
+        icon: Blocks,
+        items: [],
+      },
     ],
   },
   {
@@ -289,6 +296,12 @@ export const verticals: Vertical[] = [
           { title: "Users", url: "/legalnations/user-management" },
           { title: "User Groups", url: "/legalnations/user-groups" },
         ],
+      },
+      {
+        title: "Apps",
+        defaultUrl: "/legalnations/apps",
+        icon: Blocks,
+        items: [],
       },
     ],
   },
@@ -411,6 +424,12 @@ export const verticals: Vertical[] = [
           { title: "User Groups", url: "/usdrop/user-groups" },
         ],
       },
+      {
+        title: "Apps",
+        defaultUrl: "/usdrop/apps",
+        icon: Blocks,
+        items: [],
+      },
     ],
   },
   {
@@ -520,6 +539,12 @@ export const verticals: Vertical[] = [
           { title: "Users", url: "/goyotours/user-management" },
           { title: "User Groups", url: "/goyotours/user-groups" },
         ],
+      },
+      {
+        title: "Apps",
+        defaultUrl: "/goyotours/apps",
+        icon: Blocks,
+        items: [],
       },
     ],
   },
@@ -637,6 +662,12 @@ export const verticals: Vertical[] = [
           { title: "User Groups", url: "/eventhub/user-groups" },
         ],
       },
+      {
+        title: "Apps",
+        defaultUrl: "/eventhub/apps",
+        icon: Blocks,
+        items: [],
+      },
     ],
   },
   {
@@ -715,6 +746,12 @@ export const verticals: Vertical[] = [
           { title: "User Groups", url: "/lbm/user-groups" },
         ],
       },
+      {
+        title: "Apps",
+        defaultUrl: "/lbm/apps",
+        icon: Blocks,
+        items: [],
+      },
     ],
   },
   {
@@ -785,12 +822,6 @@ export const verticals: Vertical[] = [
         ],
       },
       {
-        title: "Toolkit",
-        defaultUrl: "/dev/toolkit",
-        icon: Wrench,
-        items: [],
-      },
-      {
         title: "Reports",
         defaultUrl: "/dev/reports",
         icon: FileText,
@@ -810,6 +841,12 @@ export const verticals: Vertical[] = [
           { title: "Users", url: "/dev/user-management" },
           { title: "User Groups", url: "/dev/user-groups" },
         ],
+      },
+      {
+        title: "Apps",
+        defaultUrl: "/dev/apps",
+        icon: Blocks,
+        items: [],
       },
     ],
   },
@@ -920,6 +957,12 @@ export const verticals: Vertical[] = [
           { title: "Users", url: "/ets/user-management" },
           { title: "User Groups", url: "/ets/user-groups" },
         ],
+      },
+      {
+        title: "Apps",
+        defaultUrl: "/ets/apps",
+        icon: Blocks,
+        items: [],
       },
     ],
   },
@@ -1054,6 +1097,12 @@ export const verticals: Vertical[] = [
           { title: "Users", url: "/faire/user-management" },
           { title: "User Groups", url: "/faire/user-groups" },
         ],
+      },
+      {
+        title: "Apps",
+        defaultUrl: "/faire/apps",
+        icon: Blocks,
+        items: [],
       },
     ],
   },
@@ -1209,6 +1258,12 @@ export const verticals: Vertical[] = [
           { title: "User Groups", url: "/hrms/user-groups" },
         ],
       },
+      {
+        title: "Apps",
+        defaultUrl: "/hrms/apps",
+        icon: Blocks,
+        items: [],
+      },
     ],
   },
   {
@@ -1325,6 +1380,12 @@ export const verticals: Vertical[] = [
           { title: "Users", url: "/ats/user-management" },
           { title: "User Groups", url: "/ats/user-groups" },
         ],
+      },
+      {
+        title: "Apps",
+        defaultUrl: "/ats/apps",
+        icon: Blocks,
+        items: [],
       },
     ],
   },
@@ -1447,6 +1508,12 @@ export const verticals: Vertical[] = [
           { title: "User Groups", url: "/crm/user-groups" },
         ],
       },
+      {
+        title: "Apps",
+        defaultUrl: "/crm/apps",
+        icon: Blocks,
+        items: [],
+      },
     ],
   },
   {
@@ -1564,6 +1631,12 @@ export const verticals: Vertical[] = [
           { title: "Users", url: "/finance/user-management" },
           { title: "User Groups", url: "/finance/user-groups" },
         ],
+      },
+      {
+        title: "Apps",
+        defaultUrl: "/finance/apps",
+        icon: Blocks,
+        items: [],
       },
     ],
   },
@@ -1683,6 +1756,12 @@ export const verticals: Vertical[] = [
           { title: "User Groups", url: "/oms/user-groups" },
         ],
       },
+      {
+        title: "Apps",
+        defaultUrl: "/oms/apps",
+        icon: Blocks,
+        items: [],
+      },
     ],
   },
   {
@@ -1787,6 +1866,12 @@ export const verticals: Vertical[] = [
           { title: "Users", url: "/social/user-management" },
           { title: "User Groups", url: "/social/user-groups" },
         ],
+      },
+      {
+        title: "Apps",
+        defaultUrl: "/social/apps",
+        icon: Blocks,
+        items: [],
       },
     ],
   },

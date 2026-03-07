@@ -63,7 +63,7 @@ import AdminSettings from "@/pages/admin/settings";
 
 import DevDashboard from "@/pages/dev/dashboard";
 import DevPrompts from "@/pages/dev/prompts";
-import DevToolkit from "@/pages/dev/toolkit";
+import UniversalAppsCredentials from "@/pages/universal/apps-credentials";
 import DevProjects from "@/pages/dev/projects";
 import DevProjectBoard from "@/pages/dev/project-board";
 import EtsDashboard from "@/pages/ets/dashboard";
@@ -216,6 +216,7 @@ function Router() {
       <Route path="/suprans/image-studio" component={UniversalImageStudio} />
       <Route path="/suprans/user-management" component={UniversalUsers} />
       <Route path="/suprans/user-groups" component={UniversalUserGroups} />
+      <Route path="/suprans/apps" component={UniversalAppsCredentials} />
       <Route path="/legalnations" component={Dashboard} />
       <Route path="/legalnations/notifications" component={UniversalNotifications} />
       <Route path="/legalnations/chat" component={UniversalChat} />
@@ -229,6 +230,7 @@ function Router() {
       <Route path="/legalnations/image-studio" component={UniversalImageStudio} />
       <Route path="/legalnations/user-management" component={UniversalUsers} />
       <Route path="/legalnations/user-groups" component={UniversalUserGroups} />
+      <Route path="/legalnations/apps" component={UniversalAppsCredentials} />
       <Route path="/legalnations/clients/:id" component={ClientDetail} />
       <Route path="/legalnations/clients" component={Clients} />
       <Route path="/legalnations/intake" component={ClientIntake} />
@@ -254,6 +256,7 @@ function Router() {
       <Route path="/usdrop/image-studio" component={UniversalImageStudio} />
       <Route path="/usdrop/user-management" component={UniversalUsers} />
       <Route path="/usdrop/user-groups" component={UniversalUserGroups} />
+      <Route path="/usdrop/apps" component={UniversalAppsCredentials} />
       <Route path="/usdrop/products" component={SalesProducts} />
       <Route path="/usdrop/categories" component={SalesCategories} />
       <Route path="/usdrop/suppliers" component={SalesSuppliers} />
@@ -294,6 +297,7 @@ function Router() {
       <Route path="/goyotours/image-studio" component={UniversalImageStudio} />
       <Route path="/goyotours/user-management" component={UniversalUsers} />
       <Route path="/goyotours/user-groups" component={UniversalUserGroups} />
+      <Route path="/goyotours/apps" component={UniversalAppsCredentials} />
       <Route path="/eventhub" component={HubDashboard} />
       <Route path="/eventhub/notifications" component={UniversalNotifications} />
       <Route path="/eventhub/chat" component={UniversalChat} />
@@ -307,6 +311,7 @@ function Router() {
       <Route path="/eventhub/image-studio" component={UniversalImageStudio} />
       <Route path="/eventhub/user-management" component={UniversalUsers} />
       <Route path="/eventhub/user-groups" component={UniversalUserGroups} />
+      <Route path="/eventhub/apps" component={UniversalAppsCredentials} />
       <Route path="/eventhub/events/:id" component={HubEventDetail} />
       <Route path="/eventhub/events" component={HubEventsList} />
       <Route path="/eventhub/attendees" component={HubAttendees} />
@@ -329,6 +334,7 @@ function Router() {
       <Route path="/lbm/image-studio" component={UniversalImageStudio} />
       <Route path="/lbm/user-management" component={UniversalUsers} />
       <Route path="/lbm/user-groups" component={UniversalUserGroups} />
+      <Route path="/lbm/apps" component={UniversalAppsCredentials} />
       <Route path="/lbm/settings" component={AdminSettings} />
       <Route path="/lbm/reports" component={UniversalReports} />
       <Route path="/dev" component={DevDashboard} />
@@ -344,9 +350,9 @@ function Router() {
       <Route path="/dev/image-studio" component={UniversalImageStudio} />
       <Route path="/dev/user-management" component={UniversalUsers} />
       <Route path="/dev/user-groups" component={UniversalUserGroups} />
+      <Route path="/dev/apps" component={UniversalAppsCredentials} />
       <Route path="/dev/design-system" component={DesignSystem} />
       <Route path="/dev/prompts" component={DevPrompts} />
-      <Route path="/dev/toolkit" component={DevToolkit} />
       <Route path="/dev/projects/:id" component={DevProjectBoard} />
       <Route path="/dev/projects" component={DevProjects} />
 
@@ -363,6 +369,7 @@ function Router() {
       <Route path="/ets/image-studio" component={UniversalImageStudio} />
       <Route path="/ets/user-management" component={UniversalUsers} />
       <Route path="/ets/user-groups" component={UniversalUserGroups} />
+      <Route path="/ets/apps" component={UniversalAppsCredentials} />
       <Route path="/ets/pipeline" component={EtsPipeline} />
       <Route path="/ets/clients/:id" component={EtsClientDetail} />
       <Route path="/ets/products" component={EtsProducts} />
@@ -385,6 +392,7 @@ function Router() {
       <Route path="/hrms/image-studio" component={UniversalImageStudio} />
       <Route path="/hrms/user-management" component={UniversalUsers} />
       <Route path="/hrms/user-groups" component={UniversalUserGroups} />
+      <Route path="/hrms/apps" component={UniversalAppsCredentials} />
       <Route path="/hrms/employees/:id" component={HrmsEmployeeDetail} />
       <Route path="/hrms/employees" component={HrmsEmployees} />
       <Route path="/hrms/onboarding" component={HrmsOnboarding} />
@@ -411,6 +419,7 @@ function Router() {
       <Route path="/ats/image-studio" component={UniversalImageStudio} />
       <Route path="/ats/user-management" component={UniversalUsers} />
       <Route path="/ats/user-groups" component={UniversalUserGroups} />
+      <Route path="/ats/apps" component={UniversalAppsCredentials} />
       <Route path="/ats/jobs/:id" component={AtsJobDetail} />
       <Route path="/ats/jobs" component={AtsJobs} />
       <Route path="/ats/candidates/:id" component={AtsCandidateDetail} />
@@ -433,6 +442,7 @@ function Router() {
       <Route path="/crm/image-studio" component={UniversalImageStudio} />
       <Route path="/crm/user-management" component={UniversalUsers} />
       <Route path="/crm/user-groups" component={UniversalUserGroups} />
+      <Route path="/crm/apps" component={UniversalAppsCredentials} />
       <Route path="/crm/contacts-important" component={UniversalImportantContacts} />
       <Route path="/crm/leads" component={CrmLeads} />
       <Route path="/crm/prospects" component={CrmProspects} />
@@ -455,6 +465,7 @@ function Router() {
       <Route path="/finance/image-studio" component={UniversalImageStudio} />
       <Route path="/finance/user-management" component={UniversalUsers} />
       <Route path="/finance/user-groups" component={UniversalUserGroups} />
+      <Route path="/finance/apps" component={UniversalAppsCredentials} />
       <Route path="/finance/ledger" component={FinanceLedger} />
       <Route path="/finance/transactions" component={FinanceTransactions} />
       <Route path="/finance/journal" component={FinanceJournal} />
@@ -476,6 +487,7 @@ function Router() {
       <Route path="/oms/image-studio" component={UniversalImageStudio} />
       <Route path="/oms/user-management" component={UniversalUsers} />
       <Route path="/oms/user-groups" component={UniversalUserGroups} />
+      <Route path="/oms/apps" component={UniversalAppsCredentials} />
       <Route path="/oms/orders" component={OmsOrders} />
       <Route path="/oms/inventory" component={OmsInventory} />
       <Route path="/oms/products" component={OmsProducts} />
@@ -498,6 +510,7 @@ function Router() {
       <Route path="/social/image-studio" component={UniversalImageStudio} />
       <Route path="/social/user-management" component={UniversalUsers} />
       <Route path="/social/user-groups" component={UniversalUserGroups} />
+      <Route path="/social/apps" component={UniversalAppsCredentials} />
       <Route path="/social/posts/:id" component={SocialPostDetail} />
       <Route path="/social/posts" component={SocialPosts} />
       <Route path="/social/composer" component={SocialComposer} />
@@ -521,6 +534,7 @@ function Router() {
       <Route path="/faire/image-studio" component={UniversalImageStudio} />
       <Route path="/faire/user-management" component={UniversalUsers} />
       <Route path="/faire/user-groups" component={UniversalUserGroups} />
+      <Route path="/faire/apps" component={UniversalAppsCredentials} />
       <Route path="/faire/stores" component={FaireStores} />
       <Route path="/faire/products/:id" component={FaireProductDetail} />
       <Route path="/faire/products" component={FaireProducts} />
