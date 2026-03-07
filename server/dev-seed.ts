@@ -870,6 +870,28 @@ export async function seedDevData(forceReseed = false) {
         { author: "Replit Agent", content: "Audited all 24 USDrop AI pages. Found 4 pages using custom table/kanban implementations instead of shared DS components. LLC Tracker now uses KanbanBoard with drag-and-drop (matches Pipeline/Leads pattern). Clients, Products, and Content Sessions now use DataTable with proper column definitions, built-in search/pagination/sorting. Added hideSearch prop to DataTable for pages that already have external search via IndexToolbar." },
       ],
     },
+    {
+      projectId: tsProject.id,
+      taskCode: "TS-035",
+      title: "Per-portal dynamic notifications from Supabase",
+      description: "Replaced hardcoded mock notification data with live Supabase-backed notifications. Seeded 8-10 realistic notifications per vertical (130 total across 16 verticals). NotificationPanel and notifications page now fetch dynamically via API, with mark-read and mark-all-read mutations.",
+      status: "done",
+      priority: "high",
+      type: "feature",
+      assignee: "Replit Agent",
+      tags: ["notifications", "supabase", "per-vertical", "api-wiring"],
+      storyPoints: 5,
+      subtasks: [
+        { title: "Write seedNotifications() with 8-10 entries per vertical (16 verticals, 130 total)", completed: true },
+        { title: "Add POST /api/core/notifications/seed endpoint in routes.ts", completed: true },
+        { title: "Wire NotificationPanel to useQuery + mutations (replace mock data)", completed: true },
+        { title: "Wire notifications page to useQuery + mutations (replace mock data)", completed: true },
+        { title: "Verify per-vertical filtering and mark-read persistence", completed: true },
+      ],
+      comments: [
+        { author: "Replit Agent", content: "Each vertical gets domain-specific notifications: USDrop gets lead/enrollment/LLC alerts, LegalNations gets formation/EIN/BOI filings, Faire gets wholesale/fulfillment/retailer updates, etc. 3 unread + rest read per vertical. Timestamps range from 2 min ago to 3 days ago. action_url routes point to valid vertical pages. Removed NOTIFICATION_SOURCES map and faireNotifications mock dependency." },
+      ],
+    },
   ];
 
   for (const seed of taskSeeds) {

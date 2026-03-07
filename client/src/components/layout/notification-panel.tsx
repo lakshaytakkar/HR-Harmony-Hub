@@ -1,11 +1,50 @@
-import { useState } from "react";
 import { useLocation } from "wouter";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Bell, ShoppingBag, Truck, Package, DollarSign, Users, FileCheck, Settings, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useVertical } from "@/lib/vertical-store";
-import { faireNotifications, type AppNotification, type NotificationType } from "@/lib/mock-data-shared";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { AppNotification, NotificationType } from "@/lib/mock-data-shared";
+
+interface CoreNotification {
+  id: string;
+  vertical_id: string | null;
+  user_id: string | null;
+  type: string;
+  title: string;
+  description: string | null;
+  action_url: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+function formatTimeAgo(isoDate: string): string {
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr${hours > 1 ? "s" : ""} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? "s" : ""} ago`;
+}
+
+function mapToAppNotification(n: CoreNotification): AppNotification {
+  return {
+    id: n.id,
+    verticalId: n.vertical_id ?? "",
+    type: (n.type as NotificationType) || "system",
+    title: n.title,
+    description: n.description ?? "",
+    time: formatTimeAgo(n.created_at),
+    url: n.action_url ?? "#",
+    isRead: n.is_read,
+  };
+}
 
 export const TYPE_CONFIG: Record<NotificationType, { icon: React.ElementType; color: string; bg: string; label: string }> = {
   order:       { icon: ShoppingBag,    color: "#2563EB", bg: "#EFF6FF", label: "Orders" },
@@ -18,10 +57,6 @@ export const TYPE_CONFIG: Record<NotificationType, { icon: React.ElementType; co
   system:      { icon: Settings,       color: "#64748B", bg: "#F8FAFC", label: "System" },
 };
 
-export const NOTIFICATION_SOURCES: Record<string, AppNotification[]> = {
-  faire: faireNotifications,
-};
-
 export function NotificationRow({
   n,
   onRead,
@@ -31,7 +66,7 @@ export function NotificationRow({
   onRead: (id: string, url: string) => void;
   compact?: boolean;
 }) {
-  const cfg = TYPE_CONFIG[n.type];
+  const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.system;
   const Icon = cfg.icon;
 
   return (
@@ -65,28 +100,61 @@ export function NotificationRow({
   );
 }
 
+function NotificationSkeleton() {
+  return (
+    <div className="flex items-start gap-3 px-4 py-3 border-b">
+      <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-2.5 w-16" />
+      </div>
+    </div>
+  );
+}
+
 export function NotificationPanel() {
   const [, setLocation] = useLocation();
   const { currentVertical } = useVertical();
   const [open, setOpen] = useState(false);
 
-  const source = NOTIFICATION_SOURCES[currentVertical.id] ?? faireNotifications;
-  const [notifications, setNotifications] = useState<AppNotification[]>(source);
+  const notifQueryKey = ["/api/core/notifications", `?verticalId=${currentVertical.id}`];
 
+  const { data: rawNotifications, isLoading } = useQuery<CoreNotification[]>({
+    queryKey: notifQueryKey,
+  });
+
+  const notifications: AppNotification[] = (rawNotifications ?? []).map(mapToAppNotification);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
   const todayNotifs = notifications.slice(0, 5);
   const earlierNotifs = notifications.slice(5);
 
+  const markReadMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("POST", `/api/core/notifications/${id}/read`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notifQueryKey });
+    },
+  });
+
+  const markAllReadMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/core/notifications/read-all?verticalId=${currentVertical.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notifQueryKey });
+    },
+  });
+
   function markRead(id: string, url: string) {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
+    markReadMutation.mutate(id);
     setOpen(false);
     setLocation(url);
   }
 
   function markAllRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    markAllReadMutation.mutate();
   }
 
   return (
@@ -116,8 +184,8 @@ export function NotificationPanel() {
         className="w-96 p-0 shadow-lg"
         data-testid="notification-panel"
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-semibold">Notifications</span>
             {unreadCount > 0 && (
               <span className="h-5 min-w-5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold px-1.5 flex items-center justify-center">
@@ -137,35 +205,46 @@ export function NotificationPanel() {
         </div>
 
         <div className="overflow-y-auto" style={{ maxHeight: "420px" }}>
-          {todayNotifs.length > 0 && (
-            <div>
-              <div className="px-4 py-1.5 bg-muted/40 sticky top-0 z-10 border-b">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Today
-                </span>
-              </div>
-              {todayNotifs.map((n) => (
-                <NotificationRow key={n.id} n={n} onRead={markRead} compact />
-              ))}
-            </div>
-          )}
-          {earlierNotifs.length > 0 && (
-            <div>
-              <div className="px-4 py-1.5 bg-muted/40 sticky top-0 z-10 border-b">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Earlier
-                </span>
-              </div>
-              {earlierNotifs.map((n) => (
-                <NotificationRow key={n.id} n={n} onRead={markRead} compact />
-              ))}
-            </div>
-          )}
-          {notifications.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-              <Bell className="h-8 w-8 mb-2 opacity-20" />
-              <p className="text-sm">No notifications</p>
-            </div>
+          {isLoading ? (
+            <>
+              <NotificationSkeleton />
+              <NotificationSkeleton />
+              <NotificationSkeleton />
+              <NotificationSkeleton />
+            </>
+          ) : (
+            <>
+              {todayNotifs.length > 0 && (
+                <div>
+                  <div className="px-4 py-1.5 bg-muted/40 sticky top-0 z-10 border-b">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Today
+                    </span>
+                  </div>
+                  {todayNotifs.map((n) => (
+                    <NotificationRow key={n.id} n={n} onRead={markRead} compact />
+                  ))}
+                </div>
+              )}
+              {earlierNotifs.length > 0 && (
+                <div>
+                  <div className="px-4 py-1.5 bg-muted/40 sticky top-0 z-10 border-b">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Earlier
+                    </span>
+                  </div>
+                  {earlierNotifs.map((n) => (
+                    <NotificationRow key={n.id} n={n} onRead={markRead} compact />
+                  ))}
+                </div>
+              )}
+              {notifications.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                  <Bell className="h-8 w-8 mb-2 opacity-20" />
+                  <p className="text-sm">No notifications</p>
+                </div>
+              )}
+            </>
           )}
         </div>
 

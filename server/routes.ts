@@ -91,6 +91,7 @@ import {
   getCoreNotifications,
   markNotificationRead,
   markAllNotificationsRead,
+  seedNotifications,
   getCoreTickets,
   getCoreTicket,
   createCoreTicket,
@@ -1303,6 +1304,13 @@ export async function registerRoutes(
       await markAllNotificationsRead(verticalId);
       return res.json({ ok: true });
     } catch { return res.status(500).json({ error: "Failed to mark all read" }); }
+  });
+
+  app.post("/api/core/notifications/seed", async (_req, res) => {
+    try {
+      const result = await seedNotifications();
+      return res.json(result);
+    } catch { return res.status(500).json({ error: "Failed to seed notifications" }); }
   });
 
   // Tickets

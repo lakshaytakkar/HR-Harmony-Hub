@@ -173,7 +173,7 @@ Supabase project: `ngvrnwjisntjmqrtnume` (ap-southeast-1). All core tables are i
 | `channel_messages` | 0+ | Messages per channel |
 | `resources` | 0+ | Shared documents/links per vertical |
 | `contacts` | 0+ | Important contacts, supports multi-vertical via `vertical_ids TEXT[]` |
-| `notifications` | 0+ | System alerts; `user_id NULL` = broadcast to all |
+| `notifications` | 130 (seeded) | Per-vertical alerts; 8-10 per vertical, 3 unread each; `user_id NULL` = broadcast |
 
 ### FK Graph
 ```
@@ -217,6 +217,7 @@ channels  ←── channel_messages.channel_id (ON DELETE CASCADE)
 | GET | `/api/core/notifications?verticalId=&userId=` | Notifications |
 | POST | `/api/core/notifications/:id/read` | Mark one read |
 | POST | `/api/core/notifications/read-all?verticalId=` | Mark all read |
+| POST | `/api/core/notifications/seed` | Seed 8-10 notifications per vertical (all 16) |
 
 ### Tasks Page Live DB Wiring
 `client/src/pages/universal/tasks.tsx` now uses:
