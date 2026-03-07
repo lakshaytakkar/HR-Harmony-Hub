@@ -31,6 +31,7 @@ All 17 verticals and 177 pages follow a single unified design system. Structure,
 #### Component Systems (both canonical, unified via ds.ts)
 - **`@/components/layout`**: `PageShell`, `PageHeader`, `HeroBanner`, `StatCard`, `StatGrid`, `SectionCard`, `SectionGrid`, `FilterPill`, `PrimaryAction`, `IndexToolbar`, `DataTableContainer`, `DataTH/TD/TR`, `SortableDataTH`, `DetailSection`, `DetailModal`, `InfoRow`
 - **`@/components/hr`**: `DataTable` (column-config), `StatusBadge` (extended variant system), `FormDialog`, `StatsCard`, `EmptyState`, `StageStepper`
+- **`@/components/ui/team-member-card`**: `TeamMemberCard` — shared thin vertical card for team member display across all verticals. Props: name, role, department, email, phone, status, location, accentColor, action callbacks (onEmailClick, onWhatsAppClick, onSlackClick, onPhoneClick). Uses `react-icons/si` for WhatsApp/Slack logos.
 
 #### Master Barrel: `client/src/lib/ds.ts`
 Single import for all design primitives — any page can import from `@/lib/ds` instead of multiple sources.
