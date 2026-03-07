@@ -1,426 +1,671 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Mail, Phone, Calendar, User, Building2, MapPin, Clock } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import {
+  ArrowLeft, Mail, Phone, Globe, Building2, Hash, CreditCard,
+  FileText, Key, CheckCircle2, Circle, Shield, ExternalLink,
+  Plus, Copy, Eye, EyeOff, Pencil, Save, X,
+} from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DataTable, type Column } from "@/components/hr/data-table";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/hr/status-badge";
-import { StageStepper } from "@/components/hr/stage-stepper";
 import { PageTransition } from "@/components/ui/animated";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import {
-  formationClients,
-  stageChecklists,
-  clientDocuments,
-  formationTasks,
-} from "@/lib/mock-data";
-import { stageDefinitions } from "@shared/schema";
-import type { ClientDocument, FormationTask, StageChecklist } from "@shared/schema";
 import { PageShell } from "@/components/layout";
-import { PersonCell, CompanyCell } from "@/components/ui/avatar-cells";
+import { FormDialog } from "@/components/hr/form-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const riskVariantMap: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
-  "on-track": "success",
-  "delayed": "warning",
-  "at-risk": "error",
+const LLC_STAGES = [
+  "LLC Booked", "Onboarded", "LLC Under Formation", "Under EIN",
+  "Under Website Formation", "EIN received", "Received EIN Letter",
+  "Under BOI", "Under Banking", "Under Payment Gateway",
+  "Ready to Deliver", "Delivered",
+];
+
+const statusVariantMap: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
+  "LLC Booked": "neutral", "Onboarded": "info", "LLC Under Formation": "info",
+  "Under EIN": "warning", "Under Website Formation": "warning", "EIN received": "info",
+  "Received EIN Letter": "info", "Under BOI": "warning", "Under Banking": "warning",
+  "Under Payment Gateway": "warning", "Ready to Deliver": "info",
+  "Delivered": "success", "Refunded": "error",
 };
 
-const priorityVariantMap: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
-  high: "error",
-  medium: "warning",
-  low: "neutral",
+const phaseLabels: Record<string, string> = {
+  onboarding: "Onboarding Process",
+  legal: "Legal Process",
+  bank: "Bank Process",
 };
 
-const taskStatusVariantMap: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
-  pending: "warning",
-  "in-progress": "info",
-  completed: "success",
-  overdue: "error",
-};
-
-const docStatusVariantMap: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
-  uploaded: "info",
-  pending: "warning",
-  verified: "success",
+const phaseColors: Record<string, string> = {
+  onboarding: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800",
+  legal: "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800",
+  bank: "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800",
 };
 
 export default function ClientDetailPage() {
   const [, params] = useRoute("/legalnations/clients/:id");
   const [, navigate] = useLocation();
-  const loading = useSimulatedLoading();
-
+  const { toast } = useToast();
   const clientId = params?.id;
-  const client = formationClients.find((c) => c.id === clientId);
 
-  const checklists = useMemo(
-    () => stageChecklists.filter((c) => c.clientId === clientId),
-    [clientId]
-  );
-  const documents = useMemo(
-    () => clientDocuments.filter((d) => d.clientId === clientId),
-    [clientId]
-  );
-  const tasks = useMemo(
-    () => formationTasks.filter((t) => t.clientId === clientId),
-    [clientId]
-  );
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState<any>({});
+  const [credDialogOpen, setCredDialogOpen] = useState(false);
+  const [newCred, setNewCred] = useState({ service_name: "", category: "", access_url: "", user_id: "", password: "" });
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
 
-  const checklistByStage = useMemo(() => {
-    const map: Record<number, StageChecklist[]> = {};
-    checklists.forEach((c) => {
-      if (!map[c.stage]) map[c.stage] = [];
-      map[c.stage].push(c);
-    });
-    return map;
-  }, [checklists]);
+  const { data, isLoading } = useQuery<{
+    client: any;
+    checklist: any[];
+    documents: any[];
+    credentials: any[];
+  }>({
+    queryKey: ["/api/legalnations/clients", clientId],
+    enabled: !!clientId,
+  });
 
-  const docColumns: Column<ClientDocument>[] = [
-    {
-      key: "title",
-      header: "Document",
-      sortable: true,
-      render: (item) => <span className="text-sm font-medium" data-testid={`text-doc-${item.id}`}>{item.title}</span>,
+  const updateMutation = useMutation({
+    mutationFn: async (updates: any) => {
+      const res = await apiRequest("PATCH", `/api/legalnations/clients/${clientId}`, updates);
+      return res.json();
     },
-    {
-      key: "category",
-      header: "Category",
-      render: (item) => <StatusBadge status={item.category} variant="info" />,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/legalnations/clients", clientId] });
+      setEditing(false);
+      toast({ title: "Client updated" });
     },
-    {
-      key: "stage",
-      header: "Stage",
-      render: (item) => (
-        <span className="text-sm text-muted-foreground">
-          {stageDefinitions[item.stage]?.name || `Stage ${item.stage}`}
-        </span>
-      ),
-    },
-    {
-      key: "uploadDate",
-      header: "Uploaded",
-      sortable: true,
-      render: (item) => <span className="text-sm text-muted-foreground">{item.uploadDate}</span>,
-    },
-    {
-      key: "uploadedBy",
-      header: "By",
-      render: (item) => <PersonCell name={item.uploadedBy} size="sm" />,
-    },
-    {
-      key: "fileSize",
-      header: "Size",
-      render: (item) => <span className="text-sm text-muted-foreground">{item.fileSize}</span>,
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (item) => (
-        <StatusBadge
-          status={item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-          variant={docStatusVariantMap[item.status]}
-        />
-      ),
-    },
-  ];
+  });
 
-  const taskColumns: Column<FormationTask>[] = [
-    {
-      key: "title",
-      header: "Task",
-      sortable: true,
-      render: (item) => (
-        <div>
-          <p className="text-sm font-medium" data-testid={`text-task-${item.id}`}>{item.title}</p>
-          <p className="text-xs text-muted-foreground line-clamp-1">{item.description}</p>
-        </div>
-      ),
+  const checklistMutation = useMutation({
+    mutationFn: async ({ id, is_completed }: { id: string; is_completed: boolean }) => {
+      const res = await apiRequest("PATCH", `/api/legalnations/checklist/${id}`, { is_completed });
+      return res.json();
     },
-    {
-      key: "assignedTo",
-      header: "Assigned To",
-      render: (item) => <PersonCell name={item.assignedTo} size="sm" />,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/legalnations/clients", clientId] });
     },
-    {
-      key: "dueDate",
-      header: "Due",
-      sortable: true,
-      render: (item) => <span className="text-sm text-muted-foreground">{item.dueDate}</span>,
-    },
-    {
-      key: "priority",
-      header: "Priority",
-      render: (item) => (
-        <StatusBadge
-          status={item.priority.charAt(0).toUpperCase() + item.priority.slice(1)}
-          variant={priorityVariantMap[item.priority]}
-        />
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (item) => (
-        <StatusBadge
-          status={item.status === "in-progress" ? "In Progress" : item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-          variant={taskStatusVariantMap[item.status]}
-        />
-      ),
-    },
-  ];
+  });
 
-  if (loading) {
+  const addCredMutation = useMutation({
+    mutationFn: async (cred: any) => {
+      const res = await apiRequest("POST", `/api/legalnations/clients/${clientId}/credentials`, cred);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/legalnations/clients", clientId] });
+      setCredDialogOpen(false);
+      setNewCred({ service_name: "", category: "", access_url: "", user_id: "", password: "" });
+      toast({ title: "Credential added" });
+    },
+  });
+
+  const deleteCredMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/legalnations/credentials/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/legalnations/clients", clientId] });
+      toast({ title: "Credential removed" });
+    },
+  });
+
+  if (isLoading || !data) {
     return (
       <PageShell>
-        <div className="flex flex-col gap-4">
-          <div className="h-8 w-48 animate-pulse rounded-md bg-muted" />
-          <div className="h-16 w-full animate-pulse rounded-md bg-muted" />
-          <div className="h-64 w-full animate-pulse rounded-md bg-muted" />
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-muted rounded w-64" />
+          <div className="h-48 bg-muted rounded" />
+          <div className="h-96 bg-muted rounded" />
         </div>
       </PageShell>
     );
   }
 
+  const { client, checklist, documents, credentials } = data;
   if (!client) {
     return (
       <PageShell>
-        <PageTransition>
-          <div className="flex flex-col items-center gap-4 py-12">
-            <p className="text-sm font-medium" data-testid="text-not-found">Client not found</p>
-            <Button size="sm" variant="outline" onClick={() => navigate("/legalnations/clients")} data-testid="button-back">
-              Back to Clients
-            </Button>
-          </div>
-        </PageTransition>
+        <div className="text-center py-20">
+          <h2 className="text-xl font-semibold">Client not found</h2>
+          <Button className="mt-4" onClick={() => navigate("/legalnations/clients")}>Back to Clients</Button>
+        </div>
       </PageShell>
     );
   }
 
-  const completedChecks = checklists.filter((c) => c.completed).length;
-  const totalChecks = checklists.length;
-  const completionPercent = totalChecks > 0 ? Math.round((completedChecks / totalChecks) * 100) : 0;
+  const currentStageIdx = LLC_STAGES.indexOf(client.llc_status);
+  const progressPercent = client.llc_status === "Delivered" ? 100 :
+    client.llc_status === "Refunded" ? 0 :
+    Math.round(((currentStageIdx + 1) / LLC_STAGES.length) * 100);
+
+  const groupedChecklist = checklist.reduce((acc: Record<string, any[]>, item: any) => {
+    const key = (item.phase || "").toLowerCase();
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
+
+  const startEditing = () => {
+    setEditing(true);
+    setEditData({ ...client });
+  };
+
+  const saveEdits = () => {
+    updateMutation.mutate(editData);
+  };
+
+  const formatCurrency = (val: number) => val ? `₹${val.toLocaleString("en-IN")}` : "—";
 
   return (
     <PageShell>
       <PageTransition>
-        <div className="mb-4">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => navigate("/legalnations/clients")}
-            data-testid="button-back-clients"
-          >
-            <ArrowLeft className="mr-1.5 size-3.5" />
-            Back to Clients
-          </Button>
-        </div>
-
-        <div className="mb-6 flex flex-col gap-4">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold font-heading" data-testid="text-company-name">
-                {client.companyName}
-              </h1>
-              <p className="text-sm text-muted-foreground" data-testid="text-client-name">
-                {client.clientName} &middot; {client.companyType} &middot; {client.state}
-              </p>
+        <div className="space-y-6">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/legalnations/clients")} data-testid="btn-back">
+                <ArrowLeft className="size-4" />
+              </Button>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold" data-testid="text-client-name">{client.client_name}</h1>
+                  <StatusBadge status={client.llc_status} variant={statusVariantMap[client.llc_status] || "neutral"} />
+                </div>
+                <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                  <span className="font-mono">{client.client_code}</span>
+                  {client.llc_name && <span>• {client.llc_name}</span>}
+                  {client.plan && <span>• {client.plan}</span>}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-                <Button variant="outline" size="sm" className="gap-1.5 text-green-600 border-green-200 hover:bg-green-50">
-                  <SiWhatsapp className="size-3.5" /> WhatsApp
-                </Button>
-              </a>
-              <a href={`mailto:${client.email}`}>
-                <Button variant="outline" size="sm" className="gap-1.5">
-                  <Mail className="size-3.5" /> Email
-                </Button>
-              </a>
-              <StatusBadge
-                status={client.riskFlag === "on-track" ? "On Track" : client.riskFlag === "at-risk" ? "At Risk" : "Delayed"}
-                variant={riskVariantMap[client.riskFlag]}
-              />
-              <StatusBadge
-                status={client.priority.charAt(0).toUpperCase() + client.priority.slice(1) + " Priority"}
-                variant={priorityVariantMap[client.priority]}
-              />
-              <StatusBadge status={client.packageType} variant="info" />
+            <div className="flex items-center gap-2">
+              {client.contact_number && (
+                <a href={`https://wa.me/${client.contact_number.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
+                  <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50" data-testid="btn-whatsapp">
+                    <SiWhatsapp className="size-4 mr-1.5" /> WhatsApp
+                  </Button>
+                </a>
+              )}
+              {client.email && (
+                <a href={`mailto:${client.email}`}>
+                  <Button variant="outline" size="sm" data-testid="btn-email">
+                    <Mail className="size-4 mr-1.5" /> Email
+                  </Button>
+                </a>
+              )}
+              {client.contact_number && (
+                <a href={`tel:${client.contact_number}`}>
+                  <Button variant="outline" size="sm" data-testid="btn-call">
+                    <Phone className="size-4 mr-1.5" /> Call
+                  </Button>
+                </a>
+              )}
             </div>
           </div>
 
-          <StageStepper
-            currentStage={client.currentStage}
-            stages={stageDefinitions}
-            className="py-2"
-          />
-        </div>
+          <Card>
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Formation Progress</span>
+                <span className="text-sm text-muted-foreground">{progressPercent}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2 mb-3">
+                <div
+                  className="bg-primary rounded-full h-2 transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <div className="flex gap-1 overflow-x-auto pb-1">
+                {LLC_STAGES.map((stage, idx) => {
+                  const isCompleted = idx < currentStageIdx || client.llc_status === "Delivered";
+                  const isCurrent = idx === currentStageIdx && client.llc_status !== "Delivered";
+                  return (
+                    <div
+                      key={stage}
+                      className={`flex-1 min-w-0 text-center px-1 py-1 rounded text-[10px] font-medium truncate ${
+                        isCompleted ? "bg-primary/10 text-primary" :
+                        isCurrent ? "bg-primary text-primary-foreground" :
+                        "bg-muted text-muted-foreground"
+                      }`}
+                      title={stage}
+                      data-testid={`stage-${idx}`}
+                    >
+                      {stage}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
-        <Tabs defaultValue="overview" data-testid="client-tabs">
-          <TabsList data-testid="client-tabs-list">
-            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-            <TabsTrigger value="checklist" data-testid="tab-checklist">Checklist ({completedChecks}/{totalChecks})</TabsTrigger>
-            <TabsTrigger value="documents" data-testid="tab-documents">Documents ({documents.length})</TabsTrigger>
-            <TabsTrigger value="tasks" data-testid="tab-tasks">Tasks ({tasks.length})</TabsTrigger>
-          </TabsList>
+          <Tabs defaultValue="overview" data-testid="client-tabs">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+              <TabsTrigger value="onboarding" data-testid="tab-onboarding">Onboarding</TabsTrigger>
+              <TabsTrigger value="documents" data-testid="tab-documents">Documents</TabsTrigger>
+              <TabsTrigger value="credentials" data-testid="tab-credentials">Credentials</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="overview">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Card data-testid="card-client-info">
-                <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Client Information</CardTitle>
-                  <User className="size-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="size-3.5 text-muted-foreground" />
-                    <span data-testid="text-email">{client.email}</span>
+            <TabsContent value="overview" className="space-y-4 mt-4">
+              <div className="flex justify-end">
+                {editing ? (
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setEditing(false)} data-testid="btn-cancel-edit">
+                      <X className="size-3.5 mr-1" /> Cancel
+                    </Button>
+                    <Button size="sm" onClick={saveEdits} disabled={updateMutation.isPending} data-testid="btn-save-edit">
+                      <Save className="size-3.5 mr-1" /> Save
+                    </Button>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="size-3.5 text-muted-foreground" />
-                    <span data-testid="text-phone">{client.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Building2 className="size-3.5 text-muted-foreground" />
-                    <span>{client.companyType}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="size-3.5 text-muted-foreground" />
-                    <span>{client.state}</span>
-                  </div>
-                </CardContent>
-              </Card>
+                ) : (
+                  <Button size="sm" variant="outline" onClick={startEditing} data-testid="btn-edit-client">
+                    <Pencil className="size-3.5 mr-1" /> Edit
+                  </Button>
+                )}
+              </div>
 
-              <Card data-testid="card-formation-info">
-                <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Formation Details</CardTitle>
-                  <Building2 className="size-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="size-3.5 text-muted-foreground" />
-                    <span>Started: {client.startDate}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="size-3.5 text-muted-foreground" />
-                    <span>Expected: {client.expectedCompletion}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <User className="size-3.5 text-muted-foreground" />
-                    <span>Manager:</span> <PersonCell name={client.assignedManager} size="sm" />
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Completion: </span>
-                    <span className="font-medium">{completionPercent}%</span>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Client Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <InfoRow icon={<Hash className="size-3.5" />} label="Client ID" value={client.client_code} />
+                    <InfoRow icon={<Mail className="size-3.5" />} label="Email" value={editing ? (
+                      <Input value={editData.email || ""} onChange={(e) => setEditData({...editData, email: e.target.value})} className="h-7 text-sm" />
+                    ) : client.email} />
+                    <InfoRow icon={<Phone className="size-3.5" />} label="Contact" value={editing ? (
+                      <Input value={editData.contact_number || ""} onChange={(e) => setEditData({...editData, contact_number: e.target.value})} className="h-7 text-sm" />
+                    ) : client.contact_number} />
+                    <InfoRow icon={<Globe className="size-3.5" />} label="Country" value={editing ? (
+                      <Input value={editData.country || ""} onChange={(e) => setEditData({...editData, country: e.target.value})} className="h-7 text-sm" />
+                    ) : client.country} />
+                  </CardContent>
+                </Card>
 
-              <Card data-testid="card-notes">
-                <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Notes</CardTitle>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">LLC Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <InfoRow icon={<Building2 className="size-3.5" />} label="LLC Name" value={editing ? (
+                      <Input value={editData.llc_name || ""} onChange={(e) => setEditData({...editData, llc_name: e.target.value})} className="h-7 text-sm" />
+                    ) : client.llc_name} />
+                    <InfoRow icon={<Mail className="size-3.5" />} label="LLC Email" value={editing ? (
+                      <Input value={editData.llc_email || ""} onChange={(e) => setEditData({...editData, llc_email: e.target.value})} className="h-7 text-sm" />
+                    ) : client.llc_email} />
+                    <InfoRow icon={<Hash className="size-3.5" />} label="EIN" value={editing ? (
+                      <Input value={editData.ein || ""} onChange={(e) => setEditData({...editData, ein: e.target.value})} className="h-7 text-sm" />
+                    ) : client.ein} />
+                    <InfoRow icon={<Globe className="size-3.5" />} label="Website" value={editing ? (
+                      <Input value={editData.website_url || ""} onChange={(e) => setEditData({...editData, website_url: e.target.value})} className="h-7 text-sm" />
+                    ) : client.website_url ? (
+                      <a href={client.website_url} target="_blank" rel="noreferrer" className="text-primary hover:underline flex items-center gap-1">
+                        {client.website_url} <ExternalLink className="size-3" />
+                      </a>
+                    ) : null} />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Banking & Finance</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <InfoRow icon={<CreditCard className="size-3.5" />} label="Bank" value={editing ? (
+                      <Input value={editData.bank_name || ""} onChange={(e) => setEditData({...editData, bank_name: e.target.value})} className="h-7 text-sm" />
+                    ) : client.bank_name} />
+                    <InfoRow icon={<Hash className="size-3.5" />} label="Account #" value={editing ? (
+                      <Input value={editData.bank_account_number || ""} onChange={(e) => setEditData({...editData, bank_account_number: e.target.value})} className="h-7 text-sm" />
+                    ) : client.bank_account_number} />
+                    <InfoRow icon={<Hash className="size-3.5" />} label="Routing #" value={editing ? (
+                      <Input value={editData.bank_routing_number || ""} onChange={(e) => setEditData({...editData, bank_routing_number: e.target.value})} className="h-7 text-sm" />
+                    ) : client.bank_routing_number} />
+                    <InfoRow label="Amount Received" value={formatCurrency(client.amount_received)} />
+                    {client.remaining_payment > 0 && (
+                      <InfoRow label="Remaining" value={<span className="text-orange-600 font-medium">{formatCurrency(client.remaining_payment)}</span>} />
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Dates</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <InfoRow label="Payment Date" value={client.date_of_payment} />
+                    <InfoRow label="Onboarding Date" value={client.date_of_onboarding} />
+                    <InfoRow label="Onboarding Call" value={client.date_of_onboarding_call} />
+                    <InfoRow label="Doc Submission" value={client.date_of_document_submission} />
+                    <InfoRow label="Closing Date" value={client.date_of_closing} />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Address & Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <InfoRow label="LLC Address" value={editing ? (
+                      <Input value={editData.llc_address || ""} onChange={(e) => setEditData({...editData, llc_address: e.target.value})} className="h-7 text-sm" />
+                    ) : client.llc_address} />
+                    {editing ? (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Notes</Label>
+                        <Textarea
+                          value={editData.notes || ""}
+                          onChange={(e) => setEditData({...editData, notes: e.target.value})}
+                          className="text-sm mt-1"
+                          rows={3}
+                        />
+                      </div>
+                    ) : client.notes ? (
+                      <div>
+                        <span className="text-xs text-muted-foreground">Notes</span>
+                        <p className="text-sm mt-0.5">{client.notes}</p>
+                      </div>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Update Status</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground" data-testid="text-notes">
-                    {client.notes || "No notes yet."}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <Select
+                      value={client.llc_status}
+                      onValueChange={(val) => updateMutation.mutate({ llc_status: val })}
+                    >
+                      <SelectTrigger className="w-64" data-testid="select-status">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[...LLC_STAGES, "Refunded"].map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {client.client_health && (
+                      <Select
+                        value={client.client_health}
+                        onValueChange={(val) => updateMutation.mutate({ client_health: val })}
+                      >
+                        <SelectTrigger className="w-40" data-testid="select-health">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["Healthy", "Neutral", "At Risk", "Critical"].map((h) => (
+                            <SelectItem key={h} value={h}>{h}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value="checklist">
-            {Object.keys(checklistByStage).length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground" data-testid="text-no-checklist">
-                No checklist items found for this client.
-              </p>
-            ) : (
-              <Accordion
-                type="multiple"
-                defaultValue={stageDefinitions.map((s) => String(s.number))}
-                className="rounded-lg border bg-background"
-              >
-                {stageDefinitions
-                  .filter((s) => checklistByStage[s.number])
-                  .map((stage) => {
-                    const items = checklistByStage[stage.number] || [];
-                    const done = items.filter((i) => i.completed).length;
-                    return (
-                      <AccordionItem
-                        key={stage.number}
-                        value={String(stage.number)}
-                        data-testid={`accordion-stage-${stage.number}`}
-                      >
-                        <AccordionTrigger className="px-4">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">
-                              Stage {stage.number}: {stage.name}
-                            </span>
-                            <StatusBadge
-                              status={`${done}/${items.length}`}
-                              variant={done === items.length ? "success" : "neutral"}
+            <TabsContent value="onboarding" className="space-y-4 mt-4">
+              {(["onboarding", "legal", "bank"] as const).map((phase) => {
+                const items = groupedChecklist[phase] || [];
+                const completed = items.filter((i: any) => i.is_completed).length;
+                const total = items.length;
+                const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+                return (
+                  <Card key={phase} className={`border ${phaseColors[phase]}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base font-semibold">{phaseLabels[phase]}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">{completed}/{total}</span>
+                          <div className="w-24 bg-muted rounded-full h-1.5">
+                            <div
+                              className={`rounded-full h-1.5 transition-all ${pct === 100 ? "bg-green-500" : "bg-primary"}`}
+                              style={{ width: `${pct}%` }}
                             />
                           </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-4">
-                          <div className="flex flex-col gap-2">
-                            {items.map((item) => (
-                              <div
-                                key={item.id}
-                                className="flex items-center gap-3 rounded-md border px-3 py-2"
-                                data-testid={`checklist-item-${item.id}`}
-                              >
-                                <Checkbox
-                                  checked={item.completed}
-                                  data-testid={`checkbox-${item.id}`}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className={`text-sm ${item.completed ? "line-through text-muted-foreground" : ""}`}>
-                                    {item.item}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {item.responsible} &middot; Due: {item.deadline}
-                                  </p>
-                                </div>
-                                {item.documentAttachment && (
-                                  <StatusBadge status={item.documentAttachment} variant="warning" />
-                                )}
-                              </div>
-                            ))}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-1">
+                        {items.sort((a: any, b: any) => a.sort_order - b.sort_order).map((item: any) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-background/60 cursor-pointer"
+                            onClick={() => checklistMutation.mutate({ id: item.id, is_completed: !item.is_completed })}
+                            data-testid={`checklist-${item.id}`}
+                          >
+                            {item.is_completed ? (
+                              <CheckCircle2 className="size-4 text-green-600 shrink-0" />
+                            ) : (
+                              <Circle className="size-4 text-muted-foreground shrink-0" />
+                            )}
+                            <span className={`text-sm flex-1 ${item.is_completed ? "line-through text-muted-foreground" : ""}`}>
+                              {item.step_name}
+                            </span>
+                            {item.is_completed && item.completed_at && (
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(item.completed_at).toLocaleDateString()}
+                              </span>
+                            )}
                           </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    );
-                  })}
-              </Accordion>
-            )}
-          </TabsContent>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </TabsContent>
 
-          <TabsContent value="documents">
-            <DataTable
-              data={documents}
-              columns={docColumns}
-              searchPlaceholder="Search documents..."
-              searchKey="title"
-            />
-          </TabsContent>
+            <TabsContent value="documents" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Client Documents</CardTitle>
+                    <span className="text-sm text-muted-foreground">{documents.length} document{documents.length !== 1 ? "s" : ""}</span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {documents.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <FileText className="size-10 mx-auto mb-3 opacity-40" />
+                      <p className="text-sm">No documents uploaded yet</p>
+                      <p className="text-xs mt-1">Documents like EIN Letter, Operating Agreement, Articles of Organization will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {documents.map((doc: any) => (
+                        <div key={doc.id} className="flex items-center justify-between py-2 px-3 rounded-md border">
+                          <div className="flex items-center gap-3">
+                            <FileText className="size-4 text-red-500" />
+                            <div>
+                              <p className="text-sm font-medium">{doc.document_name}</p>
+                              <p className="text-xs text-muted-foreground">{doc.document_type} • {doc.direction === "from_client" ? "From Client" : "To Client"}</p>
+                            </div>
+                          </div>
+                          {doc.file_url && (
+                            <a href={doc.file_url} target="_blank" rel="noreferrer">
+                              <Button variant="ghost" size="sm">
+                                <ExternalLink className="size-3.5" />
+                              </Button>
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-          <TabsContent value="tasks">
-            <DataTable
-              data={tasks}
-              columns={taskColumns}
-              searchPlaceholder="Search tasks..."
-              searchKey="title"
-              filters={[
-                { label: "Priority", key: "priority", options: ["high", "medium", "low"] },
-                { label: "Status", key: "status", options: ["pending", "in-progress", "completed", "overdue"] },
-              ]}
-            />
-          </TabsContent>
-        </Tabs>
+                  <div className="mt-4 p-4 border-2 border-dashed rounded-lg text-center">
+                    <p className="text-sm text-muted-foreground mb-1">Document Types</p>
+                    <div className="flex flex-wrap gap-1.5 justify-center">
+                      {["EIN Letter", "Operating Agreement", "Initial Resolutions", "Articles of Organization", "Wire Details", "Backup Codes", "PAN/Aadhar", "Passport"].map((t) => (
+                        <span key={t} className="text-xs px-2 py-0.5 bg-muted rounded-full">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="credentials" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">External App Credentials</CardTitle>
+                    <Button size="sm" onClick={() => setCredDialogOpen(true)} data-testid="btn-add-credential">
+                      <Plus className="size-3.5 mr-1" /> Add Credential
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {credentials.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Key className="size-10 mx-auto mb-3 opacity-40" />
+                      <p className="text-sm">No credentials stored</p>
+                      <p className="text-xs mt-1">Add Gmail, Stripe, Mercury Bank, Payoneer, or Wise credentials</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {credentials.map((cred: any) => (
+                        <div key={cred.id} className="border rounded-lg p-4" data-testid={`credential-${cred.id}`}>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Shield className="size-4 text-primary" />
+                              <span className="font-medium text-sm">{cred.service_name}</span>
+                              {cred.category && (
+                                <span className="text-xs px-2 py-0.5 bg-muted rounded-full">{cred.category}</span>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-destructive hover:text-destructive"
+                              onClick={() => deleteCredMutation.mutate(cred.id)}
+                              data-testid={`btn-delete-cred-${cred.id}`}
+                            >
+                              <X className="size-3.5" />
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                            {cred.access_url && (
+                              <div>
+                                <span className="text-xs text-muted-foreground block">Access Link</span>
+                                <a href={cred.access_url} target="_blank" rel="noreferrer" className="text-primary hover:underline flex items-center gap-1">
+                                  Open <ExternalLink className="size-3" />
+                                </a>
+                              </div>
+                            )}
+                            {cred.user_id && (
+                              <div>
+                                <span className="text-xs text-muted-foreground block">User ID</span>
+                                <div className="flex items-center gap-1">
+                                  <span>{cred.user_id}</span>
+                                  <Button variant="ghost" size="icon" className="size-5" onClick={() => { navigator.clipboard.writeText(cred.user_id); toast({ title: "Copied" }); }}>
+                                    <Copy className="size-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                            {cred.password && (
+                              <div>
+                                <span className="text-xs text-muted-foreground block">Password</span>
+                                <div className="flex items-center gap-1">
+                                  <span className="font-mono text-xs">
+                                    {showPasswords[cred.id] ? cred.password : "••••••••"}
+                                  </span>
+                                  <Button variant="ghost" size="icon" className="size-5" onClick={() => setShowPasswords(p => ({...p, [cred.id]: !p[cred.id]}))}>
+                                    {showPasswords[cred.id] ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="size-5" onClick={() => { navigator.clipboard.writeText(cred.password); toast({ title: "Copied" }); }}>
+                                    <Copy className="size-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <FormDialog
+                open={credDialogOpen}
+                onOpenChange={setCredDialogOpen}
+                title="Add Credential"
+                onSubmit={() => addCredMutation.mutate(newCred)}
+                submitLabel="Save Credential"
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <Label>Service Name</Label>
+                    <Select value={newCred.service_name} onValueChange={(v) => setNewCred({...newCred, service_name: v, category: v === "Gmail" ? "Email" : v === "Stripe" ? "Payment Gateway" : "Bank Account"})}>
+                      <SelectTrigger data-testid="select-service">
+                        <SelectValue placeholder="Select service" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Gmail">Gmail</SelectItem>
+                        <SelectItem value="Stripe">Stripe</SelectItem>
+                        <SelectItem value="Mercury Bank">Mercury Bank</SelectItem>
+                        <SelectItem value="Payoneer Bank">Payoneer Bank</SelectItem>
+                        <SelectItem value="Wise Bank">Wise Bank</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label>Category</Label>
+                    <Input value={newCred.category} onChange={(e) => setNewCred({...newCred, category: e.target.value})} placeholder="Email / Bank / Payment Gateway" data-testid="input-category" />
+                  </div>
+                  <div className="flex flex-col gap-1.5 col-span-2">
+                    <Label>Access URL</Label>
+                    <Input value={newCred.access_url} onChange={(e) => setNewCred({...newCred, access_url: e.target.value})} placeholder="https://..." data-testid="input-access-url" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label>User ID / Email</Label>
+                    <Input value={newCred.user_id} onChange={(e) => setNewCred({...newCred, user_id: e.target.value})} placeholder="user@example.com" data-testid="input-user-id" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label>Password</Label>
+                    <Input type="password" value={newCred.password} onChange={(e) => setNewCred({...newCred, password: e.target.value})} placeholder="••••••••" data-testid="input-password" />
+                  </div>
+                </div>
+              </FormDialog>
+            </TabsContent>
+          </Tabs>
+        </div>
       </PageTransition>
     </PageShell>
+  );
+}
+
+function InfoRow({ icon, label, value }: { icon?: React.ReactNode; label: string; value: any }) {
+  return (
+    <div className="flex items-start gap-2">
+      {icon && <span className="mt-0.5 text-muted-foreground">{icon}</span>}
+      <div className="flex-1 min-w-0">
+        <span className="text-xs text-muted-foreground block">{label}</span>
+        <span className="text-sm">{value || "—"}</span>
+      </div>
+    </div>
   );
 }

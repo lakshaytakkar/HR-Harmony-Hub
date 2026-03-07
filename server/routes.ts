@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { aiChatRouter } from "./ai-chat";
 import { imageGenRouter } from "./image-gen";
 import { devProjectsRouter } from "./dev-projects";
+import { legalnationsRouter } from "./legalnations-api";
 import {
   getStoreCredentials,
   listStores,
@@ -1395,6 +1396,7 @@ export async function registerRoutes(
   app.use("/api/ai", aiChatRouter);
   app.use("/api/images", imageGenRouter);
   app.use("/api/dev", devProjectsRouter);
+  app.use("/api/legalnations", legalnationsRouter);
 
   return httpServer;
 }

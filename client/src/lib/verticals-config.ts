@@ -272,6 +272,14 @@ export const verticals: Vertical[] = [
         ],
       },
       {
+        title: "Tax Filing",
+        defaultUrl: "/legalnations/tax-filing",
+        icon: FileText,
+        items: [
+          { title: "Tax Filing Service", url: "/legalnations/tax-filing" },
+        ],
+      },
+      {
         title: "Compliance",
         defaultUrl: "/legalnations/compliance",
         icon: Shield,

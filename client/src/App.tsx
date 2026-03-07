@@ -23,6 +23,7 @@ import DocumentVault from "@/pages/document-vault";
 import Templates from "@/pages/templates";
 import ComplianceTracker from "@/pages/compliance-tracker";
 import AnnualReports from "@/pages/annual-reports";
+import TaxFiling from "@/pages/tax-filing";
 import FormationAnalytics from "@/pages/formation-analytics";
 import TeamPerformance from "@/pages/team-performance";
 import DesignSystem from "@/pages/dev/design-system";
@@ -259,6 +260,7 @@ function Router() {
       <Route path="/legalnations/templates" component={Templates} />
       <Route path="/legalnations/compliance" component={ComplianceTracker} />
       <Route path="/legalnations/annual-reports" component={AnnualReports} />
+      <Route path="/legalnations/tax-filing" component={TaxFiling} />
       <Route path="/legalnations/analytics" component={FormationAnalytics} />
       <Route path="/legalnations/team-performance" component={TeamPerformance} />
       <Route path="/usdrop" component={SalesDashboard} />

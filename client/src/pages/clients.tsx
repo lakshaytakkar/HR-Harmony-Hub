@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Plus, Mail } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Plus, Mail, Phone, Globe, IndianRupee } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { DataTable, type Column } from "@/components/hr/data-table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { StatusBadge } from "@/components/hr/status-badge";
-import { MiniStageStepper } from "@/components/hr/stage-stepper";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,140 +18,239 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PersonCell, CompanyCell } from "@/components/ui/avatar-cells";
-import { formationClients, teamMembers } from "@/lib/mock-data";
-import { stageDefinitions } from "@shared/schema";
-import type { FormationClient } from "@shared/schema";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { PageTransition } from "@/components/ui/animated";
 import { PageShell } from "@/components/layout";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
-const riskVariantMap: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
-  "on-track": "success",
-  "delayed": "warning",
-  "at-risk": "error",
+const LLC_STATUSES = [
+  "LLC Booked", "Onboarded", "LLC Under Formation", "Under EIN",
+  "Under Website Formation", "EIN received", "Received EIN Letter",
+  "Under BOI", "Under Banking", "Under Payment Gateway",
+  "Ready to Deliver", "Delivered", "Refunded",
+];
+
+const statusVariantMap: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
+  "LLC Booked": "neutral",
+  "Onboarded": "info",
+  "LLC Under Formation": "info",
+  "Under EIN": "warning",
+  "Under Website Formation": "warning",
+  "EIN received": "info",
+  "Received EIN Letter": "info",
+  "Under BOI": "warning",
+  "Under Banking": "warning",
+  "Under Payment Gateway": "warning",
+  "Ready to Deliver": "info",
+  "Delivered": "success",
+  "Refunded": "error",
 };
 
-const priorityVariantMap: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
-  high: "error",
-  medium: "warning",
-  low: "neutral",
+const healthVariantMap: Record<string, "success" | "error" | "warning" | "neutral" | "info"> = {
+  "Healthy": "success",
+  "Neutral": "neutral",
+  "At Risk": "warning",
+  "Critical": "error",
 };
+
+interface LNClient {
+  id: string;
+  client_code: string;
+  client_name: string;
+  email: string | null;
+  contact_number: string | null;
+  country: string | null;
+  plan: string;
+  website_included: boolean;
+  client_health: string | null;
+  llc_name: string | null;
+  llc_status: string;
+  bank_name: string | null;
+  amount_received: number;
+  remaining_payment: number;
+  date_of_payment: string | null;
+  date_of_onboarding: string | null;
+  notes: string | null;
+  created_at: string;
+}
 
 export default function ClientsPage() {
-  const loading = useSimulatedLoading();
   const [, navigate] = useLocation();
-  const [data] = useState<FormationClient[]>(formationClients);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [newClient, setNewClient] = useState({
+    client_code: "",
+    client_name: "",
+    llc_name: "",
+    email: "",
+    contact_number: "",
+    country: "India",
+    plan: "Elite",
+    website_included: true,
+  });
+  const { toast } = useToast();
 
-  const columns: Column<FormationClient>[] = [
+  const { data: clientsData, isLoading } = useQuery<{ clients: LNClient[]; total: number }>({
+    queryKey: ["/api/legalnations/clients"],
+    queryFn: async () => {
+      const res = await fetch("/api/legalnations/clients?limit=500");
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/legalnations/clients", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/legalnations/clients"] });
+      setDialogOpen(false);
+      toast({ title: "Client created successfully" });
+    },
+    onError: (err: any) => {
+      toast({ title: "Error creating client", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const clients = clientsData?.clients || [];
+
+  const formatCurrency = (val: number) => {
+    if (!val) return "—";
+    return `₹${val.toLocaleString("en-IN")}`;
+  };
+
+  const columns: Column<LNClient>[] = [
     {
-      key: "companyName",
-      header: "Company",
+      key: "client_code",
+      header: "Client ID",
       sortable: true,
       render: (item) => (
-        <CompanyCell name={item.companyName} subtitle={item.clientName} />
+        <span className="text-xs font-mono text-muted-foreground" data-testid={`text-client-code-${item.id}`}>
+          {item.client_code}
+        </span>
       ),
     },
     {
-      key: "state",
-      header: "State",
+      key: "client_name",
+      header: "Client",
       sortable: true,
-      render: (item) => <span className="text-sm">{item.state}</span>,
-    },
-    {
-      key: "packageType",
-      header: "Package",
       render: (item) => (
-        <StatusBadge
-          status={item.packageType}
-          variant={item.packageType === "Premium" ? "info" : item.packageType === "Standard" ? "neutral" : "neutral"}
+        <CompanyCell
+          name={item.llc_name || "—"}
+          subtitle={item.client_name}
         />
       ),
     },
     {
-      key: "assignedManager",
-      header: "Manager",
+      key: "llc_status",
+      header: "Status",
       sortable: true,
-      render: (item) => <PersonCell name={item.assignedManager} size="sm" />,
-    },
-    {
-      key: "currentStage",
-      header: "Stage",
-      sortable: true,
-      render: (item) => (
-        <div className="flex items-center gap-2">
-          <MiniStageStepper currentStage={item.currentStage} />
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
-            {stageDefinitions[item.currentStage]?.name}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "priority",
-      header: "Priority",
       render: (item) => (
         <StatusBadge
-          status={item.priority.charAt(0).toUpperCase() + item.priority.slice(1)}
-          variant={priorityVariantMap[item.priority]}
+          status={item.llc_status}
+          variant={statusVariantMap[item.llc_status] || "neutral"}
         />
       ),
     },
     {
-      key: "riskFlag",
-      header: "Risk",
+      key: "plan",
+      header: "Plan",
       render: (item) => (
         <StatusBadge
-          status={item.riskFlag === "on-track" ? "On Track" : item.riskFlag === "at-risk" ? "At Risk" : "Delayed"}
-          variant={riskVariantMap[item.riskFlag]}
+          status={item.plan}
+          variant={item.plan === "Elite" ? "info" : "neutral"}
         />
       ),
     },
     {
-      key: "startDate",
-      header: "Start Date",
+      key: "country",
+      header: "Country",
       sortable: true,
-      render: (item) => <span className="text-sm text-muted-foreground">{item.startDate}</span>,
+      render: (item) => (
+        <span className="text-sm flex items-center gap-1">
+          <Globe className="size-3 text-muted-foreground" />
+          {item.country || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "amount_received",
+      header: "Amount",
+      sortable: true,
+      render: (item) => (
+        <span className="text-sm font-medium flex items-center gap-0.5" data-testid={`text-amount-${item.id}`}>
+          {formatCurrency(item.amount_received)}
+        </span>
+      ),
+    },
+    {
+      key: "bank_name",
+      header: "Bank",
+      render: (item) => (
+        <span className="text-sm text-muted-foreground">{item.bank_name || "—"}</span>
+      ),
+    },
+    {
+      key: "client_health",
+      header: "Health",
+      render: (item) => item.client_health ? (
+        <StatusBadge
+          status={item.client_health}
+          variant={healthVariantMap[item.client_health] || "neutral"}
+        />
+      ) : <span className="text-sm text-muted-foreground">—</span>,
     },
     {
       key: "_contact",
       header: "",
       render: (item) => (
         <div className="flex items-center gap-1">
-          <a href={`https://wa.me/${item.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" data-testid={`btn-whatsapp-${item.id}`}>
-            <Button variant="ghost" size="icon" className="size-8 text-green-600 hover:text-green-700 hover:bg-green-50">
-              <SiWhatsapp className="size-4" />
-            </Button>
-          </a>
-          <a href={`mailto:${item.email}`} data-testid={`btn-email-${item.id}`}>
-            <Button variant="ghost" size="icon" className="size-8">
-              <Mail className="size-4" />
-            </Button>
-          </a>
+          {item.contact_number && (
+            <a
+              href={`https://wa.me/${item.contact_number.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noreferrer"
+              data-testid={`btn-whatsapp-${item.id}`}
+            >
+              <Button variant="ghost" size="icon" className="size-8 text-green-600 hover:text-green-700 hover:bg-green-50">
+                <SiWhatsapp className="size-4" />
+              </Button>
+            </a>
+          )}
+          {item.email && (
+            <a href={`mailto:${item.email}`} data-testid={`btn-email-${item.id}`}>
+              <Button variant="ghost" size="icon" className="size-8">
+                <Mail className="size-4" />
+              </Button>
+            </a>
+          )}
         </div>
       ),
     },
   ];
 
-  const stageOptions = stageDefinitions.map((s) => `${s.number}`);
-  const managerOptions = Array.from(new Set(formationClients.map((c) => c.assignedManager)));
+  const handleCreateClient = () => {
+    if (!newClient.client_name) return;
+    const code = newClient.client_code || `SUPLLC${Date.now().toString().slice(-4)}`;
+    createMutation.mutate({ ...newClient, client_code: code });
+  };
 
   return (
     <PageShell>
       <PageTransition>
-        {loading ? (
-          <TableSkeleton rows={8} columns={8} />
+        {isLoading ? (
+          <TableSkeleton rows={10} columns={8} />
         ) : (
           <DataTable
-            data={data}
+            data={clients}
             columns={columns}
-            searchPlaceholder="Search clients..."
-            onRowClick={(item) => navigate(`/hr/clients/${item.id}`)}
+            searchPlaceholder="Search by name, LLC, code, or email..."
+            onRowClick={(item) => navigate(`/legalnations/clients/${item.id}`)}
             filters={[
-              { label: "Stage", key: "currentStage", options: stageOptions },
-              { label: "Package", key: "packageType", options: ["Basic", "Standard", "Premium"] },
-              { label: "Risk", key: "riskFlag", options: ["on-track", "delayed", "at-risk"] },
-              { label: "Manager", key: "assignedManager", options: managerOptions },
+              { label: "Status", key: "llc_status", options: LLC_STATUSES },
+              { label: "Plan", key: "plan", options: ["Elite", "Basic", "Community Access"] },
+              { label: "Health", key: "client_health", options: ["Healthy", "Neutral", "At Risk", "Critical"] },
             ]}
             headerActions={
               <Button size="sm" onClick={() => setDialogOpen(true)} data-testid="button-add-client">
@@ -166,68 +265,98 @@ export default function ClientsPage() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           title="Add New Client"
-          onSubmit={() => setDialogOpen(false)}
+          onSubmit={handleCreateClient}
           submitLabel="Create Client"
         >
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
+              <Label htmlFor="clientCode">Client ID</Label>
+              <Input
+                id="clientCode"
+                placeholder="SUPLLC1300"
+                value={newClient.client_code}
+                onChange={(e) => setNewClient({ ...newClient, client_code: e.target.value })}
+                data-testid="input-client-code"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="clientName">Client Name</Label>
-              <Input id="clientName" placeholder="John Doe" data-testid="input-client-name" />
+              <Input
+                id="clientName"
+                placeholder="Full Name"
+                value={newClient.client_name}
+                onChange={(e) => setNewClient({ ...newClient, client_name: e.target.value })}
+                data-testid="input-client-name"
+              />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="companyName">Company Name</Label>
-              <Input id="companyName" placeholder="Acme LLC" data-testid="input-company-name" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="companyType">Company Type</Label>
-              <Select>
-                <SelectTrigger data-testid="select-company-type">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="LLC">LLC</SelectItem>
-                  <SelectItem value="Corp">Corp</SelectItem>
-                  <SelectItem value="S-Corp">S-Corp</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="state">State</Label>
-              <Input id="state" placeholder="Delaware" data-testid="input-state" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="packageType">Package</Label>
-              <Select>
-                <SelectTrigger data-testid="select-package">
-                  <SelectValue placeholder="Select package" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Basic">Basic</SelectItem>
-                  <SelectItem value="Standard">Standard</SelectItem>
-                  <SelectItem value="Premium">Premium</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="manager">Assigned Manager</Label>
-              <Select>
-                <SelectTrigger data-testid="select-manager">
-                  <SelectValue placeholder="Select manager" />
-                </SelectTrigger>
-                <SelectContent>
-                  {teamMembers.filter((m) => m.role !== "admin").map((m) => (
-                    <SelectItem key={m.id} value={m.name}><PersonCell name={m.name} size="sm" /></SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="llcName">LLC Name</Label>
+              <Input
+                id="llcName"
+                placeholder="Company LLC"
+                value={newClient.llc_name}
+                onChange={(e) => setNewClient({ ...newClient, llc_name: e.target.value })}
+                data-testid="input-llc-name"
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="client@example.com" data-testid="input-email" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="client@email.com"
+                value={newClient.email}
+                onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                data-testid="input-email"
+              />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" placeholder="+1 (555) 123-4567" data-testid="input-phone" />
+              <Label htmlFor="phone">Contact Number</Label>
+              <Input
+                id="phone"
+                placeholder="+91XXXXXXXXXX"
+                value={newClient.contact_number}
+                onChange={(e) => setNewClient({ ...newClient, contact_number: e.target.value })}
+                data-testid="input-phone"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="country">Country</Label>
+              <Input
+                id="country"
+                placeholder="India"
+                value={newClient.country}
+                onChange={(e) => setNewClient({ ...newClient, country: e.target.value })}
+                data-testid="input-country"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="plan">Plan</Label>
+              <Select value={newClient.plan} onValueChange={(v) => setNewClient({ ...newClient, plan: v })}>
+                <SelectTrigger data-testid="select-plan">
+                  <SelectValue placeholder="Select plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Elite">Elite</SelectItem>
+                  <SelectItem value="Basic">Basic</SelectItem>
+                  <SelectItem value="Community Access">Community Access</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="website">Website Included</Label>
+              <Select
+                value={newClient.website_included ? "yes" : "no"}
+                onValueChange={(v) => setNewClient({ ...newClient, website_included: v === "yes" })}
+              >
+                <SelectTrigger data-testid="select-website">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </FormDialog>

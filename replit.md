@@ -233,6 +233,56 @@ channels  ←── channel_messages.channel_id (ON DELETE CASCADE)
 - 34 user-vertical memberships (cross-assigned per department)
 - 15 tasks across 7 verticals (dev, faire, hr, sales, finance, admin, hrms) — task codes T074–T088
 
+## LegalNations Supabase Integration (Mar 2026)
+
+### Architecture
+LegalNations uses real Supabase data (project `ngvrnwjisntjmqrtnume` / "teamsync") for all client management. Data lives in `public` schema with `ln_` prefix. API uses Supabase JS client with service role key (bypasses RLS). A separate dedicated Supabase project `mztxoqsijcffsyjckfqa` ("legalnations") exists but is NOT used by the app — all data is in the teamsync project.
+
+### Tables (5 — all in `public` schema)
+| Table | Rows | Description |
+|-------|------|-------------|
+| `ln_clients` | 249 | Core client records (SUPLLC1015–SUPLLC1248) |
+| `ln_onboarding_checklist` | 5,976 | 24 checklist items per client (3 phases: Onboarding/Legal/Bank) |
+| `ln_client_documents` | 0 | Document records (connected to future Supabase Storage) |
+| `ln_client_credentials` | 0 | External app credentials (Gmail, Stripe, Mercury, etc.) |
+| `ln_tax_filings` | 28 | Tax filing service records |
+
+### LLC Status Enum (13 values — in order)
+LLC Booked → Onboarded → LLC Under Formation → Under EIN → Under Website Formation → EIN received → Received EIN Letter → Under BOI → Under Banking → Under Payment Gateway → Ready to Deliver → Delivered → Refunded
+
+### API Routes (`/api/legalnations/*` — `server/legalnations-api.ts`)
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/legalnations/clients?search=&status=&plan=&health=&limit=500` | List clients |
+| GET | `/api/legalnations/clients/:id` | Client detail (+ checklist, docs, credentials) |
+| PATCH | `/api/legalnations/clients/:id` | Update client |
+| POST | `/api/legalnations/clients` | Create client |
+| PATCH | `/api/legalnations/checklist/:id` | Toggle checklist item |
+| POST | `/api/legalnations/clients/:id/documents` | Add document |
+| DELETE | `/api/legalnations/documents/:id` | Delete document |
+| POST | `/api/legalnations/clients/:id/credentials` | Add credential |
+| DELETE | `/api/legalnations/credentials/:id` | Delete credential |
+| GET | `/api/legalnations/tax-filings` | List tax filings |
+| PATCH | `/api/legalnations/tax-filings/:id` | Update tax filing |
+| GET | `/api/legalnations/stats` | Dashboard stats |
+
+### Frontend Pages (Real Data)
+| Page | Route | File |
+|------|-------|------|
+| Dashboard | `/legalnations` | `client/src/pages/dashboard.tsx` |
+| Clients | `/legalnations/clients` | `client/src/pages/clients.tsx` |
+| Client Detail | `/legalnations/clients/:id` | `client/src/pages/client-detail.tsx` |
+| Tax Filing | `/legalnations/tax-filing` | `client/src/pages/tax-filing.tsx` |
+
+### Client Detail Tabs
+1. **Overview**: Client info, LLC details, banking & finance, formation timeline
+2. **Onboarding**: 3-phase accordion (Onboarding/Legal/Bank) with checklist toggle
+3. **Documents**: Upload/download with categories
+4. **Credentials**: External app credentials table
+
+### Seeding
+Script: `scripts/seed-legalnations.ts` — parses 2 CSV files (old + new clients) + tax filing CSV. Auto-generates 24 checklist items per client with completion based on LLC status.
+
 ### Phase 2 — Portal-Specific Tables (Planned, Not Yet Created)
 - **HRMS**: `employees`, `departments`, `attendance`, `leaves`, `payroll`, `performance_reviews`
 - **ATS**: `jobs`, `candidates`, `applications`, `interviews`, `offers`
