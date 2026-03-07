@@ -1473,6 +1473,12 @@ export const verticals: Vertical[] = [
         items: [],
       },
       {
+        title: "Appointments",
+        defaultUrl: "/crm/appointments",
+        icon: CalendarDays,
+        items: [],
+      },
+      {
         title: "Performance",
         defaultUrl: "/crm/performance",
         icon: Target,

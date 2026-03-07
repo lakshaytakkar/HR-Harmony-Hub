@@ -130,6 +130,7 @@ import CrmActivities from "@/pages/crm/activities";
 import CrmPerformance from "@/pages/crm/performance";
 import CrmTemplates from "@/pages/crm/templates";
 import CrmPaymentLinks from "@/pages/crm/payment-links";
+import CrmAppointments from "@/pages/crm/appointments";
 import FinanceDashboard from "@/pages/finance/dashboard";
 import FinanceLedger from "@/pages/finance/ledger";
 import FinanceTransactions from "@/pages/finance/transactions";
@@ -452,6 +453,7 @@ function Router() {
       <Route path="/crm/activities" component={CrmActivities} />
       <Route path="/crm/performance" component={CrmPerformance} />
       <Route path="/crm/payment-links" component={CrmPaymentLinks} />
+      <Route path="/crm/appointments" component={CrmAppointments} />
       <Route path="/crm/templates" component={CrmTemplates} />
       <Route path="/finance" component={FinanceDashboard} />
       <Route path="/finance/notifications" component={UniversalNotifications} />

@@ -312,11 +312,27 @@ Dev vertical uses PostgreSQL (via Drizzle ORM) for project and task management. 
 ## Recent Additions (Feb 2026)
 
 ### CRM Payment Links (`/crm/payment-links`)
-- Multi-step Create dialog: customer details → amount+methods → QR preview
-- UPI QR code generation via `qrcode` npm package (mock UPI ID: `payments@supransbiz`)
-- Bank transfer details (HDFC), copy payment link to clipboard
-- Payment link table: search, filter pills (All/Pending/Paid/Expired), Mark as Paid inline action
+- Multi-step Create dialog (3 steps): Customer Info → Payment Details (amount, description, company, methods) → Preview & Share
+- UPI QR code generation via `qrcode` npm package with branded canvas rendering (company header, amount, UPI ID) + downloadable JPG
+- Bank transfer details with individual copy buttons (HDFC accounts)
+- Razorpay link placeholder (conditionally shown when company has `razorpayEnabled`)
+- Share dialog: WhatsApp message builder (wa.me deep link), Email mailto link, Copy All Details, Copy Payment Link
+- Mark as Paid dialog: screenshot upload (accessible dropzone with keyboard nav), confirmation note, amount display
+- 3 company configs: Startup Squad Pvt Ltd, Suprans Biz Solutions, LegalNations Consulting — each with UPI IDs and bank details
+- Stats row: Total Requests, Pending, Paid, Total Amount Collected
+- Payment link table: search, filter pills (All/Pending/Paid/Expired)
 - Grouped under CRM "Performance" nav category
+
+### CRM Appointments (`/crm/appointments`)
+- Calendar view (month grid) with colored dots on dates with appointments, month navigation, click-to-expand day details
+- List view with client name, date/time, type, status, notes — sortable/filterable
+- View toggle between Calendar and List modes
+- Create appointment dialog: client name, email, phone, date picker, time picker, duration selector, type selector, notes
+- 4 appointment types with color coding: Call (sky), Meeting (violet), Demo (amber), Consultation (emerald)
+- Stats row: Total, Today, This Week, Completed
+- Filters by type and status, plus search by name/ID
+- 10 mock appointments across different dates, types, and statuses
+- Nav entry under CRM sidebar with CalendarDays icon
 
 ### FaireDesk — Faire Order Operations Pipeline (Mar 2026)
 
