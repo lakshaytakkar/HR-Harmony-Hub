@@ -3,7 +3,7 @@ import { Search } from "lucide-react";
 import { PageTransition, Fade } from "@/components/ui/animated";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SmallDetailModal } from "@/components/blocks/detail-view-blocks";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { PersonCell, CompanyCell } from "@/components/ui/avatar-cells";
@@ -212,85 +212,79 @@ export default function CrmPipeline() {
         }}
       />
 
-      <Dialog open={!!selectedDeal} onOpenChange={o => !o && setSelectedDeal(null)}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          {selectedDeal && (() => {
-            const vert = getVertical(selectedDeal.vertical);
-            const contact = getContact(selectedDeal.contactId);
-            const acts = getDealActivities(selectedDeal.id);
-            return (
-              <>
-                <DialogHeader>
-                  <div className="flex items-center justify-between">
-                    <DialogTitle className="pr-4 leading-snug">{selectedDeal.title}</DialogTitle>
-                  </div>
-                </DialogHeader>
-                <div className="space-y-4 pt-2">
-                  <div className="flex items-center gap-3">
-                    {vert && (
-                      <span className="text-xs px-2.5 py-1 rounded-full text-white font-medium" style={{ backgroundColor: vert.color }}>
-                        {vert.name}
-                      </span>
-                    )}
-                    <span className="text-lg font-bold">{formatValue(selectedDeal)}</span>
-                    <span className="text-sm text-muted-foreground">({selectedDeal.probability}% probability)</span>
-                  </div>
+      {selectedDeal && (() => {
+        const vert = getVertical(selectedDeal.vertical);
+        const contact = getContact(selectedDeal.contactId);
+        const acts = getDealActivities(selectedDeal.id);
+        return (
+          <SmallDetailModal
+            open={!!selectedDeal}
+            onClose={() => setSelectedDeal(null)}
+            title={selectedDeal.title}
+            subtitle={`${formatValue(selectedDeal)} · ${selectedDeal.probability}% probability`}
+          >
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                {vert && (
+                  <span className="text-xs px-2.5 py-1 rounded-full text-white font-medium" style={{ backgroundColor: vert.color }}>
+                    {vert.name}
+                  </span>
+                )}
+              </div>
 
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Stage</p>
-                      <p className="font-medium capitalize">{selectedDeal.stage}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Priority</p>
-                      <div className="flex items-center gap-1.5">
-                        <div className={`size-2 rounded-full ${priorityDot[selectedDeal.priority]}`} />
-                        <p className="font-medium capitalize">{selectedDeal.priority}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Expected Close</p>
-                      <p className="font-medium">{selectedDeal.expectedClose}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Assigned To</p>
-                      <p className="font-medium">{selectedDeal.assignedTo}</p>
-                    </div>
-                  </div>
-
-                  {contact && (
-                    <div className="border rounded-xl p-3 space-y-1">
-                      <p className="text-xs text-muted-foreground font-medium mb-2">Contact</p>
-                      <PersonCell name={contact.name} subtitle={`${contact.designation} · ${contact.company} · ${contact.email}`} />
-                    </div>
-                  )}
-
-                  {selectedDeal.notes && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Notes</p>
-                      <p className="text-sm bg-muted rounded-lg p-3">{selectedDeal.notes}</p>
-                    </div>
-                  )}
-
-                  {acts.length > 0 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Recent Activities</p>
-                      <div className="space-y-2">
-                        {acts.map(a => (
-                          <div key={a.id} className="flex items-start gap-2 text-sm">
-                            <span className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded capitalize shrink-0">{a.type}</span>
-                            <span className="text-muted-foreground truncate">{a.title}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Stage</p>
+                  <p className="font-medium capitalize">{selectedDeal.stage}</p>
                 </div>
-              </>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
+                <div>
+                  <p className="text-xs text-muted-foreground">Priority</p>
+                  <div className="flex items-center gap-1.5">
+                    <div className={`size-2 rounded-full ${priorityDot[selectedDeal.priority]}`} />
+                    <p className="font-medium capitalize">{selectedDeal.priority}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Expected Close</p>
+                  <p className="font-medium">{selectedDeal.expectedClose}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Assigned To</p>
+                  <p className="font-medium">{selectedDeal.assignedTo}</p>
+                </div>
+              </div>
+
+              {contact && (
+                <div className="border rounded-xl p-3 space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium mb-2">Contact</p>
+                  <PersonCell name={contact.name} subtitle={`${contact.designation} · ${contact.company} · ${contact.email}`} />
+                </div>
+              )}
+
+              {selectedDeal.notes && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Notes</p>
+                  <p className="text-sm bg-muted rounded-lg p-3">{selectedDeal.notes}</p>
+                </div>
+              )}
+
+              {acts.length > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Recent Activities</p>
+                  <div className="space-y-2">
+                    {acts.map(a => (
+                      <div key={a.id} className="flex items-start gap-2 text-sm">
+                        <span className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded capitalize shrink-0">{a.type}</span>
+                        <span className="text-muted-foreground truncate">{a.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </SmallDetailModal>
+        );
+      })()}
     </PageTransition>
   );
 }

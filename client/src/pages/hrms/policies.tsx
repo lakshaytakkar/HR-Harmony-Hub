@@ -3,7 +3,7 @@ import { FileText, Download } from "lucide-react";
 import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SmallDetailModal } from "@/components/blocks/detail-view-blocks";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { hrPolicies, type HrPolicy } from "@/lib/mock-data-hrms";
 import { PageShell } from "@/components/layout";
@@ -94,31 +94,29 @@ export default function HrmsPolicies() {
         )}
       </Stagger>
 
-      <Dialog open={!!selectedPolicy} onOpenChange={() => setSelectedPolicy(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="size-5" />
-              {selectedPolicy?.title}
-            </DialogTitle>
-          </DialogHeader>
-          {selectedPolicy && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryColors[selectedPolicy.category]}`}>{categoryLabels[selectedPolicy.category]}</span>
-                <span className="text-xs text-muted-foreground">Last updated {selectedPolicy.updatedDate}</span>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">{selectedPolicy.description}</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                This policy applies to all employees and contractors of TeamSync. Any violations will be addressed per the escalation procedures outlined in the Code of Conduct. The policy is reviewed annually and updated to reflect changes in regulatory requirements or organizational needs.
-              </p>
-              <Button className="w-full bg-sky-600 hover:bg-sky-700" data-testid="download-policy">
-                <Download className="size-4 mr-2" /> Download PDF
-              </Button>
+      {selectedPolicy && (
+        <SmallDetailModal
+          open={!!selectedPolicy}
+          onClose={() => setSelectedPolicy(null)}
+          title={selectedPolicy.title}
+          footer={
+            <Button className="w-full bg-sky-600 hover:bg-sky-700" data-testid="download-policy">
+              <Download className="size-4 mr-2" /> Download PDF
+            </Button>
+          }
+        >
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryColors[selectedPolicy.category]}`}>{categoryLabels[selectedPolicy.category]}</span>
+              <span className="text-xs text-muted-foreground">Last updated {selectedPolicy.updatedDate}</span>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            <p className="text-sm text-muted-foreground leading-relaxed">{selectedPolicy.description}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              This policy applies to all employees and contractors of TeamSync. Any violations will be addressed per the escalation procedures outlined in the Code of Conduct. The policy is reviewed annually and updated to reflect changes in regulatory requirements or organizational needs.
+            </p>
+          </div>
+        </SmallDetailModal>
+      )}
     </PageTransition>
   );
 }

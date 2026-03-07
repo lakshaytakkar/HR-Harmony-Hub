@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { SmallDetailModal } from "@/components/blocks/detail-view-blocks";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
@@ -202,43 +203,45 @@ export default function SocialMedia() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!previewAsset} onOpenChange={() => setPreviewAsset(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-sm">{previewAsset?.name}</DialogTitle>
-          </DialogHeader>
-          {previewAsset && (() => {
-            const cfg = assetColors[previewAsset.type];
-            const TypeIcon = cfg.icon;
-            return (
-              <div className="space-y-4">
-                <div className="h-40 rounded-xl flex items-center justify-center" style={{ background: cfg.bg }}>
-                  <TypeIcon size={48} style={{ color: cfg.color }} />
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div><p className="text-muted-foreground">Brand</p><p className="font-medium">{previewAsset.brand}</p></div>
-                  <div><p className="text-muted-foreground">Type</p><p className="font-medium capitalize">{previewAsset.type.replace("-", " ")}</p></div>
-                  <div><p className="text-muted-foreground">Status</p><p className="font-medium capitalize">{previewAsset.status}</p></div>
-                  <div><p className="text-muted-foreground">Size</p><p className="font-medium">{previewAsset.size}</p></div>
-                  <div><p className="text-muted-foreground">Uploaded by</p><p className="font-medium">{previewAsset.uploadedBy}</p></div>
-                  <div><p className="text-muted-foreground">Date</p><p className="font-medium">{previewAsset.uploadedDate}</p></div>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {previewAsset.tags.map(tag => (
-                    <span key={tag} className="text-xs bg-muted px-2 py-0.5 rounded-full">{tag}</span>
-                  ))}
-                </div>
+      {previewAsset && (() => {
+        const cfg = assetColors[previewAsset.type];
+        const TypeIcon = cfg.icon;
+        return (
+          <SmallDetailModal
+            open={!!previewAsset}
+            onClose={() => setPreviewAsset(null)}
+            title={previewAsset.name}
+            size="sm"
+            footer={
+              <>
+                <Button variant="outline" onClick={() => setPreviewAsset(null)}>Close</Button>
+                <Button data-testid="btn-download">
+                  <Download size={14} className="mr-1.5" /> Download
+                </Button>
+              </>
+            }
+          >
+            <div className="space-y-4">
+              <div className="h-40 rounded-xl flex items-center justify-center" style={{ background: cfg.bg }}>
+                <TypeIcon size={48} style={{ color: cfg.color }} />
               </div>
-            );
-          })()}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewAsset(null)}>Close</Button>
-            <Button data-testid="btn-download">
-              <Download size={14} className="mr-1.5" /> Download
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div><p className="text-muted-foreground">Brand</p><p className="font-medium">{previewAsset.brand}</p></div>
+                <div><p className="text-muted-foreground">Type</p><p className="font-medium capitalize">{previewAsset.type.replace("-", " ")}</p></div>
+                <div><p className="text-muted-foreground">Status</p><p className="font-medium capitalize">{previewAsset.status}</p></div>
+                <div><p className="text-muted-foreground">Size</p><p className="font-medium">{previewAsset.size}</p></div>
+                <div><p className="text-muted-foreground">Uploaded by</p><p className="font-medium">{previewAsset.uploadedBy}</p></div>
+                <div><p className="text-muted-foreground">Date</p><p className="font-medium">{previewAsset.uploadedDate}</p></div>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {previewAsset.tags.map(tag => (
+                  <span key={tag} className="text-xs bg-muted px-2 py-0.5 rounded-full">{tag}</span>
+                ))}
+              </div>
+            </div>
+          </SmallDetailModal>
+        );
+      })()}
     </PageTransition>
   );
 }

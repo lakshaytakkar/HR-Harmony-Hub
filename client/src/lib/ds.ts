@@ -44,4 +44,6 @@ export {
   SimpleTable, QuickLinksBlock,
   CourseCard, CourseGrid, LessonItem, ModuleAccordion, ProgressRing, QuizBlock, CertificateCard, CourseDetailHeader,
   AccessProvider, useAccessControl, AccessGate, PermissionBadge,
+  SmallDetailModal, LargeDetailSheet, LargeDetailDialog,
+  FullPageDetailTabbed, FullPageDetailColumns, SidebarField,
 } from "@/components/blocks";

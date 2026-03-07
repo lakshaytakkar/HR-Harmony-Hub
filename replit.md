@@ -55,6 +55,7 @@ Comprehensive reusable block library organized by category:
 - **Grid**: `CoverMediaGrid`, `SmallImageGrid`, `ButtonGrid`, `ShortcutGrid`
 - **List**: `EntityCell`, `StackedList`, `ColumnedList`, `ExpandableList`
 - **Detail**: `DetailBanner`, `InfoPropertyGrid`, `TabContainer`
+- **Detail Views** (`detail-view-blocks.tsx`): `SmallDetailModal`, `LargeDetailSheet`, `LargeDetailDialog`, `FullPageDetailTabbed`, `FullPageDetailColumns`, `SidebarField`
 - **Timeline**: `Timeline`, `ActivityFeed`
 - **Form**: `FormSection`, `FormGrid`
 - **Chart**: `MetricCard` (KPI with trend), `ChartBlock` (8 variants: bar, column, line, area, scatter, pie, donut, rose)
@@ -81,6 +82,23 @@ Barrel export: `client/src/components/blocks/index.ts`
 - **Avatar cell sizes**: `xs` (h-5 w-5), `sm` (h-6 w-6), `md` (h-8 w-8, default for tables), `lg` (h-10 w-10, for detail pages/headers)
 - **NO** inline `<Avatar><AvatarImage src={getPersonAvatar(name)} />` patterns — use `<PersonCell name={name} />` instead
 - **NO** plain text person/company names without avatars — every name column must have a DiceBear avatar
+
+#### Detail View Patterns (6 canonical types)
+All detail views MUST use one of these 6 patterns. New patterns from `detail-view-blocks.tsx` (import from `@/lib/ds`). `DetailModal` is pre-existing in `page-layout.tsx`.
+
+| Pattern | Component | Source | When to Use | Size |
+|---------|-----------|--------|-------------|------|
+| **Small Detail Modal** | `SmallDetailModal` | `detail-view-blocks.tsx` | Quick-reference popups: payslips, policies, media previews, simple entity info | `sm` (max-w-md) or `md` (max-w-lg) |
+| **Standard Detail Modal** | `DetailModal` | `page-layout.tsx` | Record detail with header/sections/footer: CRM activities, HRMS performance reviews | max-w-2xl, scrollable body (65vh) |
+| **Large Detail Sheet** | `LargeDetailSheet` | `detail-view-blocks.tsx` | Complex entity side drawer with main+sidebar: tasks, comments, attachments | Sheet, max-w-[720px] |
+| **Large Detail Dialog** | `LargeDetailDialog` | `detail-view-blocks.tsx` | Same as Sheet but centered overlay with main+sidebar: task details, project boards | Dialog, max-w-5xl |
+| **Full-Page Tabbed** | `FullPageDetailTabbed` | `detail-view-blocks.tsx` | Deep profile pages: candidates, employees, courses (Back + Banner + Tabs) | Full page |
+| **Full-Page Columns** | `FullPageDetailColumns` | `detail-view-blocks.tsx` | Multi-column dashboard: tickets, orders, quotations (Back + Header + Grid) | Full page, ratio: 7:3/6:4/3:7 |
+
+- `SidebarField` — reusable label/value field for sidebar metadata panels in Sheet/Dialog/FullPage layouts
+- **NO** ad-hoc `<Dialog><DialogContent className="max-w-md/lg">` for detail views — use `SmallDetailModal` instead
+- **NO** inline two-column dialog layouts — use `LargeDetailDialog` or `LargeDetailSheet`
+- **FormDialog** (from `@/components/hr/form-dialog`) remains the standard for create/edit forms — don't use detail views for forms
 
 ### Optimistic Updates (Global Pattern)
 All mutations across the app follow the TanStack Query optimistic update pattern for instant UI feedback:

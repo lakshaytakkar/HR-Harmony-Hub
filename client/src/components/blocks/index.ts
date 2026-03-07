@@ -31,3 +31,12 @@ export { CourseCard, CourseGrid, LessonItem, ModuleAccordion, ProgressRing, Quiz
 export type { CourseCardItem, LessonItemData, ModuleData, QuizOption, CertificateCardItem } from "./lms-blocks";
 
 export { AccessProvider, useAccessControl, AccessGate, PermissionBadge } from "./access-gate";
+
+export {
+  SmallDetailModal,
+  LargeDetailSheet,
+  LargeDetailDialog,
+  FullPageDetailTabbed,
+  FullPageDetailColumns,
+  SidebarField,
+} from "./detail-view-blocks";

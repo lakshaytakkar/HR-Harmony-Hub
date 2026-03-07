@@ -3,8 +3,8 @@ import { Download } from "lucide-react";
 import { PageTransition, Fade } from "@/components/ui/animated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { SmallDetailModal } from "@/components/blocks/detail-view-blocks";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { PersonCell } from "@/components/ui/avatar-cells";
 import { payrollEntries } from "@/lib/mock-data-hrms";
@@ -71,56 +71,53 @@ export default function HrmsPayslips() {
         </Card>
       </Fade>
 
-      <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Payslip — {selected?.month}</DialogTitle>
-          </DialogHeader>
-          {selected && (
-            <div className="space-y-4">
-              <div className="text-center pb-2 border-b">
-                <p className="font-bold text-lg">{selected.employeeName}</p>
-                <p className="text-xs text-muted-foreground">Pay Period: {selected.month}</p>
+      {selected && (
+        <SmallDetailModal
+          open={!!selected}
+          onClose={() => setSelected(null)}
+          title={`Payslip — ${selected.month}`}
+          subtitle={selected.employeeName}
+          size="sm"
+          footer={
+            <Button className="w-full bg-sky-600 hover:bg-sky-700" data-testid="download-payslip">
+              <Download className="size-4 mr-2" /> Download PDF
+            </Button>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Earnings</p>
+              <div className="space-y-1.5 text-sm">
+                <div className="flex justify-between"><span>Basic Salary</span><span>₹{Math.round(selected.grossSalary * 0.5).toLocaleString("en-IN")}</span></div>
+                <div className="flex justify-between"><span>HRA</span><span>₹{Math.round(selected.grossSalary * 0.2).toLocaleString("en-IN")}</span></div>
+                <div className="flex justify-between"><span>Transport Allowance</span><span>₹{Math.round(selected.grossSalary * 0.1).toLocaleString("en-IN")}</span></div>
+                <div className="flex justify-between"><span>Special Allowance</span><span>₹{Math.round(selected.grossSalary * 0.2).toLocaleString("en-IN")}</span></div>
               </div>
-
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Earnings</p>
-                <div className="space-y-1.5 text-sm">
-                  <div className="flex justify-between"><span>Basic Salary</span><span>₹{Math.round(selected.grossSalary * 0.5).toLocaleString("en-IN")}</span></div>
-                  <div className="flex justify-between"><span>HRA</span><span>₹{Math.round(selected.grossSalary * 0.2).toLocaleString("en-IN")}</span></div>
-                  <div className="flex justify-between"><span>Transport Allowance</span><span>₹{Math.round(selected.grossSalary * 0.1).toLocaleString("en-IN")}</span></div>
-                  <div className="flex justify-between"><span>Special Allowance</span><span>₹{Math.round(selected.grossSalary * 0.2).toLocaleString("en-IN")}</span></div>
-                </div>
-                <div className="flex justify-between font-semibold text-sm border-t mt-2 pt-2">
-                  <span>Gross Earnings</span><span>₹{selected.grossSalary.toLocaleString("en-IN")}</span>
-                </div>
+              <div className="flex justify-between font-semibold text-sm border-t mt-2 pt-2">
+                <span>Gross Earnings</span><span>₹{selected.grossSalary.toLocaleString("en-IN")}</span>
               </div>
-
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Deductions</p>
-                <div className="space-y-1.5 text-sm">
-                  <div className="flex justify-between text-red-600"><span>PF (Employee 12%)</span><span>-₹{Math.round(selected.grossSalary * 0.05 * 0.12).toLocaleString("en-IN")}</span></div>
-                  <div className="flex justify-between text-red-600"><span>TDS</span><span>-₹{Math.round(selected.deductions * 0.6).toLocaleString("en-IN")}</span></div>
-                  <div className="flex justify-between text-red-600"><span>ESI</span><span>-₹{Math.round(selected.deductions * 0.4).toLocaleString("en-IN")}</span></div>
-                </div>
-                <div className="flex justify-between font-semibold text-sm border-t mt-2 pt-2 text-red-600">
-                  <span>Total Deductions</span><span>-₹{selected.deductions.toLocaleString("en-IN")}</span>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="flex justify-between font-bold text-lg text-emerald-600 bg-emerald-50 dark:bg-emerald-950 p-3 rounded-lg">
-                <span>Net Pay</span><span>₹{selected.netSalary.toLocaleString("en-IN")}</span>
-              </div>
-
-              <Button className="w-full bg-sky-600 hover:bg-sky-700" data-testid="download-payslip">
-                <Download className="size-4 mr-2" /> Download PDF
-              </Button>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Deductions</p>
+              <div className="space-y-1.5 text-sm">
+                <div className="flex justify-between text-red-600"><span>PF (Employee 12%)</span><span>-₹{Math.round(selected.grossSalary * 0.05 * 0.12).toLocaleString("en-IN")}</span></div>
+                <div className="flex justify-between text-red-600"><span>TDS</span><span>-₹{Math.round(selected.deductions * 0.6).toLocaleString("en-IN")}</span></div>
+                <div className="flex justify-between text-red-600"><span>ESI</span><span>-₹{Math.round(selected.deductions * 0.4).toLocaleString("en-IN")}</span></div>
+              </div>
+              <div className="flex justify-between font-semibold text-sm border-t mt-2 pt-2 text-red-600">
+                <span>Total Deductions</span><span>-₹{selected.deductions.toLocaleString("en-IN")}</span>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="flex justify-between font-bold text-lg text-emerald-600 bg-emerald-50 dark:bg-emerald-950 p-3 rounded-lg">
+              <span>Net Pay</span><span>₹{selected.netSalary.toLocaleString("en-IN")}</span>
+            </div>
+          </div>
+        </SmallDetailModal>
+      )}
     </PageTransition>
   );
 }
