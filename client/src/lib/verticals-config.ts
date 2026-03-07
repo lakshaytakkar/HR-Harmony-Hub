@@ -54,6 +54,11 @@ import {
   Kanban,
   GraduationCap,
   Sparkles,
+  Lightbulb,
+  FlaskConical,
+  Globe,
+  Search,
+  Library,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -73,6 +78,7 @@ import { SocialLogo } from "@/components/brand/social-logo";
 import { FaireLogo } from "@/components/brand/faire-logo";
 import { SupransLogo } from "@/components/brand/suprans-logo";
 import { VendorPortalLogo } from "@/components/brand/vendor-portal-logo";
+import { RndLogo } from "@/components/brand/rnd-logo";
 
 export interface NavItem {
   title: string;
@@ -1925,6 +1931,108 @@ export const verticals: Vertical[] = [
       },
     ],
   },
+  {
+    id: "rnd",
+    routePrefix: "rnd",
+    name: "Research & Development",
+    shortName: "R&D",
+    icon: FlaskConical,
+    logo: RndLogo,
+    color: "#6366F1",
+    tagline: "Innovation & Strategy",
+    description: "Product research, market intelligence, pitch ideas & strategic R&D",
+    isDepartment: true,
+    navCategories: [
+      {
+        title: "Dashboard",
+        defaultUrl: "/rnd",
+        icon: LayoutDashboard,
+        items: [],
+      },
+      {
+        title: "Chat",
+        defaultUrl: "/rnd/chat",
+        icon: MessageSquare,
+        items: [],
+      },
+      {
+        title: "Team",
+        defaultUrl: "/rnd/team",
+        icon: Users,
+        items: [],
+      },
+      {
+        title: "Resources",
+        defaultUrl: "/rnd/resources",
+        icon: FolderOpen,
+        items: [],
+      },
+      {
+        title: "Tasks",
+        defaultUrl: "/rnd/tasks",
+        icon: CheckSquare,
+        items: [],
+      },
+      {
+        title: "Tickets",
+        defaultUrl: "/rnd/tickets",
+        icon: Ticket,
+        items: [],
+      },
+      {
+        title: "Research",
+        defaultUrl: "/rnd/project-reports",
+        icon: Search,
+        items: [
+          { title: "Project Reports", url: "/rnd/project-reports" },
+          { title: "Product Research", url: "/rnd/product-research" },
+          { title: "Market Intelligence", url: "/rnd/market-intelligence" },
+        ],
+      },
+      {
+        title: "Ideas & Findings",
+        defaultUrl: "/rnd/pitch-ideas",
+        icon: Lightbulb,
+        items: [
+          { title: "Pitch Ideas", url: "/rnd/pitch-ideas" },
+          { title: "Key Findings", url: "/rnd/key-findings" },
+        ],
+      },
+      {
+        title: "SaaS References",
+        defaultUrl: "/rnd/saas-references",
+        icon: Library,
+        items: [],
+      },
+      {
+        title: "Analytics",
+        defaultUrl: "/rnd/reports",
+        icon: BarChart3,
+        items: [],
+      },
+      {
+        title: "Important Contacts",
+        defaultUrl: "/rnd/contacts",
+        icon: Phone,
+        items: [],
+      },
+      {
+        title: "Users & Access",
+        defaultUrl: "/rnd/user-management",
+        icon: Shield,
+        items: [
+          { title: "Users", url: "/rnd/user-management" },
+          { title: "User Groups", url: "/rnd/user-groups" },
+        ],
+      },
+      {
+        title: "Apps",
+        defaultUrl: "/rnd/apps",
+        icon: Blocks,
+        items: [],
+      },
+    ],
+  },
 ];
 
 export function getVerticalById(id: string): Vertical | undefined {
@@ -1963,5 +2071,6 @@ export function detectVerticalFromUrl(location: string): Vertical | undefined {
   if (location.startsWith("/lbm")) return getVerticalById("admin");
   if (location.startsWith("/dev")) return getVerticalById("dev");
   if (location.startsWith("/ets")) return getVerticalById("ets");
+  if (location.startsWith("/rnd")) return getVerticalById("rnd");
   return undefined;
 }

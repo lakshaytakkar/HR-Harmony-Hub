@@ -204,6 +204,14 @@ import SupransEnrichment from "@/pages/suprans/enrichment";
 import SupransAssignments from "@/pages/suprans/assignments";
 import EventHubLeads from "@/pages/eventhub/leads";
 
+import RndDashboard from "@/pages/rnd/dashboard";
+import RndProjectReports from "@/pages/rnd/project-reports";
+import RndPitchIdeas from "@/pages/rnd/pitch-ideas";
+import RndProductResearch from "@/pages/rnd/product-research";
+import RndMarketIntelligence from "@/pages/rnd/market-intelligence";
+import RndKeyFindings from "@/pages/rnd/key-findings";
+import RndSaasReferences from "@/pages/rnd/saas-references";
+
 function Router() {
   return (
     <Switch>
@@ -573,6 +581,26 @@ function Router() {
       <Route path="/vendor/ledger" component={VendorLedger} />
       <Route path="/vendor/tickets/:id" component={UniversalTicketDetail} />
       <Route path="/vendor/tickets" component={UniversalTickets} />
+      <Route path="/rnd" component={RndDashboard} />
+      <Route path="/rnd/notifications" component={UniversalNotifications} />
+      <Route path="/rnd/chat" component={UniversalChat} />
+      <Route path="/rnd/team" component={UniversalTeam} />
+      <Route path="/rnd/resources" component={UniversalResources} />
+      <Route path="/rnd/tasks" component={UniversalTasks} />
+      <Route path="/rnd/tickets/:id" component={UniversalTicketDetail} />
+      <Route path="/rnd/tickets" component={UniversalTickets} />
+      <Route path="/rnd/contacts" component={UniversalImportantContacts} />
+      <Route path="/rnd/reports" component={UniversalReports} />
+      <Route path="/rnd/image-studio" component={UniversalImageStudio} />
+      <Route path="/rnd/user-management" component={UniversalUsers} />
+      <Route path="/rnd/user-groups" component={UniversalUserGroups} />
+      <Route path="/rnd/apps" component={UniversalAppsCredentials} />
+      <Route path="/rnd/project-reports" component={RndProjectReports} />
+      <Route path="/rnd/pitch-ideas" component={RndPitchIdeas} />
+      <Route path="/rnd/product-research" component={RndProductResearch} />
+      <Route path="/rnd/market-intelligence" component={RndMarketIntelligence} />
+      <Route path="/rnd/key-findings" component={RndKeyFindings} />
+      <Route path="/rnd/saas-references" component={RndSaasReferences} />
       <Route component={NotFound} />
     </Switch>
   );
