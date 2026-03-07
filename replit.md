@@ -643,7 +643,7 @@ Universal pages exist under `client/src/pages/universal/` and are shared by all 
 - **Team** (`/[prefix]/team`) — Card grid of vertical team members with avatar, status dot, role, contact info, hover action row (Message/Call). "Invite Member" FormDialog header CTA. Search + department + status filters.
 - **Resources** (`/[prefix]/resources`) — File card grid with pinned strip, category filter pills, grid/list toggle. Type-colored file icons (pdf=red, excel=green, ppt=orange, doc=blue, link=violet). Detail dialog with metadata + Open Resource button. "Add Resource" FormDialog.
 - **Tasks** (`/[prefix]/tasks`) — Kanban board (5 columns: Backlog/Todo/In Progress/Review/Done) with task cards (priority badge, tags, due date, assignee avatar), List view, My Tasks tab. Task create dialog + Task detail dialog (subtask checklist, status select, comments). Stats row (Total/In Progress/Overdue/Done).
-- **Apps & Credentials** (`/[prefix]/apps`) — Card grid of external apps and API credentials filtered by vertical. Each card shows app name, description, status badge (Active/Expired/Pending), environment badge (production/staging/dev), category badge, and masked API key hint. Summary stats row (Total Apps/Active/With Credentials/Expired or Pending). Category + status + environment filter chips. Replaces the old Dev Toolkit page — now universal across all verticals.
+- **Apps & Credentials** (`/[prefix]/apps`) — 1Password-style external app directory and credential vault. Pinned in topbar across all verticals. Shows global apps (29 shared across all verticals: Gmail, Slack, WhatsApp, LinkedIn, ChatGPT, Claude, GitHub, Notion, Figma, Zoom, AWS, etc.) + vertical-specific apps. Each card: app logo (SI icons), name, description, status/environment/category/Global badges, email field with copy, masked password with show/hide toggle. Detail dialog: login URL, email, password, API key rows with copy buttons + Open Login / Open App buttons. Quick Add dialog: 18 popular app templates for fast credential entry. Stats: Total Apps, With Credentials, Global, Vertical-Specific. Filter by scope (All/Global/Vertical) + category + status.
 
 **Shared mock data** (`client/src/lib/mock-data-shared.ts`): TypeScript interfaces + mock data for all verticals:
 - `VerticalMember[]` — 4 members per vertical, with status (online/away/offline), skills, location
@@ -651,7 +651,8 @@ Universal pages exist under `client/src/pages/universal/` and are shared by all 
 - `ChatMessage[]` — messages per channel, with isMe boolean for sender styling
 - `SharedResource[]` — 5-6 resources per vertical, categories: Brochure/Script/Spreadsheet/Link/Presentation/Document/Template + Process/SOP/Playbook/Workflow/Learning (knowledge type with expandable content)
 - `SharedTask[]` — 8-9 tasks per vertical, across all 5 statuses and 4 priorities, with subtask arrays
-- `ExternalApp[]` — 2-12 apps per vertical, with status/environment/category/apiKeyHint; categories: hosting, database, ai, payment, analytics, communication, design, docs, crm, hr, other
+- `ExternalApp[]` — 29 global daily-use apps + 2-12 per vertical, with email/password/loginUrl/apiKeyHint; categories: hosting, database, ai, payment, analytics, communication, design, docs, crm, hr, productivity, other
+- `QuickAddTemplate[]` — 18 popular app templates for quick credential entry
 
 **Route renames** (existing routes moved to avoid conflicts with universal pages):
 - `/legalnations/tasks` (LegalNations Task Board) → `/legalnations/task-board`

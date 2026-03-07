@@ -1,5 +1,5 @@
 import { useLocation, Link } from "wouter";
-import { MessageCircle, Users, BookOpen, BarChart2, Phone, Ticket, ClipboardList } from "lucide-react";
+import { MessageCircle, Users, BookOpen, BarChart2, Phone, Ticket, ClipboardList, Blocks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationPanel } from "./notification-panel";
 import { SearchPanel } from "./search-panel";
@@ -18,7 +18,7 @@ import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import type { NavCategory } from "@/lib/verticals-config";
 
-const PINNED_TITLES = new Set(["Chat", "Team", "Resources", "Reports", "Contacts", "Important Contacts", "Tickets", "Tasks"]);
+const PINNED_TITLES = new Set(["Chat", "Team", "Resources", "Reports", "Contacts", "Important Contacts", "Tickets", "Tasks", "Apps"]);
 
 function getActiveCategory(location: string, categories: NavCategory[]): NavCategory | null {
   for (const cat of categories) {
@@ -61,6 +61,7 @@ export function TopNavigation() {
   const contactsUrl = findUrl("Important Contacts", "Contacts");
   const ticketsUrl = findUrl("Tickets");
   const tasksUrl = findUrl("Tasks");
+  const appsUrl = findUrl("Apps");
 
   function PinnedBtn({
     url,
@@ -138,6 +139,7 @@ export function TopNavigation() {
           <PinnedBtn url={contactsUrl} icon={Phone} label="Contacts" testId="button-contacts" />
           <PinnedBtn url={chatUrl} icon={MessageCircle} label="Chat" testId="button-chat" />
           <PinnedBtn url={teamUrl} icon={Users} label="Team" testId="button-team" />
+          <PinnedBtn url={appsUrl} icon={Blocks} label="Apps" testId="button-apps" />
 
           <Separator orientation="vertical" className="h-5" />
 
