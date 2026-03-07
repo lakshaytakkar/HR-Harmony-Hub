@@ -30,6 +30,7 @@ import {
   SectionGrid,
   SectionCard,
 } from "@/components/layout";
+import { ButtonGrid } from "@/components/blocks";
 
 const riskVariant: Record<string, "success" | "error" | "warning" | "neutral"> = {
   "on-track": "success",
@@ -259,17 +260,14 @@ export default function Dashboard() {
         </SectionCard>
 
         <SectionCard title="Quick Actions">
-          <div className="flex flex-col gap-2">
-            <Button variant="outline" className="justify-start" onClick={() => navigate("/legalnations/clients")} data-testid="button-quick-new-client">
-              <UserPlus className="mr-2 size-4" /> New Client
-            </Button>
-            <Button variant="outline" className="justify-start" onClick={() => navigate("/legalnations/pipeline")} data-testid="button-quick-pipeline">
-              <GitBranch className="mr-2 size-4" /> View Pipeline
-            </Button>
-            <Button variant="outline" className="justify-start" onClick={() => navigate("/legalnations/escalations")} data-testid="button-quick-escalations">
-              <Flag className="mr-2 size-4" /> Check Escalations
-            </Button>
-          </div>
+          <ButtonGrid
+            items={[
+              { id: "new-client", icon: UserPlus, label: "New Client", description: "Add a new client to the system", onClick: () => navigate("/legalnations/clients") },
+              { id: "view-pipeline", icon: GitBranch, label: "View Pipeline", description: "Monitor formation pipeline", onClick: () => navigate("/legalnations/pipeline") },
+              { id: "check-escalations", icon: Flag, label: "Check Escalations", description: "Review open escalations", onClick: () => navigate("/legalnations/escalations") },
+            ]}
+            cols={3}
+          />
         </SectionCard>
       </SectionGrid>
 

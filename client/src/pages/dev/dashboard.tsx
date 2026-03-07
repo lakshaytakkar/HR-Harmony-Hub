@@ -45,6 +45,7 @@ import {
   SectionCard,
   SectionGrid,
 } from "@/components/layout";
+import { ShortcutGrid } from "@/components/blocks";
 
 const priorityIcons: Record<string, JSX.Element> = {
   critical: <AlertTriangle className="size-3 text-red-500" />,
@@ -206,27 +207,17 @@ export default function DevDashboard() {
           {[...Array(6)].map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" data-testid="quick-links-grid">
-          {quickLinks.map((link) => (
-            <button
-              key={link.title}
-              onClick={() => navigate(link.url)}
-              className="w-full text-left rounded-lg border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-              data-testid={`card-quicklink-${link.title.toLowerCase().replace(/\s+/g, "-")}`}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div
-                  className="flex size-9 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: `${link.color}15`, color: link.color }}
-                >
-                  <link.icon className="size-4.5" />
-                </div>
-                <h3 className="text-sm font-semibold font-heading">{link.title}</h3>
-              </div>
-              <p className="text-xs text-muted-foreground">{link.description}</p>
-            </button>
-          ))}
-        </div>
+        <ShortcutGrid
+          items={quickLinks.map((link) => ({
+            id: link.title.toLowerCase().replace(/\s+/g, "-"),
+            icon: link.icon,
+            iconBg: `${link.color}15`,
+            iconColor: link.color,
+            label: link.title,
+            onClick: () => navigate(link.url),
+          }))}
+          cols={6}
+        />
       )}
 
       {loading ? (

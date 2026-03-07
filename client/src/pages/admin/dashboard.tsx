@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Users, UserCheck, FileText, Activity, ArrowRight, Plus, Settings, BarChart3, Download, LogIn, Pencil, Trash2, Upload } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 import { teamMembers, activityLogs } from "@/lib/mock-data-admin";
 import { reports } from "@/lib/mock-data-admin";
@@ -17,6 +17,7 @@ import {
 } from "@/components/layout";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ActivityFeed, ButtonGrid } from "@/components/blocks";
 
 const activityTypeConfig: Record<string, { icon: typeof Plus; color: string }> = {
   create: { icon: Plus, color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950" },
@@ -47,6 +48,7 @@ function getRelativeTime(timestamp: string): string {
 
 export default function AdminDashboard() {
   const loading = useSimulatedLoading();
+  const [, navigate] = useLocation();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const activeUsers = teamMembers.filter((m) => m.status === "active").length;
@@ -112,59 +114,34 @@ export default function AdminDashboard() {
         </SectionGrid>
       ) : (
         <SectionGrid>
-          <SectionCard title="Recent Activity" noPadding>
-            <div className="divide-y">
-              {activityLogs.map((log) => {
+          <SectionCard title="Recent Activity">
+            <ActivityFeed
+              items={activityLogs.map((log) => {
                 const config = activityTypeConfig[log.type];
-                const Icon = config.icon;
-                return (
-                  <div
-                    key={log.id}
-                    className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/20"
-                    data-testid={`activity-log-${log.id}`}
-                  >
-                    <div className={`flex size-8 shrink-0 items-center justify-center rounded-md ${config.color}`}>
-                      <Icon className="size-3.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm">
-                        <span className="font-medium">{log.user}</span>{" "}
-                        <span className="text-muted-foreground">{log.action}</span>{" "}
-                        <span className="font-medium">{log.target}</span>
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-xs text-muted-foreground" data-testid={`text-timestamp-${log.id}`}>
-                      {getRelativeTime(log.timestamp)}
-                    </span>
-                  </div>
-                );
+                return {
+                  id: log.id,
+                  actor: log.user,
+                  text: `${log.action} ${log.target}`,
+                  timeAgo: getRelativeTime(log.timestamp),
+                  icon: config.icon,
+                };
               })}
-            </div>
+            />
           </SectionCard>
 
           <SectionCard title="Quick Actions">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {quickActions.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <Link
-                    key={action.title}
-                    href={action.href}
-                    className="group flex items-start gap-3 rounded-md border p-4 transition-colors hover:bg-muted/20"
-                    data-testid={`quick-action-${action.title.toLowerCase().replace(/\s+/g, "-")}`}
-                  >
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                      <Icon className="size-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{action.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>
-                    </div>
-                    <ArrowRight className="size-4 shrink-0 text-muted-foreground mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
-                );
-              })}
-            </div>
+            <ButtonGrid
+              items={quickActions.map((action) => ({
+                id: action.title.toLowerCase().replace(/\s+/g, "-"),
+                icon: action.icon,
+                iconBg: "hsl(var(--primary) / 0.1)",
+                iconColor: "hsl(var(--primary))",
+                label: action.title,
+                description: action.description,
+                onClick: () => navigate(action.href),
+              }))}
+              cols={2}
+            />
           </SectionCard>
         </SectionGrid>
       )}

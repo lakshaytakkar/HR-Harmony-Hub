@@ -5,13 +5,13 @@ import { PageTransition, Fade } from "@/components/ui/animated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { employees, attendanceRecords, leaveRequests, payrollEntries, performanceReviews, goals } from "@/lib/mock-data-hrms";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { PageShell } from "@/components/layout";
+import { DetailBanner, InfoPropertyGrid } from "@/components/blocks";
 
 export default function HrmsEmployeeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -53,41 +53,36 @@ export default function HrmsEmployeeDetail() {
       </Fade>
 
       <Fade>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-6 items-start">
-              <Avatar className="size-20">
-                <AvatarImage src={getPersonAvatar(employee.name, 80)} alt={employee.name} />
-                <AvatarFallback className="text-2xl">{employee.avatar}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h1 className="text-2xl font-bold">{employee.name}</h1>
-                  <StatusBadge status={employee.status} />
-                  <StatusBadge status={employee.employmentType} />
-                </div>
-                <p className="text-muted-foreground mb-3">{employee.designation} · {employee.department}</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                  <div className="flex items-center gap-1.5 text-muted-foreground"><Mail className="size-4" />{employee.email}</div>
-                  <div className="flex items-center gap-1.5 text-muted-foreground"><Phone className="size-4" />{employee.phone}</div>
-                  <div className="flex items-center gap-1.5 text-muted-foreground"><MapPin className="size-4" />{employee.location}</div>
-                  <div className="flex items-center gap-1.5 text-muted-foreground"><Calendar className="size-4" />Joined {new Date(employee.joiningDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</div>
-                </div>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                <Button variant="outline" size="sm" asChild data-testid="whatsapp-emp">
-                  <a href={`https://wa.me/${employee.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-                    <SiWhatsapp className="size-4 text-green-500 mr-1.5" /> WhatsApp
-                  </a>
-                </Button>
-                <Button variant="outline" size="sm" asChild data-testid="email-emp">
-                  <a href={`mailto:${employee.email}`}><Mail className="size-4 mr-1.5" /> Email</a>
-                </Button>
-                <Button size="sm" className="bg-sky-600 hover:bg-sky-700" data-testid="edit-emp">Edit</Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <DetailBanner
+          title={employee.name}
+          subtitle={`${employee.designation} · ${employee.department}`}
+          avatar={getPersonAvatar(employee.name, 80)}
+          avatarFallback={employee.avatar}
+          badges={[
+            { label: employee.status },
+            { label: employee.employmentType, variant: "secondary" as const },
+          ]}
+          chips={[
+            { label: "Email", value: employee.email, icon: Mail },
+            { label: "Phone", value: employee.phone, icon: Phone },
+            { label: "Location", value: employee.location, icon: MapPin },
+            { label: "Joined", value: new Date(employee.joiningDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }), icon: Calendar },
+          ]}
+          actions={[
+            { label: "Edit", onClick: () => {}, variant: "default" as const },
+          ]}
+        >
+          <div className="mt-4 flex gap-2">
+            <Button variant="outline" size="sm" asChild data-testid="whatsapp-emp">
+              <a href={`https://wa.me/${employee.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
+                <SiWhatsapp className="size-4 text-green-500 mr-1.5" /> WhatsApp
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild data-testid="email-emp">
+              <a href={`mailto:${employee.email}`}><Mail className="size-4 mr-1.5" /> Email</a>
+            </Button>
+          </div>
+        </DetailBanner>
       </Fade>
 
       <Fade>
@@ -104,13 +99,18 @@ export default function HrmsEmployeeDetail() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="border-0 shadow-sm">
                 <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Profile Details</CardTitle></CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Department</span><span className="font-medium">{employee.department}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Designation</span><span className="font-medium">{employee.designation}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Reporting To</span><span className="font-medium">{employee.reportingManager || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Location</span><span className="font-medium">{employee.location}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Employment Type</span><span className="font-medium capitalize">{employee.employmentType}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Gross Salary</span><span className="font-medium">₹{employee.salary.toLocaleString("en-IN")}/mo</span></div>
+                <CardContent>
+                  <InfoPropertyGrid
+                    properties={[
+                      { label: "Department", value: employee.department, icon: Building2 },
+                      { label: "Designation", value: employee.designation },
+                      { label: "Reporting To", value: employee.reportingManager || "N/A", icon: User },
+                      { label: "Location", value: employee.location, icon: MapPin },
+                      { label: "Employment Type", value: <span className="capitalize">{employee.employmentType}</span> },
+                      { label: "Gross Salary", value: `₹${employee.salary.toLocaleString("en-IN")}/mo` },
+                    ]}
+                    columns={2}
+                  />
                 </CardContent>
               </Card>
 

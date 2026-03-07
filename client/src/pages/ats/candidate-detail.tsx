@@ -1,25 +1,34 @@
 import { useParams, useLocation } from "wouter";
-import { ArrowLeft, Mail, Phone, Star } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Star, FileText, Search, MonitorSmartphone, Code, Award } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { PageTransition, Fade } from "@/components/ui/animated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { getPersonAvatar } from "@/lib/avatars";
 import { candidates, applications, interviews, evaluations } from "@/lib/mock-data-ats";
 import { PageShell } from "@/components/layout";
+import { DetailBanner, InfoPropertyGrid, Timeline } from "@/components/blocks";
 
 const activityTimeline = (candidateId: string) => [
-  { text: "Application received", date: "2026-02-08", icon: "📋" },
-  { text: "Moved to Screening", date: "2026-02-10", icon: "🔍" },
-  { text: "Phone screen completed", date: "2026-02-15", icon: "📞" },
-  { text: "Technical interview scheduled", date: "2026-02-22", icon: "💻" },
-  { text: "Evaluation submitted", date: "2026-02-25", icon: "⭐" },
+  { id: "at-1", title: "Application received", timestamp: "2026-02-08", icon: FileText },
+  { id: "at-2", title: "Moved to Screening", timestamp: "2026-02-10", icon: Search },
+  { id: "at-3", title: "Phone screen completed", timestamp: "2026-02-15", icon: Phone },
+  { id: "at-4", title: "Technical interview scheduled", timestamp: "2026-02-22", icon: MonitorSmartphone },
+  { id: "at-5", title: "Evaluation submitted", timestamp: "2026-02-25", icon: Award },
 ];
+
+const stageColors: Record<string, string> = {
+  applied: "bg-blue-100 text-blue-700",
+  screening: "bg-amber-100 text-amber-700",
+  interview: "bg-violet-100 text-violet-700",
+  offer: "bg-emerald-100 text-emerald-700",
+  hired: "bg-green-100 text-green-700",
+  rejected: "bg-red-100 text-red-700",
+};
 
 export default function AtsCandidateDetail() {
   const { id } = useParams<{ id: string }>();
@@ -51,39 +60,34 @@ export default function AtsCandidateDetail() {
       </Fade>
 
       <Fade>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-5 items-start">
-              <Avatar className="size-16">
-                <AvatarImage src={getPersonAvatar(candidate.name, 64)} alt={candidate.name} />
-                <AvatarFallback className="text-xl">{candidate.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h1 className="text-2xl font-bold">{candidate.name}</h1>
-                  <StatusBadge status={candidate.stage} />
-                  <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-muted text-muted-foreground">{candidate.experience}y experience</span>
-                </div>
-                <p className="text-muted-foreground">{candidate.currentRole} · {candidate.currentCompany}</p>
-                <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1"><Mail className="size-3.5" />{candidate.email}</span>
-                  <span className="flex items-center gap-1"><Phone className="size-3.5" />{candidate.phone}</span>
-                </div>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                <Button variant="outline" size="sm" asChild data-testid="whatsapp-candidate">
-                  <a href={`https://wa.me/${candidate.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-                    <SiWhatsapp className="size-4 text-green-500 mr-1.5" /> WhatsApp
-                  </a>
-                </Button>
-                <Button variant="outline" size="sm" asChild data-testid="email-candidate">
-                  <a href={`mailto:${candidate.email}`}><Mail className="size-4 mr-1.5" /> Email</a>
-                </Button>
-                <Button size="sm" className="bg-violet-600 hover:bg-violet-700" data-testid="schedule-interview">Schedule Interview</Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <DetailBanner
+          title={candidate.name}
+          subtitle={`${candidate.currentRole} · ${candidate.currentCompany}`}
+          avatar={getPersonAvatar(candidate.name, 64)}
+          avatarFallback={candidate.name.split(" ").map(n => n[0]).join("")}
+          badges={[
+            { label: candidate.stage },
+            { label: `${candidate.experience}y experience`, variant: "secondary" as const },
+          ]}
+          chips={[
+            { label: "Email", value: candidate.email, icon: Mail },
+            { label: "Phone", value: candidate.phone, icon: Phone },
+          ]}
+          actions={[
+            { label: "Schedule Interview", onClick: () => {}, variant: "default" as const },
+          ]}
+        >
+          <div className="mt-4 flex gap-2">
+            <Button variant="outline" size="sm" asChild data-testid="whatsapp-candidate">
+              <a href={`https://wa.me/${candidate.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
+                <SiWhatsapp className="size-4 text-green-500 mr-1.5" /> WhatsApp
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild data-testid="email-candidate">
+              <a href={`mailto:${candidate.email}`}><Mail className="size-4 mr-1.5" /> Email</a>
+            </Button>
+          </div>
+        </DetailBanner>
       </Fade>
 
       <Fade>
@@ -99,16 +103,21 @@ export default function AtsCandidateDetail() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="border-0 shadow-sm">
                 <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Contact Information</CardTitle></CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{candidate.email}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Phone</span><span>{candidate.phone}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Current Role</span><span>{candidate.currentRole}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Company</span><span>{candidate.currentCompany}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Experience</span><span>{candidate.experience} years</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Source</span><StatusBadge status={candidate.source} /></div>
-                  <div className="flex justify-between items-center"><span className="text-muted-foreground">Rating</span>
-                    <div className="flex">{[1,2,3,4,5].map(s => <Star key={s} className={`size-3.5 ${s <= candidate.rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />)}</div>
-                  </div>
+                <CardContent>
+                  <InfoPropertyGrid
+                    properties={[
+                      { label: "Email", value: candidate.email, icon: Mail },
+                      { label: "Phone", value: candidate.phone, icon: Phone },
+                      { label: "Current Role", value: candidate.currentRole },
+                      { label: "Company", value: candidate.currentCompany },
+                      { label: "Experience", value: `${candidate.experience} years` },
+                      { label: "Source", value: <StatusBadge status={candidate.source} /> },
+                      { label: "Rating", value: (
+                        <div className="flex">{[1,2,3,4,5].map(s => <Star key={s} className={`size-3.5 ${s <= candidate.rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />)}</div>
+                      ) },
+                    ]}
+                    columns={2}
+                  />
                 </CardContent>
               </Card>
               <Card className="border-0 shadow-sm">
@@ -130,17 +139,7 @@ export default function AtsCandidateDetail() {
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Activity Timeline</CardTitle></CardHeader>
               <CardContent>
-                <div className="relative space-y-4 pl-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
-                  {activityTimeline(id!).map((event, idx) => (
-                    <div key={idx} className="relative flex items-start gap-3">
-                      <span className="absolute -left-4 text-base">{event.icon}</span>
-                      <div>
-                        <p className="text-sm">{event.text}</p>
-                        <p className="text-xs text-muted-foreground">{event.date}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <Timeline events={activityTimeline(id!)} />
               </CardContent>
             </Card>
           </TabsContent>

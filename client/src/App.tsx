@@ -42,6 +42,7 @@ import SalesFulfillment from "@/pages/sales/fulfillment";
 import SalesCompetitors from "@/pages/sales/competitors";
 import SalesTickets from "@/pages/sales/tickets";
 import SalesCourses from "@/pages/sales/courses";
+import SalesCourseDetail from "@/pages/sales/course-detail";
 import SalesHelpCenter from "@/pages/sales/help-center";
 import SalesRevenue from "@/pages/sales/revenue";
 import SalesUserAnalytics from "@/pages/sales/user-analytics";
@@ -262,6 +263,7 @@ function Router() {
       <Route path="/usdrop/fulfillment" component={SalesFulfillment} />
       <Route path="/usdrop/competitors" component={SalesCompetitors} />
       <Route path="/usdrop/tickets" component={UniversalTickets} />
+      <Route path="/usdrop/courses/:id" component={SalesCourseDetail} />
       <Route path="/usdrop/courses" component={SalesCourses} />
       <Route path="/usdrop/help-center" component={SalesHelpCenter} />
       <Route path="/usdrop/revenue" component={SalesRevenue} />
