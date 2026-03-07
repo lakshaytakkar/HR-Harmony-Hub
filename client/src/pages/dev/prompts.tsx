@@ -5,22 +5,21 @@ import {
   Bot,
   Copy,
   Check,
-  ChevronDown,
-  ChevronRight,
   Plus,
   Heart,
   Search,
   Filter,
+  Clock,
 } from "lucide-react";
 import { StatsCard } from "@/components/hr/stats-card";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
-import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -28,6 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { Fade, Stagger, StaggerItem, PageTransition } from "@/components/ui/animated";
 import { devPrompts, type DevPrompt } from "@/lib/mock-data-dev";
@@ -38,18 +43,18 @@ import { PageShell } from "@/components/layout";
 const categoryOptions = ["agent", "frontend", "backend", "database", "debug"] as const;
 const modelOptions = ["claude", "gpt", "replit-agent"] as const;
 
-const categoryVariant: Record<string, "info" | "success" | "warning" | "neutral" | "error"> = {
-  agent: "info",
-  frontend: "success",
-  backend: "warning",
-  database: "neutral",
-  debug: "error",
+const CATEGORY_COLORS: Record<string, string> = {
+  agent: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+  frontend: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  backend: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+  database: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+  debug: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
 };
 
-const modelVariant: Record<string, "info" | "success" | "warning"> = {
-  claude: "info",
-  gpt: "success",
-  "replit-agent": "warning",
+const MODEL_COLORS: Record<string, string> = {
+  claude: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
+  gpt: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  "replit-agent": "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
 };
 
 const modelLabel: Record<string, string> = {
@@ -67,7 +72,7 @@ export default function PromptsPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [modelFilter, setModelFilter] = useState("all");
   const [favoriteFilter, setFavoriteFilter] = useState("all");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedPrompt, setSelectedPrompt] = useState<DevPrompt | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -210,111 +215,148 @@ export default function PromptsPage() {
         )}
 
         <Fade direction="up" delay={0.15} className="mt-6">
-          <div className="rounded-lg border bg-background">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search prompts..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 w-60 pl-8 text-sm"
-                  data-testid="input-prompts-search"
-                />
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="h-8 w-auto min-w-[130px] text-sm" data-testid="filter-category">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categoryOptions.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c.charAt(0).toUpperCase() + c.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={modelFilter} onValueChange={setModelFilter}>
-                  <SelectTrigger className="h-8 w-auto min-w-[130px] text-sm" data-testid="filter-model">
-                    <SelectValue placeholder="Model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Models</SelectItem>
-                    {modelOptions.map((m) => (
-                      <SelectItem key={m} value={m}>
-                        {modelLabel[m]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={favoriteFilter} onValueChange={setFavoriteFilter}>
-                  <SelectTrigger className="h-8 w-auto min-w-[120px] text-sm" data-testid="filter-favorite">
-                    <SelectValue placeholder="Favorites" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Prompts</SelectItem>
-                    <SelectItem value="favorites">Favorites Only</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button size="sm" onClick={() => setDialogOpen(true)} data-testid="button-add-prompt">
-                  <Plus className="mr-1.5 size-3.5" /> Add Prompt
-                </Button>
-              </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search prompts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 w-72 pl-8"
+                data-testid="input-prompts-search"
+              />
             </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="h-9 w-auto min-w-[130px] text-sm" data-testid="filter-category">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categoryOptions.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c.charAt(0).toUpperCase() + c.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <div className="divide-y">
-              {filteredPrompts.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 py-12" data-testid="empty-state">
-                  <MessageSquare className="size-10 text-muted-foreground/50" />
-                  <p className="text-sm font-medium text-foreground">No prompts found</p>
-                  <p className="text-xs text-muted-foreground">Try adjusting your filters or search query.</p>
-                </div>
-              ) : (
-                filteredPrompts.map((prompt) => {
-                  const isExpanded = expandedId === prompt.id;
+              <Select value={modelFilter} onValueChange={setModelFilter}>
+                <SelectTrigger className="h-9 w-auto min-w-[130px] text-sm" data-testid="filter-model">
+                  <SelectValue placeholder="Model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Models</SelectItem>
+                  {modelOptions.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {modelLabel[m]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={favoriteFilter} onValueChange={setFavoriteFilter}>
+                <SelectTrigger className="h-9 w-auto min-w-[120px] text-sm" data-testid="filter-favorite">
+                  <SelectValue placeholder="Favorites" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Prompts</SelectItem>
+                  <SelectItem value="favorites">Favorites Only</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button size="sm" onClick={() => setDialogOpen(true)} data-testid="button-add-prompt">
+                <Plus className="mr-1.5 size-3.5" /> Add Prompt
+              </Button>
+            </div>
+          </div>
+
+          {filteredPrompts.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-16" data-testid="empty-state">
+              <MessageSquare className="size-10 text-muted-foreground/40" />
+              <p className="text-sm font-medium text-foreground">No prompts found</p>
+              <p className="text-xs text-muted-foreground">Try adjusting your filters or search query.</p>
+            </div>
+          ) : (
+            <Stagger staggerDelay={0.04}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredPrompts.map((prompt) => {
                   const isCopied = copiedId === prompt.id;
-
                   return (
-                    <div
-                      key={prompt.id}
-                      className="transition-colors hover:bg-muted/30"
-                      data-testid={`card-prompt-${prompt.id}`}
-                    >
-                      <div
-                        className="flex items-center gap-3 px-4 py-3 cursor-pointer"
-                        onClick={() => setExpandedId(isExpanded ? null : prompt.id)}
-                        data-testid={`button-expand-${prompt.id}`}
+                    <StaggerItem key={prompt.id}>
+                      <Card
+                        className="border bg-card hover:shadow-md transition-shadow cursor-pointer group h-full"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setSelectedPrompt(prompt)}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedPrompt(prompt); } }}
+                        data-testid={`card-prompt-${prompt.id}`}
                       >
-                        <div className="shrink-0 text-muted-foreground">
-                          {isExpanded ? (
-                            <ChevronDown className="size-4" />
-                          ) : (
-                            <ChevronRight className="size-4" />
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-medium truncate" data-testid={`text-title-${prompt.id}`}>
+                        <CardContent className="p-5 flex flex-col h-full">
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <h3
+                              className="text-sm font-semibold leading-snug line-clamp-2 flex-1"
+                              data-testid={`text-title-${prompt.id}`}
+                            >
                               {prompt.title}
-                            </p>
-                            <StatusBadge
-                              status={prompt.category}
-                              variant={categoryVariant[prompt.category]}
-                            />
-                            <StatusBadge
-                              status={modelLabel[prompt.model]}
-                              variant={modelVariant[prompt.model]}
-                            />
+                            </h3>
+                            <div className="flex items-center gap-0.5 shrink-0">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="size-7"
+                                onClick={(e) => { e.stopPropagation(); toggleFavorite(prompt.id); }}
+                                aria-label={prompt.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                                data-testid={`button-favorite-${prompt.id}`}
+                              >
+                                <Heart
+                                  className={cn(
+                                    "size-3.5",
+                                    prompt.isFavorite
+                                      ? "fill-red-500 text-red-500"
+                                      : "text-muted-foreground"
+                                  )}
+                                />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="size-7"
+                                onClick={(e) => { e.stopPropagation(); void handleCopy(prompt); }}
+                                aria-label="Copy prompt"
+                                data-testid={`button-copy-${prompt.id}`}
+                              >
+                                {isCopied ? (
+                                  <Check className="size-3.5 text-emerald-500" />
+                                ) : (
+                                  <Copy className="size-3.5 text-muted-foreground" />
+                                )}
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            {prompt.tags.map((tag) => (
+
+                          <p className="text-xs text-muted-foreground line-clamp-2 mb-3 flex-1">
+                            {prompt.content}
+                          </p>
+
+                          <div className="flex items-center flex-wrap gap-1.5 mb-3">
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] px-2 py-0.5 border-0 ${CATEGORY_COLORS[prompt.category] || ""}`}
+                            >
+                              {prompt.category}
+                            </Badge>
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] px-2 py-0.5 border-0 ${MODEL_COLORS[prompt.model] || ""}`}
+                            >
+                              {modelLabel[prompt.model]}
+                            </Badge>
+                          </div>
+
+                          <div className="flex items-center flex-wrap gap-1 mb-3">
+                            {prompt.tags.slice(0, 3).map((tag) => (
                               <Badge
                                 key={tag}
                                 variant="outline"
@@ -324,85 +366,108 @@ export default function PromptsPage() {
                                 {tag}
                               </Badge>
                             ))}
-                            <span className="text-xs text-muted-foreground">
-                              Last used: {prompt.lastUsed}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => toggleFavorite(prompt.id)}
-                            data-testid={`button-favorite-${prompt.id}`}
-                          >
-                            <Heart
-                              className={cn(
-                                "size-4",
-                                prompt.isFavorite
-                                  ? "fill-red-500 text-red-500"
-                                  : "text-muted-foreground"
-                              )}
-                            />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleCopy(prompt)}
-                            data-testid={`button-copy-${prompt.id}`}
-                          >
-                            {isCopied ? (
-                              <Check className="size-4 text-emerald-500" />
-                            ) : (
-                              <Copy className="size-4 text-muted-foreground" />
+                            {prompt.tags.length > 3 && (
+                              <span className="text-[10px] text-muted-foreground">
+                                +{prompt.tags.length - 3}
+                              </span>
                             )}
-                          </Button>
-                        </div>
-                      </div>
+                          </div>
 
-                      {isExpanded && (
-                        <div className="px-4 pb-4 pl-11" data-testid={`content-prompt-${prompt.id}`}>
-                          <div className="rounded-md border bg-muted/30 p-4">
-                            <pre className="whitespace-pre-wrap text-sm text-foreground leading-relaxed">
-                              {prompt.content}
-                            </pre>
+                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-auto pt-2 border-t">
+                            <Clock className="size-3" />
+                            <span>Last used {prompt.lastUsed}</span>
                           </div>
-                          <div className="flex items-center justify-between gap-2 mt-3 flex-wrap">
-                            <span className="text-xs text-muted-foreground">
-                              Created: {prompt.createdDate}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleCopy(prompt)}
-                              data-testid={`button-copy-expanded-${prompt.id}`}
-                            >
-                              {isCopied ? (
-                                <Check className="mr-1.5 size-3.5 text-emerald-500" />
-                              ) : (
-                                <Copy className="mr-1.5 size-3.5" />
-                              )}
-                              {isCopied ? "Copied" : "Copy Prompt"}
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                        </CardContent>
+                      </Card>
+                    </StaggerItem>
                   );
-                })
-              )}
-            </div>
-
-            {filteredPrompts.length > 0 && (
-              <div className="border-t px-4 py-3">
-                <p className="text-sm text-muted-foreground" data-testid="text-prompts-count">
-                  Showing {filteredPrompts.length} of {totalPrompts} prompts
-                </p>
+                })}
               </div>
-            )}
-          </div>
+            </Stagger>
+          )}
+
+          {filteredPrompts.length > 0 && (
+            <p className="text-sm text-muted-foreground mt-4" data-testid="text-prompts-count">
+              Showing {filteredPrompts.length} of {totalPrompts} prompts
+            </p>
+          )}
         </Fade>
+
+        <Dialog open={!!selectedPrompt} onOpenChange={(open) => !open && setSelectedPrompt(null)}>
+          {selectedPrompt && (
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <div className="flex items-start justify-between gap-3">
+                  <DialogTitle className="text-base font-semibold leading-snug pr-2">
+                    {selectedPrompt.title}
+                  </DialogTitle>
+                </div>
+                <div className="flex items-center flex-wrap gap-1.5 mt-2">
+                  <Badge
+                    variant="outline"
+                    className={`text-xs px-2 py-0.5 border-0 ${CATEGORY_COLORS[selectedPrompt.category] || ""}`}
+                  >
+                    {selectedPrompt.category}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className={`text-xs px-2 py-0.5 border-0 ${MODEL_COLORS[selectedPrompt.model] || ""}`}
+                  >
+                    {modelLabel[selectedPrompt.model]}
+                  </Badge>
+                  {selectedPrompt.tags.map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-xs px-2 py-0.5">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </DialogHeader>
+
+              <div className="rounded-lg border bg-muted/30 p-4 mt-2">
+                <pre className="whitespace-pre-wrap text-sm text-foreground leading-relaxed font-sans">
+                  {selectedPrompt.content}
+                </pre>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 mt-3">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span>Created: {selectedPrompt.createdDate}</span>
+                  <span>Last used: {selectedPrompt.lastUsed}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => toggleFavorite(selectedPrompt.id)}
+                    data-testid="button-detail-favorite"
+                  >
+                    <Heart
+                      className={cn(
+                        "size-4 mr-1.5",
+                        selectedPrompt.isFavorite
+                          ? "fill-red-500 text-red-500"
+                          : "text-muted-foreground"
+                      )}
+                    />
+                    {selectedPrompt.isFavorite ? "Unfavorite" : "Favorite"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleCopy(selectedPrompt)}
+                    data-testid="button-detail-copy"
+                  >
+                    {copiedId === selectedPrompt.id ? (
+                      <Check className="mr-1.5 size-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="mr-1.5 size-3.5" />
+                    )}
+                    {copiedId === selectedPrompt.id ? "Copied" : "Copy Prompt"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          )}
+        </Dialog>
 
         <FormDialog
           open={dialogOpen}
