@@ -40,8 +40,9 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { PageShell } from "@/components/layout";
 
-const categoryOptions = ["agent", "frontend", "backend", "database", "debug"] as const;
+const categoryOptions = ["agent", "frontend", "backend", "database", "debug", "audit", "testing", "ux", "seo", "security", "performance", "devops"] as const;
 const modelOptions = ["claude", "gpt", "replit-agent"] as const;
+const scopeOptions = ["narrow", "broad"] as const;
 
 const CATEGORY_COLORS: Record<string, string> = {
   agent: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
@@ -49,6 +50,18 @@ const CATEGORY_COLORS: Record<string, string> = {
   backend: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
   database: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
   debug: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
+  audit: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
+  testing: "bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300",
+  ux: "bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300",
+  seo: "bg-lime-100 text-lime-700 dark:bg-lime-950 dark:text-lime-300",
+  security: "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300",
+  performance: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
+  devops: "bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300",
+};
+
+const SCOPE_COLORS: Record<string, string> = {
+  narrow: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300",
+  broad: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
 };
 
 const MODEL_COLORS: Record<string, string> = {
@@ -71,6 +84,7 @@ export default function PromptsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [modelFilter, setModelFilter] = useState("all");
+  const [scopeFilter, setScopeFilter] = useState("all");
   const [favoriteFilter, setFavoriteFilter] = useState("all");
   const [selectedPrompt, setSelectedPrompt] = useState<DevPrompt | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -79,6 +93,7 @@ export default function PromptsPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newCategory, setNewCategory] = useState<string>("agent");
+  const [newScope, setNewScope] = useState<string>("narrow");
   const [newModel, setNewModel] = useState<string>("claude");
   const [newTags, setNewTags] = useState("");
 
@@ -103,20 +118,22 @@ export default function PromptsPage() {
       result = result.filter((p) => p.model === modelFilter);
     }
 
+    if (scopeFilter !== "all") {
+      result = result.filter((p) => p.scope === scopeFilter);
+    }
+
     if (favoriteFilter === "favorites") {
       result = result.filter((p) => p.isFavorite);
     }
 
     return result;
-  }, [prompts, searchQuery, categoryFilter, modelFilter, favoriteFilter]);
+  }, [prompts, searchQuery, categoryFilter, modelFilter, scopeFilter, favoriteFilter]);
 
   const totalPrompts = prompts.length;
   const totalFavorites = prompts.filter((p) => p.isFavorite).length;
-  const modelCounts = {
-    claude: prompts.filter((p) => p.model === "claude").length,
-    gpt: prompts.filter((p) => p.model === "gpt").length,
-    "replit-agent": prompts.filter((p) => p.model === "replit-agent").length,
-  };
+  const narrowCount = prompts.filter((p) => p.scope === "narrow").length;
+  const broadCount = prompts.filter((p) => p.scope === "broad").length;
+  const uniqueCategories = Array.from(new Set(prompts.map((p) => p.category))).length;
 
   const handleCopy = async (prompt: DevPrompt) => {
     try {
@@ -143,6 +160,7 @@ export default function PromptsPage() {
       title: newTitle.trim(),
       content: newContent.trim(),
       category: newCategory as DevPrompt["category"],
+      scope: newScope as DevPrompt["scope"],
       model: newModel as DevPrompt["model"],
       tags: newTags
         .split(",")
@@ -158,6 +176,7 @@ export default function PromptsPage() {
     setNewTitle("");
     setNewContent("");
     setNewCategory("agent");
+    setNewScope("narrow");
     setNewModel("claude");
     setNewTags("");
     toast({ title: "Prompt added", description: `"${newPrompt.title}" has been saved.` });
@@ -195,9 +214,9 @@ export default function PromptsPage() {
             </StaggerItem>
             <StaggerItem>
               <StatsCard
-                title="Claude Prompts"
-                value={modelCounts.claude}
-                change={`GPT: ${modelCounts.gpt}, Agent: ${modelCounts["replit-agent"]}`}
+                title="Narrow Focus"
+                value={narrowCount}
+                change={`${broadCount} broad prompts`}
                 changeType="neutral"
                 icon={<Bot className="size-5" />}
               />
@@ -205,8 +224,8 @@ export default function PromptsPage() {
             <StaggerItem>
               <StatsCard
                 title="Categories"
-                value={categoryOptions.length}
-                change="agent, frontend, backend, db, debug"
+                value={uniqueCategories}
+                change={`${filteredPrompts.length} matching filters`}
                 changeType="neutral"
                 icon={<Filter className="size-5" />}
               />
@@ -251,6 +270,20 @@ export default function PromptsPage() {
                   {modelOptions.map((m) => (
                     <SelectItem key={m} value={m}>
                       {modelLabel[m]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={scopeFilter} onValueChange={setScopeFilter}>
+                <SelectTrigger className="h-9 w-auto min-w-[120px] text-sm" data-testid="filter-scope">
+                  <SelectValue placeholder="Scope" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Scopes</SelectItem>
+                  {scopeOptions.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -349,6 +382,12 @@ export default function PromptsPage() {
                             </Badge>
                             <Badge
                               variant="outline"
+                              className={`text-[10px] px-2 py-0.5 border-0 ${SCOPE_COLORS[prompt.scope] || ""}`}
+                            >
+                              {prompt.scope}
+                            </Badge>
+                            <Badge
+                              variant="outline"
                               className={`text-[10px] px-2 py-0.5 border-0 ${MODEL_COLORS[prompt.model] || ""}`}
                             >
                               {modelLabel[prompt.model]}
@@ -408,6 +447,12 @@ export default function PromptsPage() {
                     className={`text-xs px-2 py-0.5 border-0 ${CATEGORY_COLORS[selectedPrompt.category] || ""}`}
                   >
                     {selectedPrompt.category}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className={`text-xs px-2 py-0.5 border-0 ${SCOPE_COLORS[selectedPrompt.scope] || ""}`}
+                  >
+                    {selectedPrompt.scope}
                   </Badge>
                   <Badge
                     variant="outline"
@@ -497,7 +542,7 @@ export default function PromptsPage() {
               data-testid="input-prompt-content"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col gap-1.5">
               <Label>Category</Label>
               <Select value={newCategory} onValueChange={setNewCategory}>
@@ -508,6 +553,21 @@ export default function PromptsPage() {
                   {categoryOptions.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c.charAt(0).toUpperCase() + c.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Scope</Label>
+              <Select value={newScope} onValueChange={setNewScope}>
+                <SelectTrigger data-testid="select-prompt-scope">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {scopeOptions.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
                     </SelectItem>
                   ))}
                 </SelectContent>

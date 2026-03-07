@@ -274,7 +274,7 @@ Dev vertical uses PostgreSQL (via Drizzle ORM) for project and task management. 
 |------|-------|------|-------------|
 | Dashboard | `/dev` | `client/src/pages/dev/dashboard.tsx` | DB via React Query |
 | Design System | `/dev/design-system` | `client/src/pages/dev/design-system.tsx` | Static (4 tabs: Style Guide, Components, Icons, Library) |
-| Prompts | `/dev/prompts` | `client/src/pages/dev/prompts.tsx` | Mock data |
+| Prompts | `/dev/prompts` | `client/src/pages/dev/prompts.tsx` | Mock data (42 prompts, 12 categories) |
 | Projects | `/dev/projects` | `client/src/pages/dev/projects.tsx` | DB via React Query |
 | Project Board | `/dev/projects/:id` | `client/src/pages/dev/project-board.tsx` | DB via React Query |
 | Toolkit | `/dev/toolkit` | `client/src/pages/dev/toolkit.tsx` | Mock data |
@@ -308,6 +308,28 @@ Dev vertical uses PostgreSQL (via Drizzle ORM) for project and task management. 
 
 ### Seed Data (`server/dev-seed.ts`)
 6 projects (TeamSync Portal, LegalNations, USDrop AI, GoyoTours, EazyToSell, Internal Tools) with 48 tasks documenting the entire build history. Replit Agent acts as the dev employee, logging all work done on the platform. Force reseed available via `POST /api/dev/reseed`.
+
+### Prompt Library Strategy (Mar 2026)
+42 professional prompts in `client/src/lib/mock-data-dev.ts` (devPrompts array). Every prompt includes a senior engineer persona prefix ("You are a X engineer with Y years of experience...").
+
+**Categories (12):** agent, frontend, backend, database, debug, audit, testing, ux, seo, security, performance, devops
+
+**Scope:** `narrow` (single component/feature) vs `broad` (full system/architecture)
+
+**Prompt Management Rules:**
+1. When user gives a long prompt worth preserving → add to devPrompts in mock-data-dev.ts with persona prefix
+2. Deduplicate against existing prompts (check title + category before adding)
+3. Every prompt must have: persona prefix, numbered sections, specific technical instructions, output format spec
+4. After every significant session → run "Replit Agent Memory & Context Update" (PRM-041) to update replit.md + seed dev tasks
+5. Keep prompts current — update file paths, component names, patterns as the codebase evolves
+
+**Key Prompts by Use Case:**
+- Page building: PRM-001 (scaffold), PRM-011 (datatable), PRM-014 (kanban), PRM-042 (detail page), PRM-026 (forms)
+- Quality: PRM-002 (UI/UX audit), PRM-012 (code review), PRM-017 (design system compliance)
+- Testing: PRM-003 (broken links), PRM-016 (typescript strict), PRM-021 (unit tests)
+- Infrastructure: PRM-006 (drizzle schema), PRM-018 (supabase), PRM-035 (mock-to-db migration)
+- Security: PRM-010 (API hardening), PRM-032 (XSS/injection)
+- Planning: PRM-008 (vertical rebuild), PRM-039 (subagent delegation), PRM-041 (memory update)
 
 ## Recent Additions (Feb 2026)
 

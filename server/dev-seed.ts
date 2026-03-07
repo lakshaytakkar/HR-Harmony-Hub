@@ -754,6 +754,28 @@ export async function seedDevData(forceReseed = false) {
       storyPoints: 8,
     },
     {
+      projectId: tsProject.id,
+      taskCode: "TS-031",
+      title: "Dev Prompt Library — professional upgrade to 42 prompts",
+      description: "Overhauled Dev Prompts page from 12 basic prompts to 42 professional prompts across 12 categories. Added scope field (narrow/broad), persona prefixes on every prompt, expanded categories: audit, testing, ux, seo, security, performance, devops. Updated UI with scope filter, scope badges. Documented prompt management strategy in replit.md.",
+      status: "done",
+      priority: "medium",
+      type: "improvement",
+      assignee: "Replit Agent",
+      tags: ["dev-vertical", "prompts", "productivity"],
+      storyPoints: 5,
+      subtasks: [
+        { title: "Expand DevPrompt interface with scope field and 7 new categories", completed: true },
+        { title: "Write 42 professional prompts with persona prefixes and numbered sections", completed: true },
+        { title: "Add scope filter dropdown and scope badges to prompts page UI", completed: true },
+        { title: "Update replit.md with prompt management strategy and key prompt index", completed: true },
+        { title: "Seed dev task TS-031 documenting the work", completed: true },
+      ],
+      comments: [
+        { author: "Replit Agent", content: "Upgraded from 12 generic prompts to 42 professional prompts. Every prompt now has a senior engineer persona prefix ('You are a X engineer with Y years...'), numbered sections, specific technical instructions, and output format specifications. Added 7 new categories (audit, testing, ux, seo, security, performance, devops) beyond the original 5. Added narrow/broad scope classification so prompts can be filtered by whether they target a single component or an entire system." },
+      ],
+    },
+    {
       projectId: intProject.id,
       taskCode: "INT-005",
       title: "Animated transitions and micro-interactions",
