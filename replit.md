@@ -696,7 +696,7 @@ Universal pages exist under `client/src/pages/universal/` and are shared by all 
 2. **USDrop AI** (id: `sales`, color: #F34147) — D2C Dropshipping SaaS Admin Command Center — Routes: `/usdrop/*`
    - **Dashboard** `/usdrop` — Command Center with Pipeline Funnel, LLC Status Breakdown, Stalled Clients, Activity Feed, 4 stat cards
    - **Pipeline** `/usdrop/leads` — Pre-sales pipeline: Kanban board (7 stages: new→contacted→engaged→qualified→demo_done→negotiation→converted), Hot Leads tab, slide-over drawer with activity/notes/call log/WhatsApp
-   - **Clients** — All Clients table (`/usdrop/clients`) with batch/status/LLC tracking + stalled highlighting + Batch Manager tab; LLC Tracker (`/usdrop/llc`) 7-column kanban with days-stuck color coding
+   - **Clients** — All Clients DataTable (`/usdrop/clients`) with batch/status/LLC tracking + stalled highlighting + Batch Manager tab; LLC Tracker (`/usdrop/llc`) KanbanBoard with drag-and-drop + days-stuck color coding
    - **Users & Subscriptions** (All Users `/usdrop/users`, User Detail `/usdrop/users/:id` with 7 tabs: Overview/LLC/Learning/Access/Business/Activity/Notes, Leads, Plans, Subscriptions)
    - **Products & Catalog** (Products with trending/winning/locked toggles + bulk actions + detail edit panel, Categories with 2-panel layout + subcategories, Suppliers, Winning Products)
    - **Content Management** (Courses with module/chapter drill-down + published toggles, Free Learning `/usdrop/content/free-learning` accordion CMS, Mentorship Sessions `/usdrop/content/sessions`)

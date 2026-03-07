@@ -1,17 +1,10 @@
 import { useState } from "react";
+import { DataTable, type Column } from "@/components/hr/data-table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { products as initialProducts, type Product } from "@/lib/mock-data-sales";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import {
-  PageShell,
-  PageHeader,
-  IndexToolbar,
-  DataTableContainer,
-  DataTH,
-  DataTD,
-  DataTR,
-} from "@/components/layout";
+import { PageShell, PageHeader } from "@/components/layout";
 import { verticals } from "@/lib/verticals-config";
 import {
   Plus,
@@ -31,7 +24,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
@@ -62,42 +54,10 @@ const statusVariant: Record<string, "success" | "error" | "warning" | "neutral" 
 export default function ProductsPage() {
   const loading = useSimulatedLoading();
   const [data, setData] = useState<Product[]>(initialProducts);
-  const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [editForm, setEditForm] = useState<Product | null>(null);
 
   const vertical = verticals.find((v) => v.id === "sales")!;
-
-  const filtered = data.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = activeFilter === "all" || item.category === activeFilter;
-    return matchesSearch && matchesFilter;
-  });
-
-  const categories = Array.from(new Set(data.map((p) => p.category)));
-  const filterOptions = [
-    { value: "all", label: "All Categories" },
-    ...categories.map((c) => ({ value: c, label: c })),
-  ];
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.size === filtered.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filtered.map((p) => p.id)));
-    }
-  };
 
   const toggleField = (id: string, field: "isTrending" | "isWinning" | "isLocked") => {
     setData((prev) =>
@@ -106,13 +66,6 @@ export default function ProductsPage() {
     if (detailProduct?.id === id) {
       setDetailProduct((prev) => prev ? { ...prev, [field]: !prev[field] } : null);
     }
-  };
-
-  const bulkToggle = (field: "isTrending" | "isWinning" | "isLocked", value: boolean) => {
-    setData((prev) =>
-      prev.map((p) => (selectedIds.has(p.id) ? { ...p, [field]: value } : p))
-    );
-    setSelectedIds(new Set());
   };
 
   const openDetail = (product: Product) => {
@@ -134,6 +87,148 @@ export default function ProductsPage() {
   const winningCount = data.filter((p) => p.isWinning).length;
   const lockedCount = data.filter((p) => p.isLocked).length;
 
+  const categories = Array.from(new Set(data.map((p) => p.category)));
+
+  const columns: Column<Product>[] = [
+    {
+      key: "name",
+      header: "Product",
+      sortable: true,
+      render: (item) => (
+        <div className="flex items-center gap-2.5">
+          <div className="size-8 shrink-0 rounded-md bg-muted flex items-center justify-center overflow-hidden">
+            <img
+              src={item.image}
+              alt={item.name}
+              className="size-8 object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+          </div>
+          <div className="min-w-0">
+            <span className="text-sm font-medium truncate block max-w-[200px]" data-testid={`text-product-name-${item.id}`}>
+              {item.name}
+            </span>
+            <span className="text-xs text-muted-foreground">{item.sku}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "category",
+      header: "Category",
+      sortable: true,
+      render: (item) => <span className="text-sm">{item.category}</span>,
+    },
+    {
+      key: "supplier",
+      header: "Supplier",
+      render: (item) => <span className="text-sm text-muted-foreground">{item.supplier}</span>,
+    },
+    {
+      key: "price",
+      header: "Price",
+      sortable: true,
+      render: (item) => (
+        <div>
+          <span className="text-sm font-medium">{formatCurrency(item.price)}</span>
+          <span className="text-xs text-muted-foreground ml-1 line-through">
+            {formatCurrency(item.comparePrice)}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "margin",
+      header: "Profit",
+      sortable: true,
+      render: (item) => {
+        const profit = item.comparePrice - item.costPrice;
+        return (
+          <div>
+            <span
+              className={cn(
+                "text-sm font-medium",
+                profit > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
+              )}
+            >
+              {formatCurrency(profit)}
+            </span>
+            <span className="text-xs text-muted-foreground ml-1">({item.margin}%)</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "orders",
+      header: "Orders",
+      sortable: true,
+      render: (item) => <span className="text-sm">{item.orders.toLocaleString()}</span>,
+    },
+    {
+      key: "flags",
+      header: "Flags",
+      render: (item) => (
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => toggleField(item.id, "isTrending")}
+            className={cn(
+              "p-1 rounded-md transition-colors",
+              item.isTrending
+                ? "text-orange-500 bg-orange-50 dark:bg-orange-950"
+                : "text-muted-foreground/40"
+            )}
+            title="Trending"
+            data-testid={`toggle-trending-${item.id}`}
+          >
+            <TrendingUp className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => toggleField(item.id, "isWinning")}
+            className={cn(
+              "p-1 rounded-md transition-colors",
+              item.isWinning
+                ? "text-amber-500 bg-amber-50 dark:bg-amber-950"
+                : "text-muted-foreground/40"
+            )}
+            title="Winning"
+            data-testid={`toggle-winning-${item.id}`}
+          >
+            <Trophy className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => toggleField(item.id, "isLocked")}
+            className={cn(
+              "p-1 rounded-md transition-colors",
+              item.isLocked
+                ? "text-red-500 bg-red-50 dark:bg-red-950"
+                : "text-muted-foreground/40"
+            )}
+            title={item.isLocked ? "Locked" : "Unlocked"}
+            data-testid={`toggle-locked-${item.id}`}
+          >
+            {item.isLocked ? (
+              <Lock className="h-3.5 w-3.5" />
+            ) : (
+              <Unlock className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (item) => (
+        <StatusBadge
+          status={item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+          variant={statusVariant[item.status]}
+        />
+      ),
+    },
+  ];
+
   return (
     <PageShell>
       <PageHeader
@@ -141,62 +236,6 @@ export default function ProductsPage() {
         subtitle="Manage your product catalog and inventory"
         actions={
           <div className="flex items-center gap-2 flex-wrap">
-            {selectedIds.size > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" data-testid="button-bulk-actions">
-                    Bulk Actions ({selectedIds.size})
-                    <ChevronDown className="ml-1 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => bulkToggle("isTrending", true)}
-                    data-testid="action-mark-trending"
-                  >
-                    <TrendingUp className="mr-2 h-4 w-4" />
-                    Mark Trending
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => bulkToggle("isTrending", false)}
-                    data-testid="action-unmark-trending"
-                  >
-                    <TrendingUp className="mr-2 h-4 w-4 opacity-40" />
-                    Unmark Trending
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => bulkToggle("isWinning", true)}
-                    data-testid="action-mark-winning"
-                  >
-                    <Trophy className="mr-2 h-4 w-4" />
-                    Mark Winning
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => bulkToggle("isWinning", false)}
-                    data-testid="action-unmark-winning"
-                  >
-                    <Trophy className="mr-2 h-4 w-4 opacity-40" />
-                    Unmark Winning
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => bulkToggle("isLocked", true)}
-                    data-testid="action-lock"
-                  >
-                    <Lock className="mr-2 h-4 w-4" />
-                    Lock
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => bulkToggle("isLocked", false)}
-                    data-testid="action-unlock"
-                  >
-                    <Unlock className="mr-2 h-4 w-4" />
-                    Unlock
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
             <Button
               className="gap-2"
               style={{ backgroundColor: vertical.color }}
@@ -224,169 +263,20 @@ export default function ProductsPage() {
         </Badge>
       </div>
 
-      <IndexToolbar
-        search={search}
-        onSearch={setSearch}
-        filters={filterOptions}
-        activeFilter={activeFilter}
-        onFilter={setActiveFilter}
-        color={vertical.color}
-        placeholder="Search products..."
-      />
-
       {loading ? (
         <TableSkeleton rows={8} columns={9} />
       ) : (
-        <DataTableContainer>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/30">
-                <DataTH>
-                  <Checkbox
-                    checked={filtered.length > 0 && selectedIds.size === filtered.length}
-                    onCheckedChange={toggleSelectAll}
-                    aria-label="Select all"
-                    data-testid="checkbox-select-all"
-                  />
-                </DataTH>
-                <DataTH>Product</DataTH>
-                <DataTH>Category</DataTH>
-                <DataTH>Supplier</DataTH>
-                <DataTH>Price</DataTH>
-                <DataTH>Profit</DataTH>
-                <DataTH>Orders</DataTH>
-                <DataTH>Flags</DataTH>
-                <DataTH>Status</DataTH>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {filtered.map((item) => {
-                const profit = item.comparePrice - item.costPrice;
-                return (
-                  <DataTR
-                    key={item.id}
-                    onClick={() => openDetail(item)}
-                    className={cn(selectedIds.has(item.id) && "bg-muted/40")}
-                  >
-                    <DataTD>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <Checkbox
-                          checked={selectedIds.has(item.id)}
-                          onCheckedChange={() => toggleSelect(item.id)}
-                          aria-label={`Select ${item.name}`}
-                          data-testid={`checkbox-product-${item.id}`}
-                        />
-                      </div>
-                    </DataTD>
-                    <DataTD>
-                      <div className="flex items-center gap-2.5">
-                        <div className="size-8 shrink-0 rounded-md bg-muted flex items-center justify-center overflow-hidden">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="size-8 object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = "none";
-                            }}
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-sm font-medium truncate block max-w-[200px]" data-testid={`text-product-name-${item.id}`}>
-                            {item.name}
-                          </span>
-                          <span className="text-xs text-muted-foreground">{item.sku}</span>
-                        </div>
-                      </div>
-                    </DataTD>
-                    <DataTD>
-                      <span className="text-sm">{item.category}</span>
-                    </DataTD>
-                    <DataTD>
-                      <span className="text-sm text-muted-foreground">{item.supplier}</span>
-                    </DataTD>
-                    <DataTD>
-                      <div>
-                        <span className="text-sm font-medium">{formatCurrency(item.price)}</span>
-                        <span className="text-xs text-muted-foreground ml-1 line-through">
-                          {formatCurrency(item.comparePrice)}
-                        </span>
-                      </div>
-                    </DataTD>
-                    <DataTD>
-                      <div>
-                        <span
-                          className={cn(
-                            "text-sm font-medium",
-                            profit > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
-                          )}
-                        >
-                          {formatCurrency(profit)}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-1">({item.margin}%)</span>
-                      </div>
-                    </DataTD>
-                    <DataTD>
-                      <span className="text-sm">{item.orders.toLocaleString()}</span>
-                    </DataTD>
-                    <DataTD>
-                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => toggleField(item.id, "isTrending")}
-                          className={cn(
-                            "p-1 rounded-md transition-colors",
-                            item.isTrending
-                              ? "text-orange-500 bg-orange-50 dark:bg-orange-950"
-                              : "text-muted-foreground/40"
-                          )}
-                          title="Trending"
-                          data-testid={`toggle-trending-${item.id}`}
-                        >
-                          <TrendingUp className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => toggleField(item.id, "isWinning")}
-                          className={cn(
-                            "p-1 rounded-md transition-colors",
-                            item.isWinning
-                              ? "text-amber-500 bg-amber-50 dark:bg-amber-950"
-                              : "text-muted-foreground/40"
-                          )}
-                          title="Winning"
-                          data-testid={`toggle-winning-${item.id}`}
-                        >
-                          <Trophy className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => toggleField(item.id, "isLocked")}
-                          className={cn(
-                            "p-1 rounded-md transition-colors",
-                            item.isLocked
-                              ? "text-red-500 bg-red-50 dark:bg-red-950"
-                              : "text-muted-foreground/40"
-                          )}
-                          title={item.isLocked ? "Locked" : "Unlocked"}
-                          data-testid={`toggle-locked-${item.id}`}
-                        >
-                          {item.isLocked ? (
-                            <Lock className="h-3.5 w-3.5" />
-                          ) : (
-                            <Unlock className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    </DataTD>
-                    <DataTD>
-                      <StatusBadge
-                        status={item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                        variant={statusVariant[item.status]}
-                      />
-                    </DataTD>
-                  </DataTR>
-                );
-              })}
-            </tbody>
-          </table>
-        </DataTableContainer>
+        <DataTable
+          data={data}
+          columns={columns}
+          searchPlaceholder="Search products..."
+          searchKey="name"
+          onRowClick={openDetail}
+          filters={[
+            { label: "Category", key: "category", options: categories },
+            { label: "Status", key: "status", options: ["active", "draft", "archived"] },
+          ]}
+        />
       )}
 
       <Sheet open={!!detailProduct} onOpenChange={(open) => !open && setDetailProduct(null)}>

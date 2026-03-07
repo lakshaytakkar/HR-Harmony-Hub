@@ -1,23 +1,17 @@
 import { useState, useMemo } from "react";
 import {
   Users,
-  Search,
   Download,
   Plus,
-  Eye,
-  CreditCard,
-  TicketCheck,
-  ArrowRightLeft,
-  GraduationCap,
   MessageSquare,
   Copy,
-  ChevronRight,
   Calendar,
   AlertTriangle,
 } from "lucide-react";
 import { PageShell } from "@/components/layout";
 import { PageTransition } from "@/components/ui/animated";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { PersonCell } from "@/components/ui/avatar-cells";
 import { Badge } from "@/components/ui/badge";
@@ -35,20 +29,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
 import { SALES_COLOR } from "@/lib/sales-config";
@@ -92,177 +72,118 @@ function daysSince(dateStr: string): number {
   return Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+const clientColumns: Column<Client>[] = [
+  {
+    key: "name",
+    header: "Client",
+    sortable: true,
+    render: (item) => (
+      <PersonCell name={item.name} subtitle={item.email} size="sm" />
+    ),
+  },
+  {
+    key: "batchName",
+    header: "Batch",
+    sortable: true,
+    render: (item) => (
+      <span className="text-sm">
+        {item.batchName}
+        <span className="ml-1 text-xs text-muted-foreground">W{item.weekNumber}</span>
+      </span>
+    ),
+  },
+  {
+    key: "progress",
+    header: "Progress",
+    sortable: true,
+    render: (item) => (
+      <div className="flex items-center gap-2">
+        <Progress value={item.progress} className="w-16 h-1.5" />
+        <span className="text-xs text-muted-foreground w-8">{item.progress}%</span>
+      </div>
+    ),
+  },
+  {
+    key: "llcStatus",
+    header: "LLC Status",
+    render: (item) => (
+      <StatusBadge status={LLC_STATUS_LABELS[item.llcStatus]} />
+    ),
+  },
+  {
+    key: "lastActive",
+    header: "Last Active",
+    sortable: true,
+    render: (item) => {
+      const stalled = isStalled(item.lastActive);
+      const daysInactive = daysSince(item.lastActive);
+      return (
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm">{item.lastActive}</span>
+          {stalled && (
+            <Badge variant="secondary" className="border-0 text-xs bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+              <AlertTriangle className="mr-1 size-3" />
+              {daysInactive}d
+            </Badge>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    key: "status",
+    header: "Status",
+    render: (item) => (
+      <StatusBadge
+        status={item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+        variant={CLIENT_STATUS_VARIANT[item.status]}
+      />
+    ),
+  },
+];
+
+const clientRowActions: RowAction<Client>[] = [
+  { label: "View Profile", onClick: () => {} },
+  { label: "Send Payment Link", onClick: () => {} },
+  { label: "Create Ticket", onClick: () => {} },
+  { label: "Change Batch", onClick: () => {}, separator: true },
+  { label: "Mark Graduated", onClick: () => {} },
+];
+
 function AllClientsTab() {
-  const [search, setSearch] = useState("");
-  const [batchFilter, setBatchFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
   const { toast } = useToast();
 
-  const filtered = useMemo(() => {
-    return allClients.filter((c) => {
-      if (search) {
-        const q = search.toLowerCase();
-        if (!c.name.toLowerCase().includes(q) && !c.email.toLowerCase().includes(q)) return false;
-      }
-      if (batchFilter !== "all" && c.batchId !== batchFilter) return false;
-      if (statusFilter !== "all" && c.status !== statusFilter) return false;
-      return true;
-    });
-  }, [search, batchFilter, statusFilter]);
-
   const handleExportCSV = () => {
-    toast({ title: "Export Started", description: `Exporting ${filtered.length} clients to CSV...` });
+    toast({ title: "Export Started", description: `Exporting clients to CSV...` });
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none size-4" />
-          <Input
-            className="pl-10"
-            placeholder="Search clients..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            data-testid="input-search-clients"
-          />
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Select value={batchFilter} onValueChange={setBatchFilter}>
-            <SelectTrigger className="w-auto min-w-[140px]" data-testid="filter-batch">
-              <SelectValue placeholder="Batch" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Batches</SelectItem>
-              {allBatches.map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-auto min-w-[130px]" data-testid="filter-status">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="stalled">Stalled</SelectItem>
-              <SelectItem value="graduated">Graduated</SelectItem>
-              <SelectItem value="paused">Paused</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={handleExportCSV} data-testid="button-export-csv">
-            <Download className="mr-2 size-4" />
-            Export CSV
-          </Button>
-        </div>
-      </div>
-
-      <div className="rounded-lg border bg-background overflow-x-auto">
-        <table className="w-full text-sm" data-testid="clients-table">
-          <thead>
-            <tr className="border-b bg-muted/30">
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Client</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Batch</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground tracking-wide">Progress</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">LLC Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Last Active</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Status</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground tracking-wide">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
-                  No clients found matching your filters.
-                </td>
-              </tr>
-            ) : (
-              filtered.map((client) => {
-                const stalled = isStalled(client.lastActive);
-                const daysInactive = daysSince(client.lastActive);
-                return (
-                  <tr
-                    key={client.id}
-                    className={cn(
-                      "border-b last:border-b-0 transition-colors hover:bg-muted/20",
-                      stalled && "bg-amber-50/50 dark:bg-amber-950/20"
-                    )}
-                    data-testid={`row-client-${client.id}`}
-                  >
-                    <td className="px-4 py-3.5">
-                      <PersonCell name={client.name} subtitle={client.email} size="sm" />
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="text-sm">{client.batchName}</span>
-                      <span className="ml-1 text-xs text-muted-foreground">W{client.weekNumber}</span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-2 justify-center">
-                        <Progress value={client.progress} className="w-16 h-1.5" />
-                        <span className="text-xs text-muted-foreground w-8">{client.progress}%</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <StatusBadge status={LLC_STATUS_LABELS[client.llcStatus]} />
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm">{client.lastActive}</span>
-                        {stalled && (
-                          <Badge variant="secondary" className="border-0 text-xs bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                            <AlertTriangle className="mr-1 size-3" />
-                            {daysInactive}d
-                          </Badge>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <StatusBadge
-                        status={client.status.charAt(0).toUpperCase() + client.status.slice(1)}
-                        variant={CLIENT_STATUS_VARIANT[client.status]}
-                      />
-                    </td>
-                    <td className="px-4 py-3.5 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" data-testid={`button-actions-${client.id}`}>
-                            Actions
-                            <ChevronRight className="ml-1 size-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem data-testid={`action-view-${client.id}`}>
-                            <Eye className="mr-2 size-4" /> View Profile
-                          </DropdownMenuItem>
-                          <DropdownMenuItem data-testid={`action-payment-${client.id}`}>
-                            <CreditCard className="mr-2 size-4" /> Send Payment Link
-                          </DropdownMenuItem>
-                          <DropdownMenuItem data-testid={`action-ticket-${client.id}`}>
-                            <TicketCheck className="mr-2 size-4" /> Create Ticket
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem data-testid={`action-batch-${client.id}`}>
-                            <ArrowRightLeft className="mr-2 size-4" /> Change Batch
-                          </DropdownMenuItem>
-                          <DropdownMenuItem data-testid={`action-graduate-${client.id}`}>
-                            <GraduationCap className="mr-2 size-4" /> Mark Graduated
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-      <p className="text-sm text-muted-foreground" data-testid="text-client-count">
-        Showing {filtered.length} of {allClients.length} clients
-      </p>
-    </div>
+    <DataTable
+      data={allClients}
+      columns={clientColumns}
+      searchPlaceholder="Search clients..."
+      filters={[
+        {
+          label: "Batch",
+          key: "batchId",
+          options: allBatches.map((b) => ({ value: b.id, label: `${b.name} ${b.week}` })),
+        },
+        {
+          label: "Status",
+          key: "status",
+          options: ["active", "stalled", "graduated", "paused"],
+        },
+      ]}
+      rowActions={clientRowActions}
+      emptyTitle="No clients found"
+      emptyDescription="No clients found matching your filters."
+      headerActions={
+        <Button variant="outline" onClick={handleExportCSV} data-testid="button-export-csv">
+          <Download className="mr-2 size-4" />
+          Export CSV
+        </Button>
+      }
+    />
   );
 }
 

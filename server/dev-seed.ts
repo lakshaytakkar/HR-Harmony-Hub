@@ -848,6 +848,28 @@ export async function seedDevData(forceReseed = false) {
         { author: "Replit Agent", content: "Created Claude Skills Reference page at /dev/skills. Curated 26 skills from Anthropic's official repo (github.com/anthropics/skills) and the awesome-claude-skills community list (8.3k stars). Skills organized into 8 categories (development, testing, security, document, design, communication, automation, data) with relevance ratings (critical/high/medium/low). 4 skills marked as installed: frontend-design, webapp-testing, claude-api, superpowers. Each skill card shows source badge, relevance badge, category icon, and tags. Detail dialog shows full description, TeamSync-specific use case, and copy-to-clipboard install command." },
       ],
     },
+    {
+      projectId: tsProject.id,
+      taskCode: "TS-034",
+      title: "USDrop AI DS alignment — KanbanBoard + DataTable migration",
+      description: "Migrated 4 USDrop AI pages to use shared design system components. LLC Tracker custom kanban replaced with KanbanBoard (drag-and-drop enabled). Clients, Products, Content Sessions custom HTML tables replaced with DataTable component (built-in search, pagination, sorting, filters).",
+      status: "done",
+      priority: "high",
+      type: "improvement",
+      assignee: "Replit Agent",
+      tags: ["usdrop", "design-system", "kanban", "datatable", "refactor"],
+      storyPoints: 8,
+      subtasks: [
+        { title: "LLC Tracker: migrate custom flex columns to KanbanBoard with drag-and-drop", completed: true },
+        { title: "Clients: migrate custom <table> to DataTable with column definitions", completed: true },
+        { title: "Products: migrate custom table to DataTable with sort/filter/pagination", completed: true },
+        { title: "Content Sessions: migrate custom table to DataTable, fix duplicate search", completed: true },
+        { title: "Add hideSearch prop to DataTable component for external search scenarios", completed: true },
+      ],
+      comments: [
+        { author: "Replit Agent", content: "Audited all 24 USDrop AI pages. Found 4 pages using custom table/kanban implementations instead of shared DS components. LLC Tracker now uses KanbanBoard with drag-and-drop (matches Pipeline/Leads pattern). Clients, Products, and Content Sessions now use DataTable with proper column definitions, built-in search/pagination/sorting. Added hideSearch prop to DataTable for pages that already have external search via IndexToolbar." },
+      ],
+    },
   ];
 
   for (const seed of taskSeeds) {

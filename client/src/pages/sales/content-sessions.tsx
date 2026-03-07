@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { DataTable, type Column, type RowAction } from "@/components/hr/data-table";
 import { mentorshipSessions as initialSessions, type MentorshipSession } from "@/lib/mock-data-sales";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import {
@@ -8,14 +9,11 @@ import {
   StatGrid,
   StatCard,
   IndexToolbar,
-  DataTableContainer,
-  DataTH,
-  DataTD,
-  DataTR,
 } from "@/components/layout";
 import { SALES_COLOR } from "@/lib/sales-config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,11 +30,13 @@ import {
   Clock,
   FolderOpen,
   Plus,
-  Pencil,
   GripVertical,
   ExternalLink,
   Eye,
   EyeOff,
+  ArrowUp,
+  ArrowDown,
+  Pencil,
 } from "lucide-react";
 
 const emptySession: Omit<MentorshipSession, "id" | "order"> = {
@@ -70,20 +70,44 @@ export default function ContentSessionsPage() {
     })),
   ];
 
-  const filtered = sessions
-    .filter((s) => {
-      const matchesSearch =
-        s.title.toLowerCase().includes(search.toLowerCase()) ||
-        s.category.toLowerCase().includes(search.toLowerCase());
-      const matchesFilter = activeFilter === "all" || s.category === activeFilter;
-      return matchesSearch && matchesFilter;
-    })
-    .sort((a, b) => a.order - b.order);
+  const filtered = useMemo(() => {
+    return sessions
+      .filter((s) => {
+        const matchesSearch =
+          s.title.toLowerCase().includes(search.toLowerCase()) ||
+          s.category.toLowerCase().includes(search.toLowerCase());
+        const matchesFilter = activeFilter === "all" || s.category === activeFilter;
+        return matchesSearch && matchesFilter;
+      })
+      .sort((a, b) => a.order - b.order);
+  }, [sessions, search, activeFilter]);
 
   const handleTogglePublished = (id: string) => {
     setSessions((prev) =>
       prev.map((s) => (s.id === id ? { ...s, published: !s.published } : s))
     );
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (index <= 0) return;
+    setSessions((prev) => {
+      const sorted = [...prev].sort((a, b) => a.order - b.order);
+      const temp = sorted[index].order;
+      sorted[index] = { ...sorted[index], order: sorted[index - 1].order };
+      sorted[index - 1] = { ...sorted[index - 1], order: temp };
+      return sorted;
+    });
+  };
+
+  const handleMoveDown = (index: number) => {
+    setSessions((prev) => {
+      const sorted = [...prev].sort((a, b) => a.order - b.order);
+      if (index >= sorted.length - 1) return prev;
+      const temp = sorted[index].order;
+      sorted[index] = { ...sorted[index], order: sorted[index + 1].order };
+      sorted[index + 1] = { ...sorted[index + 1], order: temp };
+      return sorted;
+    });
   };
 
   const handleOpenAdd = () => {
@@ -126,33 +150,88 @@ export default function ContentSessionsPage() {
     setFormData(emptySession);
   };
 
-  const handleMoveUp = (index: number) => {
-    if (index === 0) return;
-    const items = [...filtered];
-    const currentOrder = items[index].order;
-    const prevOrder = items[index - 1].order;
-    setSessions((prev) =>
-      prev.map((s) => {
-        if (s.id === items[index].id) return { ...s, order: prevOrder };
-        if (s.id === items[index - 1].id) return { ...s, order: currentOrder };
-        return s;
-      })
-    );
-  };
+  const columns: Column<MentorshipSession>[] = [
+    {
+      key: "title",
+      header: "Title",
+      sortable: true,
+      render: (session) => (
+        <div className="flex items-center gap-2">
+          <Video className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div>
+            <p className="text-sm font-medium" data-testid={`text-session-title-${session.id}`}>
+              {session.title}
+            </p>
+            <a
+              href={session.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-muted-foreground hover:underline inline-flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+              data-testid={`link-session-url-${session.id}`}
+            >
+              Open recording <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "category",
+      header: "Category",
+      sortable: true,
+      render: (session) => (
+        <Badge variant="secondary" data-testid={`badge-category-${session.id}`}>
+          {session.category}
+        </Badge>
+      ),
+    },
+    {
+      key: "duration",
+      header: "Duration",
+      render: (session) => (
+        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+          <Clock className="h-3.5 w-3.5" />
+          {session.duration}
+        </span>
+      ),
+    },
+    {
+      key: "sessionDate",
+      header: "Session Date",
+      sortable: true,
+      render: (session) => (
+        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+          <Calendar className="h-3.5 w-3.5" />
+          {new Date(session.sessionDate).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </span>
+      ),
+    },
+    {
+      key: "published",
+      header: "Published",
+      render: (session) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <Switch
+            checked={session.published}
+            onCheckedChange={() => handleTogglePublished(session.id)}
+            data-testid={`switch-published-${session.id}`}
+          />
+        </div>
+      ),
+    },
+  ];
 
-  const handleMoveDown = (index: number) => {
-    if (index >= filtered.length - 1) return;
-    const items = [...filtered];
-    const currentOrder = items[index].order;
-    const nextOrder = items[index + 1].order;
-    setSessions((prev) =>
-      prev.map((s) => {
-        if (s.id === items[index].id) return { ...s, order: nextOrder };
-        if (s.id === items[index + 1].id) return { ...s, order: currentOrder };
-        return s;
-      })
-    );
-  };
+  const rowActions: RowAction<MentorshipSession>[] = [
+    {
+      label: "Edit",
+      onClick: (session) => handleOpenEdit(session),
+    },
+  ];
 
   return (
     <PageShell>
@@ -217,112 +296,63 @@ export default function ContentSessionsPage() {
       />
 
       {loading ? (
-        <TableSkeleton rows={8} />
+        <TableSkeleton rows={8} columns={5} />
+      ) : reorderMode ? (
+        <div className="space-y-2 rounded-lg border bg-background p-4" data-testid="reorder-list">
+          {filtered.map((session, idx) => (
+            <Card key={session.id} className="flex items-center gap-3 px-4 py-3" data-testid={`reorder-item-${session.id}`}>
+              <GripVertical className="size-4 text-muted-foreground shrink-0" />
+              <span className="text-sm font-medium text-muted-foreground w-6">{idx + 1}.</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{session.title}</p>
+                <p className="text-xs text-muted-foreground">{session.category} · {session.duration}</p>
+              </div>
+              <Badge variant={session.published ? "default" : "secondary"} className="shrink-0">
+                {session.published ? "Published" : "Draft"}
+              </Badge>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  disabled={idx === 0}
+                  onClick={() => handleMoveUp(idx)}
+                  data-testid={`button-move-up-${session.id}`}
+                >
+                  <ArrowUp className="size-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  disabled={idx === filtered.length - 1}
+                  onClick={() => handleMoveDown(idx)}
+                  data-testid={`button-move-down-${session.id}`}
+                >
+                  <ArrowDown className="size-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  onClick={() => handleOpenEdit(session)}
+                  data-testid={`button-edit-${session.id}`}
+                >
+                  <Pencil className="size-4" />
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
       ) : (
-        <DataTableContainer>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-muted/40">
-                {reorderMode && <DataTH className="w-10" />}
-                <DataTH>Title</DataTH>
-                <DataTH>Category</DataTH>
-                <DataTH>Duration</DataTH>
-                <DataTH>Session Date</DataTH>
-                <DataTH align="center">Published</DataTH>
-                <DataTH align="right">Actions</DataTH>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={reorderMode ? 7 : 6} className="px-4 py-12 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <Video className="h-10 w-10 text-muted-foreground/40" />
-                      <p className="text-sm font-medium text-foreground">No sessions found</p>
-                      <p className="text-xs text-muted-foreground">Try adjusting your search or filters</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((session, idx) => (
-                  <DataTR key={session.id}>
-                    {reorderMode && (
-                      <DataTD>
-                        <div className="flex flex-col gap-0.5">
-                          <button
-                            onClick={() => handleMoveUp(idx)}
-                            className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
-                            disabled={idx === 0}
-                            data-testid={`button-move-up-${session.id}`}
-                          >
-                            <GripVertical className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </DataTD>
-                    )}
-                    <DataTD>
-                      <div className="flex items-center gap-2">
-                        <Video className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium" data-testid={`text-session-title-${session.id}`}>
-                            {session.title}
-                          </p>
-                          <a
-                            href={session.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-muted-foreground hover:underline inline-flex items-center gap-1"
-                            data-testid={`link-session-url-${session.id}`}
-                          >
-                            Open recording <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                      </div>
-                    </DataTD>
-                    <DataTD>
-                      <Badge variant="secondary" data-testid={`badge-category-${session.id}`}>
-                        {session.category}
-                      </Badge>
-                    </DataTD>
-                    <DataTD>
-                      <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" />
-                        {session.duration}
-                      </span>
-                    </DataTD>
-                    <DataTD>
-                      <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {new Date(session.sessionDate).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </DataTD>
-                    <DataTD align="center">
-                      <Switch
-                        checked={session.published}
-                        onCheckedChange={() => handleTogglePublished(session.id)}
-                        data-testid={`switch-published-${session.id}`}
-                      />
-                    </DataTD>
-                    <DataTD align="right">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleOpenEdit(session)}
-                        data-testid={`button-edit-${session.id}`}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </DataTD>
-                  </DataTR>
-                ))
-              )}
-            </tbody>
-          </table>
-        </DataTableContainer>
+        <DataTable
+          data={filtered}
+          columns={columns}
+          rowActions={rowActions}
+          hideSearch
+          emptyTitle="No sessions found"
+          emptyDescription="Try adjusting your search or filters"
+        />
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

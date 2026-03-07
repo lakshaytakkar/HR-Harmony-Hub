@@ -53,12 +53,13 @@ interface DataTableProps<T extends { id: string }> {
   searchKey?: string;
   rowActions?: RowAction<T>[];
   onRowClick?: (item: T) => void;
-  filters?: { label: string; key: string; options: string[] }[];
+  filters?: { label: string; key: string; options: (string | { value: string; label: string })[] }[];
   pageSize?: number;
   emptyTitle?: string;
   emptyDescription?: string;
   emptyIllustration?: string;
   headerActions?: React.ReactNode;
+  hideSearch?: boolean;
 }
 
 export function DataTable<T extends { id: string }>({
@@ -74,6 +75,7 @@ export function DataTable<T extends { id: string }>({
   emptyDescription = "There are no records to display.",
   emptyIllustration,
   headerActions,
+  hideSearch = false,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -181,21 +183,23 @@ export function DataTable<T extends { id: string }>({
 
   return (
     <div className="flex flex-col rounded-lg border bg-background">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
-        <div className="relative">
-          <Search className={cn("absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground", DS.table.search.icon)} />
-          <Input
-            type="search"
-            placeholder={searchPlaceholder}
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }}
-            className={cn(DS.table.search.height, DS.table.search.width, DS.table.search.padding, "text-sm")}
-            data-testid="input-table-search"
-          />
-        </div>
+      <div className={cn("flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3", hideSearch && !filters?.length && !headerActions && "hidden")}>
+        {!hideSearch && (
+          <div className="relative">
+            <Search className={cn("absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground", DS.table.search.icon)} />
+            <Input
+              type="search"
+              placeholder={searchPlaceholder}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={cn(DS.table.search.height, DS.table.search.width, DS.table.search.padding, "text-sm")}
+              data-testid="input-table-search"
+            />
+          </div>
+        )}
         <div className="flex items-center gap-2 flex-wrap">
           {filters?.map((filter) => (
             <Select
@@ -215,9 +219,11 @@ export function DataTable<T extends { id: string }>({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All {filter.label}</SelectItem>
-                {filter.options.map((opt) => (
-                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                ))}
+                {filter.options.map((opt) => {
+                  const val = typeof opt === "string" ? opt : opt.value;
+                  const lbl = typeof opt === "string" ? opt : opt.label;
+                  return <SelectItem key={val} value={val}>{lbl}</SelectItem>;
+                })}
               </SelectContent>
             </Select>
           ))}

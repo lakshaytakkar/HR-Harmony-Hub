@@ -7,11 +7,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Copy,
-  X,
   Phone,
   Mail,
-  MessageSquare,
-  ChevronRight,
   Calendar,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +41,7 @@ import {
   StatGrid,
   FilterPill,
 } from "@/components/layout";
+import { KanbanBoard, type KanbanColumnData, type KanbanCardItem } from "@/components/blocks";
 import { verticals } from "@/lib/verticals-config";
 import {
   llcApplications,
@@ -122,11 +120,49 @@ export default function LLCTrackerPage() {
   const stuck14 = data.filter((a) => a.daysInStage >= 14 && a.stage !== "complete").length;
   const inProgress = data.filter((a) => a.stage !== "complete" && a.stage !== "pending").length;
 
+  const kanbanColumns: KanbanColumnData[] = useMemo(() => {
+    return LLC_STAGES.map((stage) => {
+      const stageApps = filtered.filter((a) => a.stage === stage.key);
+      return {
+        id: stage.key,
+        title: stage.label,
+        color: stage.color,
+        cards: stageApps.map((app) => ({
+          id: app.id,
+          title: app.clientName,
+          subtitle: app.llcName,
+          dueDate: stage.key !== "complete" ? `${app.daysInStage}d in stage` : "Done",
+          assignee: app.state,
+        })),
+      };
+    });
+  }, [filtered]);
+
   const openDetail = (app: LLCApplication) => {
     setSelectedApp(app);
     setEditNotes(app.notes);
     setEditStage(app.stage);
     setDetailOpen(true);
+  };
+
+  const handleCardClick = (card: KanbanCardItem) => {
+    const app = data.find((a) => a.id === card.id);
+    if (app) openDetail(app);
+  };
+
+  const handleCardMove = (cardId: string, _sourceCol: string, targetCol: string) => {
+    setData((prev) =>
+      prev.map((a) =>
+        a.id === cardId
+          ? { ...a, stage: targetCol as LLCStage, daysInStage: 0, lastUpdated: new Date().toISOString().split("T")[0] }
+          : a
+      )
+    );
+    const app = data.find((a) => a.id === cardId);
+    const targetStage = LLC_STAGES.find((s) => s.key === targetCol);
+    if (app && targetStage) {
+      toast({ title: "Stage updated", description: `${app.clientName}'s LLC moved to ${targetStage.label}` });
+    }
   };
 
   const handleUpdateStage = () => {
@@ -152,21 +188,59 @@ export default function LLCTrackerPage() {
     toast({ title: "Copied to clipboard", description: "WhatsApp message template copied" });
   };
 
-  const groupedByStage = useMemo(() => {
-    const groups: Record<LLCStage, LLCApplication[]> = {
-      pending: [],
-      filed: [],
-      ein_applied: [],
-      boi_filed: [],
-      bank_setup: [],
-      stripe_setup: [],
-      complete: [],
-    };
-    filtered.forEach((app) => {
-      groups[app.stage].push(app);
-    });
-    return groups;
-  }, [filtered]);
+  function renderKanbanCard(card: KanbanCardItem, columnId: string) {
+    const app = data.find((a) => a.id === card.id);
+    if (!app) return null;
+    const stage = LLC_STAGES.find((s) => s.key === columnId);
+    const isComplete = columnId === "complete";
+
+    return (
+      <Card
+        className="p-3 cursor-pointer hover-elevate"
+        onClick={() => openDetail(app)}
+        data-testid={`llc-card-${app.id}`}
+      >
+        <div className="flex items-start gap-2">
+          <Avatar className="h-7 w-7 shrink-0">
+            <AvatarFallback className="text-[10px]">{getInitials(app.clientName)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate" data-testid={`text-client-name-${app.id}`}>
+              {app.clientName}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {app.llcName}
+            </p>
+          </div>
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          {!isComplete ? (
+            <span
+              className={cn(
+                "text-[10px] font-medium px-1.5 py-0.5 rounded",
+                getDaysStuckColor(app.daysInStage),
+                getDaysStuckBg(app.daysInStage)
+              )}
+              data-testid={`text-days-stuck-${app.id}`}
+            >
+              {app.daysInStage}d in stage
+            </span>
+          ) : (
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+              Done
+            </span>
+          )}
+          <span className="text-[10px] text-muted-foreground">{app.state}</span>
+        </div>
+        {app.milestones[stage?.key as keyof typeof app.milestones] && (
+          <div className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Calendar className="h-3 w-3" />
+            {app.milestones[stage?.key as keyof typeof app.milestones]}
+          </div>
+        )}
+      </Card>
+    );
+  }
 
   return (
     <PageShell>
@@ -254,80 +328,13 @@ export default function LLCTrackerPage() {
       {loading ? (
         <TableSkeleton rows={6} columns={7} />
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-4" data-testid="llc-kanban-board">
-          {LLC_STAGES.map((stage) => (
-            <div
-              key={stage.key}
-              className="flex-shrink-0 w-64"
-              data-testid={`kanban-column-${stage.key}`}
-            >
-              <div
-                className="rounded-md px-3 py-2 mb-3 flex items-center justify-between gap-2"
-                style={{ backgroundColor: stage.bg, color: stage.color }}
-              >
-                <span className="text-xs font-semibold truncate">{stage.label}</span>
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 no-default-active-elevate">
-                  {groupedByStage[stage.key].length}
-                </Badge>
-              </div>
-
-              <div className="space-y-2 min-h-[200px]">
-                {groupedByStage[stage.key].map((app) => (
-                  <Card
-                    key={app.id}
-                    className="p-3 cursor-pointer hover-elevate"
-                    onClick={() => openDetail(app)}
-                    data-testid={`llc-card-${app.id}`}
-                  >
-                    <div className="flex items-start gap-2">
-                      <Avatar className="h-7 w-7 shrink-0">
-                        <AvatarFallback className="text-[10px]">{getInitials(app.clientName)}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate" data-testid={`text-client-name-${app.id}`}>
-                          {app.clientName}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {app.llcName}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      {stage.key !== "complete" ? (
-                        <span
-                          className={cn(
-                            "text-[10px] font-medium px-1.5 py-0.5 rounded",
-                            getDaysStuckColor(app.daysInStage),
-                            getDaysStuckBg(app.daysInStage)
-                          )}
-                          data-testid={`text-days-stuck-${app.id}`}
-                        >
-                          {app.daysInStage}d in stage
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                          Done
-                        </span>
-                      )}
-                      <span className="text-[10px] text-muted-foreground">{app.state}</span>
-                    </div>
-                    {app.milestones[stage.key] && (
-                      <div className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {app.milestones[stage.key]}
-                      </div>
-                    )}
-                  </Card>
-                ))}
-                {groupedByStage[stage.key].length === 0 && (
-                  <div className="flex items-center justify-center h-20 text-xs text-muted-foreground border border-dashed rounded-md">
-                    No applications
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <KanbanBoard
+          columns={kanbanColumns}
+          onCardClick={handleCardClick}
+          onCardMove={handleCardMove}
+          renderCard={renderKanbanCard}
+          columnClassName="w-52 min-w-[13rem]"
+        />
       )}
 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
