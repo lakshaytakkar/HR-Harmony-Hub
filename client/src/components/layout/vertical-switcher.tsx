@@ -114,10 +114,10 @@ export function VerticalSwitcher() {
                 );
               })}
             </div>
+          </div>
 
-            <Separator className="my-2" />
-
-            <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2 pt-1 pb-2">
+          <div className="w-56 bg-muted/20 border-l border-border p-2">
+            <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2 pt-1.5 pb-2">
               <ExternalLink className="size-3" />
               Client Portals
             </p>
