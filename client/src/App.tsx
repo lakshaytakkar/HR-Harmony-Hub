@@ -68,6 +68,7 @@ import AdminSettings from "@/pages/admin/settings";
 
 import DevDashboard from "@/pages/dev/dashboard";
 import DevPrompts from "@/pages/dev/prompts";
+import DevSkills from "@/pages/dev/skills";
 import UniversalAppsCredentials from "@/pages/universal/apps-credentials";
 import DevProjects from "@/pages/dev/projects";
 import DevProjectBoard from "@/pages/dev/project-board";
@@ -364,6 +365,7 @@ function Router() {
       <Route path="/dev/apps" component={UniversalAppsCredentials} />
       <Route path="/dev/design-system" component={DesignSystem} />
       <Route path="/dev/prompts" component={DevPrompts} />
+      <Route path="/dev/skills" component={DevSkills} />
       <Route path="/dev/projects/:id" component={DevProjectBoard} />
       <Route path="/dev/projects" component={DevProjects} />
 

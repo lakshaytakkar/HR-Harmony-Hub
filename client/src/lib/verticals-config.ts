@@ -53,6 +53,7 @@ import {
   Blocks,
   Kanban,
   GraduationCap,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -831,6 +832,12 @@ export const verticals: Vertical[] = [
         title: "Prompts",
         defaultUrl: "/dev/prompts",
         icon: MessageSquare,
+        items: [],
+      },
+      {
+        title: "Skills",
+        defaultUrl: "/dev/skills",
+        icon: Sparkles,
         items: [],
       },
       {

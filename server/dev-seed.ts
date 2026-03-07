@@ -799,6 +799,29 @@ export async function seedDevData(forceReseed = false) {
       tags: ["ui", "banner", "announcements"],
       storyPoints: 2,
     },
+    {
+      projectId: tsProject.id,
+      taskCode: "TS-032",
+      title: "Claude Skills Reference page — curated skills library",
+      description: "Built /dev/skills page with 26 curated Claude Skills (16 official Anthropic + 11 community). Research from github.com/anthropics/skills and github.com/travisvn/awesome-claude-skills (8.3k stars). 8 categories, 4 relevance levels, install status tracking. Cards with color-coded badges, detail dialog with install command copy, repository links.",
+      status: "done",
+      priority: "medium",
+      type: "feature",
+      assignee: "Replit Agent",
+      tags: ["dev-vertical", "skills", "claude", "productivity"],
+      storyPoints: 5,
+      subtasks: [
+        { title: "Research Claude Skills ecosystem — official + community repos", completed: true },
+        { title: "Create ClaudeSkill interface and 26 skill entries in mock-data-dev.ts", completed: true },
+        { title: "Build skills.tsx page with stats, filters, card grid, detail dialog", completed: true },
+        { title: "Register route in App.tsx and nav entry in verticals-config.ts", completed: true },
+        { title: "Update replit.md with Skills reference section and key skills index", completed: true },
+        { title: "Seed dev task TS-032 documenting the work", completed: true },
+      ],
+      comments: [
+        { author: "Replit Agent", content: "Created Claude Skills Reference page at /dev/skills. Curated 26 skills from Anthropic's official repo (github.com/anthropics/skills) and the awesome-claude-skills community list (8.3k stars). Skills organized into 8 categories (development, testing, security, document, design, communication, automation, data) with relevance ratings (critical/high/medium/low). 4 skills marked as installed: frontend-design, webapp-testing, claude-api, superpowers. Each skill card shows source badge, relevance badge, category icon, and tags. Detail dialog shows full description, TeamSync-specific use case, and copy-to-clipboard install command." },
+      ],
+    },
   ];
 
   for (const seed of taskSeeds) {

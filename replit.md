@@ -269,15 +269,15 @@ channels  ←── channel_messages.channel_id (ON DELETE CASCADE)
 ### Architecture
 Dev vertical uses PostgreSQL (via Drizzle ORM) for project and task management. Design System is a single tabbed page. Dev Board was removed — all task views are accessed through project boards.
 
-### Pages (5 active)
+### Pages (6 active)
 | Page | Route | File | Data Source |
 |------|-------|------|-------------|
 | Dashboard | `/dev` | `client/src/pages/dev/dashboard.tsx` | DB via React Query |
 | Design System | `/dev/design-system` | `client/src/pages/dev/design-system.tsx` | Static (4 tabs: Style Guide, Components, Icons, Library) |
 | Prompts | `/dev/prompts` | `client/src/pages/dev/prompts.tsx` | Mock data (42 prompts, 12 categories) |
+| Skills | `/dev/skills` | `client/src/pages/dev/skills.tsx` | Mock data (26 Claude Skills, 8 categories) |
 | Projects | `/dev/projects` | `client/src/pages/dev/projects.tsx` | DB via React Query |
 | Project Board | `/dev/projects/:id` | `client/src/pages/dev/project-board.tsx` | DB via React Query |
-| Toolkit | `/dev/toolkit` | `client/src/pages/dev/toolkit.tsx` | Mock data |
 
 ### Database Tables (Drizzle ORM — `shared/schema.ts`)
 | Table | Description |
@@ -330,6 +330,25 @@ Dev vertical uses PostgreSQL (via Drizzle ORM) for project and task management. 
 - Infrastructure: PRM-006 (drizzle schema), PRM-018 (supabase), PRM-035 (mock-to-db migration)
 - Security: PRM-010 (API hardening), PRM-032 (XSS/injection)
 - Planning: PRM-008 (vertical rebuild), PRM-039 (subagent delegation), PRM-041 (memory update)
+
+### Claude Skills Reference (Mar 2026)
+26 curated Claude Skills in `client/src/lib/mock-data-dev.ts` (claudeSkills array). Mix of official Anthropic skills and community contributions.
+
+**Categories (8):** development, testing, security, document, design, communication, automation, data
+
+**Sources:** official (Anthropic — github.com/anthropics/skills) | community (github.com/travisvn/awesome-claude-skills)
+
+**Relevance Levels:** critical (must-have for TeamSync dev) → high → medium → low
+
+**Currently Installed (4):** frontend-design, webapp-testing, claude-api, superpowers
+
+**Key Skills by Use Case:**
+- UI development: sk-001 (frontend-design), sk-005 (web-artifacts-builder)
+- Testing: sk-002 (webapp-testing), sk-017 (playwright-skill)
+- API/Integration: sk-003 (mcp-builder), sk-010 (claude-api)
+- Security: sk-016 (Trail of Bits), sk-020 (ffuf-web-fuzzing)
+- Workflow: sk-004 (skill-creator), sk-015 (superpowers), sk-022 (Skill Seekers)
+- Documents: sk-006 (docx), sk-007 (xlsx), sk-008 (pdf)
 
 ## Recent Additions (Feb 2026)
 
@@ -849,6 +868,7 @@ client/src/pages/
   - `AppCredential` (10 universal credentials, tagged with `scope: "universal"`) — global API keys with real SI icon names
   - `ProjectLink` (19 entries, 2-4 per project) — per-project GitHub/Replit/Supabase/Vercel/Figma/Notion links
   - `ProjectCredential` (12 entries, 1-3 per project) — project-specific API keys (Supabase anon, Stripe live, Razorpay, etc.)
+  - `ClaudeSkill` (26 skills: 16 official + 11 community, 8 categories, 4 relevance levels, 4 installed)
   - `ImportantLink` (15 entries) — global developer bookmarks (pinned + all)
   - `QuickTool` (7 tools) — utility tools with ready/wip/planned status
   - `DevPrompt` (12 prompts) — AI prompt library with model tracking
