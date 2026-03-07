@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DS } from "@/lib/design-tokens";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PageShell — outer wrapper for all standard pages
@@ -23,7 +24,7 @@ interface PageShellProps {
 
 export function PageShell({ children, className }: PageShellProps) {
   return (
-    <PageTransition className={cn("px-16 py-6 lg:px-24 space-y-6", className)}>
+    <PageTransition className={cn(DS.page.shell, className)}>
       {children}
     </PageTransition>
   );
@@ -44,11 +45,11 @@ export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
     <div className="flex items-start justify-between" data-testid="page-header">
       <div>
-        <h1 className="text-2xl font-bold font-heading text-foreground" data-testid="text-page-title">
+        <h1 className={DS.typography.pageTitle} data-testid="text-page-title">
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-0.5 text-sm text-muted-foreground" data-testid="text-page-subtitle">
+          <p className={DS.typography.pageSubtitle} data-testid="text-page-subtitle">
             {subtitle}
           </p>
         )}
@@ -135,20 +136,20 @@ interface StatCardProps {
 
 export function StatCard({ label, value, trend, icon: Icon, iconBg, iconColor }: StatCardProps) {
   return (
-    <div className="rounded-xl border bg-card p-5" data-testid={`stat-card-${label.toLowerCase().replace(/\s+/g, "-")}`}>
+    <div className={cn(DS.card.base, DS.card.stat.padding)} data-testid={`stat-card-${label.toLowerCase().replace(/\s+/g, "-")}`}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="mt-2 text-2xl font-bold font-heading">{value}</p>
+          <p className={DS.typography.statLabel}>{label}</p>
+          <p className={cn("mt-2", DS.typography.statValue)}>{value}</p>
           {trend && (
-            <p className="mt-1 text-xs text-muted-foreground">{trend}</p>
+            <p className={cn("mt-1", DS.typography.statTrend)}>{trend}</p>
           )}
         </div>
         <div
-          className="flex h-9 w-9 items-center justify-center rounded-lg"
+          className={cn("flex items-center justify-center", DS.card.stat.iconBox)}
           style={{ backgroundColor: iconBg, color: iconColor }}
         >
-          <Icon className="h-4 w-4" />
+          <Icon className={DS.card.stat.iconSize} />
         </div>
       </div>
     </div>
@@ -166,15 +167,8 @@ interface StatGridProps {
 }
 
 export function StatGrid({ children, cols = 4 }: StatGridProps) {
-  const colClass = {
-    2: "grid-cols-1 sm:grid-cols-2",
-    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-    4: "grid-cols-2 lg:grid-cols-4",
-    6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
-  }[cols];
-
   return (
-    <div className={cn("grid gap-4", colClass)} data-testid="stat-grid">
+    <div className={cn("grid", DS.grid.gap, DS.grid.stat[cols])} data-testid="stat-grid">
       {children}
     </div>
   );
@@ -195,20 +189,20 @@ interface SectionCardProps {
 
 export function SectionCard({ title, viewAllLabel, onViewAll, children, noPadding }: SectionCardProps) {
   return (
-    <div className="rounded-xl border bg-card" data-testid={`section-card-${title.toLowerCase().replace(/\s+/g, "-")}`}>
-      <div className="flex items-center justify-between border-b px-5 py-3.5">
-        <h3 className="text-sm font-semibold">{title}</h3>
+    <div className={DS.card.base} data-testid={`section-card-${title.toLowerCase().replace(/\s+/g, "-")}`}>
+      <div className={cn("flex items-center justify-between border-b", DS.card.section.headerPadding)}>
+        <h3 className={DS.typography.sectionTitle}>{title}</h3>
         {viewAllLabel && onViewAll && (
           <button
             onClick={onViewAll}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className={cn(DS.typography.caption, "hover:text-foreground transition-colors")}
             data-testid="btn-view-all"
           >
             {viewAllLabel}
           </button>
         )}
       </div>
-      <div className={noPadding ? "" : "p-5"}>{children}</div>
+      <div className={noPadding ? "" : DS.card.section.bodyPadding}>{children}</div>
     </div>
   );
 }
@@ -224,10 +218,7 @@ interface SectionGridProps {
 
 export function SectionGrid({ children, cols = 2 }: SectionGridProps) {
   return (
-    <div
-      className={cn("grid gap-4", cols === 2 ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 lg:grid-cols-3")}
-      data-testid="section-grid"
-    >
+    <div className={cn("grid", DS.grid.gap, DS.grid.section[cols])} data-testid="section-grid">
       {children}
     </div>
   );
@@ -251,11 +242,11 @@ export function FilterPill({ active, color, onClick, children, testId }: FilterP
   return (
     <button
       onClick={onClick}
-      className="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+      className={DS.pill.base}
       style={
         active
-          ? { backgroundColor: color, color: "#fff" }
-          : { backgroundColor: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }
+          ? { backgroundColor: color, color: DS.pill.active.color }
+          : { backgroundColor: DS.pill.inactive.bg, color: DS.pill.inactive.color }
       }
       data-testid={testId ?? "filter-pill"}
     >
@@ -293,11 +284,11 @@ export function PrimaryAction({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+      className={DS.primaryAction.base}
       style={{ backgroundColor: color }}
       data-testid={testId ?? "btn-primary-action"}
     >
-      {Icon && <Icon className="h-4 w-4" />}
+      {Icon && <Icon className={DS.primaryAction.iconSize} />}
       {children}
     </button>
   );
@@ -343,18 +334,18 @@ export function IndexToolbar({
 }: IndexToolbarProps) {
   return (
     <div className="space-y-3" data-testid="index-toolbar">
-      <div className="flex items-center justify-between gap-3">
-        <div className="relative w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+      <div className={cn("flex items-center justify-between", DS.toolbar.gap)}>
+        <div className={cn("relative", DS.toolbar.search.width)}>
+          <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none", DS.toolbar.search.icon)} />
           <Input
-            className="pl-10 h-9 bg-muted/30"
+            className={cn(DS.toolbar.search.padding, DS.toolbar.search.height, DS.toolbar.search.bg)}
             placeholder={placeholder}
             value={search}
             onChange={(e) => onSearch(e.target.value)}
             data-testid="input-search"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className={cn("flex items-center", DS.toolbar.filterGap)}>
           {extra}
           {primaryAction && (
             <PrimaryAction
@@ -369,7 +360,7 @@ export function IndexToolbar({
         </div>
       </div>
       {filters && filters.length > 0 && onFilter && (
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className={cn("flex items-center flex-wrap", DS.toolbar.filterGap)}>
           {filters.map((f) => (
             <FilterPill
               key={f.value}
@@ -397,7 +388,7 @@ export function IndexToolbar({
 
 export function DataTableContainer({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("rounded-xl border bg-card overflow-hidden", className)} data-testid="data-table-container">
+    <div className={cn(DS.table.container, className)} data-testid="data-table-container">
       {children}
     </div>
   );
@@ -416,7 +407,7 @@ export function DataTH({ children, align = "left", className, ...rest }: DataTHP
   return (
     <th
       className={cn(
-        "px-4 py-3 text-xs font-medium text-muted-foreground tracking-wide",
+        DS.table.headerCell,
         align === "left" && "text-left",
         align === "right" && "text-right",
         align === "center" && "text-center",
@@ -442,7 +433,7 @@ export function DataTD({ children, align = "left", className, ...rest }: DataTDP
   return (
     <td
       className={cn(
-        "px-4 py-3.5",
+        DS.table.dataCell,
         align === "left" && "text-left",
         align === "right" && "text-right",
         align === "center" && "text-center",
@@ -471,7 +462,7 @@ export function DataTR({ children, onClick, className }: DataTRProps) {
     <tr
       onClick={onClick}
       className={cn(
-        "hover:bg-muted/20 transition-colors",
+        DS.table.row,
         onClick && "cursor-pointer",
         className
       )}
@@ -503,7 +494,8 @@ export function SortableDataTH({ sortKey, currentSort, onSort, align = "left", c
     <th
       onClick={handleClick}
       className={cn(
-        "px-4 py-3 text-xs font-medium text-muted-foreground tracking-wide cursor-pointer select-none hover:text-foreground transition-colors",
+        DS.table.headerCell,
+        "cursor-pointer select-none hover:text-foreground transition-colors",
         align === "left" && "text-left",
         align === "right" && "text-right",
         align === "center" && "text-center",
@@ -533,8 +525,8 @@ interface DetailSectionProps {
 
 export function DetailSection({ title, children }: DetailSectionProps) {
   return (
-    <div className="px-6 py-5" data-testid={`detail-section-${title.toLowerCase().replace(/\s+/g, "-")}`}>
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className={DS.modal.sectionPadding} data-testid={`detail-section-${title.toLowerCase().replace(/\s+/g, "-")}`}>
+      <h3 className={cn("mb-3", DS.typography.sectionLabel)}>
         {title}
       </h3>
       {children}
@@ -568,13 +560,12 @@ export function DetailModal({
 }: DetailModalProps) {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden" data-testid="detail-modal">
-        {/* Custom header — never use DialogHeader */}
-        <div className="flex items-start justify-between px-6 py-4 border-b">
+      <DialogContent className={cn(DS.modal.maxWidth, "p-0 gap-0 overflow-hidden")} data-testid="detail-modal">
+        <div className={cn("flex items-start justify-between border-b", DS.modal.headerPadding)}>
           <div>
-            <h2 className="text-base font-semibold" data-testid="modal-title">{title}</h2>
+            <h2 className={DS.modal.titleSize} data-testid="modal-title">{title}</h2>
             {subtitle && (
-              <p className="mt-0.5 text-xs text-muted-foreground" data-testid="modal-subtitle">
+              <p className={cn("mt-0.5", DS.modal.subtitleSize)} data-testid="modal-subtitle">
                 {subtitle}
               </p>
             )}
@@ -593,14 +584,12 @@ export function DetailModal({
           </div>
         </div>
 
-        {/* Scrollable body — divide-y separates sections */}
-        <div className="max-h-[65vh] overflow-y-auto divide-y" data-testid="modal-body">
+        <div className={cn(DS.modal.maxBodyHeight, "overflow-y-auto divide-y")} data-testid="modal-body">
           {children}
         </div>
 
-        {/* Footer */}
         <div
-          className="flex items-center justify-end gap-2 border-t bg-muted/30 px-6 py-4"
+          className={cn("flex items-center justify-end gap-2 border-t", DS.modal.footerBg, DS.modal.footerPadding)}
           data-testid="modal-footer"
         >
           {footer}
@@ -625,9 +614,9 @@ interface InfoRowProps {
 
 export function InfoRow({ label, value, children }: InfoRowProps) {
   return (
-    <div className="flex items-center justify-between py-1.5" data-testid={`info-row-${label.toLowerCase().replace(/\s+/g, "-")}`}>
-      <span className="text-sm text-muted-foreground">{label}</span>
-      {children ?? <span className="text-sm font-medium">{value}</span>}
+    <div className={cn("flex items-center justify-between", DS.infoRow.padding)} data-testid={`info-row-${label.toLowerCase().replace(/\s+/g, "-")}`}>
+      <span className={DS.infoRow.labelStyle}>{label}</span>
+      {children ?? <span className={DS.infoRow.valueStyle}>{value}</span>}
     </div>
   );
 }

@@ -41,9 +41,17 @@ One config per vertical, each exporting `VERTICAL_COLOR` + TypeScript status typ
 - `events-config.ts`, `eventhub-config.ts`, `finance-config.ts`, `oms-config.ts`, `sales-config.ts`
 - `social-config.ts`, `suprans-config.ts` (also exports `VENDOR_COLOR`), `dev-config.ts`, `admin-config.ts`
 
+#### Design Tokens (`client/src/lib/design-tokens.ts`)
+- Exports `DS` object with all locked design values (typography, table config, toolbar, pills, primary buttons, cards, grids, modals, infoRow)
+- `PageShell`, `PageHeader`, `StatCard`, `StatGrid`, `SectionCard`, `FilterPill`, `PrimaryAction`, `IndexToolbar`, `DataTableContainer`, `DataTH/TD/TR`, `DetailModal`, `InfoRow` all reference `DS` tokens
+- `DataTable` (`@/components/hr/data-table`) also references `DS` tokens for search, filters, pagination, empty states, row actions
+- `ds.ts` re-exports `DS`, `defineTablePage`, `TablePageConfig` alongside all layout/HR components
+- Also exports `TablePageConfig<T>` interface + `defineTablePage()` helper for typed table page configs
+
 #### Rules
 - **NO** inline `const statusColors: Record<string, string>` — use `<StatusBadge status={x} />` 
 - **NO** inline `const BRAND = "#..."` — import `VERTICAL_COLOR` from per-vertical config
+- **NO** hardcoded style values in layout/table components — use `DS.*` tokens from `@/lib/design-tokens`
 - **StatusBadge** auto-resolves all status strings across all verticals via extended `variantMap`
 
 ### Optimistic Updates (Global Pattern)

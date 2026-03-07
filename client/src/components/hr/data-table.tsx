@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { DS } from "@/lib/design-tokens";
 
 export interface Column<T> {
   key: string;
@@ -68,7 +69,7 @@ export function DataTable<T extends { id: string }>({
   rowActions,
   onRowClick,
   filters,
-  pageSize = 10,
+  pageSize = DS.table.pagination.pageSize,
   emptyTitle = "No data found",
   emptyDescription = "There are no records to display.",
   emptyIllustration,
@@ -182,7 +183,7 @@ export function DataTable<T extends { id: string }>({
     <div className="flex flex-col rounded-lg border bg-background">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className={cn("absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground", DS.table.search.icon)} />
           <Input
             type="search"
             placeholder={searchPlaceholder}
@@ -191,7 +192,7 @@ export function DataTable<T extends { id: string }>({
               setSearch(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-8 w-60 pl-8 text-sm"
+            className={cn(DS.table.search.height, DS.table.search.width, DS.table.search.padding, "text-sm")}
             data-testid="input-table-search"
           />
         </div>
@@ -206,7 +207,7 @@ export function DataTable<T extends { id: string }>({
               }}
             >
               <SelectTrigger
-                className="h-8 w-auto min-w-[120px] text-sm"
+                className={cn(DS.table.filter.height, "w-auto", DS.table.filter.minWidth, "text-sm")}
                 data-testid={`filter-${filter.key}`}
               >
                 <Filter className="mr-1.5 size-3 text-muted-foreground" />
@@ -227,8 +228,8 @@ export function DataTable<T extends { id: string }>({
       <div className="overflow-x-auto">
         <table className="w-full text-sm" data-testid="data-table">
           <thead>
-            <tr className="border-b bg-muted/40">
-              <th className="w-10 px-3 py-2.5">
+            <tr className={DS.table.headerRow}>
+              <th className={cn(DS.table.checkbox.colWidth, DS.table.checkbox.cellPadding)}>
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleAll}
@@ -240,7 +241,8 @@ export function DataTable<T extends { id: string }>({
                 <th
                   key={col.key}
                   className={cn(
-                    "px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground",
+                    DS.table.headerCell,
+                    "text-left uppercase tracking-wider",
                     col.width
                   )}
                 >
@@ -259,7 +261,7 @@ export function DataTable<T extends { id: string }>({
                 </th>
               ))}
               {rowActions && rowActions.length > 0 && (
-                <th className="w-10 px-3 py-2.5" />
+                <th className={cn(DS.table.actions.colWidth, DS.table.checkbox.cellPadding)} />
               )}
             </tr>
           </thead>
@@ -268,20 +270,20 @@ export function DataTable<T extends { id: string }>({
               <tr>
                 <td
                   colSpan={columns.length + (rowActions ? 2 : 1)}
-                  className="px-4 py-12 text-center"
+                  className={cn(DS.table.empty.padding, "text-center")}
                 >
                   <div className="flex flex-col items-center gap-4" data-testid="empty-state">
                     {emptyIllustration && (
                       <img
                         src={emptyIllustration}
                         alt=""
-                        className="size-28 object-contain"
+                        className={cn(DS.table.empty.illustrationSize, "object-contain")}
                         draggable={false}
                       />
                     )}
                     <div className="flex flex-col items-center gap-1.5">
-                      <p className="text-sm font-medium text-foreground">{emptyTitle}</p>
-                      <p className="max-w-xs text-xs text-muted-foreground">{emptyDescription}</p>
+                      <p className={DS.table.empty.titleStyle}>{emptyTitle}</p>
+                      <p className={DS.table.empty.descStyle}>{emptyDescription}</p>
                     </div>
                   </div>
                 </td>
@@ -291,14 +293,15 @@ export function DataTable<T extends { id: string }>({
                 <tr
                   key={item.id}
                   className={cn(
-                    "border-b last:border-b-0 transition-colors",
-                    selectedIds.has(item.id) && "bg-primary/5",
+                    "border-b last:border-b-0",
+                    DS.table.row,
+                    selectedIds.has(item.id) && DS.table.rowSelected,
                     onRowClick && "cursor-pointer"
                   )}
                   onClick={() => onRowClick?.(item)}
                   data-testid={`row-${item.id}`}
                 >
-                  <td className="w-10 px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                  <td className={cn(DS.table.checkbox.colWidth, "px-3 py-3")} onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selectedIds.has(item.id)}
                       onCheckedChange={() => toggleOne(item.id)}
@@ -307,26 +310,26 @@ export function DataTable<T extends { id: string }>({
                     />
                   </td>
                   {columns.map((col) => (
-                    <td key={col.key} className={cn("px-3 py-3", col.width)}>
+                    <td key={col.key} className={cn(DS.table.dataCell, col.width)}>
                       {col.render
                         ? col.render(item)
                         : String((item as Record<string, unknown>)[col.key] ?? "")}
                     </td>
                   ))}
                   {rowActions && rowActions.length > 0 && (
-                    <td className="w-10 px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                    <td className={cn(DS.table.actions.colWidth, "px-3 py-3")} onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="size-7"
+                            className={DS.table.actions.buttonSize}
                             data-testid={`button-row-actions-${item.id}`}
                           >
-                            <MoreHorizontal className="size-3.5" />
+                            <MoreHorizontal className={DS.table.actions.iconSize} />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-36">
+                        <DropdownMenuContent align="end" className={DS.table.actions.menuWidth}>
                           {rowActions.map((action, idx) => (
                             <div key={action.label}>
                               {action.separator && idx > 0 && <DropdownMenuSeparator />}
@@ -359,14 +362,14 @@ export function DataTable<T extends { id: string }>({
             <Button
               size="icon"
               variant="ghost"
-              className="size-7"
+              className={DS.table.pagination.buttonSize}
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
               data-testid="button-page-prev"
             >
-              <ChevronLeft className="size-3.5" />
+              <ChevronLeft className={DS.table.pagination.iconSize} />
             </Button>
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+            {Array.from({ length: Math.min(totalPages, DS.table.pagination.maxVisiblePages) }, (_, i) => {
               let pageNum: number;
               if (totalPages <= 5) {
                 pageNum = i + 1;
@@ -382,7 +385,7 @@ export function DataTable<T extends { id: string }>({
                   key={pageNum}
                   size="icon"
                   variant={currentPage === pageNum ? "default" : "ghost"}
-                  className="size-7 text-sm"
+                  className={cn(DS.table.pagination.buttonSize, "text-sm")}
                   onClick={() => setCurrentPage(pageNum)}
                   data-testid={`button-page-${pageNum}`}
                 >
@@ -393,12 +396,12 @@ export function DataTable<T extends { id: string }>({
             <Button
               size="icon"
               variant="ghost"
-              className="size-7"
+              className={DS.table.pagination.buttonSize}
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => p + 1)}
               data-testid="button-page-next"
             >
-              <ChevronRight className="size-3.5" />
+              <ChevronRight className={DS.table.pagination.iconSize} />
             </Button>
           </div>
         </div>

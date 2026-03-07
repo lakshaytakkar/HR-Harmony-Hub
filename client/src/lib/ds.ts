@@ -1,3 +1,5 @@
+export { DS, defineTablePage, type TablePageConfig, type FilterDisplay, type PaginationMethod, type TableHeight } from "@/lib/design-tokens";
+
 export {
   PageShell,
   PageHeader,
