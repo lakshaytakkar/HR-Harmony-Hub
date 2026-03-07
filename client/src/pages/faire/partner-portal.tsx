@@ -69,7 +69,7 @@ function QuoteCard({
         </div>
         <div>
           <div className="font-semibold text-emerald-800">Quote Submitted</div>
-          <div className="text-sm text-emerald-600">Order reference: <span className="font-mono font-bold">#{order?.display_id}</span></div>
+          <div className="text-sm text-emerald-600">Order reference: <span className="font-bold">#{order?.display_id}</span></div>
           <div className="text-xs text-emerald-500 mt-0.5">Thank you! The team will review your pricing shortly.</div>
         </div>
       </div>
@@ -83,7 +83,7 @@ function QuoteCard({
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-mono text-xs text-slate-400">{quotation.id}</span>
+              <span className="text-xs text-slate-400">{quotation.id}</span>
               <Badge className="border-0 text-xs" style={{ background: "#EFF6FF", color: "#2563EB" }}>
                 Awaiting Your Quote
               </Badge>

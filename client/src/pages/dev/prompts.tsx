@@ -364,7 +364,7 @@ export default function PromptsPage() {
                       {isExpanded && (
                         <div className="px-4 pb-4 pl-11" data-testid={`content-prompt-${prompt.id}`}>
                           <div className="rounded-md border bg-muted/30 p-4">
-                            <pre className="whitespace-pre-wrap text-sm text-foreground font-mono leading-relaxed">
+                            <pre className="whitespace-pre-wrap text-sm text-foreground leading-relaxed">
                               {prompt.content}
                             </pre>
                           </div>

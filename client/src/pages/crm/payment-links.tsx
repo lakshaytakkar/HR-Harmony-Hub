@@ -358,7 +358,7 @@ export default function PaymentLinksPage() {
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm">{link.customerName}</span>
-                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono uppercase">{link.id}</span>
+                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded uppercase">{link.id}</span>
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1">{link.description}</p>
                   </div>

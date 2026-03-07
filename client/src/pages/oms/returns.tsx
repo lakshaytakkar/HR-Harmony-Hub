@@ -165,8 +165,8 @@ export default function OmsReturns() {
                     <td className="py-3 px-2 text-center">
                       {expanded === ret.id ? <ChevronDown className="size-3.5 text-muted-foreground" /> : <ChevronRight className="size-3.5 text-muted-foreground" />}
                     </td>
-                    <td className="py-3 px-3 font-mono text-xs font-semibold text-cyan-700">{ret.returnNumber}</td>
-                    <td className="py-3 px-3 font-mono text-xs text-muted-foreground">{ret.orderNumber}</td>
+                    <td className="py-3 px-3 text-xs font-semibold text-cyan-700">{ret.returnNumber}</td>
+                    <td className="py-3 px-3 text-xs text-muted-foreground">{ret.orderNumber}</td>
                     <td className="py-3 px-3 text-xs font-medium">{ret.customerName}</td>
                     <td className="py-3 px-3 text-right text-xs font-semibold">{ret.items.length}</td>
                     <td className="py-3 px-3 text-xs text-muted-foreground max-w-[140px] truncate">{ret.reason}</td>
@@ -193,7 +193,7 @@ export default function OmsReturns() {
                             <div className="space-y-2">
                               {ret.items.map((item, idx) => (
                                 <div key={idx} className="border border-border rounded-lg p-2.5">
-                                  <p className="font-mono text-[10px] text-muted-foreground">{item.sku}</p>
+                                  <p className="text-[10px] text-muted-foreground">{item.sku}</p>
                                   <p className="text-xs font-medium">{item.productName}</p>
                                   <div className="flex justify-between mt-1">
                                     <span className="text-xs text-muted-foreground">Qty: {item.qty}</span>

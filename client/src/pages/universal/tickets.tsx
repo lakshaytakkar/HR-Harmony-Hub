@@ -252,7 +252,7 @@ export default function UniversalTickets() {
       width: "w-24",
       sortable: true,
       render: (t) => (
-        <span className="font-mono text-xs font-semibold text-muted-foreground" data-testid={`text-code-${t.id}`}>
+        <span className="text-xs font-semibold text-muted-foreground" data-testid={`text-code-${t.id}`}>
           {t.ticket_code}
         </span>
       ),

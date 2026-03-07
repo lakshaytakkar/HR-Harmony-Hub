@@ -243,13 +243,13 @@ export default function FaireQuotations() {
                   return (
                     <DataTR key={q.id} onClick={() => setLocation(`/faire/quotations/${q.id}`)} data-testid={`row-quotation-${q.id}`}>
                       <DataTD>
-                        <span className="text-xs font-mono text-muted-foreground">{q.id}</span>
+                        <span className="text-xs text-muted-foreground">{q.id}</span>
                       </DataTD>
                       <DataTD>
                         {order ? (
                           <button
                             onClick={() => setLocation(`/faire/orders/${order.id}`)}
-                            className="font-mono text-xs px-2 py-0.5 rounded hover:opacity-80"
+                            className="text-xs px-2 py-0.5 rounded hover:opacity-80"
                             style={{ background: "#EFF6FF", color: "#2563EB" }}
                             data-testid={`link-order-${order.id}`}
                           >

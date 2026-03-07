@@ -173,7 +173,7 @@ export default function FairePricing() {
                       <p className="text-xs text-muted-foreground">{(r.options ?? []).map((o: any) => o.value).join(" / ")}</p>
                     </DataTD>
                     <DataTD><Badge variant="outline" className="text-xs">{r.store?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
-                    <DataTD className="font-mono text-muted-foreground">{r.sku}</DataTD>
+                    <DataTD className="text-muted-foreground">{r.sku}</DataTD>
                     <DataTD className="font-semibold"><DualCurrency cents={wholesaleCents} /></DataTD>
                     <DataTD><DualCurrency cents={retailCents} /></DataTD>
                     <DataTD>

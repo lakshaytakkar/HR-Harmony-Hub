@@ -293,7 +293,7 @@ export default function DevProjectBoard() {
       render: (item) => (
         <Badge
           variant="secondary"
-          className="border-0 text-xs font-mono"
+          className="border-0 text-xs"
           style={{ backgroundColor: `${project.color}15`, color: project.color }}
           data-testid={`badge-task-id-${item.id}`}
         >
@@ -386,7 +386,7 @@ export default function DevProjectBoard() {
       header: "SP",
       sortable: true,
       render: (item) => (
-        <Badge variant="secondary" className="border-0 text-xs font-mono" data-testid={`badge-sp-${item.id}`}>
+        <Badge variant="secondary" className="border-0 text-xs" data-testid={`badge-sp-${item.id}`}>
           {item.storyPoints}
         </Badge>
       ),
@@ -419,7 +419,7 @@ export default function DevProjectBoard() {
             />
             <Badge
               variant="secondary"
-              className="border-0 text-xs font-mono font-semibold"
+              className="border-0 text-xs font-semibold"
               style={{ backgroundColor: `${project.color}15`, color: project.color }}
               data-testid="badge-project-key"
             >
@@ -575,7 +575,7 @@ export default function DevProjectBoard() {
                                     />
                                   </td>
                                   <td className="px-3 py-2">
-                                    <code className="rounded-md bg-muted px-2 py-1 text-xs font-mono" data-testid={`text-cred-key-${cred.id}`}>
+                                    <code className="rounded-md bg-muted px-2 py-1 text-xs" data-testid={`text-cred-key-${cred.id}`}>
                                       {cred.apiKeyHint}
                                     </code>
                                   </td>
@@ -762,7 +762,7 @@ export default function DevProjectBoard() {
                               <div className="flex items-center gap-1.5 mb-1.5">
                                 <Badge
                                   variant="secondary"
-                                  className="border-0 text-[10px] font-mono px-1.5 py-0"
+                                  className="border-0 text-[10px] px-1.5 py-0"
                                   style={{ backgroundColor: `${project.color}15`, color: project.color }}
                                 >
                                   {task.id}
@@ -783,7 +783,7 @@ export default function DevProjectBoard() {
                                   {task.priority}
                                 </Badge>
                                 {task.storyPoints > 0 && (
-                                  <Badge variant="secondary" className="border-0 text-[10px] px-1.5 py-0 font-mono">
+                                  <Badge variant="secondary" className="border-0 text-[10px] px-1.5 py-0">
                                     {task.storyPoints} SP
                                   </Badge>
                                 )}

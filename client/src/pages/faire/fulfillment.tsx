@@ -129,7 +129,7 @@ export default function FaireFulfillment() {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <Badge variant="outline" className="text-xs font-mono">{order.display_id}</Badge>
+                      <Badge variant="outline" className="text-xs">{order.display_id}</Badge>
                       <Badge variant="outline" className="text-xs">{store?.name?.split(" ")[0] ?? "Store"}</Badge>
                       <span
                         className="text-xs px-2 py-0.5 rounded-full font-medium"

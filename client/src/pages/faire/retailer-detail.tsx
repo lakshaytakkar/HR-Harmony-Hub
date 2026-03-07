@@ -253,7 +253,7 @@ export default function FaireRetailerDetail() {
               <CardContent className="space-y-1">
                 <InfoRow label="Name" value={retailerName} />
                 <InfoRow label="Retailer ID">
-                  <span className="text-xs font-mono text-muted-foreground truncate" data-testid="text-info-id">{retailerId}</span>
+                  <span className="text-xs text-muted-foreground truncate" data-testid="text-info-id">{retailerId}</span>
                 </InfoRow>
                 {locationParts && <InfoRow label="Location" value={locationParts} />}
                 <InfoRow label="Status" value={isActive ? "Active" : "Inactive"} />
@@ -400,7 +400,7 @@ export default function FaireRetailerDetail() {
                           const itemsTotal = (order.items ?? []).reduce((s: number, i: any) => s + (i.price_cents ?? 0) * (i.quantity ?? 0), 0);
                           return (
                             <DataTR key={order.id} onClick={() => setLocation(`/faire/orders/${order.id}`)} data-testid={`order-history-row-${order.id}`}>
-                              <DataTD><Badge variant="outline" className="text-xs font-mono">{order.display_id}</Badge></DataTD>
+                              <DataTD><Badge variant="outline" className="text-xs">{order.display_id}</Badge></DataTD>
                               <DataTD><Badge variant="outline" className="text-xs">{store?.name?.split(" ")[0] ?? "Store"}</Badge></DataTD>
                               <DataTD className="text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</DataTD>
                               <DataTD className="font-semibold"><DualCurrency cents={itemsTotal} /></DataTD>

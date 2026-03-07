@@ -197,7 +197,7 @@ export default function OmsDashboard() {
               <tbody>
                 {alertInventory.map((inv) => (
                   <tr key={inv.id} className={cn("border-b border-border/50 transition-colors", inv.status === "critical" ? "bg-red-50/50 hover:bg-red-50" : "bg-amber-50/20 hover:bg-amber-50/40")}>
-                    <td className="py-2 px-4 font-mono text-xs">{inv.sku}</td>
+                    <td className="py-2 px-4 text-xs">{inv.sku}</td>
                     <td className="py-2 px-4 text-xs truncate max-w-[160px]">{inv.productName}</td>
                     <td className="py-2 px-4 text-right font-semibold text-xs">{inv.qtyOnHand}</td>
                     <td className="py-2 px-4 text-right text-xs text-muted-foreground">{inv.reorderPoint}</td>
@@ -263,7 +263,7 @@ export default function OmsDashboard() {
             <tbody>
               {recentShipments.map((shp) => (
                 <tr key={shp.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
-                  <td className="py-2.5 px-4 font-mono text-xs text-cyan-700">{shp.awbNumber}</td>
+                  <td className="py-2.5 px-4 text-xs text-cyan-700">{shp.awbNumber}</td>
                   <td className="py-2.5 px-4">
                     <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded", courierBadgeColors[shp.courier])}>
                       {shp.courier}

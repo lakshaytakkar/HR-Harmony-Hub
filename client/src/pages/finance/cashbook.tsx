@@ -177,7 +177,7 @@ export default function FinanceCashBook() {
                       return (
                         <tr key={entry.id} data-testid={`cashbook-row-${entry.id}`} className="border-b hover:bg-muted/20 last:border-0">
                           <td className="px-4 py-2 text-muted-foreground">{entry.date}</td>
-                          <td className="px-4 py-2 font-mono text-muted-foreground/70">{entry.reference}</td>
+                          <td className="px-4 py-2 text-muted-foreground/70">{entry.reference}</td>
                           <td className="px-4 py-2 max-w-xs truncate">{entry.description}</td>
                           <td className="px-4 py-2">
                             <span className={`font-semibold px-1.5 py-0.5 rounded ${company.badgeBg} ${company.badgeText}`}>{company.shortName}</span>

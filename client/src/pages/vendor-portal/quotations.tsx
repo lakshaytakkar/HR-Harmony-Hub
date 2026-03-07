@@ -76,7 +76,7 @@ function QuoteRequestCard({
         </div>
         <div>
           <div className="font-semibold text-emerald-800 dark:text-emerald-300">Quote Submitted</div>
-          <div className="text-sm text-emerald-600 dark:text-emerald-400">Request ID: <span className="font-mono font-bold">{quotation.id}</span></div>
+          <div className="text-sm text-emerald-600 dark:text-emerald-400">Request ID: <span className="font-bold">{quotation.id}</span></div>
           <div className="text-xs text-emerald-500 mt-0.5">The team will review and accept or challenge your pricing.</div>
         </div>
       </div>
@@ -89,7 +89,7 @@ function QuoteRequestCard({
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-sm font-bold text-muted-foreground">{quotation.id}</span>
+              <span className="text-sm font-bold text-muted-foreground">{quotation.id}</span>
               <Badge style={{ background: "#EFF6FF", color: "#2563EB" }} className="border-0 text-xs">Open Request</Badge>
             </div>
             {order && (
@@ -233,7 +233,7 @@ function QuoteHistoryCard({ quotation }: { quotation: FaireQuotation }) {
       <div className="p-5 flex items-center justify-between gap-4 flex-wrap">
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-sm font-bold">{quotation.id}</span>
+            <span className="text-sm font-bold">{quotation.id}</span>
             <span className="text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1" style={{ background: sc.bg, color: sc.color }}>
               {sc.icon}{sc.label}
             </span>

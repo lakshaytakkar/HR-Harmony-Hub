@@ -94,7 +94,7 @@ export default function DevTasksPage() {
         return (
           <Badge
             variant="outline"
-            className="font-mono text-xs shrink-0"
+            className="text-xs shrink-0"
             style={{ borderColor: proj?.color, color: proj?.color }}
             data-testid={`badge-task-${item.id}`}
           >
@@ -179,7 +179,7 @@ export default function DevTasksPage() {
       header: "Points",
       sortable: true,
       render: (item) => (
-        <Badge variant="secondary" className="text-xs font-mono">{item.storyPoints}</Badge>
+        <Badge variant="secondary" className="text-xs">{item.storyPoints}</Badge>
       ),
     },
   ];

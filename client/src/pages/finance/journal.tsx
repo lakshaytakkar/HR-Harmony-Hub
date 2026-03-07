@@ -105,7 +105,7 @@ export default function FinanceJournal() {
                     className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${isSelected ? "border-2 border-amber-400 bg-amber-50" : "border border-transparent hover:bg-muted"}`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-mono font-semibold text-muted-foreground">JE-{String(i + 1).padStart(3, "0")}</span>
+                      <span className="text-xs font-semibold text-muted-foreground">JE-{String(i + 1).padStart(3, "0")}</span>
                       <div className="flex items-center gap-1">
                         {je.tags.map(t => (
                           <span key={t} className={`text-xs px-1 py-0.5 rounded font-semibold ${t === "IC" ? "bg-sky-100 text-sky-700" : "bg-violet-100 text-violet-700"}`}>{t}</span>
@@ -171,7 +171,7 @@ export default function FinanceJournal() {
                       <tr key={idx} className="border-b hover:bg-muted/20" data-testid={`je-line-${idx}`}>
                         <td className="px-4 py-2">
                           <p className="font-medium">{line.accountName}</p>
-                          <p className="text-muted-foreground/60 font-mono text-xs">{line.accountId}</p>
+                          <p className="text-muted-foreground/60 text-xs">{line.accountId}</p>
                         </td>
                         <td className="px-4 py-2 text-muted-foreground">{line.description}</td>
                         <td className="px-4 py-2 text-right font-semibold text-emerald-700">{line.debit > 0 ? `₹${line.debit.toLocaleString("en-IN")}` : ""}</td>

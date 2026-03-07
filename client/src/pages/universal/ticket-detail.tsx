@@ -242,7 +242,7 @@ export default function TicketDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <Badge variant="outline" className="font-mono text-xs shrink-0" data-testid="text-ticket-code">
+          <Badge variant="outline" className="text-xs shrink-0" data-testid="text-ticket-code">
             {ticket.ticket_code}
           </Badge>
           <h1 className="text-lg font-semibold truncate" data-testid="text-ticket-title">

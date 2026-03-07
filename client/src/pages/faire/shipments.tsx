@@ -181,9 +181,9 @@ export default function FaireShipments() {
                 const cfg = orderStateConfig[orderState] ?? { label: orderState, color: "#6B7280", bg: "#F9FAFB" };
                 return (
                   <DataTR key={ship.id} data-testid={`shipment-row-${ship.id}`}>
-                    <DataTD className="text-xs font-mono text-muted-foreground">{ship.id}</DataTD>
+                    <DataTD className="text-xs text-muted-foreground">{ship.id}</DataTD>
                     <DataTD>
-                      <Badge variant="outline" className="text-xs font-mono">{ship.order?.display_id}</Badge>
+                      <Badge variant="outline" className="text-xs">{ship.order?.display_id}</Badge>
                     </DataTD>
                     <DataTD>
                       <Badge variant="outline" className="text-xs">{ship.store?.name?.split(" ")[0] ?? "—"}</Badge>
@@ -192,7 +192,7 @@ export default function FaireShipments() {
                     <DataTD className="font-medium">{ship.carrier}</DataTD>
                     <DataTD>
                       <div className="flex items-center gap-1">
-                        <span className="text-xs font-mono bg-muted rounded px-1.5 py-0.5 max-w-[120px] truncate">{ship.tracking_code}</span>
+                        <span className="text-xs bg-muted rounded px-1.5 py-0.5 max-w-[120px] truncate">{ship.tracking_code}</span>
                         <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyTracking(ship.tracking_code)} data-testid={`btn-copy-tracking-${ship.id}`}><Copy size={10} /></Button>
                       </div>
                     </DataTD>

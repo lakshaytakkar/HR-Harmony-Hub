@@ -204,8 +204,8 @@ export default function OmsShipments() {
                     )}
                     data-testid={`row-shipment-${s.id}`}
                   >
-                    <td className="py-2.5 px-4 font-mono text-xs text-cyan-700">{s.awbNumber}</td>
-                    <td className="py-2.5 px-4 font-mono text-xs text-muted-foreground">{s.orderNumber}</td>
+                    <td className="py-2.5 px-4 text-xs text-cyan-700">{s.awbNumber}</td>
+                    <td className="py-2.5 px-4 text-xs text-muted-foreground">{s.orderNumber}</td>
                     <td className="py-2.5 px-4">
                       <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded", COURIER_STYLES[s.courier]?.badge || "bg-slate-100 text-slate-600")}>{COURIER_STYLES[s.courier]?.abbr || s.courier}</span>
                     </td>

@@ -245,7 +245,7 @@ export default function FaireRetailers() {
                 <DataTR key={retailer.id} onClick={() => setLocation(`/faire/retailers/${retailer.id}`)} data-testid={`retailer-row-${retailer.id}`}>
                   <DataTD>
                     <p className="font-medium">{retailer.name}</p>
-                    <p className="text-xs font-mono text-muted-foreground">{retailer.id}</p>
+                    <p className="text-xs text-muted-foreground">{retailer.id}</p>
                   </DataTD>
                   <DataTD className="text-muted-foreground font-medium">
                     {[retailer.city, retailer.state].filter(Boolean).join(", ") || "—"}

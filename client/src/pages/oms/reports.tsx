@@ -215,7 +215,7 @@ export default function OmsReports() {
                     {fulfillmentStats.topProducts.map(([sku, { name, count }], idx) => (
                       <tr key={sku} className="border-b border-border/40">
                         <td className="py-2 px-4 text-xs text-muted-foreground">{idx + 1}</td>
-                        <td className="py-2 px-4 font-mono text-xs">{sku}</td>
+                        <td className="py-2 px-4 text-xs">{sku}</td>
                         <td className="py-2 px-4 text-xs truncate max-w-[160px]">{name}</td>
                         <td className="py-2 px-4 text-right text-xs font-semibold">{count}</td>
                       </tr>
@@ -257,7 +257,7 @@ export default function OmsReports() {
                   <tbody>
                     {inventoryStats.slowMoving.map(inv => (
                       <tr key={inv.id} className="border-b border-border/40">
-                        <td className="py-2 px-4 font-mono text-xs">{inv.sku}</td>
+                        <td className="py-2 px-4 text-xs">{inv.sku}</td>
                         <td className="py-2 px-4 text-xs truncate max-w-[160px]">{inv.productName}</td>
                         <td className="py-2 px-4 text-right text-xs font-semibold">{inv.qtyOnHand}</td>
                         <td className="py-2 px-4 text-right text-xs text-muted-foreground">{inv.lastUpdated}</td>
@@ -279,7 +279,7 @@ export default function OmsReports() {
                   <tbody>
                     {inventoryStats.topByValue.map(inv => (
                       <tr key={inv.id} className="border-b border-border/40">
-                        <td className="py-2 px-4 font-mono text-xs">{inv.sku}</td>
+                        <td className="py-2 px-4 text-xs">{inv.sku}</td>
                         <td className="py-2 px-4 text-xs truncate max-w-[120px]">{inv.productName}</td>
                         <td className="py-2 px-4 text-right text-xs">{inv.qtyOnHand}</td>
                         <td className="py-2 px-4 text-right text-xs font-semibold">₹{inv.value.toLocaleString()}</td>

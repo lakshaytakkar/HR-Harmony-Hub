@@ -199,7 +199,7 @@ export default function FaireLedger() {
                       {order ? (
                         <button
                           onClick={() => setLocation(`/faire/orders/${order.id}`)}
-                          className="font-mono text-xs px-2 py-0.5 rounded hover:opacity-80"
+                          className="text-xs px-2 py-0.5 rounded hover:opacity-80"
                           style={{ background: "#EFF6FF", color: "#2563EB" }}
                           data-testid={`link-ledger-order-${order.id}`}
                         >

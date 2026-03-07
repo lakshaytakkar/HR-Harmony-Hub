@@ -215,12 +215,12 @@ export default function FaireQuotationDetail() {
             <ArrowLeft size={16} className="mr-1" /> Quotations
           </Button>
           <span className="text-muted-foreground">/</span>
-          <span className="font-mono text-sm font-semibold text-foreground">{quotation.id}</span>
+          <span className="text-sm font-semibold text-foreground">{quotation.id}</span>
           {order && (
             <>
               <span className="text-muted-foreground">/</span>
               <button
-                className="font-mono text-sm font-bold px-2 py-0.5 rounded hover:opacity-80 transition-opacity"
+                className="text-sm font-bold px-2 py-0.5 rounded hover:opacity-80 transition-opacity"
                 style={{ background: "#EFF6FF", color: "#2563EB" }}
                 onClick={() => setLocation(`/faire/orders/${order.id}`)}
               >
@@ -249,7 +249,7 @@ export default function FaireQuotationDetail() {
                   <div className="space-y-1 mb-4">
                     <InfoRow label="Order">
                       <button
-                        className="font-mono text-sm px-2.5 py-0.5 rounded font-bold hover:opacity-80 transition-opacity"
+                        className="text-sm px-2.5 py-0.5 rounded font-bold hover:opacity-80 transition-opacity"
                         style={{ background: "#EFF6FF", color: "#2563EB" }}
                         onClick={() => setLocation(`/faire/orders/${order.id}`)}
                         data-testid="link-order"

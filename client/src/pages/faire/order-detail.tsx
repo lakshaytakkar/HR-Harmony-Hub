@@ -369,7 +369,7 @@ export default function FaireOrderDetail() {
                               </div>
                             )}
                           </DataTD>
-                          <DataTD className="text-muted-foreground font-mono">{item.sku}</DataTD>
+                          <DataTD className="text-muted-foreground">{item.sku}</DataTD>
                           <DataTD align="center">{item.quantity}</DataTD>
                           <DataTD><DualCurrency cents={item.price_cents} /></DataTD>
                           <DataTD className="font-semibold"><DualCurrency cents={item.price_cents * item.quantity} /></DataTD>
@@ -435,7 +435,7 @@ export default function FaireOrderDetail() {
                 <div className="space-y-2">
                   {(order.brand_discounts ?? []).map((d: any) => (
                     <div key={d.id} className="flex items-center justify-between">
-                      <Badge variant="outline" className="font-mono">{d.code}</Badge>
+                      <Badge variant="outline">{d.code}</Badge>
                       <span className="text-sm text-muted-foreground">
                         {d.discount_type === "PERCENTAGE" ? `${d.discount_percentage}% off` : "Flat discount"}
                         {d.includes_free_shipping && " + Free shipping"}
@@ -601,7 +601,7 @@ export default function FaireOrderDetail() {
                       <div className="flex items-center gap-2">
                         <Truck size={14} className="text-muted-foreground shrink-0" />
                         <span className="text-sm font-medium">{ship.carrier}</span>
-                        <span className="text-sm text-muted-foreground font-mono">{ship.tracking_code}</span>
+                        <span className="text-sm text-muted-foreground">{ship.tracking_code}</span>
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground ml-6">
                         <span>{ship.shipped_at ? new Date(ship.shipped_at).toLocaleDateString() : "—"}</span>

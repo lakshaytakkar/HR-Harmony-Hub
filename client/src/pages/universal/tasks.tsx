@@ -567,7 +567,7 @@ function TaskCard({ task, onClick }: { task: SharedTask, onClick: () => void }) 
             className="h-7 w-7 rounded-lg border bg-muted shrink-0 object-cover"
             loading="lazy"
           />
-          <span className="text-[10px] font-mono font-semibold text-muted-foreground tracking-wide">{code}</span>
+          <span className="text-[10px] font-semibold text-muted-foreground tracking-wide">{code}</span>
         </div>
         <Badge 
           className={cn(
@@ -645,7 +645,7 @@ function TasksListView({ tasks, onTaskClick }: { tasks: SharedTask[], onTaskClic
                     />
                     <div className="flex flex-col min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono font-semibold text-muted-foreground">{getTaskCode(task)}</span>
+                        <span className="text-[10px] font-semibold text-muted-foreground">{getTaskCode(task)}</span>
                         <span className="font-semibold text-[14px] truncate">{task.title}</span>
                       </div>
                       <span className="text-[12px] text-muted-foreground line-clamp-1">{task.description}</span>
@@ -839,7 +839,7 @@ function TaskDetailDialog({
             />
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-semibold text-muted-foreground tracking-wide shrink-0">{getTaskCode(task)}</span>
+                <span className="text-[10px] font-semibold text-muted-foreground tracking-wide shrink-0">{getTaskCode(task)}</span>
                 <DialogTitle className="text-base font-semibold truncate" data-testid={`text-task-title-${task.id}`}>
                   {task.title}
                 </DialogTitle>

@@ -415,7 +415,7 @@ export default function FaireProducts() {
                         </div>
                       </DataTD>
                       <DataTD>
-                        <div className="font-mono text-muted-foreground">
+                        <div className="text-muted-foreground">
                           {variants.length === 1 ? (variants[0].sku || "—") : (
                             <span title={variants.map(v => v.sku).filter(Boolean).join(", ")}>
                               {variants[0]?.sku || "—"}

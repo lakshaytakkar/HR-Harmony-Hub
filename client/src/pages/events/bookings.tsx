@@ -182,7 +182,7 @@ export default function EventsBookings() {
             <tbody className="divide-y">
               {filtered.map((item) => (
                 <DataTR key={item.id} onClick={() => navigate(`/events/bookings/${item.id}`)}>
-                  <DataTD className="font-mono text-[10px]">{item.id}</DataTD>
+                  <DataTD className="text-[10px]">{item.id}</DataTD>
                   <DataTD>
                     <p className="text-sm font-medium">{item.client_name}</p>
                     <p className="text-xs text-muted-foreground">{item.client_phone}</p>

@@ -134,9 +134,9 @@ export default function OmsInventory() {
             <tbody className="divide-y">
               {filtered.map((inv) => (
                 <DataTR key={inv.id}>
-                  <DataTD className="font-mono text-xs">{inv.sku}</DataTD>
+                  <DataTD className="text-xs">{inv.sku}</DataTD>
                   <DataTD className="max-w-[200px] truncate">{inv.productName}</DataTD>
-                  <DataTD className="font-mono text-muted-foreground">{inv.locationCode}</DataTD>
+                  <DataTD className="text-muted-foreground">{inv.locationCode}</DataTD>
                   <DataTD align="right" className="font-semibold">
                     {inv.qtyOnHand}
                   </DataTD>

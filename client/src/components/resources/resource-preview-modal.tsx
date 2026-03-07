@@ -697,7 +697,7 @@ function SpreadsheetPreview({ resourceId }: { resourceId: string }) {
         <tbody>
           {data.rows.map((row, ri) => (
             <tr key={ri} className={cn("border-b border-gray-100 dark:border-gray-800 transition-colors", ri % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50/50 dark:bg-gray-900/50", "hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20")}>
-              <td className="px-4 py-2.5 text-[11px] text-gray-400 font-mono border-r border-gray-100 dark:border-gray-800">{ri + 1}</td>
+              <td className="px-4 py-2.5 text-[11px] text-gray-400 border-r border-gray-100 dark:border-gray-800">{ri + 1}</td>
               {row.map((cell, ci) => (
                 <td key={ci} className="px-4 py-2.5 text-[13px] text-gray-700 dark:text-gray-300 border-r border-gray-100 dark:border-gray-800 last:border-r-0 whitespace-nowrap">{cell}</td>
               ))}
@@ -811,7 +811,7 @@ function LinkPreview({ resource }: { resource: SharedResource }) {
         <div>
           <p className="font-semibold text-lg text-gray-900 dark:text-gray-100">{resource.title}</p>
           <p className="text-gray-500 text-sm mt-2 leading-relaxed">{resource.description}</p>
-          <p className="text-violet-600 dark:text-violet-400 text-xs mt-3 font-mono truncate">{resource.url}</p>
+          <p className="text-violet-600 dark:text-violet-400 text-xs mt-3 truncate">{resource.url}</p>
         </div>
         <a
           href={resource.url}

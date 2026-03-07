@@ -247,7 +247,7 @@ export default function VendorLedger() {
                         </DataTD>
                         <DataTD>
                           {t.reference
-                            ? <span className="font-mono text-xs text-muted-foreground">{t.reference}</span>
+                            ? <span className="text-xs text-muted-foreground">{t.reference}</span>
                             : <span className="text-muted-foreground">—</span>}
                         </DataTD>
                         <DataTD>

@@ -243,7 +243,7 @@ export default function FinanceReports() {
                           {accounts.map(acc => (
                             <tr key={acc.id} className="border-b hover:bg-muted/20">
                               <td className="px-4 py-2 pl-6">
-                                <span className="font-mono text-muted-foreground/60 mr-2">{acc.code}</span>{acc.name}
+                                <span className="text-muted-foreground/60 mr-2">{acc.code}</span>{acc.name}
                               </td>
                               {showConsolidated && ALL_FINANCE_COMPANIES.map(co => {
                                 const matches = acc.companyId === co.id || acc.companyId === "all";
@@ -351,7 +351,7 @@ export default function FinanceReports() {
                       const isDrAccount = acc.type === "asset" || acc.type === "expense";
                       return (
                         <tr key={acc.id} className="border-b hover:bg-muted/20">
-                          <td className="px-4 py-2 font-mono text-muted-foreground">{acc.code}</td>
+                          <td className="px-4 py-2 text-muted-foreground">{acc.code}</td>
                           <td className="px-4 py-2">{acc.name}</td>
                           <td className="px-4 py-2 capitalize text-muted-foreground">{acc.type}</td>
                           <td className="px-4 py-2 text-right font-medium text-emerald-700">{isDrAccount ? fmtINR(acc.openingBalance) : ""}</td>

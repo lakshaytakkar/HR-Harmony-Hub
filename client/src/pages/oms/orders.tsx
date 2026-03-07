@@ -104,7 +104,7 @@ export default function OmsOrders() {
                         <ChevronRight className="size-3.5 text-muted-foreground" />
                       )}
                     </DataTD>
-                    <DataTD className="font-mono text-xs font-semibold text-cyan-700">
+                    <DataTD className="text-xs font-semibold text-cyan-700">
                       {order.orderNumber}
                     </DataTD>
                     <DataTD className="text-xs text-muted-foreground">{order.orderDate}</DataTD>

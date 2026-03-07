@@ -149,7 +149,7 @@ export default function OmsSuppliers() {
                           </div>
                           <div className="flex justify-between text-xs">
                             <span className="text-muted-foreground">GSTIN</span>
-                            <span className="font-mono text-[10px]">****{sup.gstin.slice(-4)}</span>
+                            <span className="text-[10px]">****{sup.gstin.slice(-4)}</span>
                           </div>
                           <div className="flex justify-between text-xs">
                             <span className="text-muted-foreground">Terms</span>
@@ -247,7 +247,7 @@ export default function OmsSuppliers() {
                 <tbody>
                   {supplierPOs.map(po => (
                     <tr key={po.id} className="border-b border-cyan-100/50 hover:bg-cyan-50/50">
-                      <td className="py-2 px-4 font-mono text-xs text-cyan-700">{po.poNumber}</td>
+                      <td className="py-2 px-4 text-xs text-cyan-700">{po.poNumber}</td>
                       <td className="py-2 px-4 text-xs text-muted-foreground">{po.orderedDate}</td>
                       <td className="py-2 px-4 text-xs text-muted-foreground">{po.expectedDate}</td>
                       <td className="py-2 px-4 text-right text-xs">{po.lines.length}</td>

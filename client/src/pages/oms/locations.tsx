@@ -141,7 +141,7 @@ export default function OmsLocations() {
                         <td className="py-2.5 px-2 text-center">
                           {isSelected ? <ChevronDown className="size-3.5 text-muted-foreground" /> : <ChevronRight className="size-3.5 text-muted-foreground" />}
                         </td>
-                        <td className="py-2.5 px-4 font-mono text-xs font-semibold text-cyan-700">{loc.code}</td>
+                        <td className="py-2.5 px-4 text-xs font-semibold text-cyan-700">{loc.code}</td>
                         <td className="py-2.5 px-4 text-xs font-medium">{loc.name}</td>
                         <td className="py-2.5 px-4 text-xs text-muted-foreground">{loc.zone}</td>
                         <td className="py-2.5 px-4">
@@ -159,7 +159,7 @@ export default function OmsLocations() {
                             <div className="grid grid-cols-4 gap-2">
                               {locationInventory.map(inv => (
                                 <div key={inv.id} className="border border-cyan-200 rounded-lg p-2.5 bg-white">
-                                  <p className="font-mono text-[10px] text-muted-foreground">{inv.sku}</p>
+                                  <p className="text-[10px] text-muted-foreground">{inv.sku}</p>
                                   <p className="text-xs font-medium leading-tight">{inv.productName}</p>
                                   <div className="flex justify-between mt-1">
                                     <span className="text-[10px] text-muted-foreground">On Hand</span>

@@ -197,7 +197,7 @@ export default function FaireInventory() {
                   <DataTR key={v.id} className={isOut ? "bg-red-50/30 dark:bg-red-950/5" : isLow ? "bg-amber-50/30 dark:bg-amber-950/5" : ""} data-testid={`inv-row-${v.id}`}>
                     <DataTD className="font-medium">{v.product.name}</DataTD>
                     <DataTD><Badge variant="outline" className="text-xs font-medium">{v.store?.name?.split(" ")[0] ?? "—"}</Badge></DataTD>
-                    <DataTD className="font-mono text-muted-foreground">{v.sku}</DataTD>
+                    <DataTD className="text-muted-foreground">{v.sku}</DataTD>
                     <DataTD>
                       <div className="flex flex-wrap gap-1">
                         {(v.options ?? []).map((o: any) => (

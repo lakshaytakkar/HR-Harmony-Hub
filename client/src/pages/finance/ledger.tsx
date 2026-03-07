@@ -139,7 +139,7 @@ export default function FinanceLedger() {
                             className={`w-full text-left px-3 py-1.5 rounded text-xs transition-colors ${selectedAccount?.id === account.id ? "font-semibold" : "text-muted-foreground hover:bg-muted"}`}
                             style={selectedAccount?.id === account.id ? { backgroundColor: "#FEF3C7", color: FINANCE_COLOR } : undefined}
                           >
-                            <span className="font-mono mr-1.5 opacity-60">{account.code}</span>{account.name}
+                            <span className="mr-1.5 opacity-60">{account.code}</span>{account.name}
                           </button>
                         ))}
                       </div>
@@ -164,7 +164,7 @@ export default function FinanceLedger() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm text-muted-foreground">{selectedAccount.code}</span>
+                      <span className="text-sm text-muted-foreground">{selectedAccount.code}</span>
                       <CardTitle className="text-base">{selectedAccount.name}</CardTitle>
                       <Badge variant="outline" className={`text-xs ${TYPE_COLORS[selectedAccount.type]}`}>{TYPE_LABELS[selectedAccount.type]}</Badge>
                     </div>

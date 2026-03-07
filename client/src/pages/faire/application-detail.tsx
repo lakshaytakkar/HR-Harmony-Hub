@@ -635,7 +635,7 @@ export default function FaireApplicationDetail() {
                 </div>
                 {app.csv_storage_path && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <FileText size={13} /> CSV saved: <span className="font-mono">{app.csv_storage_path}</span>
+                    <FileText size={13} /> CSV saved: <span>{app.csv_storage_path}</span>
                   </div>
                 )}
               </CardContent>
@@ -794,7 +794,7 @@ export default function FaireApplicationDetail() {
                 </div>
                 <div className="flex justify-between">
                   <span>ID</span>
-                  <span className="font-mono text-xs text-muted-foreground">{app.id.slice(0, 8)}…</span>
+                  <span className="text-xs text-muted-foreground">{app.id.slice(0, 8)}…</span>
                 </div>
               </CardContent>
             </Card>

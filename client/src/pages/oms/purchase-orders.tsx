@@ -111,7 +111,7 @@ export default function OmsPurchaseOrders() {
                   data-testid={`po-list-item-${po.id}`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-mono text-xs font-semibold text-cyan-700">{po.poNumber}</p>
+                    <p className="text-xs font-semibold text-cyan-700">{po.poNumber}</p>
                     <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0", STATUS_STYLES[po.status])}>
                       {po.status === "partially-received" ? "Partial" : po.status}
                     </span>
@@ -133,7 +133,7 @@ export default function OmsPurchaseOrders() {
                 <div className="p-5 border-b border-border">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-mono text-xs text-muted-foreground">{selectedPO.poNumber}</p>
+                      <p className="text-xs text-muted-foreground">{selectedPO.poNumber}</p>
                       <h2 className="text-lg font-bold mt-0.5">{selectedPO.supplierName}</h2>
                     </div>
                     <span className={cn("text-sm font-semibold px-3 py-1 rounded-full", STATUS_STYLES[selectedPO.status])}>
@@ -164,7 +164,7 @@ export default function OmsPurchaseOrders() {
                         const isNone = line.receivedQty === 0 && selectedPO.status !== "draft" && selectedPO.status !== "sent";
                         return (
                           <tr key={idx} className={cn("border-b border-border/50", isPartial && "bg-amber-50", isNone && selectedPO.status === "partially-received" && "bg-amber-50/40")}>
-                            <td className="py-2.5 px-5 font-mono text-xs">{line.sku}</td>
+                            <td className="py-2.5 px-5 text-xs">{line.sku}</td>
                             <td className="py-2.5 px-5 text-xs">{line.productName}</td>
                             <td className="py-2.5 px-5 text-right text-xs font-medium">{line.orderedQty}</td>
                             <td className="py-2.5 px-5 text-right text-xs">

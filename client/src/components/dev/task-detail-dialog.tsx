@@ -236,7 +236,7 @@ export function TaskDetailDialog({ task, open, onOpenChange, onTaskUpdate }: Tas
             <div className="flex items-center gap-2 min-w-0">
               <Badge
                 variant="outline"
-                className="shrink-0 font-mono text-xs"
+                className="shrink-0 text-xs"
                 style={{ borderColor: project?.color, color: project?.color }}
                 data-testid={`badge-task-id-${currentTask.id}`}
               >
@@ -493,7 +493,7 @@ export function TaskDetailDialog({ task, open, onOpenChange, onTaskUpdate }: Tas
 
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Story Points</label>
-              <Badge variant="secondary" className="text-xs font-mono">{currentTask.storyPoints} pts</Badge>
+              <Badge variant="secondary" className="text-xs">{currentTask.storyPoints} pts</Badge>
             </div>
 
             {currentTask.dueDate && (

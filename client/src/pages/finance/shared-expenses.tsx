@@ -173,7 +173,7 @@ export default function FinanceSharedExpenses() {
                           </td>
                         );
                       })}
-                      <td className="px-4 py-2.5 font-mono text-muted-foreground">{entry.journalEntryRef}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground">{entry.journalEntryRef}</td>
                       <td className="px-4 py-2.5">
                         <Badge variant="outline" className={`text-xs ${entry.status === "allocated" ? "border-emerald-300 text-emerald-700" : "border-amber-300 text-amber-700"}`}>
                           {entry.status}

@@ -171,7 +171,7 @@ export default function FinancePayments() {
                         {tx.gateway === "razorpay" ? "RZP" : "STRP"}
                       </span>
                     </DataTD>
-                    <DataTD className="font-mono text-[10px] text-muted-foreground">
+                    <DataTD className="text-[10px] text-muted-foreground">
                       {tx.transactionId.substring(0, 12)}…
                     </DataTD>
                     <DataTD className="text-[10px] text-muted-foreground">{tx.date}</DataTD>

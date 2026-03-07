@@ -261,7 +261,7 @@ export default function DevDashboard() {
                         <div className="flex items-center gap-2">
                           <Badge
                             variant="outline"
-                            className="font-mono text-[10px] shrink-0 px-1"
+                            className="text-[10px] shrink-0 px-1"
                             style={{ borderColor: proj?.color, color: proj?.color }}
                           >
                             {task.id}
@@ -299,7 +299,7 @@ export default function DevDashboard() {
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: proj.color }} />
                         <span className="text-sm font-medium truncate">{proj.name}</span>
-                        <Badge variant="outline" className="font-mono text-[10px] shrink-0" style={{ borderColor: proj.color, color: proj.color }}>
+                        <Badge variant="outline" className="text-[10px] shrink-0" style={{ borderColor: proj.color, color: proj.color }}>
                           {proj.key}
                         </Badge>
                       </div>

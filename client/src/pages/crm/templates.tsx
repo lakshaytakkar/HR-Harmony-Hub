@@ -45,7 +45,7 @@ function highlightVars(text: string) {
   const parts = text.split(/({{[^}]+}})/g);
   return parts.map((part, i) =>
     part.startsWith("{{") ? (
-      <span key={i} className="bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-1 rounded font-mono text-xs">{part}</span>
+      <span key={i} className="bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-1 rounded text-xs">{part}</span>
     ) : (
       <span key={i}>{part}</span>
     )
@@ -224,7 +224,7 @@ export default function CrmTemplates() {
                     <p className="text-xs italic text-muted-foreground mb-2">Subject: {t.subject}</p>
                   )}
 
-                  <div className="flex-1 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 line-clamp-4 font-mono leading-relaxed mb-3">
+                  <div className="flex-1 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 line-clamp-4 leading-relaxed mb-3">
                     {highlightVars(t.body)}
                   </div>
 
@@ -283,7 +283,7 @@ export default function CrmTemplates() {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Variables</p>
                     {previewTemplate.variables.map(v => (
                       <div key={v}>
-                        <label className="text-xs text-muted-foreground mb-1 block font-mono">{v}</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">{v}</label>
                         <Input
                           value={varValues[v] ?? ""}
                           onChange={e => setVarValues(prev => ({ ...prev, [v]: e.target.value }))}

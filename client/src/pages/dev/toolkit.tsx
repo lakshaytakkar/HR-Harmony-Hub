@@ -213,7 +213,7 @@ const credentialColumns: Column<AppCredential>[] = [
     key: "apiKeyHint",
     header: "API Key",
     render: (item) => (
-      <code className="rounded-md bg-muted px-2 py-1 text-xs font-mono" data-testid={`text-api-key-${item.id}`}>
+      <code className="rounded-md bg-muted px-2 py-1 text-xs" data-testid={`text-api-key-${item.id}`}>
         {item.apiKeyHint}
       </code>
     ),
@@ -428,7 +428,7 @@ export default function ToolkitPage() {
                           <div key={proj.id} className="rounded-lg border bg-background" data-testid={`section-project-creds-${proj.id}`}>
                             <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/20">
                               <div className="size-2.5 rounded-full" style={{ backgroundColor: proj.color }} />
-                              <Badge variant="secondary" className="border-0 text-[10px] font-mono" style={{ backgroundColor: `${proj.color}15`, color: proj.color }}>
+                              <Badge variant="secondary" className="border-0 text-[10px]" style={{ backgroundColor: `${proj.color}15`, color: proj.color }}>
                                 {proj.key}
                               </Badge>
                               <span className="text-sm font-semibold font-heading">{proj.name}</span>
@@ -474,7 +474,7 @@ export default function ToolkitPage() {
                                           />
                                         </td>
                                         <td className="px-4 py-2.5">
-                                          <code className="rounded-md bg-muted px-2 py-1 text-xs font-mono">{cred.apiKeyHint}</code>
+                                          <code className="rounded-md bg-muted px-2 py-1 text-xs">{cred.apiKeyHint}</code>
                                         </td>
                                         <td className="px-4 py-2.5">
                                           <StatusBadge
@@ -594,7 +594,7 @@ export default function ToolkitPage() {
                                       />
                                     ) : (
                                       <p
-                                        className="text-xs text-primary/70 mt-1 truncate cursor-pointer hover:text-primary font-mono"
+                                        className="text-xs text-primary/70 mt-1 truncate cursor-pointer hover:text-primary"
                                         onClick={() => startEditing(urlKey, link.url)}
                                         data-testid={`text-link-url-${link.id}`}
                                       >
@@ -702,7 +702,7 @@ export default function ToolkitPage() {
                                   />
                                 ) : (
                                   <p
-                                    className="text-xs text-primary/70 mt-1 truncate cursor-pointer hover:text-primary font-mono"
+                                    className="text-xs text-primary/70 mt-1 truncate cursor-pointer hover:text-primary"
                                     onClick={() => startEditing(urlKey, link.url)}
                                     data-testid={`text-link-url-${link.id}`}
                                   >

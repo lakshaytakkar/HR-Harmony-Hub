@@ -126,7 +126,7 @@ export default function OmsProducts() {
                         </div>
                         <div className="p-3">
                           <div className="flex items-start justify-between gap-1 mb-1.5">
-                            <span className="font-mono text-[10px] text-muted-foreground">{p.sku}</span>
+                            <span className="text-[10px] text-muted-foreground">{p.sku}</span>
                             <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0",
                               p.fulfillmentType === "dropship" ? "bg-violet-100 text-violet-700" : "bg-cyan-100 text-cyan-700"
                             )}>
@@ -168,10 +168,10 @@ export default function OmsProducts() {
                   <tbody>
                     {filtered.map(p => (
                       <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 cursor-pointer" onClick={() => setSelected(selected === p.id ? null : p.id)} data-testid={`row-product-${p.id}`}>
-                        <td className="py-2.5 px-4 font-mono text-xs">{p.sku}</td>
+                        <td className="py-2.5 px-4 text-xs">{p.sku}</td>
                         <td className="py-2.5 px-4 text-xs font-medium">{p.name}</td>
                         <td className="py-2.5 px-4 text-xs text-muted-foreground">{p.category}</td>
-                        <td className="py-2.5 px-4 font-mono text-xs text-muted-foreground">{p.hsnCode}</td>
+                        <td className="py-2.5 px-4 text-xs text-muted-foreground">{p.hsnCode}</td>
                         <td className="py-2.5 px-4 text-right font-semibold text-xs">₹{p.mrp.toLocaleString()}</td>
                         <td className="py-2.5 px-4 text-right text-xs text-muted-foreground">₹{p.costPrice.toLocaleString()}</td>
                         <td className="py-2.5 px-4 text-right text-xs text-muted-foreground">{p.weightGrams}g</td>
@@ -204,7 +204,7 @@ export default function OmsProducts() {
               </div>
               <div className="p-4 space-y-3">
                 <div>
-                  <p className="font-mono text-[10px] text-muted-foreground">{selectedProduct.sku}</p>
+                  <p className="text-[10px] text-muted-foreground">{selectedProduct.sku}</p>
                   <p className="font-bold text-sm leading-tight mt-0.5">{selectedProduct.name}</p>
                   <p className="text-xs text-muted-foreground">{selectedProduct.brand}</p>
                 </div>

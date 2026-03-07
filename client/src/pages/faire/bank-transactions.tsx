@@ -229,7 +229,7 @@ function WiseView() {
                 return (
                   <DataTR key={t.id} data-testid={`wise-row-${t.id}`}>
                     <DataTD className="text-muted-foreground whitespace-nowrap">{created}</DataTD>
-                    <DataTD><span className="font-mono text-xs">{t.reference ?? `#${t.id}`}</span></DataTD>
+                    <DataTD><span className="text-xs">{t.reference ?? `#${t.id}`}</span></DataTD>
                     <DataTD className="text-muted-foreground text-xs capitalize">{t.type?.replace(/_/g, " ").toLowerCase() ?? "transfer"}</DataTD>
                     <DataTD><span className="font-semibold">{formatWiseCurrency(amt, cur)}</span></DataTD>
                     <DataTD>
@@ -430,7 +430,7 @@ function MercuryView() {
                   <DataTD className="text-muted-foreground whitespace-nowrap">{t.date}</DataTD>
                   <DataTD>
                     <div className="font-medium leading-tight max-w-xs">{t.description}</div>
-                    {t.reference && <div className="text-xs font-mono text-muted-foreground mt-0.5">{t.reference}</div>}
+                    {t.reference && <div className="text-xs text-muted-foreground mt-0.5">{t.reference}</div>}
                   </DataTD>
                   <DataTD>
                     <Badge variant="outline" className="text-xs font-medium" style={{ borderColor: `${MERCURY_TEAL}40`, color: MERCURY_TEAL }}>
@@ -804,12 +804,12 @@ export default function FaireBankTransactions() {
                             {t.type === "credit" ? "+" : "−"}${(t.amount_usd ?? t.amount).toLocaleString()}
                           </span>
                         </DataTD>
-                        <DataTD><span className="font-mono text-muted-foreground text-xs">{t.reference ?? "—"}</span></DataTD>
+                        <DataTD><span className="text-muted-foreground text-xs">{t.reference ?? "—"}</span></DataTD>
                         <DataTD>
                           {t.faire_order_id ? (
                             <button
                               onClick={() => setLocation(`/faire/orders/${t.faire_order_id}`)}
-                              className="font-mono text-xs px-1.5 py-0.5 rounded hover:opacity-80"
+                              className="text-xs px-1.5 py-0.5 rounded hover:opacity-80"
                               style={{ background: "#EFF6FF", color: "#2563EB" }}
                               data-testid={`link-txn-order-${t.faire_order_id}`}
                             >
@@ -964,7 +964,7 @@ export default function FaireBankTransactions() {
                     <label key={o.id} className="flex items-center gap-2 cursor-pointer p-2 rounded border hover:bg-muted/30">
                       <input type="radio" name="map-order" checked={mapOrderId === o.id} onChange={() => setMapOrderId(o.id)} data-testid={`radio-order-${o.id}`} />
                       <div className="text-sm">
-                        <span className="font-mono font-bold">#{o.display_id}</span>
+                        <span className="font-bold">#{o.display_id}</span>
                         <span className="text-muted-foreground ml-2">{o.state}</span>
                       </div>
                     </label>

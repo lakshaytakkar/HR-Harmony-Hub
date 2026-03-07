@@ -230,7 +230,7 @@ export default function FaireProductDetail() {
                   const vlc = lifecycleBadge[(variant.lifecycle_state as ProductLifecycleState)] ?? lifecycleBadge.DRAFT;
                   return (
                     <tr key={variant.id} className={`border-b ${isOut ? "bg-red-50/40 dark:bg-red-950/10" : isLow ? "bg-amber-50/40 dark:bg-amber-950/10" : ""}`} data-testid={`variant-row-${variant.id}`}>
-                      <td className="p-3 text-xs font-mono">{variant.sku}</td>
+                      <td className="p-3 text-xs">{variant.sku}</td>
                       <td className="p-3">
                         {(variant.options ?? []).map((o: any) => (
                           <Badge key={o.name} variant="outline" className="text-xs mr-1">{o.name}: {o.value}</Badge>
