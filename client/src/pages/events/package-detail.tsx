@@ -41,7 +41,7 @@ export default function PackageDetail() {
   if (!loading && !pkg) {
     return (
       <div className="px-16 py-6 lg:px-24">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/events/packages")} className="gap-2 mb-4">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/goyotours/packages")} className="gap-2 mb-4">
           <ArrowLeft className="size-4" /> Back to Packages
         </Button>
         <p className="text-muted-foreground">Package not found.</p>
@@ -81,7 +81,7 @@ export default function PackageDetail() {
       <PageTransition>
         <Fade direction="up" delay={0}>
           <div className="mb-5 flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/events/packages")} className="gap-2" data-testid="btn-back">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/goyotours/packages")} className="gap-2" data-testid="btn-back">
               <ArrowLeft className="size-4" /> Back
             </Button>
             <div className="flex items-center gap-2 flex-1">
@@ -175,7 +175,7 @@ export default function PackageDetail() {
                 <Button
                   className="w-full text-white mb-2"
                   style={{ backgroundColor: "#E91E63" }}
-                  onClick={() => navigate("/events/bookings")}
+                  onClick={() => navigate("/goyotours/bookings")}
                   data-testid="btn-create-booking"
                 >
                   Create Booking

@@ -274,10 +274,10 @@ Detail pages (have /:id routes):
 - **Faire quotations:** \`[Quotation #CODE](/faire/quotations/ID)\`
 - **Faire applications:** \`[Application Name](/faire/applications/ID)\`
 - **Tickets:** \`[Ticket TICKET_CODE](/VERTICAL_ID/tickets/ID)\` (works for all verticals)
-- **HR Clients:** \`[Client Name](/hr/clients/ID)\`
-- **Events bookings:** \`[Booking](/events/bookings/ID)\`
-- **Events packages:** \`[Package Name](/events/packages/ID)\`
-- **Hub events:** \`[Event Name](/hub/events/ID)\`
+- **HR Clients:** \`[Client Name](/legalnations/clients/ID)\`
+- **Events bookings:** \`[Booking](/goyotours/bookings/ID)\`
+- **Events packages:** \`[Package Name](/goyotours/packages/ID)\`
+- **Hub events:** \`[Event Name](/eventhub/events/ID)\`
 - **ETS clients:** \`[Client Name](/ets/clients/ID)\`
 - **HRMS employees:** \`[Employee Name](/hrms/employees/ID)\`
 - **ATS jobs:** \`[Job Title](/ats/jobs/ID)\`
@@ -296,8 +296,8 @@ List pages (no /:id route — link to the list):
 
 **Examples:**
 - "The largest order is [Order #3ZC8AMJ4P9](/faire/orders/7fc98b40-9887-4c57-889d-b4e74ab73c41) with a payout of $985.80."
-- "Here are the open tickets: [TKT-0042](/hr/tickets/abc-123), [TKT-0043](/hr/tickets/def-456)"
-- "Assigned to [Sneha Patel](/hr/team) in the [HR Dashboard](/hr)"
+- "Here are the open tickets: [TKT-0042](/legalnations/tickets/abc-123), [TKT-0043](/legalnations/tickets/def-456)"
+- "Assigned to [Sneha Patel](/legalnations/team) in the [HR Dashboard](/legalnations)"
 
 **Rules:**
 - Always SELECT the id (UUID) column alongside display fields so you can build the link.

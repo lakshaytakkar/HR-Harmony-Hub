@@ -179,7 +179,7 @@ export default function EventsPackages() {
                       variant="outline"
                       size="sm"
                       className="flex-1 gap-1.5 text-xs font-bold"
-                      onClick={() => navigate(`/events/packages/${pkg.id}`)}
+                      onClick={() => navigate(`/goyotours/packages/${pkg.id}`)}
                       data-testid={`btn-view-${pkg.id}`}
                     >
                       View Details <ChevronRight className="size-3" />
@@ -188,7 +188,7 @@ export default function EventsPackages() {
                       size="sm"
                       className="flex-1 text-xs text-white font-bold"
                       style={{ backgroundColor: EVENTS_COLOR }}
-                      onClick={() => navigate("/events/bookings")}
+                      onClick={() => navigate("/goyotours/bookings")}
                       data-testid={`btn-book-${pkg.id}`}
                     >
                       New Booking

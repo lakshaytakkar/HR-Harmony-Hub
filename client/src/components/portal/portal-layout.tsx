@@ -97,7 +97,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-muted-foreground"
-              onClick={() => setLocation("/hr")}
+              onClick={() => setLocation("/legalnations")}
               data-testid="button-back-internal"
               title="Back to Internal Portal"
             >

@@ -142,7 +142,7 @@ export default function GoyoToursDashboard() {
           <SectionCard
             title="Tour Packages"
             viewAllLabel="View all"
-            onViewAll={() => navigate("/events/packages")}
+            onViewAll={() => navigate("/goyotours/packages")}
           >
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
               {tourPackages.map((pkg) => {
@@ -152,7 +152,7 @@ export default function GoyoToursDashboard() {
                   <div
                     key={pkg.id}
                     className="min-w-[220px] max-w-[220px] rounded-xl border border-border bg-card p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                    onClick={() => navigate("/events/packages")}
+                    onClick={() => navigate("/goyotours/packages")}
                     data-testid={`card-pkg-${pkg.id}`}
                   >
                     <p className="text-sm font-semibold leading-tight mb-1 line-clamp-2" data-testid={`text-pkg-name-${pkg.id}`}>{pkg.name}</p>
@@ -204,7 +204,7 @@ export default function GoyoToursDashboard() {
               <SectionCard
                 title="Recent Bookings"
                 viewAllLabel="All bookings"
-                onViewAll={() => navigate("/events/bookings")}
+                onViewAll={() => navigate("/goyotours/bookings")}
                 noPadding
               >
                 <div className="divide-y">
@@ -214,7 +214,7 @@ export default function GoyoToursDashboard() {
                       <div
                         key={bkg.id}
                         className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-muted/20 cursor-pointer"
-                        onClick={() => navigate(`/events/bookings/${bkg.id}`)}
+                        onClick={() => navigate(`/goyotours/bookings/${bkg.id}`)}
                         data-testid={`row-booking-${bkg.id}`}
                       >
                         <div className="flex-1 min-w-0">
@@ -251,7 +251,7 @@ export default function GoyoToursDashboard() {
                         <div
                           key={stage.key}
                           className="flex items-center justify-between cursor-pointer"
-                          onClick={() => navigate("/events/leads")}
+                          onClick={() => navigate("/goyotours/leads")}
                           data-testid={`row-stage-${stage.key}`}
                         >
                           <span className="text-sm text-muted-foreground">{stage.label}</span>
@@ -298,7 +298,7 @@ export default function GoyoToursDashboard() {
                 <div
                   key={lead.id}
                   className="flex items-center justify-between text-sm rounded-lg bg-white dark:bg-amber-950/30 px-3 py-2 cursor-pointer"
-                  onClick={() => navigate("/events/leads")}
+                  onClick={() => navigate("/goyotours/leads")}
                   data-testid={`urgent-lead-${lead.id}`}
                 >
                   <span className="font-medium text-foreground">Follow-up overdue: <span className="text-amber-700 dark:text-amber-400">{lead.name}</span></span>
@@ -311,7 +311,7 @@ export default function GoyoToursDashboard() {
                   <div
                     key={bkg.id}
                     className="flex items-center justify-between text-sm rounded-lg bg-white dark:bg-amber-950/30 px-3 py-2 cursor-pointer"
-                    onClick={() => navigate(`/events/bookings/${bkg.id}`)}
+                    onClick={() => navigate(`/goyotours/bookings/${bkg.id}`)}
                     data-testid={`urgent-visa-${bkg.id}`}
                   >
                     <span className="font-medium text-foreground">Visa pending: <span className="text-red-600 dark:text-red-400">{bkg.client_name}</span></span>

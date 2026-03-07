@@ -3,9 +3,9 @@
 ## Overview
 TeamSync is a multi-vertical team portal with exceptional UI/UX inspired by the Dropship.io design system. The vertical switcher shows two labeled groups: "Business Products" and "Departments". Each vertical/department has its own dashboard, pages, brand logo, and workflows. Built with React, TypeScript, Tailwind CSS, and Shadcn UI.
 
-**Business Products** (8): Suprans Business Services (`/suprans`), LegalNations (`/hr`), USDrop AI (`/sales`), GoyoTours (`/events`), LBM Lifestyle (`/admin`), EazyToSell (`/ets`), FaireDesk (`/faire`), Vendor Portal (`/vendor`)
+**Business Products** (8): Suprans Business Services (`/suprans`), LegalNations (`/legalnations`), USDrop AI (`/usdrop`), GoyoTours (`/goyotours`), LBM Lifestyle (`/lbm`), EazyToSell (`/ets`), FaireDesk (`/faire`), Vendor Portal (`/vendor`)
 
-**Departments** (8): HRMS (`/hrms`), ATS (`/ats`), Sales CRM (`/crm`), Finance & Accounts (`/finance`), Order & Fulfillment OMS (`/oms`), Event Management (`/hub`), Developer (`/dev`), SMM (`/social`)
+**Departments** (8): HRMS (`/hrms`), ATS (`/ats`), Sales CRM (`/crm`), Finance & Accounts (`/finance`), Order & Fulfillment OMS (`/oms`), Event Management (`/eventhub`), Developer (`/dev`), SMM (`/social`)
 
 ## Suprans Business Services (`/suprans/*`) — indigo #3730A3
 
@@ -305,13 +305,13 @@ Minimal supplier-facing portal. 2 pages only. Vendors select their identity via 
 - Updated all 8 feature pages to consume corrected data model: orders, order-detail, products, product-detail, inventory, pricing, shipments, fulfillment
 - Also updated dashboard, analytics, retailer-detail for correct stateConfig (8 states) and API v2 field names
 
-### EventHub Event Inquiries (`/hub/leads`)
+### EventHub Event Inquiries (`/eventhub/leads`)
 - 15 event inquiry leads (Corporate/Wedding/Social/Conference/Exhibition)
 - Client cards: guest count, tentative date, budget range, source, status badges
 - Stat cards: Total Inquiries, New Today, Qualified, Pipeline Value
 - Under EventHub "Sales" nav category
 
-### GoyoTours Booking Calendar (`/events/calendar`)
+### GoyoTours Booking Calendar (`/goyotours/calendar`)
 - Monthly calendar grid (Mon-Sun), February 2026 default
 - Booking pills colored by tour type (Canton Fair/Custom Tour/Sourcing Tour)
 - Click-to-view detail panel on the right
@@ -385,7 +385,7 @@ Minimal supplier-facing portal. 2 pages only. Vendors select their identity via 
 
 ## Universal Reports System (All 16 Verticals)
 - **Page**: `pages/universal/reports.tsx` — single shared component, auto-adapts via `detectVerticalFromUrl`
-- **Route**: `/[prefix]/reports` for all 16 verticals (LBM Lifestyle also uses `/admin/team-reports`)
+- **Route**: `/[prefix]/reports` for all 16 verticals (LBM Lifestyle also uses `/lbm/team-reports`)
 - **Data**: `lib/mock-data-reports.ts` (types + assembly) + 4 group files:
   - `mock-data-reports-g1.ts` — hr, sales, events, eventhub
   - `mock-data-reports-g2.ts` — admin, dev, ets, faire
@@ -446,7 +446,7 @@ The portal supports multiple business verticals, each with its own navigation, b
 - `SharedTask[]` — 8-9 tasks per vertical, across all 5 statuses and 4 priorities, with subtask arrays
 
 **Route renames** (3 existing routes moved to avoid conflicts with universal `/tasks` and `/resources`):
-- `/hr/tasks` (LegalNations Task Board) → `/hr/task-board`
+- `/legalnations/tasks` (LegalNations Task Board) → `/legalnations/task-board`
 - `/dev/tasks` (Developer ClickUp-style board) → `/dev/board`
 - `/dev/resources` (Developer Knowledge Base) → `/dev/knowledge-base`
 
@@ -475,11 +475,11 @@ The portal supports multiple business verticals, each with its own navigation, b
    - **Mock data**: `client/src/lib/mock-data-faire.ts` — all field names match Faire API v2 exactly; 6 stores, 10 products, 16 orders, 6 shipments, 13 retailers, 8 campaigns, 10 disputes
    - **Logo**: `client/src/components/brand/faire-logo.tsx`
 
-2. **LegalNations** (id: `hr`, color: #225AEA) — US Company Formation & Compliance Operations — Routes: `/hr/*`
+2. **LegalNations** (id: `hr`, color: #225AEA) — US Company Formation & Compliance Operations — Routes: `/legalnations/*`
    - Dashboard (operations overview: active formations, stuck/delayed, avg time, team load)
    - **Universal**: Chat, Team, Resources, Tasks
    - Clients (All Clients, Client Detail with stage progression, Client Intake, Stage Overview)
-   - Operations (Formation Pipeline kanban, Task Board at `/hr/task-board`, Escalations)
+   - Operations (Formation Pipeline kanban, Task Board at `/legalnations/task-board`, Escalations)
    - Documents (Document Vault, Templates)
    - Compliance (Compliance Tracker, Annual Reports)
    - Analytics (Formation Analytics, Team Performance)
@@ -491,26 +491,26 @@ The portal supports multiple business verticals, each with its own navigation, b
    - Operations (Shopify Stores, Fulfillment, Competitor Stores)
    - Support & Learning (Support Tickets, Courses, Help Center)
    - Analytics (Revenue Analytics, User Analytics, Product Performance)
-3. **GoyoTours** (id: `events`, color: #E91E63) — China B2B Travel CRM for Mr. Suprans' delegation business — Routes: `/events/*`
-   - **Universal**: Chat, Team, Resources, Tasks, Important Contacts (`/events/contacts`)
+3. **GoyoTours** (id: `events`, color: #E91E63) — China B2B Travel CRM for Mr. Suprans' delegation business — Routes: `/goyotours/*`
+   - **Universal**: Chat, Team, Resources, Tasks, Important Contacts (`/goyotours/contacts`)
    - **Dashboard** — pink gradient welcome banner, 4 KPI cards (Revenue Collected, Bookings, Active Leads, Seats Available), horizontal package strip with progress bars, lead pipeline chips, payment summary, recent bookings table, urgent actions (overdue follow-ups + pending visas)
-   - **Packages** (`/events/packages`) — 7 real packages from suprans.in; status filter pills; 2-per-row cards with gradient headers, discount badges, seat progress bars, pricing with GST/TCS note, advance chip, highlights, View+Book CTAs
-   - **Package Detail** (`/events/packages/:id`) — day-by-day itinerary, inclusions/exclusions, pricing card (with GST breakdown), capacity widget, hotel info, Create Booking CTA, Copy Brochure Link, filtered bookings table
-   - **Leads** (`/events/leads`) — Kanban (New/Contacted/Interested/Booked/Cold/Lost columns) + Table view toggle; cards show business type, city, package badge, source badge, overdue follow-up warning (red), WhatsApp btn; stats (Total, New, Follow-ups Due, Conversion Rate); Add Lead FormDialog
-   - **Bookings** (`/events/bookings`) — DataTable: Booking ID, Client+phone, Package, Pax, Total, Advance, Balance, Payment Status, Visa, Travel Date; status + payment filter pills; stats strip; Row click → detail; Record Payment row action; New Booking FormDialog
-   - **Booking Detail** (`/events/bookings/:id`) — Client info, Package details (totals/advance/balance), Payment history timeline, Visa & Flight status; Actions: Record Payment, WhatsApp pre-filled reminder, Mark Visa Applied, Print Voucher; Travel countdown
-   - **Hotels** (`/events/hotels`) — China hotel directory; city + star filters; 3-per-row cards with rate (listed vs our), contact, amenities, packages used, status dot; Add Hotel FormDialog
-   - **Vendors** (`/events/vendors`) — Category pills; 3-per-row cards; ground partner "Guangzhou Connect Tours" pinned with KEY PARTNER badge; star ratings, services chips; Add Vendor FormDialog
-   - **Analytics** (`/events/analytics`) — 6 KPI cards, Revenue by Package bar chart, Lead Funnel, Bookings by Source, Top Cities table
+   - **Packages** (`/goyotours/packages`) — 7 real packages from suprans.in; status filter pills; 2-per-row cards with gradient headers, discount badges, seat progress bars, pricing with GST/TCS note, advance chip, highlights, View+Book CTAs
+   - **Package Detail** (`/goyotours/packages/:id`) — day-by-day itinerary, inclusions/exclusions, pricing card (with GST breakdown), capacity widget, hotel info, Create Booking CTA, Copy Brochure Link, filtered bookings table
+   - **Leads** (`/goyotours/leads`) — Kanban (New/Contacted/Interested/Booked/Cold/Lost columns) + Table view toggle; cards show business type, city, package badge, source badge, overdue follow-up warning (red), WhatsApp btn; stats (Total, New, Follow-ups Due, Conversion Rate); Add Lead FormDialog
+   - **Bookings** (`/goyotours/bookings`) — DataTable: Booking ID, Client+phone, Package, Pax, Total, Advance, Balance, Payment Status, Visa, Travel Date; status + payment filter pills; stats strip; Row click → detail; Record Payment row action; New Booking FormDialog
+   - **Booking Detail** (`/goyotours/bookings/:id`) — Client info, Package details (totals/advance/balance), Payment history timeline, Visa & Flight status; Actions: Record Payment, WhatsApp pre-filled reminder, Mark Visa Applied, Print Voucher; Travel countdown
+   - **Hotels** (`/goyotours/hotels`) — China hotel directory; city + star filters; 3-per-row cards with rate (listed vs our), contact, amenities, packages used, status dot; Add Hotel FormDialog
+   - **Vendors** (`/goyotours/vendors`) — Category pills; 3-per-row cards; ground partner "Guangzhou Connect Tours" pinned with KEY PARTNER badge; star ratings, services chips; Add Vendor FormDialog
+   - **Analytics** (`/goyotours/analytics`) — 6 KPI cards, Revenue by Package bar chart, Lead Funnel, Bookings by Source, Top Cities table
    - **Mock data**: `client/src/lib/mock-data-goyo.ts` — 7 packages (full itineraries), 18 leads, 12 bookings (with payments[]), 8 China hotels, 8 vendors
-4. **Event Hub** (id: `eventhub`, color: #7C3AED) — Networking Events & Engagement Platform — Routes: `/hub/*`
+4. **Event Hub** (id: `eventhub`, color: #7C3AED) — Networking Events & Engagement Platform — Routes: `/eventhub/*`
    - Dashboard (4 KPI cards: upcoming events, total attendees, active vendors, budget utilized; upcoming events grid, this week countdown, vendor status sidebar, organizers section, recently completed with check-in bars)
    - Events: All Events (DataTable with 10 events, status/type/city filters, Create Event dialog), Event Detail (5 tabs: Overview, Attendees, Vendors, Budget, Tasks checklist)
    - Attendees: All Attendees (DataTable 35 records across events, multi-filter), Live Check-in (event selector, stats, search, quick check-in input, per-attendee toggle, Check In All button)
    - Venues (card grid of 6 venues with status dot, capacity, rating, amenities, hover contact reveal, city/type/status filters)
    - Vendors (DataTable 8 vendors with star ratings, event counts, category badges, Copy Email action)
    - Operations: Budget Tracker (30 budget items, category progress bars, planned vs actual, over-budget highlighting), Analytics (type distribution bars, attendee source mix, event performance table, top vendors, budget by category)
-5. **LBM Lifestyle** (id: `admin`, color: #673AB7) — Team, Settings, Reports — Routes: `/admin/*`
+5. **LBM Lifestyle** (id: `admin`, color: #673AB7) — Team, Settings, Reports — Routes: `/lbm/*`
 6. **Developer** (id: `dev`, color: #10B981) — Internal Developer Hub — Routes: `/dev/*`
    - Dashboard (quick links to all sections, My Tasks list, Project Progress bars, recent prompts, credential status)
    - Design System (Style Guide, Components, Icons)
@@ -559,20 +559,20 @@ React with TypeScript, Tailwind CSS, Shadcn UI, Wouter routing, motion/react ani
 ### Page Organization
 ```
 client/src/pages/
-├── dashboard.tsx              # LegalNations Dashboard (route: /hr)
-├── clients.tsx                # All Clients (route: /hr/clients)
-├── client-detail.tsx          # Client Detail (route: /hr/clients/:id)
-├── client-intake.tsx          # Client Intake Queue (route: /hr/intake)
-├── stage-overview.tsx         # Stage Overview (route: /hr/stages)
-├── formation-pipeline.tsx     # Formation Pipeline Kanban (route: /hr/pipeline)
-├── task-board.tsx             # Task Board (route: /hr/task-board)
-├── escalations.tsx            # Escalation Flags (route: /hr/escalations)
-├── document-vault.tsx         # Document Vault (route: /hr/documents)
-├── templates.tsx              # Document Templates (route: /hr/templates)
-├── compliance-tracker.tsx     # Compliance Tracker (route: /hr/compliance)
-├── annual-reports.tsx         # Annual Reports (route: /hr/annual-reports)
-├── formation-analytics.tsx    # Formation Analytics (route: /hr/analytics)
-├── team-performance.tsx       # Team Performance (route: /hr/team-performance)
+├── dashboard.tsx              # LegalNations Dashboard (route: /legalnations)
+├── clients.tsx                # All Clients (route: /legalnations/clients)
+├── client-detail.tsx          # Client Detail (route: /legalnations/clients/:id)
+├── client-intake.tsx          # Client Intake Queue (route: /legalnations/intake)
+├── stage-overview.tsx         # Stage Overview (route: /legalnations/stages)
+├── formation-pipeline.tsx     # Formation Pipeline Kanban (route: /legalnations/pipeline)
+├── task-board.tsx             # Task Board (route: /legalnations/task-board)
+├── escalations.tsx            # Escalation Flags (route: /legalnations/escalations)
+├── document-vault.tsx         # Document Vault (route: /legalnations/documents)
+├── templates.tsx              # Document Templates (route: /legalnations/templates)
+├── compliance-tracker.tsx     # Compliance Tracker (route: /legalnations/compliance)
+├── annual-reports.tsx         # Annual Reports (route: /legalnations/annual-reports)
+├── formation-analytics.tsx    # Formation Analytics (route: /legalnations/analytics)
+├── team-performance.tsx       # Team Performance (route: /legalnations/team-performance)
 ├── dev/
 │   ├── dashboard.tsx          # Developer Dashboard (route: /dev)
 │   ├── style-guide.tsx        # Style Guide (route: /dev/style-guide)
@@ -585,44 +585,44 @@ client/src/pages/
 │   ├── tasks.tsx              # All Tasks DataTable (route: /dev/board)
 │   └── toolkit.tsx            # Apps, Credentials, Links & Quick Tools (route: /dev/toolkit)
 ├── sales/
-│   ├── dashboard.tsx           # USDrop AI Dashboard (route: /sales)
-│   ├── products.tsx            # Product Library (route: /sales/products)
-│   ├── categories.tsx          # Product Categories (route: /sales/categories)
-│   ├── suppliers.tsx           # Supplier Directory (route: /sales/suppliers)
-│   ├── winning-products.tsx    # Top Products (route: /sales/winning-products)
-│   ├── users.tsx               # External Users (route: /sales/users)
-│   ├── leads.tsx               # Lead Management (route: /sales/leads)
-│   ├── plans.tsx               # Plan Tiers (route: /sales/plans)
-│   ├── subscriptions.tsx       # Subscriptions (route: /sales/subscriptions)
-│   ├── stores.tsx              # Shopify Stores (route: /sales/stores)
-│   ├── fulfillment.tsx         # Fulfillment Orders (route: /sales/fulfillment)
-│   ├── competitors.tsx         # Competitor Stores (route: /sales/competitors)
-│   ├── tickets.tsx             # Support Tickets (route: /sales/tickets)
-│   ├── courses.tsx             # Learning Hub Courses (route: /sales/courses)
-│   ├── help-center.tsx         # Help Center FAQ (route: /sales/help-center)
-│   ├── revenue.tsx             # Revenue Analytics (route: /sales/revenue)
-│   ├── user-analytics.tsx      # User Analytics (route: /sales/user-analytics)
-│   └── product-performance.tsx # Product Performance (route: /sales/product-performance)
+│   ├── dashboard.tsx           # USDrop AI Dashboard (route: /usdrop)
+│   ├── products.tsx            # Product Library (route: /usdrop/products)
+│   ├── categories.tsx          # Product Categories (route: /usdrop/categories)
+│   ├── suppliers.tsx           # Supplier Directory (route: /usdrop/suppliers)
+│   ├── winning-products.tsx    # Top Products (route: /usdrop/winning-products)
+│   ├── users.tsx               # External Users (route: /usdrop/users)
+│   ├── leads.tsx               # Lead Management (route: /usdrop/leads)
+│   ├── plans.tsx               # Plan Tiers (route: /usdrop/plans)
+│   ├── subscriptions.tsx       # Subscriptions (route: /usdrop/subscriptions)
+│   ├── stores.tsx              # Shopify Stores (route: /usdrop/stores)
+│   ├── fulfillment.tsx         # Fulfillment Orders (route: /usdrop/fulfillment)
+│   ├── competitors.tsx         # Competitor Stores (route: /usdrop/competitors)
+│   ├── tickets.tsx             # Support Tickets (route: /usdrop/tickets)
+│   ├── courses.tsx             # Learning Hub Courses (route: /usdrop/courses)
+│   ├── help-center.tsx         # Help Center FAQ (route: /usdrop/help-center)
+│   ├── revenue.tsx             # Revenue Analytics (route: /usdrop/revenue)
+│   ├── user-analytics.tsx      # User Analytics (route: /usdrop/user-analytics)
+│   └── product-performance.tsx # Product Performance (route: /usdrop/product-performance)
 ├── events/
-│   ├── dashboard.tsx      # GoyoTours Dashboard (route: /events)
-│   ├── events-list.tsx    # All Events (route: /events/list)
-│   ├── venues.tsx         # Venue Directory (route: /events/venues)
-│   └── checkin.tsx        # Event Check-in (route: /events/checkin)
+│   ├── dashboard.tsx      # GoyoTours Dashboard (route: /goyotours)
+│   ├── events-list.tsx    # All Events (route: /goyotours/list)
+│   ├── venues.tsx         # Venue Directory (route: /goyotours/venues)
+│   └── checkin.tsx        # Event Check-in (route: /goyotours/checkin)
 ├── eventhub/
-│   ├── dashboard.tsx      # Event Hub Dashboard (route: /hub)
-│   ├── events-list.tsx    # All Events DataTable (route: /hub/events)
-│   ├── event-detail.tsx   # Event Detail 5-tab view (route: /hub/events/:id)
-│   ├── attendees.tsx      # All Attendees DataTable (route: /hub/attendees)
-│   ├── checkin.tsx        # Live Check-in (route: /hub/checkin)
-│   ├── venues.tsx         # Venue Card Grid (route: /hub/venues)
-│   ├── vendors.tsx        # Vendor Directory (route: /hub/vendors)
-│   ├── budget.tsx         # Budget Tracker (route: /hub/budget)
-│   └── analytics.tsx      # Analytics Overview (route: /hub/analytics)
+│   ├── dashboard.tsx      # Event Hub Dashboard (route: /eventhub)
+│   ├── events-list.tsx    # All Events DataTable (route: /eventhub/events)
+│   ├── event-detail.tsx   # Event Detail 5-tab view (route: /eventhub/events/:id)
+│   ├── attendees.tsx      # All Attendees DataTable (route: /eventhub/attendees)
+│   ├── checkin.tsx        # Live Check-in (route: /eventhub/checkin)
+│   ├── venues.tsx         # Venue Card Grid (route: /eventhub/venues)
+│   ├── vendors.tsx        # Vendor Directory (route: /eventhub/vendors)
+│   ├── budget.tsx         # Budget Tracker (route: /eventhub/budget)
+│   └── analytics.tsx      # Analytics Overview (route: /eventhub/analytics)
 ├── admin/
-│   ├── dashboard.tsx      # System Overview (route: /admin)
-│   ├── team.tsx           # Team Management (route: /admin/team)
-│   ├── settings.tsx       # System Settings (route: /admin/settings)
-│   └── reports.tsx        # Reports & Analytics (route: /admin/reports)
+│   ├── dashboard.tsx      # System Overview (route: /lbm)
+│   ├── team.tsx           # Team Management (route: /lbm/team)
+│   ├── settings.tsx       # System Settings (route: /lbm/settings)
+│   └── reports.tsx        # Reports & Analytics (route: /lbm/reports)
 ├── ets/
 │   ├── dashboard.tsx      # Command Center Dashboard (route: /ets)
 │   ├── pipeline.tsx       # Client Pipeline Kanban+Table (route: /ets/pipeline)

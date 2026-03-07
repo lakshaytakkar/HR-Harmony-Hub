@@ -281,7 +281,7 @@ export default function Dashboard() {
                   <h3 className="text-base font-semibold font-heading">Recent Escalations</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">Open issues requiring attention</p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/hr/escalations")} data-testid="link-view-all-escalations">
+                <Button variant="ghost" size="sm" onClick={() => navigate("/legalnations/escalations")} data-testid="link-view-all-escalations">
                   View All <ArrowRight className="ml-1 size-3.5" />
                 </Button>
               </div>
@@ -322,13 +322,13 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground mt-0.5">Common tasks</p>
               </div>
               <div className="flex flex-col gap-2 p-4">
-                <Button variant="outline" className="justify-start" onClick={() => navigate("/hr/clients")} data-testid="button-quick-new-client">
+                <Button variant="outline" className="justify-start" onClick={() => navigate("/legalnations/clients")} data-testid="button-quick-new-client">
                   <UserPlus className="mr-2 size-4" /> New Client
                 </Button>
-                <Button variant="outline" className="justify-start" onClick={() => navigate("/hr/pipeline")} data-testid="button-quick-pipeline">
+                <Button variant="outline" className="justify-start" onClick={() => navigate("/legalnations/pipeline")} data-testid="button-quick-pipeline">
                   <GitBranch className="mr-2 size-4" /> View Pipeline
                 </Button>
-                <Button variant="outline" className="justify-start" onClick={() => navigate("/hr/escalations")} data-testid="button-quick-escalations">
+                <Button variant="outline" className="justify-start" onClick={() => navigate("/legalnations/escalations")} data-testid="button-quick-escalations">
                   <Flag className="mr-2 size-4" /> Check Escalations
                 </Button>
               </div>

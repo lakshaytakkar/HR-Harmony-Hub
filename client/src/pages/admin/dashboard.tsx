@@ -27,10 +27,10 @@ const activityTypeConfig: Record<string, { icon: typeof Plus; color: string }> =
 };
 
 const quickActions = [
-  { title: "Manage Team", description: "Add, edit, or remove team members", icon: Users, href: "/admin/team" },
-  { title: "System Settings", description: "Configure system preferences", icon: Settings, href: "/admin/settings" },
-  { title: "View Reports", description: "Access analytics and reports", icon: BarChart3, href: "/admin/reports" },
-  { title: "Export Data", description: "Download data in various formats", icon: Download, href: "/admin/reports" },
+  { title: "Manage Team", description: "Add, edit, or remove team members", icon: Users, href: "/lbm/team" },
+  { title: "System Settings", description: "Configure system preferences", icon: Settings, href: "/lbm/settings" },
+  { title: "View Reports", description: "Access analytics and reports", icon: BarChart3, href: "/lbm/reports" },
+  { title: "Export Data", description: "Download data in various formats", icon: Download, href: "/lbm/reports" },
 ];
 
 function getRelativeTime(timestamp: string): string {

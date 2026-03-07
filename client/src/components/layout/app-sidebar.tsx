@@ -31,16 +31,16 @@ import { Fade } from "@/components/ui/animated";
 import { motion } from "motion/react";
 
 const mainNavItems = [
-  { title: "Dashboard", url: "/hr", icon: LayoutDashboard },
-  { title: "Employees", url: "/hr/employees", icon: Users },
-  { title: "Candidates", url: "/hr/candidates", icon: UserPlus },
-  { title: "Departments", url: "/hr/departments", icon: Building2 },
-  { title: "Job Postings", url: "/hr/job-postings", icon: Briefcase },
-  { title: "Leave Management", url: "/hr/leave", icon: CalendarDays },
-  { title: "Attendance", url: "/hr/attendance", icon: Clock },
-  { title: "Documents", url: "/hr/documents", icon: FileText },
-  { title: "Payroll", url: "/hr/payroll", icon: Wallet },
-  { title: "Projects", url: "/hr/projects", icon: FolderKanban },
+  { title: "Dashboard", url: "/legalnations", icon: LayoutDashboard },
+  { title: "Employees", url: "/legalnations/employees", icon: Users },
+  { title: "Candidates", url: "/legalnations/candidates", icon: UserPlus },
+  { title: "Departments", url: "/legalnations/departments", icon: Building2 },
+  { title: "Job Postings", url: "/legalnations/job-postings", icon: Briefcase },
+  { title: "Leave Management", url: "/legalnations/leave", icon: CalendarDays },
+  { title: "Attendance", url: "/legalnations/attendance", icon: Clock },
+  { title: "Documents", url: "/legalnations/documents", icon: FileText },
+  { title: "Payroll", url: "/legalnations/payroll", icon: Wallet },
+  { title: "Projects", url: "/legalnations/projects", icon: FolderKanban },
 ];
 
 const designNavItems = [

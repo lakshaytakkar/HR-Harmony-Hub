@@ -134,7 +134,7 @@ const tasksByType: Record<string, string[]> = {
 };
 
 export default function HubEventDetail() {
-  const [, params] = useRoute("/hub/events/:id");
+  const [, params] = useRoute("/eventhub/events/:id");
   const [, navigate] = useLocation();
   const loading = useSimulatedLoading();
   const { toast } = useToast();
@@ -183,7 +183,7 @@ export default function HubEventDetail() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/hub/events")}
+            onClick={() => navigate("/eventhub/events")}
             className="mb-3 gap-2 text-muted-foreground hover:text-foreground"
             data-testid="button-back"
           >

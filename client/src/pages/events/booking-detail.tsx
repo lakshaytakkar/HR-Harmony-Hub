@@ -51,7 +51,7 @@ export default function BookingDetail() {
   if (!loading && !booking) {
     return (
       <div className="px-16 py-6 lg:px-24">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/events/bookings")} className="gap-2 mb-4">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/goyotours/bookings")} className="gap-2 mb-4">
           <ArrowLeft className="size-4" /> Back to Bookings
         </Button>
         <p className="text-muted-foreground">Booking not found.</p>
@@ -88,7 +88,7 @@ export default function BookingDetail() {
       <PageTransition>
         <Fade direction="up" delay={0}>
           <div className="mb-5 flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/events/bookings")} className="gap-2" data-testid="btn-back">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/goyotours/bookings")} className="gap-2" data-testid="btn-back">
               <ArrowLeft className="size-4" /> Back
             </Button>
             <div className="flex items-center gap-2 flex-wrap flex-1">

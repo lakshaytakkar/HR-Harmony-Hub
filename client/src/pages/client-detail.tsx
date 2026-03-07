@@ -47,7 +47,7 @@ const docStatusVariantMap: Record<string, "success" | "error" | "warning" | "neu
 };
 
 export default function ClientDetailPage() {
-  const [, params] = useRoute("/hr/clients/:id");
+  const [, params] = useRoute("/legalnations/clients/:id");
   const [, navigate] = useLocation();
   const loading = useSimulatedLoading();
 
@@ -188,7 +188,7 @@ export default function ClientDetailPage() {
         <PageTransition>
           <div className="flex flex-col items-center gap-4 py-12">
             <p className="text-sm font-medium" data-testid="text-not-found">Client not found</p>
-            <Button size="sm" variant="outline" onClick={() => navigate("/hr/clients")} data-testid="button-back">
+            <Button size="sm" variant="outline" onClick={() => navigate("/legalnations/clients")} data-testid="button-back">
               Back to Clients
             </Button>
           </div>
@@ -208,7 +208,7 @@ export default function ClientDetailPage() {
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => navigate("/hr/clients")}
+            onClick={() => navigate("/legalnations/clients")}
             data-testid="button-back-clients"
           >
             <ArrowLeft className="mr-1.5 size-3.5" />

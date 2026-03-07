@@ -175,7 +175,7 @@ export default function SalesDashboard() {
           <SectionCard
             title="Recent Signups"
             viewAllLabel="View All"
-            onViewAll={() => navigate("/sales/users")}
+            onViewAll={() => navigate("/usdrop/users")}
           >
             <div className="divide-y -mx-5 -mb-5">
               {recentSignups.map((user) => (
@@ -219,7 +219,7 @@ export default function SalesDashboard() {
             <SectionCard
               title="Recent Support Tickets"
               viewAllLabel="View All"
-              onViewAll={() => navigate("/sales/tickets")}
+              onViewAll={() => navigate("/usdrop/tickets")}
             >
               <div className="divide-y -mx-5 -mb-5">
                 {recentTickets.map((ticket) => (
@@ -250,16 +250,16 @@ export default function SalesDashboard() {
 
           <SectionCard title="Quick Actions">
             <div className="flex flex-col gap-2">
-              <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/products")} data-testid="button-quick-products">
+              <Button variant="outline" className="justify-start" onClick={() => navigate("/usdrop/products")} data-testid="button-quick-products">
                 <Package className="mr-2 size-4" /> Browse Products
               </Button>
-              <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/users")} data-testid="button-quick-users">
+              <Button variant="outline" className="justify-start" onClick={() => navigate("/usdrop/users")} data-testid="button-quick-users">
                 <Users className="mr-2 size-4" /> Manage Users
               </Button>
-              <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/tickets")} data-testid="button-quick-tickets">
+              <Button variant="outline" className="justify-start" onClick={() => navigate("/usdrop/tickets")} data-testid="button-quick-tickets">
                 <Headphones className="mr-2 size-4" /> Support Tickets
               </Button>
-              <Button variant="outline" className="justify-start" onClick={() => navigate("/sales/revenue")} data-testid="button-quick-analytics">
+              <Button variant="outline" className="justify-start" onClick={() => navigate("/usdrop/revenue")} data-testid="button-quick-analytics">
                 <TrendingUp className="mr-2 size-4" /> Revenue Analytics
               </Button>
             </div>
