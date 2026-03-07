@@ -252,7 +252,7 @@ export function NotificationPanel() {
           <button
             onClick={() => {
               setOpen(false);
-              setLocation(`/${currentVertical.id}/notifications`);
+              setLocation(`/${currentVertical.routePrefix}/notifications`);
             }}
             className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
             data-testid="btn-view-all-notifications"

@@ -88,6 +88,7 @@ export interface NavCategory {
 
 export interface Vertical {
   id: string;
+  routePrefix: string;
   name: string;
   shortName: string;
   icon: LucideIcon;
@@ -103,6 +104,7 @@ export interface Vertical {
 export const verticals: Vertical[] = [
   {
     id: "suprans",
+    routePrefix: "suprans",
     name: "Suprans Business Services",
     shortName: "Suprans",
     icon: Target,
@@ -189,6 +191,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "hr",
+    routePrefix: "legalnations",
     name: "LegalNations",
     shortName: "LegalNations",
     icon: Users,
@@ -310,6 +313,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "sales",
+    routePrefix: "usdrop",
     name: "USDrop AI",
     shortName: "USDrop AI",
     icon: TrendingUp,
@@ -455,6 +459,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "events",
+    routePrefix: "goyotours",
     name: "GoyoTours",
     shortName: "GoyoTours",
     icon: Ticket,
@@ -571,6 +576,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "eventhub",
+    routePrefix: "eventhub",
     name: "Event Management",
     shortName: "Events",
     icon: CalendarCheck,
@@ -693,6 +699,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "admin",
+    routePrefix: "lbm",
     name: "LBM Lifestyle",
     shortName: "LBM Lifestyle",
     icon: Shield,
@@ -777,6 +784,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "dev",
+    routePrefix: "dev",
     name: "Developer",
     shortName: "Dev",
     icon: Code2,
@@ -879,6 +887,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "ets",
+    routePrefix: "ets",
     name: "EazyToSell",
     shortName: "EazyToSell",
     icon: ShoppingBag,
@@ -995,6 +1004,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "faire",
+    routePrefix: "faire",
     name: "FaireDesk",
     shortName: "Faire",
     icon: Store,
@@ -1135,6 +1145,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "vendor-portal",
+    routePrefix: "vendor",
     name: "Vendor Portal",
     shortName: "Vendors",
     icon: Briefcase,
@@ -1167,6 +1178,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "hrms",
+    routePrefix: "hrms",
     name: "HR / HRMS",
     shortName: "HRMS",
     icon: UserCheck,
@@ -1295,6 +1307,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "ats",
+    routePrefix: "ats",
     name: "ATS / Recruitment",
     shortName: "ATS",
     icon: ClipboardList,
@@ -1418,6 +1431,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "crm",
+    routePrefix: "crm",
     name: "Sales CRM",
     shortName: "CRM",
     icon: TrendingUp,
@@ -1551,6 +1565,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "finance",
+    routePrefix: "finance",
     name: "Finance & Accounts",
     shortName: "Finance",
     icon: Landmark,
@@ -1675,6 +1690,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "oms",
+    routePrefix: "oms",
     name: "Order & Fulfillment",
     shortName: "OMS",
     icon: Package,
@@ -1799,6 +1815,7 @@ export const verticals: Vertical[] = [
   },
   {
     id: "social",
+    routePrefix: "social",
     name: "SMM",
     shortName: "SMM",
     icon: BarChart3,
