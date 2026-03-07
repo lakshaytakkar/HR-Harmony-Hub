@@ -713,10 +713,13 @@ export default function UniversalChat() {
   const [hasNewOutOfView, setHasNewOutOfView] = useState(false);
   const [showUserSwitcher, setShowUserSwitcher] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(() => window.innerWidth >= 768);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const realtimeRef = useRef<RealtimeChannel | null>(null);
   const typingChannelRef = useRef<RealtimeChannel | null>(null);
 
@@ -948,6 +951,70 @@ export default function UniversalChat() {
       }
     },
   });
+
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("sender_name", currentUser);
+      const res = await fetch(`/api/core/channels/${activeChannelId}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      return res.json();
+    },
+    onSuccess: (newMsg) => {
+      if (messagesKey) {
+        queryClient.setQueryData([messagesKey], (old: DBMessage[] | undefined) =>
+          old ? (old.find((m) => m.id === newMsg.id) ? old : [...old, newMsg]) : [newMsg]
+        );
+      }
+      queryClient.invalidateQueries({ queryKey: [channelsKey] });
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    },
+    onError: () => toast({ title: "Failed to upload file", variant: "destructive" }),
+  });
+
+  const handleFileUpload = useCallback((file: File) => {
+    if (!activeChannelId) return;
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Maximum file size is 50MB", variant: "destructive" });
+      return;
+    }
+    uploadMutation.mutate(file);
+  }, [activeChannelId, uploadMutation, toast]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    handleFileUpload(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current = 0;
+    setIsDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileUpload(file);
+  }, [handleFileUpload]);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current++;
+    if (dragCounterRef.current === 1) setIsDragOver(true);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) setIsDragOver(false);
+  }, []);
 
   // ── Typing broadcast ───────────────────────────────────────────────────────
   const handleTyping = useCallback(() => {
@@ -1204,7 +1271,18 @@ export default function UniversalChat() {
 
               {/* Messages + Info Panel */}
               <div className="flex flex-1 min-h-0">
-                <div className="flex-1 flex flex-col min-h-0 relative">
+                <div
+                  className="flex-1 flex flex-col min-h-0 relative"
+                  onDrop={handleDrop}
+                  onDragEnter={handleDragEnter}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                >
+                  {isDragOver && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-primary/5 border-2 border-dashed border-primary/30 rounded-lg m-2 pointer-events-none">
+                      <div className="text-sm font-medium text-primary/70">Drop file to upload</div>
+                    </div>
+                  )}
                   {/* Messages */}
                   <div
                     ref={messagesContainerRef}
@@ -1335,6 +1413,21 @@ export default function UniversalChat() {
                         </div>
                       </div>
                     ) : (
+                      <>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        onChange={handleFileSelect}
+                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.mp4,.mp3"
+                        data-testid="input-file-upload"
+                      />
+                      {uploadMutation.isPending && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground bg-muted/50 rounded-t-lg border-x border-t">
+                          <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          Uploading file…
+                        </div>
+                      )}
                       <div className="flex items-end gap-2">
                         <div className="flex-1 relative">
                           <Textarea
@@ -1350,8 +1443,20 @@ export default function UniversalChat() {
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
                               <Smile className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
-                              <Paperclip className="h-4 w-4" />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={uploadMutation.isPending}
+                              data-testid="btn-attach-file"
+                              aria-label="Attach file"
+                            >
+                              {uploadMutation.isPending ? (
+                                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <Paperclip className="h-4 w-4" />
+                              )}
                             </Button>
                           </div>
                         </div>
@@ -1366,6 +1471,7 @@ export default function UniversalChat() {
                           <Send className="h-4 w-4 text-white" />
                         </Button>
                       </div>
+                      </>
                     )}
                   </div>
                 </div>

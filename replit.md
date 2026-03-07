@@ -778,6 +778,7 @@ All task detail modals now include a real-time Activity panel (right-side) with 
 | POST | `/api/core/channels/dm` | Find or create DM between members |
 | GET | `/api/core/channels/:id/messages?limit=100` | Get messages (chronological) |
 | POST | `/api/core/channels/:id/messages` | Send message |
+| POST | `/api/core/channels/:id/upload` | Upload file attachment (multer, Supabase Storage) |
 | PATCH | `/api/core/channels/:id/messages/:mid` | Edit message (sets edited_at) |
 | DELETE | `/api/core/channels/:id/messages/:mid` | Soft delete (is_deleted=true) |
 | POST | `/api/core/channels/:id/messages/:mid/react` | Toggle emoji reaction |
@@ -799,11 +800,11 @@ All task detail modals now include a real-time Activity panel (right-side) with 
 - **New DM**: Dialog listing vertical team members; find-or-create logic
 - **Channel info panel**: Right drawer with members list, online status, description
 - **User switcher**: Header dropdown to switch identity (for multi-account testing)
+- **File attachments**: Paperclip button triggers hidden file input; uploads to Supabase Storage (`chat-attachments` bucket) via `POST /api/core/channels/:id/upload`; creates file message with `message_type: "file"`, `file_url`, `file_name`, `file_size`; images render inline with download button; other files show card with icon + size + download; drag-and-drop support on messages area with visual overlay; 50MB limit; spinner on Paperclip during upload
 - **Jump to bottom**: Floating button when scrolled up; "New message" badge when out-of-view
 - **Online status**: Green/yellow/grey dot on DMs (from verticalMembers mock status)
 
 ### Phase 2 (Planned)
-- File/image attachments via Supabase Storage `chat-attachments` bucket
 - Per-message read receipts (WhatsApp-style double ticks)
 - @mentions with notification
 - Channel search / global message search
