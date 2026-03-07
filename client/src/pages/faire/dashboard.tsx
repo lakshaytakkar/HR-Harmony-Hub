@@ -9,6 +9,7 @@ import {
   StatGrid,
   StatCard,
   SectionCard,
+  SectionGrid,
 } from "@/components/layout";
 import {
   FAIRE_COLOR,
@@ -254,7 +255,7 @@ export default function FaireDashboard() {
       </Fade>
 
       <Fade>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SectionGrid>
           <SectionCard
             title="Recent Orders"
             viewAllLabel="View All Orders"
@@ -353,11 +354,11 @@ export default function FaireDashboard() {
               </div>
             )}
           </SectionCard>
-        </div>
+        </SectionGrid>
       </Fade>
 
       <Fade>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SectionGrid>
           <SectionCard title="Quick Actions">
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -402,7 +403,7 @@ export default function FaireDashboard() {
               ))}
             </div>
           </SectionCard>
-        </div>
+        </SectionGrid>
       </Fade>
     </PageShell>
   );

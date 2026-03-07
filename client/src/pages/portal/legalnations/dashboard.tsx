@@ -2,42 +2,22 @@ import {
   CheckCircle2, Clock, AlertCircle, ArrowRight, Calendar,
   Shield, FileText, DollarSign, MessageSquare, Building2,
 } from "lucide-react";
-import { Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { cn } from "@/lib/utils";
-import { PageTransition } from "@/components/ui/animated";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  PageShell, HeroBanner, StatGrid, StatCard, SectionGrid, SectionCard,
+} from "@/components/layout";
 import {
   portalClient, portalCompanies, portalActivity, upcomingDeadlines,
   portalMessages, portalDocuments, portalInvoices,
 } from "@/lib/mock-data-portal-legalnations";
 
-function StatCard({ label, value, icon: Icon, iconColor, subtitle }: {
-  label: string;
-  value: string | number;
-  icon: typeof Building2;
-  iconColor: string;
-  subtitle?: string;
-}) {
-  return (
-    <Card className="p-5" data-testid={`stat-${label.toLowerCase().replace(/\s/g, "-")}`}>
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="text-2xl font-bold mt-1">{value}</p>
-          {subtitle && <p className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</p>}
-        </div>
-        <div className={cn("size-10 rounded-xl flex items-center justify-center", iconColor)}>
-          <Icon className="size-5" />
-        </div>
-      </div>
-    </Card>
-  );
-}
-
 function FormationProgressCard() {
+  const [, navigate] = useLocation();
   const activeCompany = portalCompanies.find(c => c.status === "in-progress");
   if (!activeCompany) return null;
 
@@ -47,19 +27,13 @@ function FormationProgressCard() {
   const currentStage = activeCompany.stages.find(s => s.status === "in-progress");
 
   return (
-    <Card className="overflow-hidden" data-testid="formation-progress-card">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-bold">Formation Progress</CardTitle>
-          <Link href="/portal/legalnations/companies">
-            <Button variant="ghost" size="sm" className="text-xs gap-1 h-7" data-testid="link-view-companies">
-              View Details <ArrowRight className="size-3" />
-            </Button>
-          </Link>
-        </div>
+    <SectionCard
+      title="Formation Progress"
+      viewAllLabel="View Details"
+      onViewAll={() => navigate("/portal/legalnations/companies")}
+    >
+      <div className="space-y-4">
         <p className="text-sm text-muted-foreground">{activeCompany.name} — {activeCompany.entityType} ({activeCompany.state})</p>
-      </CardHeader>
-      <CardContent className="space-y-4">
         <div className="flex items-center gap-3">
           <Progress value={progressPercent} className="flex-1 h-2.5" />
           <span className="text-sm font-bold text-blue-600">{progressPercent}%</span>
@@ -109,8 +83,8 @@ function FormationProgressCard() {
             <p className="text-xs text-blue-700/70 dark:text-blue-400/70 mt-1">{currentStage.description}</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </SectionCard>
   );
 }
 
@@ -134,6 +108,24 @@ const deadlinePriorityVariant: Record<string, "success" | "error" | "warning" | 
   low: "neutral",
 };
 
+function DashboardSkeleton() {
+  return (
+    <PageShell>
+      <Skeleton className="h-40 w-full rounded-2xl" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 rounded-xl" />
+        ))}
+      </div>
+      <Skeleton className="h-48 rounded-xl" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Skeleton className="h-64 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
+    </PageShell>
+  );
+}
+
 export default function PortalDashboard() {
   const unreadMessages = portalMessages.filter(m => !m.read).length;
   const pendingInvoices = portalInvoices.filter(i => i.status === "pending" || i.status === "overdue").length;
@@ -141,123 +133,130 @@ export default function PortalDashboard() {
   const activeFormations = portalCompanies.filter(c => c.status === "in-progress").length;
 
   return (
-    <PageTransition className="px-4 sm:px-8 py-6 lg:px-24 space-y-6">
-      <div className="rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 p-6 lg:p-8 text-white" data-testid="portal-welcome-banner">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-blue-200 text-sm">Welcome back,</p>
-            <h1 className="text-2xl lg:text-3xl font-bold font-heading mt-1">{portalClient.name}</h1>
-            <p className="text-blue-100 text-sm mt-2 max-w-md">Your company formations are on track. Here's your latest overview.</p>
-          </div>
-          <div className="hidden lg:flex items-center gap-6 text-right">
-            <div>
-              <p className="text-2xl font-bold">{portalCompanies.length}</p>
-              <p className="text-xs text-blue-200">Companies</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{portalDocuments.filter(d => d.status === "verified").length}</p>
-              <p className="text-xs text-blue-200">Documents</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{unreadMessages}</p>
-              <p className="text-xs text-blue-200">New Messages</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <PageShell>
+      <HeroBanner
+        eyebrow={`Welcome back, ${portalClient.name}`}
+        headline="Client Portal"
+        tagline="Your company formations are on track. Here's your latest overview."
+        color="#2563eb"
+        colorDark="#3730a3"
+        metrics={[
+          { label: "Companies", value: portalCompanies.length },
+          { label: "Documents", value: portalDocuments.filter(d => d.status === "verified").length },
+          { label: "New Messages", value: unreadMessages },
+        ]}
+      />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Active Formations" value={activeFormations} icon={Building2} iconColor="bg-blue-100 text-blue-600 dark:bg-blue-900/30" subtitle={`${portalCompanies.filter(c => c.status === "completed").length} completed`} />
-        <StatCard label="Pending Invoices" value={pendingInvoices} icon={DollarSign} iconColor="bg-amber-100 text-amber-600 dark:bg-amber-900/30" subtitle={`$${portalInvoices.filter(i => i.status !== "paid").reduce((s, i) => s + i.amount, 0)} due`} />
-        <StatCard label="Action Required" value={actionDocs} icon={AlertCircle} iconColor="bg-red-100 text-red-600 dark:bg-red-900/30" subtitle="Documents need review" />
-        <StatCard label="Messages" value={unreadMessages} icon={MessageSquare} iconColor="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30" subtitle="Unread from team" />
-      </div>
+      <StatGrid cols={4}>
+        <StatCard
+          label="Active Formations"
+          value={activeFormations}
+          icon={Building2}
+          iconBg="#dbeafe"
+          iconColor="#2563eb"
+          trend={`${portalCompanies.filter(c => c.status === "completed").length} completed`}
+        />
+        <StatCard
+          label="Pending Invoices"
+          value={pendingInvoices}
+          icon={DollarSign}
+          iconBg="#fef3c7"
+          iconColor="#d97706"
+          trend={`$${portalInvoices.filter(i => i.status !== "paid").reduce((s, i) => s + i.amount, 0)} due`}
+        />
+        <StatCard
+          label="Action Required"
+          value={actionDocs}
+          icon={AlertCircle}
+          iconBg="#fee2e2"
+          iconColor="#dc2626"
+          trend="Documents need review"
+        />
+        <StatCard
+          label="Messages"
+          value={unreadMessages}
+          icon={MessageSquare}
+          iconBg="#d1fae5"
+          iconColor="#059669"
+          trend="Unread from team"
+        />
+      </StatGrid>
 
       <FormationProgressCard />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card data-testid="recent-activity-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-bold">Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {portalActivity.slice(0, 5).map((act) => {
-                const Icon = activityIconMap[act.icon] || Clock;
-                const color = activityColorMap[act.icon] || "bg-slate-100 text-slate-500";
-                return (
-                  <div key={act.id} className="flex items-start gap-3" data-testid={`activity-${act.id}`}>
-                    <div className={cn("size-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5", color)}>
-                      <Icon className="size-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{act.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{act.description}</p>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
-                      {new Date(act.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    </span>
+      <SectionGrid cols={2}>
+        <SectionCard title="Recent Activity">
+          <div className="space-y-3">
+            {portalActivity.slice(0, 5).map((act) => {
+              const Icon = activityIconMap[act.icon] || Clock;
+              const color = activityColorMap[act.icon] || "bg-slate-100 text-slate-500";
+              return (
+                <div key={act.id} className="flex items-start gap-3" data-testid={`activity-${act.id}`}>
+                  <div className={cn("size-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5", color)}>
+                    <Icon className="size-4" />
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card data-testid="upcoming-deadlines-card">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-bold">Upcoming Deadlines</CardTitle>
-              <Calendar className="size-4 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {upcomingDeadlines.map(dl => (
-                <div key={dl.id} className="flex items-center gap-3 rounded-lg border px-4 py-3" data-testid={`deadline-${dl.id}`}>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{dl.title}</p>
-                    <p className="text-xs text-muted-foreground">{dl.company}</p>
+                    <p className="text-sm font-medium">{act.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{act.description}</p>
                   </div>
-                  <div className="text-right shrink-0 flex items-center gap-2">
-                    <span className="text-xs font-medium">
-                      {new Date(dl.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    </span>
-                    <StatusBadge status={dl.priority} variant={deadlinePriorityVariant[dl.priority]} />
-                  </div>
+                  <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
+                    {new Date(act.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </span>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              );
+            })}
+          </div>
+        </SectionCard>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <SectionCard title="Upcoming Deadlines">
+          <div className="space-y-3">
+            {upcomingDeadlines.map(dl => (
+              <div key={dl.id} className="flex items-center gap-3 rounded-lg border px-4 py-3" data-testid={`deadline-${dl.id}`}>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">{dl.title}</p>
+                  <p className="text-xs text-muted-foreground">{dl.company}</p>
+                </div>
+                <div className="text-right shrink-0 flex items-center gap-2">
+                  <span className="text-xs font-medium">
+                    {new Date(dl.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </span>
+                  <StatusBadge status={dl.priority} variant={deadlinePriorityVariant[dl.priority]} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      </SectionGrid>
+
+      <SectionGrid cols={3}>
         <Link href="/portal/legalnations/companies">
-          <Card className="p-5 hover:shadow-md transition-shadow cursor-pointer group h-full" data-testid="link-quick-companies">
-            <Building2 className="size-5 text-blue-500 mb-3" />
-            <h3 className="text-sm font-bold">My Companies</h3>
-            <p className="text-xs text-muted-foreground mt-1">View all your companies and their formation status</p>
-            <ArrowRight className="size-4 text-muted-foreground mt-3 group-hover:translate-x-1 transition-transform" />
-          </Card>
+          <SectionCard title="My Companies">
+            <div className="space-y-2">
+              <Building2 className="size-5 text-blue-500" />
+              <p className="text-xs text-muted-foreground">View all your companies and their formation status</p>
+              <ArrowRight className="size-4 text-muted-foreground" />
+            </div>
+          </SectionCard>
         </Link>
         <Link href="/portal/legalnations/documents">
-          <Card className="p-5 hover:shadow-md transition-shadow cursor-pointer group h-full" data-testid="link-quick-documents">
-            <FileText className="size-5 text-purple-500 mb-3" />
-            <h3 className="text-sm font-bold">Documents</h3>
-            <p className="text-xs text-muted-foreground mt-1">Access your formation documents and compliance files</p>
-            <ArrowRight className="size-4 text-muted-foreground mt-3 group-hover:translate-x-1 transition-transform" />
-          </Card>
+          <SectionCard title="Documents">
+            <div className="space-y-2">
+              <FileText className="size-5 text-purple-500" />
+              <p className="text-xs text-muted-foreground">Access your formation documents and compliance files</p>
+              <ArrowRight className="size-4 text-muted-foreground" />
+            </div>
+          </SectionCard>
         </Link>
         <Link href="/portal/legalnations/messages">
-          <Card className="p-5 hover:shadow-md transition-shadow cursor-pointer group h-full" data-testid="link-quick-messages">
-            <MessageSquare className="size-5 text-emerald-500 mb-3" />
-            <h3 className="text-sm font-bold">Messages</h3>
-            <p className="text-xs text-muted-foreground mt-1">Chat with your formation specialist team</p>
-            <ArrowRight className="size-4 text-muted-foreground mt-3 group-hover:translate-x-1 transition-transform" />
-          </Card>
+          <SectionCard title="Messages">
+            <div className="space-y-2">
+              <MessageSquare className="size-5 text-emerald-500" />
+              <p className="text-xs text-muted-foreground">Chat with your formation specialist team</p>
+              <ArrowRight className="size-4 text-muted-foreground" />
+            </div>
+          </SectionCard>
         </Link>
-      </div>
-    </PageTransition>
+      </SectionGrid>
+    </PageShell>
   );
 }

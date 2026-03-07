@@ -12,6 +12,7 @@ import {
   StatGrid,
   StatCard,
   SectionCard,
+  SectionGrid,
 } from "@/components/layout";
 import { tourPackages, leads, bookings } from "@/lib/mock-data-goyo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
@@ -63,7 +64,7 @@ export default function GoyoToursDashboard() {
   return (
     <PageShell>
       <HeroBanner
-        eyebrow={`👋 ${greeting}, Priya Kapoor`}
+        eyebrow={`${greeting}, Priya Kapoor`}
         headline="GoyoTours"
         tagline={`China B2B Delegations — 7 active packages · Apr–May 2026 season · ${totalBookings} bookings so far`}
         color="#E91E63"
@@ -185,10 +186,10 @@ export default function GoyoToursDashboard() {
         </Fade>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <SectionGrid>
         {loading ? (
           <>
-            <div className="col-span-2 rounded-xl border bg-card p-5">
+            <div className="rounded-xl border bg-card p-5">
               <Skeleton className="h-5 w-36 mb-4" />
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full mb-2" />)}
             </div>
@@ -200,7 +201,7 @@ export default function GoyoToursDashboard() {
           </>
         ) : (
           <>
-            <Fade direction="up" delay={0.2} className="col-span-2">
+            <Fade direction="up" delay={0.2}>
               <SectionCard
                 title="Recent Bookings"
                 viewAllLabel="All bookings"
@@ -284,7 +285,7 @@ export default function GoyoToursDashboard() {
             </Fade>
           </>
         )}
-      </div>
+      </SectionGrid>
 
       {!loading && (overdueFollowUps.length > 0 || visaUrgent.length > 0) && (
         <Fade direction="up" delay={0.3}>

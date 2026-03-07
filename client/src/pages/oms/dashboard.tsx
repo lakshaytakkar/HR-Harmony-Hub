@@ -7,6 +7,7 @@ import {
   StatGrid,
   StatCard,
   SectionCard,
+  SectionGrid,
 } from "@/components/layout";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { omsOrders, omsShipments, omsInventory } from "@/lib/mock-data-oms";
@@ -176,7 +177,7 @@ export default function OmsDashboard() {
         </SectionCard>
       </Fade>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <SectionGrid cols={3}>
         <Fade className="lg:col-span-2">
           <SectionCard
             title="Inventory Alerts"
@@ -240,7 +241,7 @@ export default function OmsDashboard() {
             </div>
           </SectionCard>
         </Fade>
-      </div>
+      </SectionGrid>
 
       <Fade>
         <SectionCard

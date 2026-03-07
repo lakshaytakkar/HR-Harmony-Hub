@@ -66,7 +66,7 @@ export default function SalesDashboard() {
   return (
     <PageShell>
       <HeroBanner
-        eyebrow={`👋 ${greeting}, Sneha Patel`}
+        eyebrow={`${greeting}, Sneha Patel`}
         headline="USDrop AI"
         tagline="AI-powered dropshipping automation & sales management platform"
         color="#F34147"

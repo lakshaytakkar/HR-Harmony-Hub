@@ -114,7 +114,7 @@ export default function EtsDashboard() {
   return (
     <PageShell>
       <HeroBanner
-        eyebrow={`👋 ${greeting}, Sneha Patel`}
+        eyebrow={`${greeting}, Sneha Patel`}
         headline="EazyToSell Command Center"
         tagline="China-to-India value retail franchise pipeline & operations"
         color="#F97316"

@@ -70,7 +70,7 @@ export default function HrmsDashboard() {
     <PageShell>
       <HeroBanner
         eyebrow="HRMS · People & Culture"
-        headline="Good morning, Sneha 👋"
+        headline="Good morning, Sneha"
         tagline={`You have ${pendingLeaves} leave requests pending approval and 3 upcoming birthdays this week.`}
         color={HRMS_COLOR}
         colorDark={HRMS_COLOR}

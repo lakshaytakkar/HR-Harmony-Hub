@@ -71,7 +71,7 @@ export default function SocialDashboard() {
   return (
     <PageShell>
       <HeroBanner
-        eyebrow="👋 Good morning, Ananya"
+        eyebrow="Good morning, Ananya"
         headline="SocialDesk"
         tagline="Content ops & brand performance across Suprans, LegalNations, USDrop and Gullee"
         color={SOCIAL_COLOR}
