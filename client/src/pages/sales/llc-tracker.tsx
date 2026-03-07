@@ -16,7 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { PersonCell } from "@/components/ui/avatar-cells";
+import { StatusBadge } from "@/components/hr/status-badge";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { useToast } from "@/hooks/use-toast";
@@ -52,25 +53,10 @@ import {
 } from "@/lib/mock-data-sales";
 import { cn } from "@/lib/utils";
 
-function getDaysStuckColor(days: number): string {
-  if (days >= 14) return "text-red-600 dark:text-red-400";
-  if (days >= 7) return "text-amber-600 dark:text-amber-400";
-  return "text-emerald-600 dark:text-emerald-400";
-}
-
-function getDaysStuckBg(days: number): string {
-  if (days >= 14) return "bg-red-100 dark:bg-red-900/30";
-  if (days >= 7) return "bg-amber-100 dark:bg-amber-900/30";
-  return "bg-emerald-100 dark:bg-emerald-900/30";
-}
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+function getDaysStuckVariant(days: number): "error" | "warning" | "success" {
+  if (days >= 14) return "error";
+  if (days >= 7) return "warning";
+  return "success";
 }
 
 export default function LLCTrackerPage() {
@@ -200,35 +186,23 @@ export default function LLCTrackerPage() {
         onClick={() => openDetail(app)}
         data-testid={`llc-card-${app.id}`}
       >
-        <div className="flex items-start gap-2">
-          <Avatar className="h-7 w-7 shrink-0">
-            <AvatarFallback className="text-[10px]">{getInitials(app.clientName)}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium truncate" data-testid={`text-client-name-${app.id}`}>
-              {app.clientName}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {app.llcName}
-            </p>
-          </div>
+        <div data-testid={`text-client-name-${app.id}`}>
+          <PersonCell
+            name={app.clientName}
+            subtitle={app.llcName}
+            size="sm"
+          />
         </div>
         <div className="mt-2 flex items-center justify-between gap-2">
           {!isComplete ? (
-            <span
-              className={cn(
-                "text-[10px] font-medium px-1.5 py-0.5 rounded",
-                getDaysStuckColor(app.daysInStage),
-                getDaysStuckBg(app.daysInStage)
-              )}
+            <StatusBadge
+              status={`${app.daysInStage}d in stage`}
+              variant={getDaysStuckVariant(app.daysInStage)}
+              className="text-[10px]"
               data-testid={`text-days-stuck-${app.id}`}
-            >
-              {app.daysInStage}d in stage
-            </span>
+            />
           ) : (
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-              Done
-            </span>
+            <StatusBadge status="Done" variant="success" className="text-[10px]" />
           )}
           <span className="text-[10px] text-muted-foreground">{app.state}</span>
         </div>

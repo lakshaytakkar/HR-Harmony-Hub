@@ -61,23 +61,34 @@ import {
   FilterPill,
   StatCard,
   StatGrid,
+  DataTableContainer,
+  DataTH,
+  DataTD,
+  DataTR,
 } from "@/components/layout";
+import { StatusBadge } from "@/components/hr/status-badge";
 import { KanbanBoard, type KanbanColumnData, type KanbanCardItem } from "@/components/blocks";
 import { verticals } from "@/lib/verticals-config";
-import { cn } from "@/lib/utils";
+import { DS } from "@/lib/design-tokens";
 
 const STAGES: PipelineStage[] = ["new", "contacted", "engaged", "qualified", "demo_done", "negotiation", "converted"];
 
-const engagementColors: Record<string, { bg: string; text: string; label: string }> = {
-  cold: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-300", label: "Cold" },
-  warm: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300", label: "Warm" },
-  hot: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-300", label: "Hot" },
+const engagementLabels: Record<string, { label: string; variant: "info" | "warning" | "error" }> = {
+  cold: { label: "Cold", variant: "info" },
+  warm: { label: "Warm", variant: "warning" },
+  hot: { label: "Hot", variant: "error" },
 };
 
-function daysColor(days: number) {
-  if (days <= 2) return "text-emerald-600 dark:text-emerald-400";
-  if (days <= 5) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+function daysVariant(days: number): "success" | "warning" | "error" {
+  if (days <= 2) return "success";
+  if (days <= 5) return "warning";
+  return "error";
+}
+
+function scoreBarColor(score: number): string {
+  if (score >= 70) return DS.color.system.success;
+  if (score >= 40) return DS.color.system.warning;
+  return "hsl(var(--muted-foreground))";
 }
 
 function generateWhatsAppMessage(lead: PipelineLead): string {
@@ -130,7 +141,7 @@ export default function LeadsPage() {
           title: l.name,
           subtitle: `${l.chaptersCompleted}/${l.totalChapters} chapters`,
           badges: [
-            { label: engagementColors[l.engagementLevel].label, variant: "secondary" },
+            { label: engagementLabels[l.engagementLevel].label, variant: "secondary" },
           ],
           dueDate: `${l.daysInStage}d in stage`,
           assignee: l.assignedTo,
@@ -179,7 +190,7 @@ export default function LeadsPage() {
   function renderKanbanCard(card: KanbanCardItem, _columnId: string) {
     const lead = data.find((l) => l.id === card.id);
     if (!lead) return null;
-    const eng = engagementColors[lead.engagementLevel];
+    const eng = engagementLabels[lead.engagementLevel];
 
     return (
       <Card
@@ -195,18 +206,16 @@ export default function LeadsPage() {
             <p className="text-sm font-medium truncate" data-testid={`card-name-${lead.id}`}>{lead.name}</p>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{lead.phone}</p>
           </div>
-          <Badge variant="secondary" className={cn("text-[10px] px-1.5 py-0 shrink-0", eng.bg, eng.text)}>
-            {eng.label}
-          </Badge>
+          <StatusBadge status={eng.label} variant={eng.variant} className="shrink-0" />
         </div>
         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <BookOpen className="h-3 w-3" />
             {lead.chaptersCompleted}/{lead.totalChapters}
           </span>
-          <span className={cn("flex items-center gap-1", daysColor(lead.daysInStage))}>
+          <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            {lead.daysInStage}d
+            <StatusBadge status={`${lead.daysInStage}d`} variant={daysVariant(lead.daysInStage)} className="px-1 py-0 text-[10px]" />
           </span>
         </div>
         <div className="flex items-center justify-between mt-2">
@@ -319,69 +328,65 @@ export default function LeadsPage() {
           {loading ? (
             <TableSkeleton rows={10} columns={6} />
           ) : (
-            <div className="rounded-xl border bg-card overflow-hidden">
+            <DataTableContainer>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-muted/30">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Contact</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Engagement</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Score</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Chapters</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Stage</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide">Days in Stage</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground tracking-wide">Actions</th>
+                  <tr className={DS.table.headerRow}>
+                    <DataTH>Contact</DataTH>
+                    <DataTH>Engagement</DataTH>
+                    <DataTH>Score</DataTH>
+                    <DataTH>Chapters</DataTH>
+                    <DataTH>Stage</DataTH>
+                    <DataTH>Days in Stage</DataTH>
+                    <DataTH align="right">Actions</DataTH>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {hotLeads.map((lead) => {
-                    const eng = engagementColors[lead.engagementLevel];
+                    const eng = engagementLabels[lead.engagementLevel];
                     const stageConf = pipelineStageConfig[lead.pipelineStage];
                     return (
-                      <tr
+                      <DataTR
                         key={lead.id}
-                        className="hover:bg-muted/20 transition-colors cursor-pointer"
+                        className="cursor-pointer"
                         onClick={() => {
                           setSelectedLead(lead);
                           setDrawerOpen(true);
                         }}
                         data-testid={`hot-lead-row-${lead.id}`}
                       >
-                        <td className="px-4 py-3.5">
+                        <DataTD>
                           <PersonCell name={lead.name} subtitle={lead.phone} size="sm" />
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <Badge variant="secondary" className={cn("text-[10px]", eng.bg, eng.text)}>
-                            {eng.label}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3.5">
+                        </DataTD>
+                        <DataTD>
+                          <StatusBadge status={eng.label} variant={eng.variant} />
+                        </DataTD>
+                        <DataTD>
                           <div className="flex items-center gap-2">
                             <div className="h-1.5 w-16 rounded-full bg-muted overflow-visible">
                               <div
                                 className="h-full rounded-full"
                                 style={{
                                   width: `${lead.engagementScore}%`,
-                                  backgroundColor: lead.engagementScore >= 70 ? "#22c55e" : lead.engagementScore >= 40 ? "#f59e0b" : "#6b7280",
+                                  backgroundColor: scoreBarColor(lead.engagementScore),
                                 }}
                               />
                             </div>
                             <span className="text-xs font-medium">{lead.engagementScore}%</span>
                           </div>
-                        </td>
-                        <td className="px-4 py-3.5 text-sm">
+                        </DataTD>
+                        <DataTD className="text-sm">
                           {lead.chaptersCompleted}/{lead.totalChapters}
-                        </td>
-                        <td className="px-4 py-3.5">
+                        </DataTD>
+                        <DataTD>
                           <Badge variant="outline" className="text-[10px]" style={{ borderColor: stageConf.color, color: stageConf.color }}>
                             {stageConf.label}
                           </Badge>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <span className={cn("text-sm font-medium", daysColor(lead.daysInStage))}>
-                            {lead.daysInStage} days
-                          </span>
-                        </td>
-                        <td className="px-4 py-3.5 text-right">
+                        </DataTD>
+                        <DataTD>
+                          <StatusBadge status={`${lead.daysInStage} days`} variant={daysVariant(lead.daysInStage)} />
+                        </DataTD>
+                        <DataTD align="right">
                           <div className="flex items-center justify-end gap-1">
                             <Button
                               size="icon"
@@ -406,13 +411,13 @@ export default function LeadsPage() {
                               <Phone className="h-4 w-4" />
                             </Button>
                           </div>
-                        </td>
-                      </tr>
+                        </DataTD>
+                      </DataTR>
                     );
                   })}
                 </tbody>
               </table>
-            </div>
+            </DataTableContainer>
           )}
         </TabsContent>
       </Tabs>
@@ -438,16 +443,11 @@ export default function LeadsPage() {
                   >
                     {pipelineStageConfig[selectedLead.pipelineStage].label}
                   </Badge>
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      engagementColors[selectedLead.engagementLevel].bg,
-                      engagementColors[selectedLead.engagementLevel].text
-                    )}
+                  <StatusBadge
+                    status={engagementLabels[selectedLead.engagementLevel].label}
+                    variant={engagementLabels[selectedLead.engagementLevel].variant}
                     data-testid="badge-lead-engagement"
-                  >
-                    {engagementColors[selectedLead.engagementLevel].label}
-                  </Badge>
+                  />
                   {selectedLead.plan !== "none" && (
                     <Badge variant="secondary" data-testid="badge-lead-plan">
                       {selectedLead.plan.charAt(0).toUpperCase() + selectedLead.plan.slice(1)}

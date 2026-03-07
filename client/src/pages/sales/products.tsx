@@ -150,7 +150,7 @@ export default function ProductsPage() {
             <span
               className={cn(
                 "text-sm font-medium",
-                profit > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
+                profit > 0 ? "text-success" : "text-foreground"
               )}
             >
               {formatCurrency(profit)}
@@ -176,9 +176,10 @@ export default function ProductsPage() {
             className={cn(
               "p-1 rounded-md transition-colors",
               item.isTrending
-                ? "text-orange-500 bg-orange-50 dark:bg-orange-950"
+                ? "bg-warning/10 text-warning-foreground"
                 : "text-muted-foreground/40"
             )}
+            style={item.isTrending ? { color: "hsl(var(--warning))" } : undefined}
             title="Trending"
             data-testid={`toggle-trending-${item.id}`}
           >
@@ -189,9 +190,10 @@ export default function ProductsPage() {
             className={cn(
               "p-1 rounded-md transition-colors",
               item.isWinning
-                ? "text-amber-500 bg-amber-50 dark:bg-amber-950"
+                ? "bg-warning/10 text-warning-foreground"
                 : "text-muted-foreground/40"
             )}
+            style={item.isWinning ? { color: "hsl(var(--warning))" } : undefined}
             title="Winning"
             data-testid={`toggle-winning-${item.id}`}
           >
@@ -202,9 +204,10 @@ export default function ProductsPage() {
             className={cn(
               "p-1 rounded-md transition-colors",
               item.isLocked
-                ? "text-red-500 bg-red-50 dark:bg-red-950"
+                ? "bg-destructive/10"
                 : "text-muted-foreground/40"
             )}
+            style={item.isLocked ? { color: "hsl(var(--destructive))" } : undefined}
             title={item.isLocked ? "Locked" : "Unlocked"}
             data-testid={`toggle-locked-${item.id}`}
           >
@@ -297,9 +300,10 @@ export default function ProductsPage() {
                       className={cn(
                         "p-1.5 rounded-md transition-colors",
                         detailProduct.isTrending
-                          ? "text-orange-500 bg-orange-50 dark:bg-orange-950"
+                          ? "bg-warning/10"
                           : "text-muted-foreground/40"
                       )}
+                      style={detailProduct.isTrending ? { color: "hsl(var(--warning))" } : undefined}
                       data-testid="detail-toggle-trending"
                     >
                       <TrendingUp className="h-4 w-4" />
@@ -309,9 +313,10 @@ export default function ProductsPage() {
                       className={cn(
                         "p-1.5 rounded-md transition-colors",
                         detailProduct.isWinning
-                          ? "text-amber-500 bg-amber-50 dark:bg-amber-950"
+                          ? "bg-warning/10"
                           : "text-muted-foreground/40"
                       )}
+                      style={detailProduct.isWinning ? { color: "hsl(var(--warning))" } : undefined}
                       data-testid="detail-toggle-winning"
                     >
                       <Trophy className="h-4 w-4" />
@@ -321,9 +326,10 @@ export default function ProductsPage() {
                       className={cn(
                         "p-1.5 rounded-md transition-colors",
                         detailProduct.isLocked
-                          ? "text-red-500 bg-red-50 dark:bg-red-950"
+                          ? "bg-destructive/10"
                           : "text-muted-foreground/40"
                       )}
+                      style={detailProduct.isLocked ? { color: "hsl(var(--destructive))" } : undefined}
                       data-testid="detail-toggle-locked"
                     >
                       {detailProduct.isLocked ? (
@@ -355,19 +361,13 @@ export default function ProductsPage() {
                         variant={statusVariant[detailProduct.status]}
                       />
                       {detailProduct.isTrending && (
-                        <Badge variant="secondary" className="gap-1 text-orange-600 dark:text-orange-400">
-                          <TrendingUp className="h-3 w-3" /> Trending
-                        </Badge>
+                        <StatusBadge status="Trending" variant="warning" />
                       )}
                       {detailProduct.isWinning && (
-                        <Badge variant="secondary" className="gap-1 text-amber-600 dark:text-amber-400">
-                          <Trophy className="h-3 w-3" /> Winning
-                        </Badge>
+                        <StatusBadge status="Winning" variant="warning" />
                       )}
                       {detailProduct.isLocked && (
-                        <Badge variant="secondary" className="gap-1 text-red-600 dark:text-red-400">
-                          <Lock className="h-3 w-3" /> Locked
-                        </Badge>
+                        <StatusBadge status="Locked" variant="error" />
                       )}
                     </div>
                   </div>
@@ -503,7 +503,7 @@ export default function ProductsPage() {
                     <div className="rounded-lg bg-muted/50 p-3">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Profit (Compare - Cost)</span>
-                        <span className="font-semibold text-emerald-600 dark:text-emerald-400" data-testid="text-auto-profit">
+                        <span className="font-semibold text-success" data-testid="text-auto-profit">
                           {formatCurrency(editForm.comparePrice - editForm.costPrice)}
                         </span>
                       </div>

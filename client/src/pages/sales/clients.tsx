@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -121,10 +122,7 @@ const clientColumns: Column<Client>[] = [
         <div className="flex items-center gap-1.5">
           <span className="text-sm">{item.lastActive}</span>
           {stalled && (
-            <Badge variant="secondary" className="border-0 text-xs bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-              <AlertTriangle className="mr-1 size-3" />
-              {daysInactive}d
-            </Badge>
+            <StatusBadge status={`${daysInactive}d`} variant="warning" />
           )}
         </div>
       );
@@ -460,7 +458,7 @@ export default function ClientsPage() {
                 Graduated: <span className="font-semibold text-foreground">{graduatedCount}</span>
               </span>
               {stalledCount > 0 && (
-                <span className="text-amber-600 dark:text-amber-400">
+                <span style={{ color: "hsl(var(--warning))" }}>
                   <AlertTriangle className="inline mr-1 size-3.5" />
                   Stalled: <span className="font-semibold">{stalledCount}</span>
                 </span>

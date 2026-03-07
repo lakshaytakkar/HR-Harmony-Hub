@@ -50,13 +50,13 @@ const activityIcon: Record<string, typeof UserPlus> = {
 };
 
 const activityColor: Record<string, string> = {
-  signup: "#6366f1",
-  payment: "#10b981",
-  llc_update: "#8b5cf6",
-  course_complete: "#0ea5e9",
-  ticket: "#ef4444",
-  login: "#64748b",
-  store_connect: "#f59e0b",
+  signup: "hsl(var(--chart-1))",
+  payment: "hsl(var(--success))",
+  llc_update: "hsl(var(--chart-3))",
+  course_complete: "hsl(var(--info))",
+  ticket: "hsl(var(--destructive))",
+  login: "hsl(var(--muted-foreground))",
+  store_connect: "hsl(var(--warning))",
 };
 
 function formatTimeAgo(timestamp: string): string {
@@ -121,24 +121,24 @@ export default function SalesDashboard() {
             value={hotLeadsToday}
             trend="New + Contacted"
             icon={Flame}
-            iconBg="rgba(245, 158, 11, 0.1)"
-            iconColor="#f59e0b"
+            iconBg="hsl(var(--warning) / 0.1)"
+            iconColor="hsl(var(--warning))"
           />
           <StatCard
             label="Active Clients"
             value={activeClients}
             trend="Paid & active"
             icon={UserCheck}
-            iconBg="rgba(16, 185, 129, 0.1)"
-            iconColor="#10b981"
+            iconBg="hsl(var(--success) / 0.1)"
+            iconColor="hsl(var(--success))"
           />
           <StatCard
             label="Open Tickets"
             value={openTickets}
             trend={`${supportTickets.length} total`}
             icon={Headphones}
-            iconBg="rgba(239, 68, 68, 0.1)"
-            iconColor="#ef4444"
+            iconBg="hsl(var(--destructive) / 0.1)"
+            iconColor="hsl(var(--destructive))"
           />
         </StatGrid>
       )}
@@ -235,12 +235,12 @@ export default function SalesDashboard() {
               <div
                 key={client.id}
                 className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-muted/20"
-                style={{ borderLeft: "3px solid #f59e0b" }}
+                style={{ borderLeft: "3px solid hsl(var(--warning))" }}
                 data-testid={`stalled-client-${client.id}`}
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-md bg-amber-500/10 shrink-0">
-                    <AlertTriangle className="w-4 h-4 text-amber-500" />
+                  <div className="flex items-center justify-center w-8 h-8 rounded-md shrink-0" style={{ backgroundColor: "hsl(var(--warning) / 0.1)" }}>
+                    <AlertTriangle className="w-4 h-4" style={{ color: "hsl(var(--warning))" }} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{client.name}</p>
@@ -250,7 +250,7 @@ export default function SalesDashboard() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0 flex-wrap">
-                  <Badge variant="outline" className="text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-600">
+                  <Badge variant="outline" style={{ color: "hsl(var(--warning))", borderColor: "hsl(var(--warning) / 0.4)" }}>
                     {client.daysSinceActivity}d inactive
                   </Badge>
                   <Badge variant="secondary">{client.llcStage}</Badge>
@@ -276,7 +276,7 @@ export default function SalesDashboard() {
               <div className="divide-y -mx-5 -mb-5" data-testid="section-activity-feed">
                 {recentActivityFeed.slice(0, 10).map((activity) => {
                   const Icon = activityIcon[activity.type] || UserPlus;
-                  const color = activityColor[activity.type] || "#64748b";
+                  const color = activityColor[activity.type] || "hsl(var(--muted-foreground))";
                   return (
                     <div
                       key={activity.id}

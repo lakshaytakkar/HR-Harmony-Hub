@@ -451,13 +451,13 @@ export function DataTD({ children, align = "left", className, ...rest }: DataTDP
 // Always hover:bg-muted/20 transition-colors. Never muted/30 or muted/50.
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface DataTRProps {
+interface DataTRProps extends React.HTMLAttributes<HTMLTableRowElement> {
   children: ReactNode;
   onClick?: () => void;
   className?: string;
 }
 
-export function DataTR({ children, onClick, className }: DataTRProps) {
+export function DataTR({ children, onClick, className, ...rest }: DataTRProps) {
   return (
     <tr
       onClick={onClick}
@@ -466,6 +466,7 @@ export function DataTR({ children, onClick, className }: DataTRProps) {
         onClick && "cursor-pointer",
         className
       )}
+      {...rest}
     >
       {children}
     </tr>

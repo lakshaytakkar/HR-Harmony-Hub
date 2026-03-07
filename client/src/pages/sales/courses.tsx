@@ -20,11 +20,11 @@ import { PageShell } from "@/components/layout";
 function ContentTypeIcon({ type }: { type: string }) {
   switch (type) {
     case "video":
-      return <Video className="h-3.5 w-3.5 text-blue-500" />;
+      return <Video className="h-3.5 w-3.5" style={{ color: "hsl(var(--info))" }} />;
     case "quiz":
-      return <HelpCircle className="h-3.5 w-3.5 text-orange-500" />;
+      return <HelpCircle className="h-3.5 w-3.5" style={{ color: "hsl(var(--warning))" }} />;
     case "text":
-      return <FileText className="h-3.5 w-3.5 text-green-500" />;
+      return <FileText className="h-3.5 w-3.5" style={{ color: "hsl(var(--success))" }} />;
     default:
       return <FileText className="h-3.5 w-3.5 text-muted-foreground" />;
   }
