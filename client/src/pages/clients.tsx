@@ -135,10 +135,15 @@ export default function ClientsPage() {
       key: "client_name",
       header: "Client",
       sortable: true,
-      render: (item) => (
+      render: (item) => item.llc_name ? (
         <CompanyCell
-          name={item.llc_name || "—"}
+          name={item.llc_name}
           subtitle={item.client_name}
+        />
+      ) : (
+        <PersonCell
+          name={item.client_name}
+          subtitle="No LLC assigned"
         />
       ),
     },
@@ -213,14 +218,14 @@ export default function ClientsPage() {
               rel="noreferrer"
               data-testid={`btn-whatsapp-${item.id}`}
             >
-              <Button variant="ghost" size="icon" className="size-8 text-green-600 hover:text-green-700 hover:bg-green-50">
+              <Button variant="ghost" size="icon" className="text-green-600">
                 <SiWhatsapp className="size-4" />
               </Button>
             </a>
           )}
           {item.email && (
             <a href={`mailto:${item.email}`} data-testid={`btn-email-${item.id}`}>
-              <Button variant="ghost" size="icon" className="size-8">
+              <Button variant="ghost" size="icon">
                 <Mail className="size-4" />
               </Button>
             </a>

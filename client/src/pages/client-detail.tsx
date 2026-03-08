@@ -149,6 +149,7 @@ export default function ClientDetailPage() {
   const currentStageIdx = LLC_STAGES.indexOf(client.llc_status);
   const progressPercent = client.llc_status === "Delivered" ? 100 :
     client.llc_status === "Refunded" ? 0 :
+    currentStageIdx < 0 ? 0 :
     Math.round(((currentStageIdx + 1) / LLC_STAGES.length) * 100);
 
   const groupedChecklist = checklist.reduce((acc: Record<string, any[]>, item: any) => {
@@ -185,15 +186,15 @@ export default function ClientDetailPage() {
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
                   <span className="font-mono">{client.client_code}</span>
-                  {client.llc_name && <span>• {client.llc_name}</span>}
-                  {client.plan && <span>• {client.plan}</span>}
+                  {client.llc_name && <span data-testid="text-llc-name">{client.llc_name}</span>}
+                  {client.plan && <span data-testid="text-plan">{client.plan}</span>}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {client.contact_number && (
                 <a href={`https://wa.me/${client.contact_number.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-                  <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50" data-testid="btn-whatsapp">
+                  <Button variant="outline" size="sm" className="text-green-600 border-green-200" data-testid="btn-whatsapp">
                     <SiWhatsapp className="size-4 mr-1.5" /> WhatsApp
                   </Button>
                 </a>
@@ -558,7 +559,7 @@ export default function ClientDetailPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="size-7 text-destructive hover:text-destructive"
+                              className="text-destructive"
                               onClick={() => deleteCredMutation.mutate(cred.id)}
                               data-testid={`btn-delete-cred-${cred.id}`}
                             >

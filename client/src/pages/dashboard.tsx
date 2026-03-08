@@ -144,7 +144,7 @@ export default function Dashboard() {
         <StatCard
           label="Total Revenue"
           value={formatCurrency(stats.totalRevenue)}
-          trend={`From ${stats.totalClients} clients`}
+          trend={`From ${stats.totalClients - stats.refunded} active clients`}
           icon={IndianRupee}
           iconBg="#FFF7ED"
           iconColor="#EA580C"

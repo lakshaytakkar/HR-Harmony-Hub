@@ -150,10 +150,11 @@ function formatCurrency(val: number) {
   return val ? `₹${val.toLocaleString("en-IN")}` : "—";
 }
 
-function FilingDetailPanel({ filing, onClose, onUpdate }: {
+function FilingDetailPanel({ filing, onClose, onUpdate, isSaving }: {
   filing: TaxFiling;
   onClose: () => void;
   onUpdate: (updates: Partial<TaxFiling>) => void;
+  isSaving?: boolean;
 }) {
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
@@ -169,7 +170,8 @@ function FilingDetailPanel({ filing, onClose, onUpdate }: {
     setEditing(false);
   };
 
-  const currentStageIdx = FILING_STAGES.indexOf(filing.filing_stage || "Document Collection");
+  const rawStageIdx = FILING_STAGES.indexOf(filing.filing_stage || "Document Collection");
+  const currentStageIdx = rawStageIdx >= 0 ? rawStageIdx : 0;
 
   const personalized = (template: string) =>
     template
@@ -196,8 +198,8 @@ function FilingDetailPanel({ filing, onClose, onUpdate }: {
               <Button size="sm" variant="outline" onClick={() => setEditing(false)} data-testid="btn-cancel-edit">
                 <X className="size-3.5 mr-1" /> Cancel
               </Button>
-              <Button size="sm" onClick={saveEdit} data-testid="btn-save-filing">
-                <Save className="size-3.5 mr-1" /> Save
+              <Button size="sm" onClick={saveEdit} disabled={isSaving} data-testid="btn-save-filing">
+                <Save className="size-3.5 mr-1" /> {isSaving ? "Saving..." : "Save"}
               </Button>
             </>
           ) : (
@@ -650,9 +652,15 @@ export default function TaxFilingPage() {
       const res = await apiRequest("PATCH", `/api/legalnations/tax-filings/${id}`, updates);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (serverData: TaxFiling) => {
       queryClient.invalidateQueries({ queryKey: ["/api/legalnations/tax-filings"] });
+      if (serverData && serverData.id) {
+        setSelectedFiling(serverData);
+      }
       toast({ title: "Filing updated" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Update failed", description: err.message, variant: "destructive" });
     },
   });
 
@@ -661,12 +669,7 @@ export default function TaxFilingPage() {
     const clean = { ...updates };
     delete (clean as any).id;
     delete (clean as any).created_at;
-    updateMutation.mutate({ id: selectedFiling.id, updates: clean }, {
-      onSuccess: () => {
-        setSelectedFiling({ ...selectedFiling, ...clean });
-        queryClient.invalidateQueries({ queryKey: ["/api/legalnations/tax-filings"] });
-      },
-    });
+    updateMutation.mutate({ id: selectedFiling.id, updates: clean });
   };
 
   const filings = filingsData?.filings || [];
@@ -787,6 +790,7 @@ export default function TaxFilingPage() {
               filing={selectedFiling}
               onClose={() => setSelectedFiling(null)}
               onUpdate={handleUpdate}
+              isSaving={updateMutation.isPending}
             />
           ) : (
             <>
