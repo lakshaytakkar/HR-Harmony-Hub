@@ -245,7 +245,7 @@ LegalNations uses real Supabase data (project `ngvrnwjisntjmqrtnume` / "teamsync
 | `ln_onboarding_checklist` | 5,976 | 24 checklist items per client (3 phases: Onboarding/Legal/Bank) |
 | `ln_client_documents` | 0 | Document records (connected to future Supabase Storage) |
 | `ln_client_credentials` | 0 | External app credentials (Gmail, Stripe, Mercury, etc.) |
-| `ln_tax_filings` | 28 | Tax filing service records |
+| `ln_tax_filings` | 28 | Tax filing service records (45 columns incl. filing_stage, filled_1120, filled_5472, bank_statements_status, send_mail_status, etc.) |
 
 ### LLC Status Enum (13 values — in order)
 LLC Booked → Onboarded → LLC Under Formation → Under EIN → Under Website Formation → EIN received → Received EIN Letter → Under BOI → Under Banking → Under Payment Gateway → Ready to Deliver → Delivered → Refunded
@@ -280,8 +280,27 @@ LLC Booked → Onboarded → LLC Under Formation → Under EIN → Under Website
 3. **Documents**: Upload/download with categories
 4. **Credentials**: External app credentials table
 
+### Tax Filing Service (Cross-Sell)
+Annual US tax filing for foreign-owned LLCs. Pricing: Single Member ₹15,000+GST (₹17,700), Multi Member ₹19,000+GST (₹22,420).
+
+**ln_tax_filings columns (45):** id, client_id (FK→ln_clients), llc_name, llc_type, amount_received, main_entity_name, contact_details, address, address_2, email_address, status, date_of_formation, notes, bank_transactions_count, ein_number, naics, principal_activity, personal_address, pan_aadhar_dl, filing_done, reference_number, fax_confirmation, tax_standing, annual_report_filed, state_annual_report_due, country, filled_1120, filled_5472, verified_ein_in_form, message, subject, recipient, fax, bank_statements_status, business_activity, date_copy, send_mail_status, tax_standing_last_checked, filing_search_url, additional_notes, filing_stage, mail_tracking_number, required_documents, created_at, updated_at
+
+**Filing Stages (9):** Document Collection → EIN Verification → Form 1120 Preparation → Form 5472 Preparation → Review & QC → Print & Package → Mail to IRS → Awaiting Confirmation → Filed & Confirmed
+
+**Tax Filing Page Tabs:**
+1. Active Filings — DataTable with search, type/status/stage filters, WhatsApp/email actions, click for detail
+2. Filing Procedure — 11-step visual guide for cross-sell and operations
+3. Resources & Forms — IRS forms (1120, 5472, 1065, 8832), YouTube tutorials, LetterStream, Wyoming filing search
+4. Cross-Sell Templates — WhatsApp + email templates with personalization placeholders
+
+**Filing Detail Panel (4 tabs):**
+1. Client & LLC Details — entity info, LLC details, address & banking
+2. Filing Information — checkboxes (1120/5472/EIN verified/filed/annual report), NAICS, reference #, mailing & compliance
+3. Communication — personalized WhatsApp/email with send buttons, IRS correspondence fields
+4. Documents & Notes — pending items badges, required documents checklist with auto-status
+
 ### Seeding
-Script: `scripts/seed-legalnations.ts` — parses 2 CSV files (old + new clients) + tax filing CSV. Auto-generates 24 checklist items per client with completion based on LLC status.
+Script: `scripts/seed-legalnations.ts` — parses 2 CSV files (old + new clients) + tax filing CSV. Auto-generates 24 checklist items per client with completion based on LLC status. Tax filings seeded via Supabase MCP (28 records from CSV, all mapped to existing ln_clients by LLC name).
 
 ### Phase 2 — Portal-Specific Tables (Planned, Not Yet Created)
 - **HRMS**: `employees`, `departments`, `attendance`, `leaves`, `payroll`, `performance_reviews`
