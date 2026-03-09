@@ -30,12 +30,11 @@ import { DataTable, type Column } from "@/components/hr/data-table";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  etsClients,
-  etsPayments,
   ETS_PIPELINE_STAGES,
   ETS_STAGE_LABELS,
   type EtsClient,
@@ -81,9 +80,12 @@ const paymentTypeVariantMap: Record<string, "info" | "neutral" | "success"> = {
 };
 
 interface EtsChecklistItem {
-  id: string;
-  label: string;
+  id: number;
+  itemId: number;
+  clientId: number;
   completed: boolean;
+  label: string;
+  sortOrder: number;
 }
 
 interface EtsTimelineEntry {
@@ -98,29 +100,6 @@ interface EtsNote {
   date: string;
   content: string;
   author: string;
-}
-
-function generateChecklist(client: EtsClient): EtsChecklistItem[] {
-  const stageIdx = STAGE_INDEX[client.stage];
-  const items: EtsChecklistItem[] = [
-    { id: "CK-01", label: "Discovery call completed", completed: stageIdx >= 1 },
-    { id: "CK-02", label: "Store location finalized", completed: stageIdx >= 2 },
-    { id: "CK-03", label: "Package tier selected", completed: stageIdx >= 2 },
-    { id: "CK-04", label: "Token payment received", completed: stageIdx >= 2 },
-    { id: "CK-05", label: "KYC documents collected", completed: stageIdx >= 3 },
-    { id: "CK-06", label: "Interior design approved", completed: stageIdx >= 4 },
-    { id: "CK-07", label: "Product category mix finalized", completed: stageIdx >= 4 },
-    { id: "CK-08", label: "Inventory order placed", completed: stageIdx >= 4 },
-    { id: "CK-09", label: "Milestone payment received", completed: stageIdx >= 5 },
-    { id: "CK-10", label: "Shipment tracking shared", completed: stageIdx >= 5 },
-    { id: "CK-11", label: "Customs clearance complete", completed: stageIdx >= 6 },
-    { id: "CK-12", label: "Store setup & merchandising done", completed: stageIdx >= 6 },
-    { id: "CK-13", label: "POS system installed", completed: stageIdx >= 6 },
-    { id: "CK-14", label: "Staff training completed", completed: stageIdx >= 6 },
-    { id: "CK-15", label: "Grand opening executed", completed: stageIdx >= 6 },
-    { id: "CK-16", label: "Final payment received", completed: stageIdx >= 7 },
-  ];
-  return items;
 }
 
 function generateTimeline(client: EtsClient): EtsTimelineEntry[] {
@@ -286,22 +265,44 @@ function EtsStageStepper({ currentStage }: { currentStage: EtsPipelineStage }) {
 export default function EtsClientDetailPage() {
   const [, params] = useRoute("/ets/clients/:id");
   const [, navigate] = useLocation();
-  const loading = useSimulatedLoading();
+  const qc = useQueryClient();
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
 
   const clientId = params?.id;
-  const client = etsClients.find((c) => c.id === clientId);
 
-  const clientPayments = useMemo(
-    () => etsPayments.filter((p) => p.clientId === clientId),
-    [clientId]
-  );
+  const { data, isLoading } = useQuery<{ client: EtsClient; payments: EtsPayment[]; checklist: EtsChecklistItem[] }>({
+    queryKey: ['/api/ets/clients', clientId],
+    enabled: !!clientId,
+  });
 
-  const checklist = useMemo(
-    () => (client ? generateChecklist(client) : []),
-    [client]
-  );
+  const client = data?.client;
+  const clientPayments = data?.payments || [];
+  const checklist = data?.checklist || [];
+
+  const stageMutation = useMutation({
+    mutationFn: (stage: string) => apiRequest("PATCH", `/api/ets/clients/${clientId}`, { stage }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/ets/clients', clientId] });
+      qc.invalidateQueries({ queryKey: ['/api/ets/clients'] });
+    },
+  });
+
+  const noteMutation = useMutation({
+    mutationFn: (last_note: string) => apiRequest("PATCH", `/api/ets/clients/${clientId}`, { last_note }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/ets/clients', clientId] });
+      qc.invalidateQueries({ queryKey: ['/api/ets/clients'] });
+    },
+  });
+
+  const checklistMutation = useMutation({
+    mutationFn: ({ statusId, completed }: { statusId: number; completed: boolean }) =>
+      apiRequest("PATCH", `/api/ets/checklist/${statusId}`, { completed }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/ets/clients', clientId] });
+    },
+  });
 
   const timeline = useMemo(
     () => (client ? generateTimeline(client) : []),
@@ -359,7 +360,7 @@ export default function EtsClientDetailPage() {
     },
   ];
 
-  if (loading) {
+  if (isLoading) {
     return (
       <PageShell>
         <div className="flex flex-col gap-4">
@@ -435,9 +436,11 @@ export default function EtsClientDetailPage() {
                 onClick={() => {
                   const idx = STAGE_INDEX[client.stage];
                   if (idx < ETS_PIPELINE_STAGES.length - 1) {
-                    navigate("/ets/pipeline");
+                    const nextStage = ETS_PIPELINE_STAGES[idx + 1];
+                    stageMutation.mutate(nextStage);
                   }
                 }}
+                disabled={stageMutation.isPending}
                 data-testid="button-move-stage"
               >
                 <ChevronRight className="size-3.5" />
@@ -611,8 +614,9 @@ export default function EtsClientDetailPage() {
                   {checklist.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center gap-3 rounded-md border px-3 py-2"
+                      className="flex items-center gap-3 rounded-md border px-3 py-2 cursor-pointer"
                       data-testid={`checklist-item-${item.id}`}
+                      onClick={() => checklistMutation.mutate({ statusId: item.id, completed: !item.completed })}
                     >
                       {item.completed ? (
                         <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
@@ -723,6 +727,9 @@ export default function EtsClientDetailPage() {
           onOpenChange={setNoteDialogOpen}
           title="Add Note"
           onSubmit={() => {
+            if (noteText.trim()) {
+              noteMutation.mutate(noteText.trim());
+            }
             setNoteText("");
             setNoteDialogOpen(false);
           }}

@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { DataTable, type Column } from "@/components/hr/data-table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { StatsCardSkeleton } from "@/components/ui/card-skeleton";
@@ -20,9 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageTransition, Stagger, StaggerItem, Fade } from "@/components/ui/animated";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import {
-  etsClients,
   ETS_PIPELINE_STAGES,
   ETS_STAGE_LABELS,
   type EtsClient,
@@ -78,8 +78,8 @@ function scoreLabel(score: number): string {
 }
 
 export default function EtsPipeline() {
-  const loading = useSimulatedLoading();
   const { toast } = useToast();
+  const qc = useQueryClient();
   const [view, setView] = useState<"kanban" | "table">("kanban");
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [tierFilter, setTierFilter] = useState<string>("all");
@@ -88,8 +88,20 @@ export default function EtsPipeline() {
   const [noteClient, setNoteClient] = useState<EtsClient | null>(null);
   const [noteText, setNoteText] = useState("");
 
+  const { data: clientsData, isLoading } = useQuery<{ clients: EtsClient[], total: number }>({ queryKey: ['/api/ets/clients'] });
+  const clients = clientsData?.clients || [];
+
+  const moveStageMutation = useMutation({
+    mutationFn: async ({ id, stage }: { id: string | number, stage: EtsPipelineStage }) => {
+      await apiRequest("PATCH", `/api/ets/clients/${id}`, { stage });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/ets/clients'] });
+    },
+  });
+
   const filteredClients = useMemo(() => {
-    let result = [...etsClients];
+    let result = [...clients];
     if (stageFilter !== "all") {
       result = result.filter((c) => c.stage === stageFilter);
     }
@@ -101,7 +113,7 @@ export default function EtsPipeline() {
       result = result.filter((c) => c.city.toLowerCase().includes(search) || c.name.toLowerCase().includes(search));
     }
     return result;
-  }, [stageFilter, tierFilter, citySearch]);
+  }, [clients, stageFilter, tierFilter, citySearch]);
 
   const stageColumns = useMemo(() => {
     return ETS_PIPELINE_STAGES.map((stage) => ({
@@ -118,10 +130,10 @@ export default function EtsPipeline() {
   }, [filteredClients]);
 
   const kanbanColumns: KanbanColumnData[] = useMemo(() => {
-    return stageColumns.map(({ stage, label, clients }) => ({
+    return stageColumns.map(({ stage, label, clients: stageClients }) => ({
       id: stage,
       title: label,
-      cards: clients.map((c) => ({
+      cards: stageClients.map((c) => ({
         id: c.id,
         title: c.name,
         subtitle: c.city,
@@ -132,10 +144,10 @@ export default function EtsPipeline() {
   const stageCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const stage of ETS_PIPELINE_STAGES) {
-      counts[stage] = etsClients.filter((c) => c.stage === stage).length;
+      counts[stage] = clients.filter((c) => c.stage === stage).length;
     }
     return counts;
-  }, []);
+  }, [clients]);
 
   const handleAddNote = () => {
     if (noteClient && noteText.trim()) {
@@ -150,6 +162,7 @@ export default function EtsPipeline() {
   };
 
   const handleMoveStage = (client: EtsClient, newStage: EtsPipelineStage) => {
+    moveStageMutation.mutate({ id: client.id, stage: newStage });
     toast({
       title: "Stage Updated",
       description: `${client.name} moved to ${ETS_STAGE_LABELS[newStage]}`,
@@ -159,6 +172,7 @@ export default function EtsPipeline() {
   const handleCardMove = (cardId: string, sourceColumnId: string, targetColumnId: string) => {
     const client = clientMap[cardId];
     if (client) {
+      moveStageMutation.mutate({ id: client.id, stage: targetColumnId as EtsPipelineStage });
       toast({
         title: "Stage Updated",
         description: `${client.name} moved to ${ETS_STAGE_LABELS[targetColumnId as EtsPipelineStage]}`,
@@ -488,7 +502,7 @@ export default function EtsPipeline() {
 
         <Fade direction="up" distance={10} delay={0.2}>
           {view === "kanban" ? (
-            loading ? (
+            isLoading ? (
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 mt-2">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <StatsCardSkeleton key={i} />
@@ -505,7 +519,7 @@ export default function EtsPipeline() {
               />
             )
           ) : (
-            loading ? (
+            isLoading ? (
               <TableSkeleton rows={10} columns={8} />
             ) : (
               <DataTable

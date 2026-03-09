@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Settings,
   Pencil,
@@ -20,14 +20,14 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
   defaultPriceSettings,
   ETS_PRODUCT_CATEGORIES,
   ETS_CATEGORY_DUTY_RATES,
-  etsProposalTemplates,
   type EtsPriceSetting,
   type EtsProductCategory,
 } from "@/lib/mock-data-ets";
@@ -76,13 +76,61 @@ function formatCurrency(amount: number): string {
 }
 
 export default function EtsSettingsPage() {
-  const loading = useSimulatedLoading();
   const { toast } = useToast();
+  const qc = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
-  const [settings, setSettings] = useState<EtsPriceSetting[]>([...defaultPriceSettings]);
-  const [editSettings, setEditSettings] = useState<EtsPriceSetting[]>([...defaultPriceSettings]);
-  const [categoryRates, setCategoryRates] = useState<Record<EtsProductCategory, { duty: number; igst: number }>>({ ...ETS_CATEGORY_DUTY_RATES });
+
+  const { data: settingsData, isLoading: settingsLoading } = useQuery<{ settings: any[] }>({
+    queryKey: ['/api/ets/settings'],
+  });
+
+  const { data: categoriesData, isLoading: categoriesLoading } = useQuery<{ categories: any[] }>({
+    queryKey: ['/api/ets/categories'],
+  });
+
+  const { data: proposalData } = useQuery<{ templates: any[] }>({
+    queryKey: ['/api/ets/proposal-templates'],
+  });
+
+  const settings: EtsPriceSetting[] = (settingsData?.settings || []).length > 0
+    ? settingsData!.settings.map((s: any) => ({
+        key: s.key,
+        value: parseFloat(s.value) || 0,
+        label: s.label,
+        unit: s.unit,
+      }))
+    : [...defaultPriceSettings];
+
+  const categoryRatesFromApi = (categoriesData?.categories || []).reduce((acc: Record<string, { duty: number; igst: number }>, cat: any) => {
+    acc[cat.slug] = {
+      duty: parseFloat(cat.customs_duty_percent) || 0,
+      igst: parseFloat(cat.igst_percent) || 0,
+    };
+    return acc;
+  }, {});
+
+  const categoryRates: Record<EtsProductCategory, { duty: number; igst: number }> =
+    Object.keys(categoryRatesFromApi).length > 0
+      ? { ...ETS_CATEGORY_DUTY_RATES, ...categoryRatesFromApi } as any
+      : { ...ETS_CATEGORY_DUTY_RATES };
+
+  const proposalTemplates = proposalData?.templates || [];
+
+  const [editSettings, setEditSettings] = useState<EtsPriceSetting[]>([]);
   const [editCategoryRates, setEditCategoryRates] = useState<Record<EtsProductCategory, { duty: number; igst: number }>>({ ...ETS_CATEGORY_DUTY_RATES });
+
+  const isLoading = settingsLoading || categoriesLoading;
+
+  const settingsMutation = useMutation({
+    mutationFn: async (settingsToSave: EtsPriceSetting[]) => {
+      for (const s of settingsToSave) {
+        await apiRequest("POST", "/api/ets/settings", { key: s.key, value: s.value, label: s.label, unit: s.unit });
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/ets/settings'] });
+    },
+  });
 
   const handleEdit = () => {
     setEditSettings([...settings]);
@@ -95,8 +143,7 @@ export default function EtsSettingsPage() {
   };
 
   const handleSave = () => {
-    setSettings([...editSettings]);
-    setCategoryRates({ ...editCategoryRates });
+    settingsMutation.mutate(editSettings);
     setIsEditing(false);
     toast({ title: "Settings saved", description: "Pricing defaults have been updated." });
   };
@@ -118,7 +165,7 @@ export default function EtsSettingsPage() {
     }));
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <PageShell>
         <Skeleton className="h-24 w-full rounded-xl mb-5" />
@@ -141,7 +188,7 @@ export default function EtsSettingsPage() {
                 <X className="mr-1.5 size-3.5" />
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleSave} data-testid="button-save-settings">
+              <Button size="sm" onClick={handleSave} disabled={settingsMutation.isPending} data-testid="button-save-settings">
                 <Save className="mr-1.5 size-3.5" />
                 Save Changes
               </Button>
@@ -294,7 +341,7 @@ export default function EtsSettingsPage() {
               </CardHeader>
               <CardContent>
                 <Stagger staggerInterval={0.06} className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  {etsProposalTemplates.map((tmpl) => (
+                  {proposalTemplates.map((tmpl: any) => (
                     <StaggerItem key={tmpl.id}>
                       <div
                         className="rounded-lg border bg-background p-5"
@@ -334,14 +381,14 @@ export default function EtsSettingsPage() {
                         <div className="mt-4 pt-4 border-t">
                           <p className="text-xs font-medium text-muted-foreground mb-2">Category Mix Defaults</p>
                           <div className="flex flex-wrap gap-1.5">
-                            {Object.entries(tmpl.categoryMix).map(([cat, pct]) => (
+                            {tmpl.categoryMix && Object.entries(tmpl.categoryMix).map(([cat, pct]) => (
                               <Badge
                                 key={cat}
                                 variant="secondary"
                                 className="text-xs"
                                 data-testid={`badge-mix-${tmpl.packageTier}-${cat}`}
                               >
-                                {categoryLabels[cat as EtsProductCategory] || cat} {pct}%
+                                {categoryLabels[cat as EtsProductCategory] || cat} {pct as number}%
                               </Badge>
                             ))}
                           </div>
@@ -350,7 +397,7 @@ export default function EtsSettingsPage() {
                         <div className="mt-4 pt-4 border-t">
                           <p className="text-xs font-medium text-muted-foreground mb-2">Payment Schedule</p>
                           <div className="space-y-1.5">
-                            {tmpl.paymentSchedule.map((ps, idx) => (
+                            {tmpl.paymentSchedule && tmpl.paymentSchedule.map((ps: any, idx: number) => (
                               <div key={idx} className="flex items-center justify-between gap-2">
                                 <span className="text-xs text-muted-foreground">{ps.milestone}</span>
                                 <span className="text-xs font-medium">{ps.percent}%</span>

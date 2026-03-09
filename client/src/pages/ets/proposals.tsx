@@ -8,11 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
-  etsProposalTemplates,
   type EtsPackageTier,
   type EtsProposalTemplate,
 } from "@/lib/mock-data-ets";
@@ -74,8 +73,15 @@ function scaleInvestment(template: EtsProposalTemplate, storeSize: number, categ
 }
 
 export default function EtsProposals() {
-  const loading = useSimulatedLoading();
   const { showSuccess } = useToast();
+
+  const { data: proposalsData, isLoading } = useQuery<{ templates: any[] }>({
+    queryKey: ['/api/ets/proposal-templates'],
+  });
+
+  const apiTemplates = proposalsData?.templates || [];
+
+  const allTemplates = apiTemplates;
 
   const [storeSize, setStoreSize] = useState(1000);
   const [packageTier, setPackageTier] = useState<EtsPackageTier>("pro");
@@ -91,10 +97,11 @@ export default function EtsProposals() {
   });
 
   const template = useMemo(() => {
-    return etsProposalTemplates.find((t) => t.packageTier === packageTier) || etsProposalTemplates[1];
-  }, [packageTier]);
+    return allTemplates.find((t: any) => t.packageTier === packageTier) || allTemplates[1] || allTemplates[0];
+  }, [packageTier, allTemplates]);
 
   const scaled = useMemo(() => {
+    if (!template) return null;
     return scaleInvestment(template, storeSize, categoryMix);
   }, [template, storeSize, categoryMix]);
 
@@ -107,19 +114,21 @@ export default function EtsProposals() {
   };
 
   const paymentSchedule = useMemo(() => {
-    return template.paymentSchedule.map((ps) => ({
+    if (!template || !scaled) return [];
+    return template.paymentSchedule.map((ps: any) => ({
       ...ps,
       amount: Math.round((scaled.total * ps.percent) / 100 / 1000) * 1000,
     }));
-  }, [template, scaled.total]);
+  }, [template, scaled]);
 
   const breakdownByCategory = useMemo(() => {
     const groups: Record<string, number> = {};
+    if (!scaled) return groups;
     scaled.breakdown.forEach((item) => {
       groups[item.category] = (groups[item.category] || 0) + item.amount;
     });
     return groups;
-  }, [scaled.breakdown]);
+  }, [scaled]);
 
   const generateWhatsAppCopy = () => {
     const lines = [
@@ -136,7 +145,7 @@ export default function EtsProposals() {
 
     lines.push("", `*Total: ${formatInr(scaled.total)}*`, "");
     lines.push("*Payment Plan:*");
-    paymentSchedule.forEach((ps) => {
+    paymentSchedule.forEach((ps: any) => {
       lines.push(`${ps.milestone} (${ps.percent}%): ${formatInr(ps.amount)}`);
     });
 
@@ -164,7 +173,7 @@ export default function EtsProposals() {
     window.print();
   };
 
-  if (loading) {
+  if (isLoading || !template || !scaled) {
     return (
       <PageShell>
         <Skeleton className="h-20 w-full rounded-xl" />
@@ -314,7 +323,7 @@ export default function EtsProposals() {
                 </CardHeader>
                 <CardContent>
                   <div className="relative space-y-0">
-                    {template.timeline.map((step, idx) => (
+                    {template.timeline.map((step: any, idx: number) => (
                       <div key={idx} className="flex gap-3 pb-4 last:pb-0" data-testid={`timeline-step-${idx}`}>
                         <div className="flex flex-col items-center">
                           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
@@ -346,7 +355,7 @@ export default function EtsProposals() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {template.inclusions.map((item, idx) => (
+                      {template.inclusions.map((item: string, idx: number) => (
                         <li key={idx} className="flex items-start gap-2 text-sm" data-testid={`text-inclusion-${idx}`}>
                           <Check className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
                           <span>{item}</span>
@@ -362,7 +371,7 @@ export default function EtsProposals() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {template.exclusions.map((item, idx) => (
+                      {template.exclusions.map((item: string, idx: number) => (
                         <li key={idx} className="flex items-start gap-2 text-sm" data-testid={`text-exclusion-${idx}`}>
                           <X className="size-4 shrink-0 text-red-500 dark:text-red-400 mt-0.5" />
                           <span className="text-muted-foreground">{item}</span>
@@ -381,7 +390,7 @@ export default function EtsProposals() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {paymentSchedule.map((ps, idx) => (
+                    {paymentSchedule.map((ps: any, idx: number) => (
                       <div key={idx} className="rounded-md border p-3 text-center" data-testid={`card-payment-milestone-${idx}`}>
                         <p className="text-xs text-muted-foreground mb-1">{ps.milestone}</p>
                         <p className="text-sm font-semibold">{formatInr(ps.amount)}</p>

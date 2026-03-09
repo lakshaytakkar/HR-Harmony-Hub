@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -137,20 +137,47 @@ function PriceChainStep({ label, value, detail, isHighlight }: PriceChainStepPro
 }
 
 export default function EtsCalculator() {
-  const loading = useSimulatedLoading();
   const { toast } = useToast();
   const [inputs, setInputs] = useState<InputState>(defaultInputState);
   const [templates, setTemplates] = useState<SavedTemplate[]>(initialTemplates);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
 
+  const { data: settingsData, isLoading: settingsLoading } = useQuery<{ settings: any[] }>({
+    queryKey: ['/api/ets/settings'],
+  });
+
+  const { data: categoriesData } = useQuery<{ categories: any[] }>({
+    queryKey: ['/api/ets/categories'],
+  });
+
   const settings = useMemo(() => {
     const map: Record<string, number> = {};
     defaultPriceSettings.forEach((s) => { map[s.key] = s.value; });
+    if (settingsData?.settings) {
+      settingsData.settings.forEach((s: any) => {
+        map[s.key] = parseFloat(s.value) || 0;
+      });
+    }
     return map;
-  }, []);
+  }, [settingsData]);
 
-  const dutyRates = useMemo(() => ETS_CATEGORY_DUTY_RATES[inputs.category], [inputs.category]);
+  const categoryDutyRates = useMemo(() => {
+    const rates = { ...ETS_CATEGORY_DUTY_RATES };
+    if (categoriesData?.categories) {
+      categoriesData.categories.forEach((cat: any) => {
+        if (cat.slug && rates[cat.slug as EtsProductCategory]) {
+          rates[cat.slug as EtsProductCategory] = {
+            duty: parseFloat(cat.customs_duty_percent) || 0,
+            igst: parseFloat(cat.igst_percent) || 0,
+          };
+        }
+      });
+    }
+    return rates;
+  }, [categoriesData]);
+
+  const dutyRates = useMemo(() => categoryDutyRates[inputs.category], [inputs.category, categoryDutyRates]);
 
   const priceInputs: EtsPriceInputs = useMemo(() => ({
     exwPriceYuan: inputs.exwPriceYuan,
@@ -204,7 +231,7 @@ export default function EtsCalculator() {
 
   const targetMargin = settings.target_store_margin;
 
-  if (loading) {
+  if (settingsLoading) {
     return (
       <PageShell>
         <Skeleton className="mb-5 h-24 w-full rounded-xl" />
@@ -348,7 +375,7 @@ export default function EtsCalculator() {
                     <SelectContent>
                       {ETS_PRODUCT_CATEGORIES.map((cat) => (
                         <SelectItem key={cat} value={cat}>
-                          {categoryLabels[cat]} (Duty {ETS_CATEGORY_DUTY_RATES[cat].duty}% / IGST {ETS_CATEGORY_DUTY_RATES[cat].igst}%)
+                          {categoryLabels[cat]} (Duty {categoryDutyRates[cat].duty}% / IGST {categoryDutyRates[cat].igst}%)
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -382,7 +409,7 @@ export default function EtsCalculator() {
                     <span className="text-muted-foreground">Sourcing Commission</span>
                     <span className="text-right tabular-nums">{settings.sourcing_commission}%</span>
                     <span className="text-muted-foreground">Freight / CBM</span>
-                    <span className="text-right tabular-nums">₹{settings.freight_per_cbm.toLocaleString("en-IN")}</span>
+                    <span className="text-right tabular-nums">₹{settings.freight_per_cbm?.toLocaleString("en-IN")}</span>
                     <span className="text-muted-foreground">Insurance</span>
                     <span className="text-right tabular-nums">{settings.insurance_percent}%</span>
                     <span className="text-muted-foreground">SW Surcharge</span>
@@ -482,7 +509,7 @@ export default function EtsCalculator() {
                       <PriceChainStep
                         label="Freight"
                         value={formatInr(result.freightPerUnit)}
-                        detail={`CBM/unit: ${result.cbmPerUnit.toFixed(4)} @ ₹${settings.freight_per_cbm.toLocaleString("en-IN")}/CBM`}
+                        detail={`CBM/unit: ${result.cbmPerUnit.toFixed(4)} @ ₹${settings.freight_per_cbm?.toLocaleString("en-IN")}/CBM`}
                       />
                     </StaggerItem>
                     <StaggerItem>

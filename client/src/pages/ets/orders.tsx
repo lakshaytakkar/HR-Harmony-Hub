@@ -30,14 +30,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 import { cn } from "@/lib/utils";
 import {
-  etsOrders,
   ETS_ORDER_STATUSES,
   ETS_ORDER_STATUS_LABELS,
-  etsClients,
   type EtsOrder,
   type EtsOrderStatus,
   type EtsOrderDocument,
@@ -117,13 +116,37 @@ function formatCurrency(val: number): string {
 }
 
 export default function OrdersPage() {
-  const loading = useSimulatedLoading();
+  const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [orders, setOrders] = useState<EtsOrder[]>(etsOrders);
+
+  const { data: ordersData, isLoading } = useQuery<{ orders: EtsOrder[] }>({
+    queryKey: ['/api/ets/orders'],
+  });
+
+  const orders = ordersData?.orders || [];
+
   const [docsDialog, setDocsDialog] = useState<{ open: boolean; order: EtsOrder | null }>({
     open: false,
     order: null,
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string | number; status: EtsOrderStatus }) => {
+      await apiRequest("PATCH", `/api/ets/orders/${id}`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ets/orders'] });
+    },
+  });
+
+  const flagMutation = useMutation({
+    mutationFn: async ({ id, is_flagged }: { id: string | number; is_flagged: boolean }) => {
+      await apiRequest("PATCH", `/api/ets/orders/${id}`, { is_flagged });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ets/orders'] });
+    },
   });
 
   const stats = useMemo(() => {
@@ -137,21 +160,17 @@ export default function OrdersPage() {
     return { totalOrders, inTransitCount, deliveredCount, totalValue };
   }, [orders]);
 
-  const handleStatusChange = (orderId: string, newStatus: EtsOrderStatus) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-    );
+  const handleStatusChange = (orderId: string | number, newStatus: EtsOrderStatus) => {
+    statusMutation.mutate({ id: orderId, status: newStatus });
     toast({
       title: "Status Updated",
       description: `Order ${orderId} moved to ${ETS_ORDER_STATUS_LABELS[newStatus]}`,
     });
   };
 
-  const handleFlagToggle = (orderId: string) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, isFlagged: !o.isFlagged } : o))
-    );
+  const handleFlagToggle = (orderId: string | number) => {
     const order = orders.find((o) => o.id === orderId);
+    flagMutation.mutate({ id: orderId, is_flagged: !order?.isFlagged });
     toast({
       title: order?.isFlagged ? "Flag Removed" : "Order Flagged",
       description: `Order ${orderId} has been ${order?.isFlagged ? "unflagged" : "flagged for delay"}`,
@@ -340,7 +359,7 @@ export default function OrdersPage() {
           </p>
         </Fade>
 
-        {loading ? (
+        {isLoading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <CardSkeleton key={i} />
@@ -381,7 +400,7 @@ export default function OrdersPage() {
           </Stagger>
         )}
 
-        {loading ? (
+        {isLoading ? (
           <TableSkeleton rows={8} columns={9} />
         ) : (
           <DataTable

@@ -16,10 +16,11 @@ import { CardSkeleton } from "@/components/ui/card-skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 import { cn } from "@/lib/utils";
-import { etsPayments, type EtsPayment } from "@/lib/mock-data-ets";
+import { type EtsPayment } from "@/lib/mock-data-ets";
 import { PageShell } from "@/components/layout";
 import { PersonCell } from "@/components/ui/avatar-cells";
 
@@ -55,8 +56,14 @@ interface ClientPaymentSummary {
 }
 
 export default function PaymentsPage() {
-  const loading = useSimulatedLoading();
-  const [payments] = useState<EtsPayment[]>(etsPayments);
+  const queryClient = useQueryClient();
+
+  const { data: paymentsData, isLoading } = useQuery<{ payments: EtsPayment[] }>({
+    queryKey: ['/api/ets/payments'],
+  });
+
+  const payments = paymentsData?.payments || [];
+
   const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
 
   const stats = useMemo(() => {
@@ -182,7 +189,7 @@ export default function PaymentsPage() {
           </p>
         </Fade>
 
-        {loading ? (
+        {isLoading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <CardSkeleton key={i} />
@@ -225,7 +232,7 @@ export default function PaymentsPage() {
           </Stagger>
         )}
 
-        {loading ? (
+        {isLoading ? (
           <TableSkeleton rows={8} columns={6} />
         ) : (
           <DataTable
@@ -247,7 +254,7 @@ export default function PaymentsPage() {
           />
         )}
 
-        {!loading && (
+        {!isLoading && (
           <Fade direction="up" distance={10} delay={0.2}>
             <div className="mt-6">
               <h2 className="mb-3 text-lg font-semibold font-heading" data-testid="text-section-client-summary">

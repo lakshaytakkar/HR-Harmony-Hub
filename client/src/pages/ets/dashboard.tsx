@@ -12,6 +12,7 @@ import {
   Ship,
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import {
   PageShell,
   PageHeader,
@@ -27,15 +28,14 @@ import { StatusBadge } from "@/components/hr/status-badge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  etsClients,
-  etsOrders,
-  etsPayments,
   ETS_STAGE_LABELS,
   ETS_ORDER_STATUS_LABELS,
   ETS_ORDER_STATUSES,
+  type EtsClient,
+  type EtsOrder,
+  type EtsPayment,
   type EtsPipelineStage,
 } from "@/lib/mock-data-ets";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 import { PersonCell } from "@/components/ui/avatar-cells";
 
@@ -58,10 +58,17 @@ function formatCurrency(amount: number): string {
 }
 
 export default function EtsDashboard() {
-  const loading = useSimulatedLoading();
   const [, navigate] = useLocation();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  const { data: clientsData, isLoading } = useQuery<{ clients: EtsClient[], total: number }>({ queryKey: ['/api/ets/clients'] });
+  const { data: ordersData } = useQuery<{ orders: EtsOrder[] }>({ queryKey: ['/api/ets/orders'] });
+  const { data: paymentsData } = useQuery<{ payments: EtsPayment[] }>({ queryKey: ['/api/ets/payments'] });
+
+  const etsClients = clientsData?.clients || [];
+  const etsOrders = ordersData?.orders || [];
+  const etsPayments = paymentsData?.payments || [];
 
   const totalClients = etsClients.length;
   const qualifiedClients = etsClients.filter((c) => c.stage === "qualified").length;
@@ -127,7 +134,7 @@ export default function EtsDashboard() {
         ]}
       />
 
-      {loading ? (
+      {isLoading ? (
         <StatGrid>
           <StatsCardSkeleton />
           <StatsCardSkeleton />
@@ -171,7 +178,7 @@ export default function EtsDashboard() {
         </StatGrid>
       )}
 
-      {loading ? (
+      {isLoading ? (
         <SectionGrid>
           <Skeleton className="h-[400px] w-full rounded-xl" />
           <Skeleton className="h-[400px] w-full rounded-xl" />
@@ -277,7 +284,7 @@ export default function EtsDashboard() {
         </SectionGrid>
       )}
 
-      {!loading && (
+      {!isLoading && (
         <SectionGrid>
           <SectionCard
             title="Recent Clients"

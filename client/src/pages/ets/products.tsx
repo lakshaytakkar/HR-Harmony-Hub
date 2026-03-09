@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { Package, Eye, EyeOff, Star, StarOff, ChevronDown, ChevronRight, ArrowRight, AlertTriangle, Search, Filter } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,7 +9,6 @@ import { StatsCard } from "@/components/hr/stats-card";
 import { StatusBadge } from "@/components/hr/status-badge";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import {
   Select,
   SelectContent,
@@ -22,7 +23,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  etsProducts as initialProducts,
   type EtsProduct,
   type EtsProductCategory,
   ETS_PRODUCT_CATEGORIES,
@@ -114,17 +114,28 @@ function ExpandedPriceBreakdown({ product }: { product: EtsProduct }) {
 }
 
 export default function EtsProductsPage() {
-  const loading = useSimulatedLoading();
-  const [products, setProducts] = useState<EtsProduct[]>([...initialProducts]);
+  const qc = useQueryClient();
+  const { data: productsData, isLoading } = useQuery<{ products: EtsProduct[] }>({ queryKey: ['/api/ets/products'] });
+  const products = productsData?.products || [];
+
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [marginTierFilter, setMarginTierFilter] = useState<string>("all");
   const [visibilityFilter, setVisibilityFilter] = useState<string>("all");
   const [heroFilter, setHeroFilter] = useState<string>("all");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [expandedId, setExpandedId] = useState<string | number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const patchProductMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string | number, data: Record<string, any> }) => {
+      await apiRequest("PATCH", `/api/ets/products/${id}`, data);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/ets/products'] });
+    },
+  });
 
   const productsWithPricing = useMemo(() => {
     return products.map((p) => {
@@ -186,15 +197,21 @@ export default function EtsProductsPage() {
     return { total, active, heroSkus, avgMargin: Math.round(avgMargin * 10) / 10, categories };
   }, [products, productsWithPricing]);
 
-  const toggleVisibility = (id: string) => {
-    setProducts((prev) => prev.map((p) => p.id === id ? { ...p, isVisible: !p.isVisible } : p));
+  const toggleVisibility = (id: string | number) => {
+    const product = products.find((p) => p.id === id);
+    if (product) {
+      patchProductMutation.mutate({ id, data: { is_visible: !product.isVisible } });
+    }
   };
 
-  const toggleHeroSku = (id: string) => {
-    setProducts((prev) => prev.map((p) => p.id === id ? { ...p, isHeroSku: !p.isHeroSku } : p));
+  const toggleHeroSku = (id: string | number) => {
+    const product = products.find((p) => p.id === id);
+    if (product) {
+      patchProductMutation.mutate({ id, data: { is_hero_sku: !product.isHeroSku } });
+    }
   };
 
-  const toggleSelect = (id: string) => {
+  const toggleSelect = (id: string | number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -212,16 +229,16 @@ export default function EtsProductsPage() {
   };
 
   const bulkToggleVisibility = (visible: boolean) => {
-    setProducts((prev) =>
-      prev.map((p) => selectedIds.has(p.id) ? { ...p, isVisible: visible } : p)
-    );
+    Array.from(selectedIds).forEach((id) => {
+      patchProductMutation.mutate({ id, data: { is_visible: visible } });
+    });
     setSelectedIds(new Set());
   };
 
   const bulkSetMarginTier = (tier: "standard" | "premium" | "value") => {
-    setProducts((prev) =>
-      prev.map((p) => selectedIds.has(p.id) ? { ...p, marginTier: tier } : p)
-    );
+    Array.from(selectedIds).forEach((id) => {
+      patchProductMutation.mutate({ id, data: { margin_tier: tier } });
+    });
     setSelectedIds(new Set());
   };
 
@@ -247,7 +264,7 @@ export default function EtsProductsPage() {
     </button>
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <PageShell>
         <PageTransition>
@@ -272,7 +289,7 @@ export default function EtsProductsPage() {
             <StatsCard
               title="Active Products"
               value={stats.active}
-              change={`${Math.round((stats.active / stats.total) * 100)}% visible`}
+              change={`${Math.round((stats.active / Math.max(stats.total, 1)) * 100)}% visible`}
               changeType="positive"
               icon={<Eye className="size-5" />}
             />

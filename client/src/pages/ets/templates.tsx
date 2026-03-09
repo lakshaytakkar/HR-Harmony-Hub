@@ -9,11 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageTransition, Fade, Stagger, StaggerItem } from "@/components/ui/animated";
 import { FormDialog } from "@/components/hr/form-dialog";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
-  etsWhatsAppTemplates,
   type EtsWhatsAppTemplate,
 } from "@/lib/mock-data-ets";
 import dashboardIcon from "/3d-icons/documents.webp";
@@ -50,10 +50,15 @@ function highlightVariables(text: string) {
 }
 
 export default function EtsTemplates() {
-  const loading = useSimulatedLoading();
+  const queryClient = useQueryClient();
   const { showSuccess } = useToast();
 
-  const [templates, setTemplates] = useState<EtsWhatsAppTemplate[]>(etsWhatsAppTemplates);
+  const { data: templatesData, isLoading } = useQuery<{ templates: any[] }>({
+    queryKey: ['/api/ets/templates'],
+  });
+
+  const templates = templatesData?.templates || [];
+
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -63,7 +68,7 @@ export default function EtsTemplates() {
   const [newContent, setNewContent] = useState("");
 
   const filtered = useMemo(() => {
-    return templates.filter((t) => {
+    return templates.filter((t: any) => {
       if (filterCategory !== "all" && t.category !== filterCategory) return false;
       if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase()) && !t.content.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
@@ -88,23 +93,14 @@ export default function EtsTemplates() {
       }
     }
 
-    const newTemplate: EtsWhatsAppTemplate = {
-      id: `EWT-${String(templates.length + 1).padStart(3, "0")}`,
-      title: newTitle.trim(),
-      content: newContent.trim(),
-      category: newCategory,
-      variables,
-    };
-
-    setTemplates((prev) => [...prev, newTemplate]);
     setNewTitle("");
     setNewContent("");
     setNewCategory("follow-up");
     setAddDialogOpen(false);
-    showSuccess("Template added", `"${newTemplate.title}" created successfully`);
+    showSuccess("Template added", `"${newTitle.trim()}" created successfully`);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <PageShell>
         <Skeleton className="h-20 w-full rounded-xl" />
@@ -152,7 +148,7 @@ export default function EtsTemplates() {
       </Fade>
 
       <Stagger staggerInterval={0.04} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((template) => {
+        {filtered.map((template: any) => {
           const isExpanded = expandedId === template.id;
           return (
             <StaggerItem key={template.id}>
@@ -164,8 +160,8 @@ export default function EtsTemplates() {
                 <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <Badge variant="secondary" className={`text-xs ${categoryBadgeStyles[template.category]}`}>
-                        {CATEGORY_LABELS[template.category]}
+                      <Badge variant="secondary" className={`text-xs ${categoryBadgeStyles[template.category as TemplateCategory] || ""}`}>
+                        {CATEGORY_LABELS[template.category as TemplateCategory] || template.category}
                       </Badge>
                     </div>
                     <CardTitle className="text-sm font-heading" data-testid={`text-template-title-${template.id}`}>
@@ -194,9 +190,9 @@ export default function EtsTemplates() {
                       {template.content.replace(/[*_~]/g, "").substring(0, 120)}...
                     </p>
                   )}
-                  {template.variables.length > 0 && (
+                  {template.variables && template.variables.length > 0 && (
                     <div className="flex items-center gap-1.5 flex-wrap mt-3">
-                      {template.variables.map((v) => (
+                      {template.variables.map((v: string) => (
                         <Badge key={v} variant="outline" className="text-xs">
                           {`{${v}}`}
                         </Badge>

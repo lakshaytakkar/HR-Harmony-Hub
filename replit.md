@@ -310,6 +310,79 @@ Script: `scripts/seed-legalnations.ts` — parses 2 CSV files (old + new clients
 - **Finance**: `journal_entries`, `payment_records`
 - **OMS**: `oms_orders`, `oms_inventory`, `oms_shipments`
 
+## EazyToSell (ETS) Supabase Integration (Mar 2026)
+
+### Architecture
+EazyToSell uses the `easytosell` schema in Supabase (project `ngvrnwjisntjmqrtnume`). The Express router at `server/ets-api.ts` uses a dedicated Supabase client configured with `db: { schema: "easytosell" }`. All 10 ETS pages are fully wired to real data via TanStack Query — no mock data fallbacks remain.
+
+### Schema Setup
+- Schema exposed via `ALTER ROLE authenticator SET pgrst.db_schemas = 'public, easytosell'`
+- Permissions: `GRANT USAGE ON SCHEMA easytosell TO anon, authenticated, service_role`
+- All table permissions granted to `anon, authenticated, service_role`
+
+### Tables (11 — all in `easytosell` schema)
+| Table | Rows | Description |
+|-------|------|-------------|
+| `clients` | 15 | Client records with pipeline stage, package tier, scores |
+| `products` | 20 | Product catalog with EXW pricing, carton dims, duty/IGST rates |
+| `orders` | 8 | Import orders with status, ETA, value, documents (JSONB) |
+| `payments` | 12 | Payment records (token/milestone/final) with status tracking |
+| `proposal_templates` | 3 | Package proposals (lite/pro/elite) with investment breakdowns (JSONB) |
+| `whatsapp_templates` | 8 | WhatsApp message templates with variables |
+| `checklist_items` | 9 | Master checklist definitions (9 items per client) |
+| `client_checklist_status` | 135 | Per-client checklist completion (15 clients x 9 items) |
+| `price_settings` | 14 | Key-value pricing config (exchange rate, freight, margins) |
+| `product_categories` | 7 | Category definitions with duty rates |
+| `calc_templates` | 6 | Calculator quick-fill templates |
+
+### API Routes (`/api/ets/*` — `server/ets-api.ts`)
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/ets/clients` | List all clients (mapped to camelCase) |
+| GET | `/api/ets/clients/:id` | Client detail + payments + checklist |
+| POST | `/api/ets/clients` | Create client |
+| PATCH | `/api/ets/clients/:id` | Update client (stage, notes, etc.) |
+| GET | `/api/ets/products` | List all products |
+| PATCH | `/api/ets/products/:id` | Update product (visibility, hero, margin tier) |
+| GET | `/api/ets/orders` | List all orders (with client name join) |
+| PATCH | `/api/ets/orders/:id` | Update order (status, flag) |
+| GET | `/api/ets/payments` | List all payments (with client name join) |
+| PATCH | `/api/ets/payments/:id` | Update payment status |
+| GET | `/api/ets/proposal-templates` | List proposal templates |
+| GET | `/api/ets/templates` | List WhatsApp templates |
+| GET | `/api/ets/settings` | List price settings |
+| POST | `/api/ets/settings` | Upsert price settings |
+| GET | `/api/ets/categories` | List product categories |
+| GET | `/api/ets/calc-templates` | List calculator templates |
+| PATCH | `/api/ets/checklist/:id` | Toggle checklist item completion |
+
+### Mapper Functions
+All GET responses apply camelCase mappers (e.g., `mapClient`, `mapProduct`, `mapOrder`, `mapPayment`) converting snake_case DB columns to camelCase for frontend consumption. Product mapper uses `carton_length_cm`, `carton_width_cm`, `carton_height_cm` with `parseFloat()`.
+
+### Frontend Pages (10 — all real data)
+| Page | Route | File |
+|------|-------|------|
+| Dashboard | `/ets` | `client/src/pages/ets/dashboard.tsx` |
+| Pipeline | `/ets/pipeline` | `client/src/pages/ets/pipeline.tsx` |
+| Products | `/ets/products` | `client/src/pages/ets/products.tsx` |
+| Orders | `/ets/orders` | `client/src/pages/ets/orders.tsx` |
+| Payments | `/ets/payments` | `client/src/pages/ets/payments.tsx` |
+| Client Detail | `/ets/clients/:id` | `client/src/pages/ets/client-detail.tsx` |
+| Templates | `/ets/templates` | `client/src/pages/ets/templates.tsx` |
+| Proposals | `/ets/proposals` | `client/src/pages/ets/proposals.tsx` |
+| Calculator | `/ets/calculator` | `client/src/pages/ets/calculator.tsx` |
+| Settings | `/ets/settings` | `client/src/pages/ets/settings.tsx` |
+
+### Client-Side Utilities (kept in `mock-data-ets.ts`)
+- `calculateEtsPrices()` — full landed cost calculator (EXW → FOB → CIF → landed → MRP)
+- `getDefaultPriceInputs()` / `defaultPriceSettings` — default pricing parameters
+- `ETS_CATEGORY_DUTY_RATES` — category-specific duty rates
+- Constants: `ETS_PIPELINE_STAGES`, `ETS_STAGE_LABELS`, `ETS_ORDER_STATUSES`, `ETS_PRODUCT_CATEGORIES`, `ETS_MRP_BANDS`
+- All TypeScript interfaces: `EtsClient`, `EtsProduct`, `EtsOrder`, `EtsPayment`, `EtsProposalTemplate`, `EtsWhatsAppTemplate`, `EtsCalcTemplate`, etc.
+
+### IDs
+All entity IDs are numeric (bigint from DB), not string prefixed (e.g., `5` not `"ETC-005"`).
+
 ## User Management & RBAC System (Mar 2026)
 
 ### Mock Data (`client/src/lib/mock-data-users.ts`)
