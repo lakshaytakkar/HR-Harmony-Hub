@@ -463,6 +463,49 @@ export async function getTransactionProofUrl(storagePath: string): Promise<strin
   return data.signedUrl;
 }
 
+// ── LegalNations Document Storage helpers ─────────────────────────────────────
+
+export async function uploadClientDocument(
+  clientId: string,
+  category: string,
+  file: Buffer,
+  fileName: string,
+  mimeType: string
+): Promise<string | null> {
+  const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `${clientId}/${category}/${Date.now()}-${safeName}`;
+  const { error } = await supabase.storage
+    .from("legalnations-docs")
+    .upload(path, file, { contentType: mimeType, upsert: false });
+  if (error) {
+    console.error("[supabase] uploadClientDocument error:", error.message);
+    return null;
+  }
+  return path;
+}
+
+export async function getClientDocumentUrl(storagePath: string): Promise<string | null> {
+  const { data, error } = await supabase.storage
+    .from("legalnations-docs")
+    .createSignedUrl(storagePath, 3600);
+  if (error) {
+    console.error("[supabase] getClientDocumentUrl error:", error.message);
+    return null;
+  }
+  return data.signedUrl;
+}
+
+export async function deleteClientDocumentFile(storagePath: string): Promise<boolean> {
+  const { error } = await supabase.storage
+    .from("legalnations-docs")
+    .remove([storagePath]);
+  if (error) {
+    console.error("[supabase] deleteClientDocumentFile error:", error.message);
+    return false;
+  }
+  return true;
+}
+
 // ── Seller Application helpers ─────────────────────────────────────────────────
 
 export interface SellerApplication {

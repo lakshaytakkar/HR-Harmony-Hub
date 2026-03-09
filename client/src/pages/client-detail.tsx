@@ -19,6 +19,7 @@ import { PageShell } from "@/components/layout";
 import { FormDialog } from "@/components/hr/form-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { DocumentManager } from "@/components/legalnations/document-manager";
 import {
   Select,
   SelectContent,
@@ -477,54 +478,8 @@ export default function ClientDetailPage() {
               })}
             </TabsContent>
 
-            <TabsContent value="documents" className="space-y-4 mt-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Client Documents</CardTitle>
-                    <span className="text-sm text-muted-foreground">{documents.length} document{documents.length !== 1 ? "s" : ""}</span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {documents.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <FileText className="size-10 mx-auto mb-3 opacity-40" />
-                      <p className="text-sm">No documents uploaded yet</p>
-                      <p className="text-xs mt-1">Documents like EIN Letter, Operating Agreement, Articles of Organization will appear here</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {documents.map((doc: any) => (
-                        <div key={doc.id} className="flex items-center justify-between py-2 px-3 rounded-md border">
-                          <div className="flex items-center gap-3">
-                            <FileText className="size-4 text-red-500" />
-                            <div>
-                              <p className="text-sm font-medium">{doc.document_name}</p>
-                              <p className="text-xs text-muted-foreground">{doc.document_type} • {doc.direction === "from_client" ? "From Client" : "To Client"}</p>
-                            </div>
-                          </div>
-                          {doc.file_url && (
-                            <a href={doc.file_url} target="_blank" rel="noreferrer">
-                              <Button variant="ghost" size="sm">
-                                <ExternalLink className="size-3.5" />
-                              </Button>
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="mt-4 p-4 border-2 border-dashed rounded-lg text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Document Types</p>
-                    <div className="flex flex-wrap gap-1.5 justify-center">
-                      {["EIN Letter", "Operating Agreement", "Initial Resolutions", "Articles of Organization", "Wire Details", "Backup Codes", "PAN/Aadhar", "Passport"].map((t) => (
-                        <span key={t} className="text-xs px-2 py-0.5 bg-muted rounded-full">{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <TabsContent value="documents" className="mt-4">
+              <DocumentManager clientId={client.id} />
             </TabsContent>
 
             <TabsContent value="credentials" className="space-y-4 mt-4">

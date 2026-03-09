@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { PageTransition } from "@/components/ui/animated";
 import { PageShell, StatCard } from "@/components/layout";
+import { DocumentManager } from "@/components/legalnations/document-manager";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -507,7 +508,7 @@ function FilingDetailPanel({ filing, onClose, onUpdate, isSaving }: {
         </TabsContent>
 
         <TabsContent value="documents" className="mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Notes & Pending Items</CardTitle>
@@ -551,42 +552,13 @@ function FilingDetailPanel({ filing, onClose, onUpdate, isSaving }: {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Required Documents Checklist</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {[
-                    { doc: "PAN Card Copy", status: filing.pan_aadhar_dl ? "received" : (filing.notes?.toLowerCase().includes("pan pending") ? "pending" : "unknown") },
-                    { doc: "Aadhar/DL Copy", status: filing.pan_aadhar_dl ? "received" : "unknown" },
-                    { doc: "Bank Statements (Full Year)", status: filing.bank_statements_status === "Received" ? "received" : (filing.notes?.toLowerCase().includes("bank statement") ? "pending" : "unknown") },
-                    { doc: "EIN Confirmation Letter", status: filing.ein_number ? "received" : "pending" },
-                    { doc: "LLC Formation Documents", status: filing.date_of_formation ? "received" : "pending" },
-                    { doc: "Articles of Organization", status: "unknown" },
-                    { doc: "Operating Agreement", status: "unknown" },
-                  ].map((item) => (
-                    <div key={item.doc} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted/50">
-                      {item.status === "received" ? (
-                        <CheckCircle2 className="size-4 text-green-500 shrink-0" />
-                      ) : item.status === "pending" ? (
-                        <AlertCircle className="size-4 text-amber-500 shrink-0" />
-                      ) : (
-                        <Circle className="size-4 text-muted-foreground shrink-0" />
-                      )}
-                      <span className="text-sm flex-1">{item.doc}</span>
-                      <Badge variant="outline" className={`text-[10px] ${
-                        item.status === "received" ? "text-green-600 bg-green-50 border-green-200 dark:bg-green-950 dark:text-green-300" :
-                        item.status === "pending" ? "text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-950 dark:text-amber-300" :
-                        ""
-                      }`}>
-                        {item.status === "received" ? "Received" : item.status === "pending" ? "Pending" : "—"}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {filing.client_id && (
+              <DocumentManager
+                clientId={filing.client_id}
+                defaultCategory="tax_filing"
+                showCategoryFilter={true}
+              />
+            )}
           </div>
         </TabsContent>
       </Tabs>

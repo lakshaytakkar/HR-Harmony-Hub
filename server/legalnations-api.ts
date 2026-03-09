@@ -1,5 +1,9 @@
 import { Router } from "express";
+import multer from "multer";
 import { supabase } from "./supabase";
+import { uploadClientDocument, getClientDocumentUrl, deleteClientDocumentFile } from "./supabase";
+
+const docUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 export const legalnationsRouter = Router();
 
@@ -187,12 +191,62 @@ legalnationsRouter.delete("/credentials/:id", async (req, res) => {
   }
 });
 
-legalnationsRouter.post("/clients/:id/documents", async (req, res) => {
+legalnationsRouter.get("/clients/:id/documents", async (req, res) => {
   try {
     const { id } = req.params;
+    const { category } = req.query;
+    let query = supabase
+      .from("ln_client_documents")
+      .select("*")
+      .eq("client_id", id)
+      .order("uploaded_at", { ascending: false });
+
+    if (category && category !== "all") {
+      query = query.eq("category", category as string);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err: any) {
+    console.error("[legalnations] GET client documents error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+legalnationsRouter.post("/clients/:id/documents", docUpload.single("file"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const file = (req as any).file;
+
+    if (!file) {
+      return res.status(400).json({ error: "No file provided" });
+    }
+
+    const category = req.body.category || "other";
+    const documentName = req.body.document_name || file.originalname;
+    const documentType = req.body.document_type || "other";
+
+    const storagePath = await uploadClientDocument(
+      id, category, file.buffer, file.originalname, file.mimetype
+    );
+
+    if (!storagePath) {
+      return res.status(500).json({ error: "Failed to upload file to storage" });
+    }
+
     const { data, error } = await supabase
       .from("ln_client_documents")
-      .insert({ ...req.body, client_id: id })
+      .insert({
+        client_id: id,
+        document_name: documentName,
+        document_type: documentType,
+        file_url: storagePath,
+        file_name: file.originalname,
+        file_size: file.size,
+        category,
+        status: "uploaded",
+      })
       .select()
       .single();
 
@@ -204,9 +258,62 @@ legalnationsRouter.post("/clients/:id/documents", async (req, res) => {
   }
 });
 
+legalnationsRouter.get("/documents/:id/url", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, error } = await supabase
+      .from("ln_client_documents")
+      .select("file_url")
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+    if (!data?.file_url) return res.status(404).json({ error: "No file URL found" });
+
+    const signedUrl = await getClientDocumentUrl(data.file_url);
+    if (!signedUrl) return res.status(500).json({ error: "Failed to generate signed URL" });
+
+    res.json({ url: signedUrl });
+  } catch (err: any) {
+    console.error("[legalnations] GET document URL error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+legalnationsRouter.patch("/documents/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const { data, error } = await supabase
+      .from("ln_client_documents")
+      .update({ status })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err: any) {
+    console.error("[legalnations] PATCH document error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 legalnationsRouter.delete("/documents/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const { data: doc, error: fetchError } = await supabase
+      .from("ln_client_documents")
+      .select("file_url")
+      .eq("id", id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    if (doc?.file_url) {
+      await deleteClientDocumentFile(doc.file_url);
+    }
+
     const { error } = await supabase
       .from("ln_client_documents")
       .delete()
